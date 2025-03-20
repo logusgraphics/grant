@@ -2,8 +2,9 @@
 
 import { gql, useQuery, useMutation } from '@apollo/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { X, Pencil } from 'lucide-react';
+import { X, Pencil, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,7 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { EditUserDialog } from './EditUserDialog';
+import { CreateUserDialog } from './CreateUserDialog';
 
 export const GET_USERS = gql`
   query GetUsers {
@@ -84,41 +86,70 @@ export function UserList() {
     <>
       <div className="max-w-2xl mx-auto p-4">
         <div className="space-y-4">
-          {data.users.map((user: { id: string; name: string; email: string }) => (
-            <div
-              key={user.id}
-              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow relative"
-            >
-              <div className="absolute right-2 top-2 flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-gray-400 hover:text-gray-600"
-                  onClick={() => setUserToEdit(user)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-gray-400 hover:text-gray-600"
-                  onClick={() => setUserToDelete({ id: user.id, name: user.name })}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex items-center gap-4">
-                <Avatar>
-                  <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} />
-                  <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold">{user.name}</h3>
-                  <p className="text-gray-600">{user.email}</p>
-                </div>
+          {data.users.length === 0 ? (
+            <div className="text-center py-10 border-2 border-dashed rounded-lg">
+              <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-4 text-lg font-semibold text-gray-900">No users yet</h3>
+              <p className="mt-1 text-sm text-gray-500">Get started by creating a new user.</p>
+              <div className="mt-6">
+                <CreateUserDialog />
               </div>
             </div>
-          ))}
+          ) : (
+            data.users.map((user: { id: string; name: string; email: string }) => (
+              <div
+                key={user.id}
+                className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow relative"
+              >
+                <div className="absolute right-2 top-2 flex gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-gray-400 hover:text-gray-600"
+                          onClick={() => setUserToEdit(user)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Edit user</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-gray-400 hover:text-gray-600"
+                          onClick={() => setUserToDelete({ id: user.id, name: user.name })}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete user</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Avatar>
+                    <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} />
+                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold">{user.name}</h3>
+                    <p className="text-gray-600">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
