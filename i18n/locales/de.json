@@ -56,11 +56,20 @@
     },
     "login": {
       "title": "Anmelden",
-      "description": "Willkommen zurück! Bitte geben Sie Ihre Anmeldedaten ein, um fortzufahren.",
-      "submit": "Anmelden",
+      "description": "Geben Sie Ihre Anmeldedaten ein",
+      "email": "E-Mail",
+      "emailPlaceholder": "E-Mail eingeben",
+      "emailError": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+      "password": "Passwort",
+      "passwordPlaceholder": "Passwort eingeben",
+      "passwordError": "Das Passwort muss mindestens 6 Zeichen lang sein",
       "forgotPassword": "Passwort vergessen?",
+      "submit": "Anmelden",
       "noAccount": "Noch kein Konto?",
-      "register": "Registrieren"
+      "register": "Jetzt registrieren",
+      "success": "Anmeldung erfolgreich",
+      "error": "Anmeldung fehlgeschlagen",
+      "errorUnknown": "Ein unbekannter Fehler ist aufgetreten"
     },
     "register": {
       "title": "Konto erstellen",

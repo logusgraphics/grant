@@ -1,34 +1,29 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
-interface NavLinkProps {
+export interface NavLinkProps {
   href: string;
   children: React.ReactNode;
-  variant?: 'default' | 'ghost' | 'outline';
+  onClick?: (e: React.MouseEvent) => void;
 }
 
-export function NavLink({ href, children, variant = 'ghost' }: NavLinkProps) {
+export function NavLink({ href, children, onClick }: NavLinkProps) {
   const pathname = usePathname();
-  // Remove the locale prefix for comparison
-  const currentPath = pathname.split('/').slice(2).join('/');
-  const targetPath = href === '/' ? '' : href.slice(1);
-
-  const isActive =
-    href === '/'
-      ? currentPath === ''
-      : currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+  const isActive = pathname === href;
 
   return (
-    <Button
-      variant={variant}
-      asChild
-      className={cn(isActive && 'bg-accent text-accent-foreground')}
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        'transition-colors hover:text-foreground/80',
+        isActive ? 'text-foreground' : 'text-foreground/60'
+      )}
     >
-      <Link href={href}>{children}</Link>
-    </Button>
+      {children}
+    </Link>
   );
 }

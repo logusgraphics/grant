@@ -56,11 +56,20 @@
     },
     "login": {
       "title": "Login",
-      "description": "Welcome back! Please enter your credentials to continue.",
-      "submit": "Sign in",
+      "description": "Enter your credentials to access your account",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "emailError": "Please enter a valid email address",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "passwordError": "Password must be at least 6 characters",
       "forgotPassword": "Forgot password?",
+      "submit": "Login",
       "noAccount": "Don't have an account?",
-      "register": "Register"
+      "register": "Register here",
+      "success": "Login successful",
+      "error": "Login failed",
+      "errorUnknown": "An unknown error occurred"
     },
     "register": {
       "title": "Create an account",

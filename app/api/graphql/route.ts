@@ -1,11 +1,10 @@
 import { NextRequest } from 'next/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { ApolloServer } from '@apollo/server';
-import { typeDefs, resolvers } from '@/graphql/schema';
+import { schema } from '@/graphql/schema';
 
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  schema,
 });
 
 const handler = startServerAndCreateNextHandler(server, {
