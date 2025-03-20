@@ -2,7 +2,13 @@
 
 import { gql, useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -16,13 +22,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { GET_USERS } from './UserList';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
-const UPDATE_USER = gql`
-  mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
-    updateUser(id: $id, input: $input) {
+const CREATE_USER = gql`
+  mutation CreateUser($input: CreateUserInput!) {
+    createUser(input: $input) {
       id
       name
       email
@@ -38,20 +45,12 @@ const formSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
 });
 
-interface EditUserDialogProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
-  const [updateUser] = useMutation(UPDATE_USER, {
+export function CreateUserDialog() {
+  const [open, setOpen] = useState(false);
+  const [createUser] = useMutation(CREATE_USER, {
     refetchQueries: [{ query: GET_USERS }],
   });
+  const t = useTranslations('users');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,43 +61,34 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
     mode: 'onSubmit', // Only validate on submit
   });
 
-  // Reset form with user data when user changes or dialog opens
-  useEffect(() => {
-    if (user) {
-      form.reset({
-        name: user.name,
-        email: user.email,
-      });
-    }
-  }, [form, user]);
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!user) return;
-
     try {
-      await updateUser({
+      await createUser({
         variables: {
-          id: user.id,
           input: values,
         },
       });
-      toast.success('User updated successfully', {
-        description: `${values.name}'s information has been updated`,
+      form.reset();
+      setOpen(false);
+      toast.success(t('notifications.createSuccess'), {
+        description: `${values.name} has been added to the system`,
       });
-      onOpenChange(false);
     } catch (error) {
-      console.error('Error updating user:', error);
-      toast.error('Failed to update user', {
+      console.error('Error creating user:', error);
+      toast.error(t('notifications.createError'), {
         description: error instanceof Error ? error.message : 'An unknown error occurred',
       });
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">{t('actions.create')}</Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle>{t('actions.create')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -107,9 +97,10 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t('form.name.label')}</FormLabel>
                   <FormControl>
                     <Input
+                      placeholder={t('form.name.placeholder')}
                       {...field}
                       className={cn(
                         form.formState.errors.name &&
@@ -126,9 +117,10 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('form.email.label')}</FormLabel>
                   <FormControl>
                     <Input
+                      placeholder={t('form.email.placeholder')}
                       type="email"
                       {...field}
                       className={cn(
@@ -141,7 +133,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 </FormItem>
               )}
             />
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">{t('form.submit')}</Button>
           </form>
         </Form>
       </DialogContent>

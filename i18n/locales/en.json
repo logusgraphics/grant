@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "User Management",
+    "description": "A modern user management system built with Next.js, Apollo, and shadcn/ui"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "switchTo": "Switch to {theme} theme"
+  },
+  "users": {
+    "title": "Users",
+    "noUsers": {
+      "title": "No users yet",
+      "description": "Get started by creating a new user"
+    },
+    "actions": {
+      "edit": "Edit user",
+      "delete": "Delete user",
+      "create": "Create user"
+    },
+    "form": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Enter your name"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email"
+      },
+      "submit": "Save",
+      "cancel": "Cancel"
+    },
+    "deleteDialog": {
+      "title": "Are you sure?",
+      "description": "This will permanently delete {name}'s account and remove all their data from our servers.",
+      "confirm": "Delete Account",
+      "cancel": "Cancel"
+    },
+    "notifications": {
+      "createSuccess": "User created successfully",
+      "createError": "Failed to create user",
+      "updateSuccess": "User updated successfully",
+      "updateError": "Failed to update user",
+      "deleteSuccess": "User deleted successfully",
+      "deleteError": "Failed to delete user"
+    }
+  }
+}

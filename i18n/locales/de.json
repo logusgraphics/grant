@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "Benutzerverwaltung",
+    "description": "Ein modernes Benutzerverwaltungssystem entwickelt mit Next.js, Apollo und shadcn/ui"
+  },
+  "theme": {
+    "toggle": "Design umschalten",
+    "switchTo": "Zum {theme} Design wechseln"
+  },
+  "users": {
+    "title": "Benutzer",
+    "noUsers": {
+      "title": "Noch keine Benutzer",
+      "description": "Erstellen Sie Ihren ersten Benutzer"
+    },
+    "actions": {
+      "edit": "Benutzer bearbeiten",
+      "delete": "Benutzer löschen",
+      "create": "Benutzer erstellen"
+    },
+    "form": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Geben Sie Ihren Namen ein"
+      },
+      "email": {
+        "label": "E-Mail",
+        "placeholder": "Geben Sie Ihre E-Mail ein"
+      },
+      "submit": "Speichern",
+      "cancel": "Abbrechen"
+    },
+    "deleteDialog": {
+      "title": "Sind Sie sicher?",
+      "description": "Dies wird das Konto von {name} dauerhaft löschen und alle Daten von unseren Servern entfernen.",
+      "confirm": "Konto löschen",
+      "cancel": "Abbrechen"
+    },
+    "notifications": {
+      "createSuccess": "Benutzer erfolgreich erstellt",
+      "createError": "Fehler beim Erstellen des Benutzers",
+      "updateSuccess": "Benutzer erfolgreich aktualisiert",
+      "updateError": "Fehler beim Aktualisieren des Benutzers",
+      "deleteSuccess": "Benutzer erfolgreich gelöscht",
+      "deleteError": "Fehler beim Löschen des Benutzers"
+    }
+  }
+}

@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { EditUserDialog } from './EditUserDialog';
 import { CreateUserDialog } from './CreateUserDialog';
+import { useTranslations } from 'next-intl';
 
 export const GET_USERS = gql`
   query GetUsers {
@@ -58,6 +59,7 @@ export function UserList() {
   const [userToEdit, setUserToEdit] = useState<{ id: string; name: string; email: string } | null>(
     null
   );
+  const t = useTranslations('users');
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -69,12 +71,12 @@ export function UserList() {
       await deleteUser({
         variables: { id: userToDelete.id },
       });
-      toast.success('User deleted successfully', {
+      toast.success(t('notifications.deleteSuccess'), {
         description: `${userToDelete.name} has been removed from the system`,
       });
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error('Failed to delete user', {
+      toast.error(t('notifications.deleteError'), {
         description: error instanceof Error ? error.message : 'An unknown error occurred',
       });
     } finally {
@@ -89,8 +91,8 @@ export function UserList() {
           {data.users.length === 0 ? (
             <div className="text-center py-10 border-2 border-dashed rounded-lg">
               <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">No users yet</h3>
-              <p className="mt-1 text-sm text-gray-500">Get started by creating a new user.</p>
+              <h3 className="mt-4 text-lg font-semibold text-gray-900">{t('noUsers.title')}</h3>
+              <p className="mt-1 text-sm text-gray-500">{t('noUsers.description')}</p>
               <div className="mt-6">
                 <CreateUserDialog />
               </div>
@@ -115,7 +117,7 @@ export function UserList() {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Edit user</p>
+                        <p>{t('actions.edit')}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -132,7 +134,7 @@ export function UserList() {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Delete user</p>
+                        <p>{t('actions.delete')}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -153,21 +155,24 @@ export function UserList() {
         </div>
       </div>
 
-      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {userToDelete?.name}&apos;s account and remove all their
-              data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete Account</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {userToDelete && (
+        <AlertDialog open={true} onOpenChange={(open) => !open && setUserToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('deleteDialog.description', { name: userToDelete.name })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>
+                {t('deleteDialog.confirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       <EditUserDialog
         user={userToEdit}
