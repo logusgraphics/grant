@@ -1,10 +1,8 @@
 'use client';
 
 import { gql, useQuery, useMutation } from '@apollo/client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { X, Pencil, UserPlus } from 'lucide-react';
+import { X, Pencil, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,13 +18,18 @@ import { toast } from 'sonner';
 import { EditUserDialog } from './EditUserDialog';
 import { CreateUserDialog } from './CreateUserDialog';
 import { useTranslations } from 'next-intl';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const GET_USERS = gql`
-  query GetUsers {
-    users {
-      id
-      name
-      email
+  query GetUsers($page: Int!, $limit: Int!) {
+    users(page: $page, limit: $limit) {
+      users {
+        id
+        name
+        email
+      }
+      totalCount
+      hasNextPage
     }
   }
 `;
@@ -41,19 +44,23 @@ const DELETE_USER = gql`
   }
 `;
 
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 export function UserList() {
-  const { loading, error, data } = useQuery(GET_USERS);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const { loading, error, data } = useQuery(GET_USERS, {
+    variables: { page, limit },
+  });
   const [deleteUser] = useMutation(DELETE_USER, {
-    refetchQueries: [{ query: GET_USERS }],
+    refetchQueries: [
+      {
+        query: GET_USERS,
+        variables: {
+          page: page,
+          limit: 10,
+        },
+      },
+    ],
   });
   const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
   const [userToEdit, setUserToEdit] = useState<{ id: string; name: string; email: string } | null>(
@@ -63,6 +70,9 @@ export function UserList() {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
+
+  const { users, totalCount, hasNextPage } = data.users;
+  const totalPages = Math.ceil(totalCount / limit);
 
   const handleDelete = async () => {
     if (!userToDelete) return;
@@ -86,71 +96,98 @@ export function UserList() {
 
   return (
     <>
-      <div className="max-w-2xl mx-auto p-4">
+      <div className="max-w-5xl mx-auto p-4">
         <div className="space-y-4">
-          {data.users.length === 0 ? (
+          {users.length === 0 ? (
             <div className="text-center py-10 border-2 border-dashed rounded-lg">
               <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 text-lg font-semibold text-gray-900">{t('noUsers.title')}</h3>
               <p className="mt-1 text-sm text-gray-500">{t('noUsers.description')}</p>
               <div className="mt-6">
-                <CreateUserDialog />
+                <CreateUserDialog currentPage={page} />
               </div>
             </div>
           ) : (
-            data.users.map((user: { id: string; name: string; email: string }) => (
-              <div
-                key={user.id}
-                className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow relative"
-              >
-                <div className="absolute right-2 top-2 flex gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-gray-400 hover:text-gray-600"
-                          onClick={() => setUserToEdit(user)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t('actions.edit')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-gray-400 hover:text-gray-600"
-                          onClick={() => setUserToDelete({ id: user.id, name: user.name })}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t('actions.delete')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Avatar>
-                    <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} />
-                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold">{user.name}</h3>
-                    <p className="text-gray-600">{user.email}</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-6">
+                {users.map((user: { id: string; name: string; email: string }) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 rounded-lg shadow"
+                  >
+                    <div className="flex items-center space-x-4 min-w-0">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg">
+                        {user.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-base truncate">{user.name}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 ml-4">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-gray-400 hover:text-gray-600"
+                              onClick={() => setUserToEdit(user)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t('actions.edit')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-gray-400 hover:text-gray-600"
+                              onClick={() => setUserToDelete({ id: user.id, name: user.name })}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t('actions.delete')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))
+
+              <div className="flex items-center justify-between mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <span className="text-sm text-gray-500">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={!hasNextPage}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>

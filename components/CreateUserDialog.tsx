@@ -1,14 +1,25 @@
 'use client';
 
-import { gql, useMutation } from '@apollo/client';
+import { useState } from 'react';
+import { useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
+import { GET_USERS } from './UserList';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
   FormControl,
@@ -17,15 +28,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { GET_USERS } from './UserList';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
+import { UserPlus } from 'lucide-react';
+
+const createUserSchema = z.object({
+  name: z.string().min(3, 'Name must be at least 3 characters'),
+  email: z.string().email('Please enter a valid email address'),
+});
+
+type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
 const CREATE_USER = gql`
   mutation CreateUser($input: CreateUserInput!) {
@@ -37,42 +47,40 @@ const CREATE_USER = gql`
   }
 `;
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(3, 'Name must be at least 3 characters')
-    .regex(/^[a-zA-Z\s]*$/, 'Name can only contain letters and spaces'),
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-});
+interface CreateUserDialogProps {
+  currentPage: number;
+}
 
-export function CreateUserDialog() {
+export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
-  const [createUser] = useMutation(CREATE_USER, {
-    refetchQueries: [{ query: GET_USERS }],
-  });
   const t = useTranslations('users');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<CreateUserFormValues>({
+    resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: '',
       email: '',
     },
-    mode: 'onSubmit', // Only validate on submit
+    mode: 'onChange',
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const [createUser] = useMutation(CREATE_USER, {
+    refetchQueries: [{ query: GET_USERS, variables: { page: currentPage, limit: 10 } }],
+  });
+
+  const onSubmit = async (values: CreateUserFormValues) => {
     try {
       await createUser({
         variables: {
-          input: values,
+          input: {
+            name: values.name,
+            email: values.email,
+          },
         },
       });
-      form.reset();
+      toast.success(t('notifications.createSuccess'));
       setOpen(false);
-      toast.success(t('notifications.createSuccess'), {
-        description: `${values.name} has been added to the system`,
-      });
+      form.reset();
     } catch (error) {
       console.error('Error creating user:', error);
       toast.error(t('notifications.createError'), {
@@ -84,11 +92,15 @@ export function CreateUserDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">{t('actions.create')}</Button>
+        <Button>
+          <UserPlus className="h-4 w-4 mr-2" />
+          {t('actions.create')}
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('actions.create')}</DialogTitle>
+          <DialogTitle>{t('createDialog.title')}</DialogTitle>
+          <DialogDescription>{t('createDialog.description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -97,18 +109,19 @@ export function CreateUserDialog() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('form.name.label')}</FormLabel>
+                  <FormLabel>{t('form.name')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t('form.name.placeholder')}
+                      placeholder={t('form.name')}
                       {...field}
-                      className={cn(
-                        form.formState.errors.name &&
-                          'border-destructive focus-visible:ring-destructive'
-                      )}
+                      className={form.formState.errors.name ? 'border-red-500' : ''}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.name && (
+                    <FormMessage className="text-red-500 text-sm mt-1">
+                      {form.formState.errors.name.message}
+                    </FormMessage>
+                  )}
                 </FormItem>
               )}
             />
@@ -117,23 +130,26 @@ export function CreateUserDialog() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('form.email.label')}</FormLabel>
+                  <FormLabel>{t('form.email')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t('form.email.placeholder')}
                       type="email"
+                      placeholder={t('form.email')}
                       {...field}
-                      className={cn(
-                        form.formState.errors.email &&
-                          'border-destructive focus-visible:ring-destructive'
-                      )}
+                      className={form.formState.errors.email ? 'border-red-500' : ''}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.email && (
+                    <FormMessage className="text-red-500 text-sm mt-1">
+                      {form.formState.errors.email.message}
+                    </FormMessage>
+                  )}
                 </FormItem>
               )}
             />
-            <Button type="submit">{t('form.submit')}</Button>
+            <DialogFooter>
+              <Button type="submit">{t('createDialog.confirm')}</Button>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

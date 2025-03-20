@@ -1,22 +1,40 @@
 {
-  "app": {
-    "title": "User Management",
-    "description": "A modern user management system built with Next.js, Apollo, and shadcn/ui"
+  "common": {
+    "app": {
+      "title": "Customer Platform",
+      "description": "A modern user management system"
+    },
+    "auth": {
+      "login": "Login",
+      "logout": "Logout",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "errors": {
+        "invalidCredentials": "Invalid email or password"
+      }
+    },
+    "navigation": {
+      "home": "Home",
+      "dashboard": "Dashboard"
+    }
+  },
+  "dashboard": {
+    "navigation": {
+      "users": "Users"
+    }
   },
   "theme": {
     "toggle": "Toggle theme",
-    "switchTo": "Switch to {theme} theme"
+    "switchTo": "Switch to {theme} theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   },
-  "users": {
-    "title": "Users",
-    "noUsers": {
-      "title": "No users yet",
-      "description": "Get started by creating a new user"
-    },
-    "actions": {
-      "edit": "Edit user",
-      "delete": "Delete user",
-      "create": "Create user"
+  "auth": {
+    "welcome": {
+      "title": "Welcome to our platform",
+      "description": "Manage your users and data with our powerful and intuitive interface."
     },
     "form": {
       "name": {
@@ -27,21 +45,81 @@
         "label": "Email",
         "placeholder": "Enter your email"
       },
-      "submit": "Save",
-      "cancel": "Cancel"
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password"
+      },
+      "confirmPassword": {
+        "label": "Confirm Password",
+        "placeholder": "Confirm your password"
+      }
+    },
+    "login": {
+      "title": "Login",
+      "description": "Welcome back! Please enter your credentials to continue.",
+      "submit": "Sign in",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "register": "Register"
+    },
+    "register": {
+      "title": "Create an account",
+      "description": "Fill in your details to get started with our platform",
+      "submit": "Sign Up",
+      "haveAccount": "Already have an account?",
+      "login": "Sign in"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "submit": "Send Reset Link",
+      "rememberPassword": "Remember your password?",
+      "backToLogin": "Back to login"
+    },
+    "validation": {
+      "email": "Please enter a valid email address",
+      "password": "Password must be at least 8 characters",
+      "name": "Name must be at least 2 characters",
+      "passwordMatch": "Passwords don't match"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "noUsers": {
+      "title": "No users found",
+      "description": "Get started by creating your first user"
+    },
+    "actions": {
+      "create": "Create User",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "form": {
+      "name": "Name",
+      "email": "Email"
+    },
+    "createDialog": {
+      "title": "Create New User",
+      "description": "Add a new user to the system",
+      "confirm": "Create User"
+    },
+    "editDialog": {
+      "title": "Edit User",
+      "description": "Update user information",
+      "confirm": "Save Changes"
     },
     "deleteDialog": {
-      "title": "Are you sure?",
-      "description": "This will permanently delete {name}'s account and remove all their data from our servers.",
-      "confirm": "Delete Account",
-      "cancel": "Cancel"
+      "title": "Delete User",
+      "description": "Are you sure you want to delete {name}?",
+      "cancel": "Cancel",
+      "confirm": "Delete"
     },
     "notifications": {
-      "createSuccess": "User created successfully",
+      "createSuccess": "User created",
       "createError": "Failed to create user",
-      "updateSuccess": "User updated successfully",
+      "updateSuccess": "User updated",
       "updateError": "Failed to update user",
-      "deleteSuccess": "User deleted successfully",
+      "deleteSuccess": "User deleted",
       "deleteError": "Failed to delete user"
     }
   }

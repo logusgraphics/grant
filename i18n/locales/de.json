@@ -1,22 +1,40 @@
 {
-  "app": {
-    "title": "Benutzerverwaltung",
-    "description": "Ein modernes Benutzerverwaltungssystem entwickelt mit Next.js, Apollo und shadcn/ui"
+  "common": {
+    "app": {
+      "title": "Kundenplattform",
+      "description": "Ein modernes Benutzerverwaltungssystem"
+    },
+    "auth": {
+      "login": "Anmelden",
+      "logout": "Abmelden",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "submit": "Anmelden",
+      "errors": {
+        "invalidCredentials": "Ungültige E-Mail oder Passwort"
+      }
+    },
+    "navigation": {
+      "home": "Startseite",
+      "dashboard": "Dashboard"
+    }
+  },
+  "dashboard": {
+    "navigation": {
+      "users": "Benutzer"
+    }
   },
   "theme": {
     "toggle": "Design umschalten",
-    "switchTo": "Zum {theme} Design wechseln"
+    "switchTo": "Zum {theme} Design wechseln",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System"
   },
-  "users": {
-    "title": "Benutzer",
-    "noUsers": {
-      "title": "Noch keine Benutzer",
-      "description": "Erstellen Sie Ihren ersten Benutzer"
-    },
-    "actions": {
-      "edit": "Benutzer bearbeiten",
-      "delete": "Benutzer löschen",
-      "create": "Benutzer erstellen"
+  "auth": {
+    "welcome": {
+      "title": "Willkommen auf unserer Plattform",
+      "description": "Verwalten Sie Ihre Benutzer und Daten mit unserer leistungsstarken und intuitiven Oberfläche."
     },
     "form": {
       "name": {
@@ -27,22 +45,82 @@
         "label": "E-Mail",
         "placeholder": "Geben Sie Ihre E-Mail ein"
       },
-      "submit": "Speichern",
-      "cancel": "Abbrechen"
+      "password": {
+        "label": "Passwort",
+        "placeholder": "Geben Sie Ihr Passwort ein"
+      },
+      "confirmPassword": {
+        "label": "Passwort bestätigen",
+        "placeholder": "Bestätigen Sie Ihr Passwort"
+      }
+    },
+    "login": {
+      "title": "Anmelden",
+      "description": "Willkommen zurück! Bitte geben Sie Ihre Anmeldedaten ein, um fortzufahren.",
+      "submit": "Anmelden",
+      "forgotPassword": "Passwort vergessen?",
+      "noAccount": "Noch kein Konto?",
+      "register": "Registrieren"
+    },
+    "register": {
+      "title": "Konto erstellen",
+      "description": "Füllen Sie Ihre Daten aus, um mit unserer Plattform zu beginnen",
+      "submit": "Registrieren",
+      "haveAccount": "Bereits ein Konto?",
+      "login": "Anmelden"
+    },
+    "forgotPassword": {
+      "title": "Passwort vergessen",
+      "description": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
+      "submit": "Link senden",
+      "rememberPassword": "Passwort wieder eingefallen?",
+      "backToLogin": "Zurück zur Anmeldung"
+    },
+    "validation": {
+      "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+      "password": "Das Passwort muss mindestens 8 Zeichen lang sein",
+      "name": "Der Name muss mindestens 2 Zeichen lang sein",
+      "passwordMatch": "Die Passwörter stimmen nicht überein"
+    }
+  },
+  "users": {
+    "title": "Benutzerverwaltung",
+    "noUsers": {
+      "title": "Keine Benutzer gefunden",
+      "description": "Erstellen Sie Ihren ersten Benutzer"
+    },
+    "actions": {
+      "create": "Benutzer erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
+    },
+    "form": {
+      "name": "Name",
+      "email": "E-Mail"
+    },
+    "createDialog": {
+      "title": "Neuen Benutzer erstellen",
+      "description": "Fügen Sie einen neuen Benutzer zum System hinzu",
+      "confirm": "Benutzer erstellen"
+    },
+    "editDialog": {
+      "title": "Benutzer bearbeiten",
+      "description": "Aktualisieren Sie die Benutzerinformationen",
+      "confirm": "Änderungen speichern"
     },
     "deleteDialog": {
-      "title": "Sind Sie sicher?",
-      "description": "Dies wird das Konto von {name} dauerhaft löschen und alle Daten von unseren Servern entfernen.",
-      "confirm": "Konto löschen",
-      "cancel": "Abbrechen"
+      "title": "Benutzer löschen",
+      "description": "Sind Sie sicher, dass Sie {name} löschen möchten?",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen"
     },
     "notifications": {
-      "createSuccess": "Benutzer erfolgreich erstellt",
-      "createError": "Fehler beim Erstellen des Benutzers",
-      "updateSuccess": "Benutzer erfolgreich aktualisiert",
-      "updateError": "Fehler beim Aktualisieren des Benutzers",
-      "deleteSuccess": "Benutzer erfolgreich gelöscht",
-      "deleteError": "Fehler beim Löschen des Benutzers"
+      "createSuccess": "Benutzer erstellt",
+      "createError": "Benutzer konnte nicht erstellt werden",
+      "updateSuccess": "Benutzer aktualisiert",
+      "updateError": "Benutzer konnte nicht aktualisiert werden",
+      "deleteSuccess": "Benutzer gelöscht",
+      "deleteError": "Benutzer konnte nicht gelöscht werden"
     }
   }
 }

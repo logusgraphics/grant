@@ -1,4 +1,5 @@
 'use client';
+
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
 import { getClient } from '@/lib/apollo-client';

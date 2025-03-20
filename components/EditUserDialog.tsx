@@ -1,8 +1,23 @@
 'use client';
 
-import { gql, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
+import { GET_USERS } from './UserList';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
   FormControl,
@@ -11,15 +26,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { GET_USERS } from './UserList';
-import { toast } from 'sonner';
 import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
+
+const editUserSchema = z.object({
+  name: z.string().min(3, 'Name must be at least 3 characters'),
+  email: z.string().email('Please enter a valid email address'),
+});
+
+type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 const UPDATE_USER = gql`
   mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
@@ -31,40 +45,24 @@ const UPDATE_USER = gql`
   }
 `;
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(3, 'Name must be at least 3 characters')
-    .regex(/^[a-zA-Z\s]*$/, 'Name can only contain letters and spaces'),
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-});
-
 interface EditUserDialogProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
+  user: { id: string; name: string; email: string } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
-  const [updateUser] = useMutation(UPDATE_USER, {
-    refetchQueries: [{ query: GET_USERS }],
-  });
   const t = useTranslations('users');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<EditUserFormValues>({
+    resolver: zodResolver(editUserSchema),
     defaultValues: {
       name: '',
       email: '',
     },
-    mode: 'onSubmit', // Only validate on submit
+    mode: 'onChange',
   });
 
-  // Reset form with user data when user changes or dialog opens
   useEffect(() => {
     if (user) {
       form.reset({
@@ -72,21 +70,26 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         email: user.email,
       });
     }
-  }, [form, user]);
+  }, [user, form]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const [updateUser] = useMutation(UPDATE_USER, {
+    refetchQueries: [{ query: GET_USERS, variables: { page: 1, limit: 10 } }],
+  });
+
+  const onSubmit = async (values: EditUserFormValues) => {
     if (!user) return;
 
     try {
       await updateUser({
         variables: {
           id: user.id,
-          input: values,
+          input: {
+            name: values.name,
+            email: values.email,
+          },
         },
       });
-      toast.success(t('notifications.updateSuccess'), {
-        description: `${values.name}'s information has been updated`,
-      });
+      toast.success(t('notifications.updateSuccess'));
       onOpenChange(false);
     } catch (error) {
       console.error('Error updating user:', error);
@@ -98,9 +101,10 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('actions.edit')}</DialogTitle>
+          <DialogTitle>{t('editDialog.title')}</DialogTitle>
+          <DialogDescription>{t('editDialog.description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -109,17 +113,19 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('form.name.label')}</FormLabel>
+                  <FormLabel>{t('form.name')}</FormLabel>
                   <FormControl>
                     <Input
+                      placeholder={t('form.name')}
                       {...field}
-                      className={cn(
-                        form.formState.errors.name &&
-                          'border-destructive focus-visible:ring-destructive'
-                      )}
+                      className={form.formState.errors.name ? 'border-red-500' : ''}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.name && (
+                    <FormMessage className="text-red-500 text-sm mt-1">
+                      {form.formState.errors.name.message}
+                    </FormMessage>
+                  )}
                 </FormItem>
               )}
             />
@@ -128,22 +134,26 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('form.email.label')}</FormLabel>
+                  <FormLabel>{t('form.email')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
+                      placeholder={t('form.email')}
                       {...field}
-                      className={cn(
-                        form.formState.errors.email &&
-                          'border-destructive focus-visible:ring-destructive'
-                      )}
+                      className={form.formState.errors.email ? 'border-red-500' : ''}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.email && (
+                    <FormMessage className="text-red-500 text-sm mt-1">
+                      {form.formState.errors.email.message}
+                    </FormMessage>
+                  )}
                 </FormItem>
               )}
             />
-            <Button type="submit">{t('form.submit')}</Button>
+            <DialogFooter>
+              <Button type="submit">{t('editDialog.confirm')}</Button>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

@@ -1,27 +1,23 @@
-import { setRequestLocale } from 'next-intl/server';
-import { routing } from '@/i18n/routing';
-import { hasLocale } from 'next-intl';
-import { notFound } from 'next/navigation';
+import { MessagesProvider } from '@/components/providers/MessagesProvider';
+import { Header } from '@/components/Header';
+import { Toaster } from 'sonner';
 
-type Props = {
+interface RootLayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
-};
-
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
 }
 
-export default async function LocaleLayout({ children, params }: Props) {
+export default async function RootLayout({ children, params }: RootLayoutProps) {
   const { locale } = await params;
+  const messages = (await import(`@/i18n/locales/${locale}.json`)).default;
 
-  // Validate that the incoming locale is valid
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
-
-  // Enable static rendering
-  setRequestLocale(locale);
-
-  return children;
+  return (
+    <MessagesProvider locale={locale} messages={messages}>
+      <div className="relative flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1">{children}</main>
+      </div>
+      <Toaster />
+    </MessagesProvider>
+  );
 }
