@@ -48,6 +48,10 @@ const users: User[] = [
   { id: '2', name: 'Jane Doe', email: 'jane@example.com' },
 ];
 
+function generateUniqueId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
 export const resolvers = {
   Query: {
     hello: () => 'Hello from Apollo Server!',
@@ -56,7 +60,7 @@ export const resolvers = {
   Mutation: {
     createUser: (_: unknown, { input }: { input: CreateUserInput }): User => {
       const newUser = {
-        id: String(users.length + 1),
+        id: generateUniqueId(),
         ...input,
       };
       users.push(newUser);

@@ -18,6 +18,7 @@ import * as z from 'zod';
 import { GET_USERS } from './UserList';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 const UPDATE_USER = gql`
   mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
@@ -30,8 +31,11 @@ const UPDATE_USER = gql`
 `;
 
 const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  name: z
+    .string()
+    .min(3, 'Name must be at least 3 characters')
+    .regex(/^[a-zA-Z\s]*$/, 'Name can only contain letters and spaces'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
 });
 
 interface EditUserDialogProps {
@@ -55,6 +59,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       name: '',
       email: '',
     },
+    mode: 'onSubmit', // Only validate on submit
   });
 
   // Reset form with user data when user changes or dialog opens
@@ -104,7 +109,13 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      {...field}
+                      className={cn(
+                        form.formState.errors.name &&
+                          'border-destructive focus-visible:ring-destructive'
+                      )}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,7 +128,14 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} />
+                    <Input
+                      type="email"
+                      {...field}
+                      className={cn(
+                        form.formState.errors.email &&
+                          'border-destructive focus-visible:ring-destructive'
+                      )}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

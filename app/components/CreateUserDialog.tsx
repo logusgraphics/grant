@@ -24,6 +24,7 @@ import * as z from 'zod';
 import { GET_USERS } from './UserList';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const CREATE_USER = gql`
   mutation CreateUser($input: CreateUserInput!) {
@@ -36,8 +37,11 @@ const CREATE_USER = gql`
 `;
 
 const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  name: z
+    .string()
+    .min(3, 'Name must be at least 3 characters')
+    .regex(/^[a-zA-Z\s]*$/, 'Name can only contain letters and spaces'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
 });
 
 export function CreateUserDialog() {
@@ -52,6 +56,7 @@ export function CreateUserDialog() {
       name: '',
       email: '',
     },
+    mode: 'onSubmit', // Only validate on submit
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -92,7 +97,14 @@ export function CreateUserDialog() {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input
+                      placeholder="John Doe"
+                      {...field}
+                      className={cn(
+                        form.formState.errors.name &&
+                          'border-destructive focus-visible:ring-destructive'
+                      )}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -105,7 +117,15 @@ export function CreateUserDialog() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="john@example.com" type="email" {...field} />
+                    <Input
+                      placeholder="john@example.com"
+                      type="email"
+                      {...field}
+                      className={cn(
+                        form.formState.errors.email &&
+                          'border-destructive focus-visible:ring-destructive'
+                      )}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
