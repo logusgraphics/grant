@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 import { setStoredToken } from '@/lib/auth';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -41,6 +42,7 @@ export default function LoginPage() {
   const params = useParams();
   const locale = params.locale as string;
   const from = searchParams.get('from') || '/dashboard';
+  usePageTitle('auth.login');
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

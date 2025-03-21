@@ -1,11 +1,19 @@
+'use client';
+
 import { redirect } from 'next/navigation';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { use } from 'react';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
-export default function DashboardPage({ params: { locale } }: PageProps) {
+export default function DashboardPage({ params }: PageProps) {
+  usePageTitle('dashboard');
+  const { locale } = use(params);
+
+  // Redirect to users page for now
   redirect(`/${locale}/dashboard/users`);
 }

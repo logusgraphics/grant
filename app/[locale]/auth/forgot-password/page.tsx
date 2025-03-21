@@ -15,9 +15,11 @@ import { Link } from '@/i18n/navigation';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
+  usePageTitle('auth.forgotPassword');
 
   const formSchema = z.object({
     email: z.string().email(t('validation.email')),

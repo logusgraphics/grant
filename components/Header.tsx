@@ -5,7 +5,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { NavLink } from './NavLink';
-import { Zap, Menu, X, LogOut, Globe, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon, Globe, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/lib/auth';
 import { useState, useRef } from 'react';
@@ -66,8 +66,8 @@ export function Header() {
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500">
-              <Zap className="h-4 w-4 text-white fill-current" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-400">
+              <Shield className="h-4 w-4 text-white fill-current" />
             </div>
             <span className="font-bold uppercase tracking-tight">{title[0]}</span>
             <span className="font-normal uppercase tracking-wider">{title[1]}</span>

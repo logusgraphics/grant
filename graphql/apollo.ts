@@ -1,11 +1,10 @@
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
-import { typeDefs, resolvers } from './schema';
+import { schema } from '@/graphql/schema';
 
 // Create the Apollo Server instance
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  schema,
 });
 
 // Export the handler for the API route

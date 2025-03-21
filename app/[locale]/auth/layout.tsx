@@ -1,14 +1,13 @@
-import { getTranslations } from 'next-intl/server';
+'use client';
+
+import { useTranslations } from 'next-intl';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
-  params: Promise<{
-    locale: string;
-  }>;
 }
 
-export default async function AuthLayout({ children }: AuthLayoutProps) {
-  const t = await getTranslations('auth');
+export default function AuthLayout({ children }: AuthLayoutProps) {
+  const t = useTranslations('auth');
 
   return (
     <div className="min-h-[calc(100vh-4rem)] grid lg:grid-cols-2">

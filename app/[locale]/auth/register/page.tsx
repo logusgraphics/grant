@@ -15,9 +15,11 @@ import { Link } from '@/i18n/navigation';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function RegisterPage() {
   const t = useTranslations('auth');
+  usePageTitle('auth.register');
 
   const formSchema = z
     .object({

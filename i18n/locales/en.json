@@ -42,8 +42,8 @@
   },
   "auth": {
     "welcome": {
-      "title": "Welcome to our platform",
-      "description": "Manage your users and data with our powerful and intuitive interface."
+      "title": "Welcome to Your Insurance Portal",
+      "description": "Manage your insurance policies, submit claims, and update your information all in one place. Access your coverage details and get support whenever you need it."
     },
     "form": {
       "name": {

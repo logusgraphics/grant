@@ -42,8 +42,8 @@
   },
   "auth": {
     "welcome": {
-      "title": "Willkommen auf unserer Plattform",
-      "description": "Verwalten Sie Ihre Benutzer und Daten mit unserer leistungsstarken und intuitiven Oberfläche."
+      "title": "Willkommen in Ihrem Versicherungsportal",
+      "description": "Verwalten Sie Ihre Versicherungspolicen, reichen Sie Schadensfälle ein und aktualisieren Sie Ihre Informationen an einem Ort. Greifen Sie auf Ihre Versicherungsdetails zu und erhalten Sie Unterstützung, wann immer Sie sie benötigen."
     },
     "form": {
       "name": {
