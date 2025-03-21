@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description:
     'Manage your insurance policies, submit claims, and update your information all in one place.',
   icons: {
-    icon: [{ url: '/favicon.svg?v=2', type: 'image/svg+xml' }, { url: '/favicon.svg?v=2' }],
+    icon: [{ url: '/favicon.svg?v=3', type: 'image/svg+xml' }, { url: '/favicon.svg?v=3' }],
   },
 };
 

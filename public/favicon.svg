@@ -7,6 +7,8 @@
     </linearGradient>
   </defs>
   <rect width="32" height="32" rx="16" fill="url(#gradient)"/>
-  <path d="M16 4L8 8V14C8 20.6274 11.3726 26.6274 16 28C20.6274 26.6274 24 20.6274 24 14V8L16 4Z" fill="white"/>
-  <path d="M16 4L8 8V14C8 20.6274 11.3726 26.6274 16 28C20.6274 26.6274 24 20.6274 24 14V8L16 4Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+  <g transform="translate(4, 4) scale(0.75)">
+    <path d="M16 4L8 8V14C8 20.6274 11.3726 26.6274 16 28C20.6274 26.6274 24 20.6274 24 14V8L16 4Z" fill="white"/>
+    <path d="M16 4L8 8V14C8 20.6274 11.3726 26.6274 16 28C20.6274 26.6274 24 20.6274 24 14V8L16 4Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+  </g>
 </svg> 
