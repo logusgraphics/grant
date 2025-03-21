@@ -1,0 +1,172 @@
+"""
+Represents a user role in the system.
+"""
+type Role {
+  """
+  Unique identifier for the role.
+  """
+  id: ID!
+  """
+  Human-readable label for the role.
+  """
+  label: String!
+}
+
+"""
+Represents a user in the system.
+"""
+type User {
+  """
+  Unique identifier for the user.
+  """
+  id: ID!
+  """
+  Full name of the user.
+  """
+  name: String!
+  """
+  Email address of the user.
+  """
+  email: String!
+  """
+  List of roles assigned to the user.
+  """
+  roles: [Role!]!
+}
+
+"""
+Represents a paginated list of users.
+"""
+type UserConnection {
+  """
+  List of users for the current page.
+  """
+  users: [User!]!
+  """
+  Total number of users across all pages.
+  """
+  totalCount: Int!
+  """
+  Whether there are more users available on the next page.
+  """
+  hasNextPage: Boolean!
+}
+
+"""
+Input type for creating a new user.
+"""
+input CreateUserInput {
+  """
+  Full name of the user.
+  """
+  name: String!
+  """
+  Email address of the user.
+  """
+  email: String!
+  """
+  List of role IDs to assign to the user.
+  """
+  roleIds: [ID!]
+}
+
+"""
+Input type for updating an existing user.
+"""
+input UpdateUserInput {
+  """
+  Full name of the user.
+  """
+  name: String!
+  """
+  Email address of the user.
+  """
+  email: String!
+  """
+  List of role IDs to assign to the user.
+  """
+  roleIds: [ID!]
+}
+
+"""
+Input type for user authentication.
+"""
+input LoginInput {
+  """
+  Email address of the user.
+  """
+  email: String!
+  """
+  Password of the user.
+  """
+  password: String!
+}
+
+"""
+Response type for successful authentication.
+"""
+type LoginResponse {
+  """
+  JWT token for authenticated requests.
+  """
+  token: String!
+}
+
+type Query {
+  """
+  Retrieves a paginated list of users.
+  """
+  users(
+    """
+    Page number (1-based).
+    """
+    page: Int!
+    """
+    Number of users per page.
+    """
+    limit: Int!
+  ): UserConnection!
+}
+
+type Mutation {
+  """
+  Creates a new user.
+  """
+  createUser(
+    """
+    User data for creation.
+    """
+    input: CreateUserInput!
+  ): User!
+  """
+  Updates an existing user.
+  """
+  updateUser(
+    """
+    ID of the user to update.
+    """
+    id: ID!
+    """
+    Updated user data.
+    """
+    input: UpdateUserInput!
+  ): User!
+  """
+  Deletes a user.
+  """
+  deleteUser(
+    """
+    ID of the user to delete.
+    """
+    id: ID!
+  ): User!
+  """
+  Authenticates a user and returns a JWT token.
+  """
+  login(
+    """
+    User credentials.
+    """
+    input: LoginInput!
+  ): LoginResponse!
+} 

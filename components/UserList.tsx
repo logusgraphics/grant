@@ -23,6 +23,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { EditUserDialog } from './EditUserDialog';
 import { CreateUserDialog } from './CreateUserDialog';
+import { UserCardSkeleton } from './UserCardSkeleton';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
@@ -156,7 +157,6 @@ export function UserList() {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const t = useTranslations('users');
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
   if (!data) return null;
 
@@ -197,7 +197,7 @@ export function UserList() {
     <>
       <div className="max-w-5xl mx-auto p-4">
         <div className="space-y-4">
-          {users.length === 0 ? (
+          {users.length === 0 && !loading ? (
             <div className="text-center py-10 border-2 border-dashed rounded-lg">
               <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 text-lg font-semibold text-gray-900">{t('noUsers.title')}</h3>
@@ -209,65 +209,71 @@ export function UserList() {
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {users.map((user: User) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
-                  >
-                    <div className="flex items-center space-x-4 min-w-0">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg">
-                        {user.name.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-medium text-sm md:text-base truncate">{user.name}</h3>
-                        <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {user.email}
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {user.roles.map((role) => (
-                            <span
-                              key={role.id}
-                              className={cn(
-                                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                                role.id === 'admin'
-                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                              )}
-                            >
-                              {t(`roles.${role.id}`)}
-                            </span>
-                          ))}
+                {loading
+                  ? Array.from({ length: limit }).map((_, index) => (
+                      <UserCardSkeleton key={index} />
+                    ))
+                  : users.map((user: User) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
+                      >
+                        <div className="flex items-center space-x-4 min-w-0">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg">
+                            {user.name.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-medium text-sm md:text-base truncate">
+                              {user.name}
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">
+                              {user.email}
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {user.roles.map((role) => (
+                                <span
+                                  key={role.id}
+                                  className={cn(
+                                    'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                                    role.id === 'admin'
+                                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                  )}
+                                >
+                                  {t(`roles.${role.id}`)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2 ml-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setUserToEdit(user)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                {t('actions.edit')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setUserToDelete({ id: user.id, name: user.name })}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                {t('actions.delete')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setUserToEdit(user)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            {t('actions.edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setUserToDelete({ id: user.id, name: user.name })}
-                            className="text-red-600 focus:text-red-600"
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            {t('actions.delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
+                    ))}
               </div>
 
               {totalCount > 0 && (
@@ -275,7 +281,7 @@ export function UserList() {
                   <Button
                     variant="outline"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
+                    disabled={page === 1 || loading}
                   >
                     <ChevronLeft className="h-4 w-4 mr-2" />
                     {t('pagination.previous')}
@@ -286,7 +292,7 @@ export function UserList() {
                   <Button
                     variant="outline"
                     onClick={() => setPage((p) => p + 1)}
-                    disabled={!hasNextPage}
+                    disabled={!hasNextPage || loading}
                   >
                     {t('pagination.next')}
                     <ChevronRight className="h-4 w-4 ml-2" />
