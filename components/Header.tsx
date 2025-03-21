@@ -11,6 +11,7 @@ import { logout } from '@/lib/auth';
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const t = useTranslations('common');
@@ -127,41 +128,46 @@ export function Header() {
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="absolute top-14 left-0 right-0 bg-background border-b md:hidden">
-            <div className="flex flex-col space-y-4 p-4">
-              <nav className="flex flex-col space-y-2">
-                {isAuthenticated && (
-                  <div className="block py-2">
-                    <NavLink href="/dashboard">{t('navigation.dashboard')}</NavLink>
+        <div
+          className={cn(
+            'absolute top-14 left-0 right-0 bg-background border-b md:hidden transition-all duration-200 ease-in-out',
+            isMobileMenuOpen
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 -translate-y-2 pointer-events-none'
+          )}
+        >
+          <div className="flex flex-col space-y-4 p-4">
+            <nav className="flex flex-col space-y-2">
+              {isAuthenticated && (
+                <div className="block py-2">
+                  <NavLink href="/dashboard">{t('navigation.dashboard')}</NavLink>
+                </div>
+              )}
+            </nav>
+            <div className="h-px bg-border" />
+            <div className="flex flex-col space-y-2">
+              <ThemeToggle ref={themeToggleRef} trigger={mobileThemeTrigger} />
+              <LanguageSwitcher ref={languageSwitcherRef} trigger={mobileLanguageTrigger} />
+            </div>
+            <div className="h-px bg-border" />
+            <div className="flex flex-col space-y-2">
+              {!isAuthenticated ? (
+                <div className="block py-2">
+                  <NavLink href="/auth/login">{t('auth.login')}</NavLink>
+                </div>
+              ) : (
+                <div className="block py-2">
+                  <div className="flex items-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    <NavLink href="/auth/login" onClick={handleLogout}>
+                      {t('auth.logout')}
+                    </NavLink>
                   </div>
-                )}
-              </nav>
-              <div className="h-px bg-border" />
-              <div className="flex flex-col space-y-2">
-                <ThemeToggle ref={themeToggleRef} trigger={mobileThemeTrigger} />
-                <LanguageSwitcher ref={languageSwitcherRef} trigger={mobileLanguageTrigger} />
-              </div>
-              <div className="h-px bg-border" />
-              <div className="flex flex-col space-y-2">
-                {!isAuthenticated ? (
-                  <div className="block py-2">
-                    <NavLink href="/auth/login">{t('auth.login')}</NavLink>
-                  </div>
-                ) : (
-                  <div className="block py-2">
-                    <div className="flex items-center gap-2">
-                      <LogOut className="h-4 w-4" />
-                      <NavLink href="/auth/login" onClick={handleLogout}>
-                        {t('auth.logout')}
-                      </NavLink>
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </header>
   );
