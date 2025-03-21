@@ -1,18 +1,4 @@
 {
   "extends": ["next/core-web-vitals", "prettier"],
-  "ignorePatterns": ["graphql/generated/**/*"],
-  "rules": {
-    "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-empty-object-type": "error"
-  },
-  "overrides": [
-    {
-      "files": ["graphql/generated/**/*"],
-      "rules": {
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/no-empty-object-type": "off"
-      }
-    }
-  ]
-} 
+  "ignorePatterns": ["graphql/generated/**/*"]
+}
