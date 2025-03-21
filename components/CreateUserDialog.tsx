@@ -51,6 +51,14 @@ interface CreateUserDialogProps {
   currentPage: number;
 }
 
+interface UsersQueryResult {
+  users: {
+    users: Array<{ id: string; name: string; email: string }>;
+    totalCount: number;
+    hasNextPage: boolean;
+  };
+}
+
 export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
   const t = useTranslations('users');
@@ -65,27 +73,67 @@ export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
   });
 
   const [createUser] = useMutation(CREATE_USER, {
-    refetchQueries: [{ query: GET_USERS, variables: { page: currentPage, limit: 10 } }],
+    update: (cache, { data: mutationData }) => {
+      if (!mutationData?.createUser) return;
+
+      // Get the current total count from the current page
+      const existingData = cache.readQuery<UsersQueryResult>({
+        query: GET_USERS,
+        variables: { page: currentPage, limit: 10 },
+      });
+
+      const newTotalCount = (existingData?.users.totalCount ?? 0) + 1;
+      const totalPages = Math.ceil(newTotalCount / 10);
+
+      // Update all existing pages in cache
+      for (let page = 1; page <= totalPages; page++) {
+        try {
+          const pageData = cache.readQuery<UsersQueryResult>({
+            query: GET_USERS,
+            variables: { page, limit: 10 },
+          });
+
+          if (pageData) {
+            // If this is the last page and it's not full, add the new user
+            const isLastPage = page === totalPages;
+            const currentPageUsers = pageData.users.users;
+            let updatedUsers = [...currentPageUsers];
+
+            if (isLastPage && currentPageUsers.length < 10) {
+              updatedUsers = [...currentPageUsers, mutationData.createUser];
+            }
+
+            cache.writeQuery<UsersQueryResult>({
+              query: GET_USERS,
+              variables: { page, limit: 10 },
+              data: {
+                users: {
+                  users: updatedUsers,
+                  totalCount: newTotalCount,
+                  hasNextPage: page < totalPages,
+                },
+              },
+            });
+          }
+        } catch {
+          // Skip if page data doesn't exist in cache
+        }
+      }
+    },
   });
 
   const onSubmit = async (values: CreateUserFormValues) => {
     try {
       await createUser({
         variables: {
-          input: {
-            name: values.name,
-            email: values.email,
-          },
+          input: values,
         },
       });
       toast.success(t('notifications.createSuccess'));
-      setOpen(false);
       form.reset();
+      setOpen(false);
     } catch (error) {
-      console.error('Error creating user:', error);
-      toast.error(t('notifications.createError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
+      toast.error(error instanceof Error ? error.message : t('notifications.createError'));
     }
   };
 
@@ -93,7 +141,7 @@ export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <UserPlus className="mr-2 h-4 w-4" />
           {t('actions.create')}
         </Button>
       </DialogTrigger>
@@ -111,17 +159,9 @@ export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
                 <FormItem>
                   <FormLabel>{t('form.name')}</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder={t('form.name')}
-                      {...field}
-                      className={form.formState.errors.name ? 'border-red-500' : ''}
-                    />
+                    <Input {...field} />
                   </FormControl>
-                  {form.formState.errors.name && (
-                    <FormMessage className="text-red-500 text-sm mt-1">
-                      {form.formState.errors.name.message}
-                    </FormMessage>
-                  )}
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -132,23 +172,18 @@ export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
                 <FormItem>
                   <FormLabel>{t('form.email')}</FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder={t('form.email')}
-                      {...field}
-                      className={form.formState.errors.email ? 'border-red-500' : ''}
-                    />
+                    <Input {...field} type="email" />
                   </FormControl>
-                  {form.formState.errors.email && (
-                    <FormMessage className="text-red-500 text-sm mt-1">
-                      {form.formState.errors.email.message}
-                    </FormMessage>
-                  )}
+                  <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">{t('createDialog.confirm')}</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting
+                  ? t('createDialog.confirm')
+                  : t('createDialog.confirm')}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

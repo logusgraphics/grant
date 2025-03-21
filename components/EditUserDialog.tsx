@@ -49,9 +49,10 @@ interface EditUserDialogProps {
   user: { id: string; name: string; email: string } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  currentPage: number;
 }
 
-export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUserDialogProps) {
   const t = useTranslations('users');
 
   const form = useForm<EditUserFormValues>({
@@ -73,7 +74,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
   }, [user, form]);
 
   const [updateUser] = useMutation(UPDATE_USER, {
-    refetchQueries: [{ query: GET_USERS, variables: { page: 1, limit: 10 } }],
+    refetchQueries: [{ query: GET_USERS, variables: { page: currentPage, limit: 10 } }],
   });
 
   const onSubmit = async (values: EditUserFormValues) => {

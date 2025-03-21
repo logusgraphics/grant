@@ -173,17 +173,17 @@ export function UserList() {
                   disabled={page === 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-2" />
-                  Previous
+                  {t('pagination.previous')}
                 </Button>
                 <span className="text-sm text-gray-500">
-                  Page {page} of {totalPages}
+                  {t('pagination.info', { current: page, total: totalPages })}
                 </span>
                 <Button
                   variant="outline"
                   onClick={() => setPage((p) => p + 1)}
                   disabled={!hasNextPage}
                 >
-                  Next
+                  {t('pagination.next')}
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
@@ -215,6 +215,7 @@ export function UserList() {
         user={userToEdit}
         open={!!userToEdit}
         onOpenChange={(open) => !open && setUserToEdit(null)}
+        currentPage={page}
       />
     </>
   );

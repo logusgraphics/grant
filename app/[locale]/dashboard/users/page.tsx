@@ -1,15 +1,17 @@
+'use client';
+
 import { UserList } from '@/components/UserList';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
-import { getTranslations } from 'next-intl/server';
+import { useTranslations } from 'next-intl';
 
-export default async function UsersPage() {
-  const t = await getTranslations();
+export default function UsersPage() {
+  const t = useTranslations('users');
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{t('users.title')}</h2>
-        <CreateUserDialog />
+        <h2 className="text-2xl font-bold">{t('title')}</h2>
+        <CreateUserDialog currentPage={1} />
       </div>
       <UserList />
     </div>
