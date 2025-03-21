@@ -52,15 +52,71 @@ export function UserList() {
     variables: { page, limit },
   });
   const [deleteUser] = useMutation(DELETE_USER, {
-    refetchQueries: [
-      {
+    update(cache, { data: { deleteUser } }) {
+      // Read the existing users query
+      const existingUsers = cache.readQuery<{
+        users: {
+          users: Array<{ id: string; name: string; email: string }>;
+          totalCount: number;
+          hasNextPage: boolean;
+        };
+      }>({
         query: GET_USERS,
-        variables: {
-          page: page,
-          limit: 10,
-        },
-      },
-    ],
+        variables: { page, limit },
+      });
+
+      if (existingUsers) {
+        const newTotalCount = existingUsers.users.totalCount - 1;
+        const newTotalPages = Math.ceil(newTotalCount / limit);
+        const newHasNextPage = page < newTotalPages;
+
+        // Update the current page
+        cache.writeQuery({
+          query: GET_USERS,
+          variables: { page, limit },
+          data: {
+            users: {
+              ...existingUsers.users,
+              totalCount: newTotalCount,
+              hasNextPage: newHasNextPage,
+              users: existingUsers.users.users.filter(
+                (user: { id: string }) => user.id !== deleteUser.id
+              ),
+            },
+          },
+        });
+
+        // Update all other pages to reflect the new total count
+        for (let p = 1; p <= newTotalPages; p++) {
+          if (p !== page) {
+            const otherPageData = cache.readQuery<{
+              users: {
+                users: Array<{ id: string; name: string; email: string }>;
+                totalCount: number;
+                hasNextPage: boolean;
+              };
+            }>({
+              query: GET_USERS,
+              variables: { page: p, limit },
+            });
+
+            if (otherPageData) {
+              cache.writeQuery({
+                query: GET_USERS,
+                variables: { page: p, limit },
+                data: {
+                  users: {
+                    ...otherPageData.users,
+                    totalCount: newTotalCount,
+                    hasNextPage: p < newTotalPages,
+                  },
+                },
+              });
+            }
+          }
+        }
+      }
+    },
   });
   const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
   const [userToEdit, setUserToEdit] = useState<{ id: string; name: string; email: string } | null>(
@@ -72,7 +128,7 @@ export function UserList() {
   if (error) return <div>Error: {error.message}</div>;
 
   const { users, totalCount, hasNextPage } = data.users;
-  const totalPages = Math.ceil(totalCount / limit);
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
   const handleDelete = async () => {
     if (!userToDelete) return;
@@ -84,6 +140,16 @@ export function UserList() {
       toast.success(t('notifications.deleteSuccess'), {
         description: `${userToDelete.name} has been removed from the system`,
       });
+
+      // If we're on a page greater than 1 and this was the last user on the current page,
+      // navigate to the previous page
+      if (page > 1 && users.length === 1) {
+        setPage(page - 1);
+      }
+      // If we're on the last page and it becomes empty, go back one page
+      else if (page === totalPages && users.length === 1) {
+        setPage(page - 1);
+      }
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error(t('notifications.deleteError'), {
@@ -166,27 +232,29 @@ export function UserList() {
                 ))}
               </div>
 
-              <div className="flex items-center justify-between mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  {t('pagination.previous')}
-                </Button>
-                <span className="text-sm text-gray-500">
-                  {t('pagination.info', { current: page, total: totalPages })}
-                </span>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={!hasNextPage}
-                >
-                  {t('pagination.next')}
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
+              {totalCount > 0 && (
+                <div className="flex items-center justify-between mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    {t('pagination.previous')}
+                  </Button>
+                  <span className="text-sm text-gray-500">
+                    {t('pagination.info', { current: page, total: totalPages })}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={!hasNextPage}
+                  >
+                    {t('pagination.next')}
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
