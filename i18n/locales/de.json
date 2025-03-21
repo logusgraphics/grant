@@ -17,6 +17,12 @@
     "navigation": {
       "home": "Startseite",
       "dashboard": "Dashboard"
+    },
+    "theme": {
+      "label": "Design"
+    },
+    "language": {
+      "label": "Sprache"
     }
   },
   "dashboard": {

@@ -17,6 +17,12 @@
     "navigation": {
       "home": "Home",
       "dashboard": "Dashboard"
+    },
+    "theme": {
+      "label": "Theme"
+    },
+    "language": {
+      "label": "Language"
     }
   },
   "dashboard": {
