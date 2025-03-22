@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { User } from '@/graphql/generated/types';
 import { CreateUserParams, CreateUserResult } from '../types';
-import { ROLES } from '@/graphql/users/constants';
+import { ROLES } from '@/shared/constants/roles';
 
 export async function createUser({ input }: CreateUserParams): Promise<CreateUserResult> {
   const newUser: User = {

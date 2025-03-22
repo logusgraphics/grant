@@ -1,10 +1,10 @@
 'use client';
 
-import { ThemeToggle } from './ThemeToggle';
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { ThemeToggle } from '@/components/settings/ThemeToggle';
+import { LanguageSwitcher } from '@/components/settings/LanguageSwitcher';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { NavLink } from './NavLink';
+import { NavLink } from '@/components/navigation/NavLink';
 import { Menu, X, Sun, Moon, Globe, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/lib/auth';

@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/form';
 import { UserPlus } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ROLES } from '@/shared/constants/roles';
 
 interface Role {
   id: string;
@@ -76,11 +77,6 @@ interface UsersQueryResult {
     hasNextPage: boolean;
   };
 }
-
-const AVAILABLE_ROLES: Role[] = [
-  { id: 'admin', label: 'roles.admin' },
-  { id: 'customer', label: 'roles.customer' },
-];
 
 export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
@@ -209,7 +205,7 @@ export function CreateUserDialog({ currentPage }: CreateUserDialogProps) {
                 <FormItem>
                   <FormLabel>{t('form.roles')}</FormLabel>
                   <div className="space-y-2">
-                    {AVAILABLE_ROLES.map((role) => (
+                    {ROLES.map((role) => (
                       <FormField
                         key={role.id}
                         control={form.control}

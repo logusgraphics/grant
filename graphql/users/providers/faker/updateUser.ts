@@ -1,6 +1,6 @@
 import { User } from '@/graphql/generated/types';
 import { UpdateUserParams, UpdateUserResult } from '../types';
-import { ROLES } from '@/graphql/users/constants';
+import { ROLES } from '@/shared/constants/roles';
 import { ValidationError } from '@/graphql/errors';
 
 export async function updateUser({ id, input }: UpdateUserParams): Promise<UpdateUserResult> {

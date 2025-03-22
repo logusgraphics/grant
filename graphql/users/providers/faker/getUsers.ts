@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { User } from '@/graphql/generated/types';
 import { GetUsersParams, GetUsersResult } from '../types';
-import { ROLES } from '@/graphql/users/constants';
+import { ROLES } from '@/shared/constants/roles';
 
 export async function getUsers({ page, limit }: GetUsersParams): Promise<GetUsersResult> {
   // Generate fake users based on page and limit

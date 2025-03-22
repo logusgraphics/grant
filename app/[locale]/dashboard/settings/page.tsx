@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { DashboardPageTitle } from '@/components/DashboardPageTitle';
+import { DashboardPageTitle } from '@/components/common/DashboardPageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function SettingsPage() {

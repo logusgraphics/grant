@@ -1,9 +1,9 @@
 'use client';
 
-import { UserList } from '@/components/UserList';
-import { CreateUserDialog } from '@/components/CreateUserDialog';
+import { UserList } from '@/components/features/users/UserList';
+import { CreateUserDialog } from '@/components/features/users/CreateUserDialog';
 import { useTranslations } from 'next-intl';
-import { DashboardPageTitle } from '@/components/DashboardPageTitle';
+import { DashboardPageTitle } from '@/components/common/DashboardPageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function UsersPage() {
