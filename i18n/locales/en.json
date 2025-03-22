@@ -132,7 +132,8 @@
     "createDialog": {
       "title": "Create New User",
       "description": "Add a new user to the system",
-      "confirm": "Create User"
+      "confirm": "Create User",
+      "submitting": "Creating..."
     },
     "editDialog": {
       "title": "Edit User",

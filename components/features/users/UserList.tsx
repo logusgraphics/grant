@@ -64,7 +64,7 @@ export function UserList() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const { loading, error, data } = useQuery<UsersQueryResult>(GET_USERS, {
+  const { loading, error, data, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
     variables: { page, limit },
   });
   const [deleteUser] = useMutation<{
@@ -98,28 +98,12 @@ export function UserList() {
           },
         });
 
-        // Update all other pages to reflect the new total count
-        for (let p = 1; p <= newTotalPages; p++) {
-          if (p !== page) {
-            const otherPageData = cache.readQuery<UsersQueryResult>({
-              query: GET_USERS,
-              variables: { page: p, limit },
-            });
-
-            if (otherPageData) {
-              cache.writeQuery({
-                query: GET_USERS,
-                variables: { page: p, limit },
-                data: {
-                  users: {
-                    ...otherPageData.users,
-                    totalCount: newTotalCount,
-                    hasNextPage: p < newTotalPages,
-                  },
-                },
-              });
-            }
-          }
+        // Invalidate the next page's cache
+        if (hasNextPage) {
+          cache.evict({
+            fieldName: 'users',
+            args: { page: page + 1, limit },
+          });
         }
       }
     },
@@ -144,6 +128,9 @@ export function UserList() {
       toast.success(t('notifications.deleteSuccess'), {
         description: `${userToDelete.name} has been removed from the system`,
       });
+
+      // Refetch the current page to get the updated list
+      await refetch();
 
       // If we're on a page greater than 1 and this was the last user on the current page,
       // navigate to the previous page

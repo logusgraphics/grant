@@ -132,7 +132,8 @@
     "createDialog": {
       "title": "Neuen Benutzer erstellen",
       "description": "Fügen Sie einen neuen Benutzer zum System hinzu",
-      "confirm": "Benutzer erstellen"
+      "confirm": "Benutzer erstellen",
+      "submitting": "Wird erstellt..."
     },
     "editDialog": {
       "title": "Benutzer bearbeiten",

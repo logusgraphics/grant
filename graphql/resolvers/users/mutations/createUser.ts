@@ -1,5 +1,10 @@
 import { MutationResolvers } from '@/graphql/generated/types';
 
-export const createUser: MutationResolvers['createUser'] = async (_, args, context) => {
-  return context.providers.users.createUser(args);
+export const createUserResolver: MutationResolvers['createUser'] = async (
+  _parent,
+  { input },
+  context
+) => {
+  const createdUser = await context.providers.users.createUser({ input });
+  return createdUser;
 };
