@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { EditUserDialog } from './EditUserDialog';
 import { CreateUserDialog } from './CreateUserDialog';
@@ -27,6 +27,7 @@ import { UserCardSkeleton } from './UserCardSkeleton';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { User, UsersQueryResult } from './types';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export const GET_USERS = gql`
   query GetUsers($page: Int!, $limit: Int!) {
@@ -61,8 +62,23 @@ const DELETE_USER = gql`
 `;
 
 export function UserList() {
-  const [page, setPage] = useState(1);
-  const limit = 10;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultLimit = 10;
+
+  // Get page and limit from URL or use defaults
+  const currentPage = Number(searchParams.get('page')) || 1;
+  const currentLimit = Number(searchParams.get('limit')) || defaultLimit;
+  const [page, setPage] = useState(currentPage);
+  const [limit, setLimit] = useState(currentLimit);
+
+  // Update URL when page or limit changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    params.set('limit', limit.toString());
+    router.push(`?${params.toString()}`);
+  }, [page, limit, router, searchParams]);
 
   const { loading, error, data, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
     variables: { page, limit },
@@ -151,6 +167,10 @@ export function UserList() {
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
   return (
     <>
       <div className="max-w-5xl mx-auto p-4">
@@ -233,14 +253,22 @@ export function UserList() {
                     ))}
               </div>
               <div className="flex justify-between items-center mt-4">
-                <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                >
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   {t('pagination.previous')}
                 </Button>
                 <span className="text-sm text-gray-500">
                   {t('pagination.info', { current: page, total: totalPages })}
                 </span>
-                <Button variant="outline" onClick={() => setPage(page + 1)} disabled={!hasNextPage}>
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={!hasNextPage}
+                >
                   {t('pagination.next')}
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
