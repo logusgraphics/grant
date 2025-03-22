@@ -1,0 +1,15 @@
+extend type Query {
+  """
+  Retrieves a paginated list of users.
+  """
+  users(
+    """
+    Page number (1-based).
+    """
+    page: Int!
+    """
+    Number of users per page.
+    """
+    limit: Int!
+  ): UserConnection!
+} 

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { LoginParams, LoginResult } from '../types';
-import { JWT_SECRET } from '@/graphql/auth/constants';
+import { LoginParams, LoginResult } from '@/graphql/resolvers/auth/providers/types';
+import { JWT_SECRET } from '@/graphql/resolvers/auth/constants';
 import { ValidationError } from '@/graphql/errors';
 
 export async function login({ input }: LoginParams): Promise<LoginResult> {

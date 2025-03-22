@@ -1,11 +1,11 @@
-import { UserDataProvider } from './users/providers/types';
-import { AuthDataProvider } from './auth/providers/types';
-import { fakerProvider } from './users/providers/faker';
-import { jwtProvider } from './auth/providers/jwt';
+import { AuthDataProvider } from '@/graphql/resolvers/auth/providers/types';
+import { UserDataProvider } from '@/graphql/resolvers/users/providers/types';
+import { fakerProvider } from '@/graphql/resolvers/users/providers/faker';
+import { jwtProvider } from '@/graphql/resolvers/auth/providers/jwt';
 
 export interface ModuleProviders {
-  users: UserDataProvider;
   auth: AuthDataProvider;
+  users: UserDataProvider;
   // Add other modules here as we create them
   // auth: AuthDataProvider;
 }
@@ -21,3 +21,12 @@ export const defaultConfig: GraphQLConfig = {
     auth: jwtProvider,
   },
 };
+
+export const config = {
+  auth: {
+    provider: jwtProvider,
+  },
+  users: {
+    provider: fakerProvider,
+  },
+} as const;

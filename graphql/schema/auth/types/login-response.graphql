@@ -1,0 +1,9 @@
+"""
+Response type for successful authentication.
+"""
+type LoginResponse {
+  """
+  JWT token for authenticated requests.
+  """
+  token: String!
+} 

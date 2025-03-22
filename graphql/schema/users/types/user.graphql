@@ -1,0 +1,21 @@
+"""
+Represents a user in the system.
+"""
+type User {
+  """
+  Unique identifier for the user.
+  """
+  id: ID!
+  """
+  Full name of the user.
+  """
+  name: String!
+  """
+  Email address of the user.
+  """
+  email: String!
+  """
+  List of roles assigned to the user.
+  """
+  roles: [Role!]!
+} 
