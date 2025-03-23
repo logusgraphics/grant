@@ -117,6 +117,7 @@
       "name": "Name",
       "email": "E-Mail"
     },
+    "limit": "Einträge pro Seite",
     "form": {
       "name": "Name",
       "email": "E-Mail",

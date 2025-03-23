@@ -30,6 +30,7 @@ import { User, UsersQueryResult } from './types';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { UserSortableField, UserSortOrder } from '@/graphql/generated/types';
 import { evictUsersCache } from './cache';
+import { UserActions } from './UserActions';
 
 export const GET_USERS = gql`
   query GetUsers($page: Int!, $limit: Int!, $sort: UserSortInput) {
@@ -77,13 +78,24 @@ export function UserList() {
   const [page, setPage] = useState(currentPage);
   const [limit, setLimit] = useState(currentLimit);
 
-  // Update URL when page or limit changes
+  // Update URL when page changes (we control this in UserList)
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', page.toString());
-    params.set('limit', limit.toString());
-    router.push(`?${params.toString()}`);
-  }, [page, limit, router, searchParams]);
+    const currentPageParam = params.get('page');
+
+    if (currentPageParam !== page.toString()) {
+      params.set('page', page.toString());
+      router.push(`?${params.toString()}`);
+    }
+  }, [page, router, searchParams]);
+
+  // Sync limit from URL (controlled by parent)
+  useEffect(() => {
+    const newLimit = Number(searchParams.get('limit')) || defaultLimit;
+    if (newLimit !== limit) {
+      setLimit(newLimit);
+    }
+  }, [searchParams, defaultLimit]);
 
   const { loading, error, data, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
     variables: {

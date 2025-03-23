@@ -14,10 +14,12 @@ export default function UsersPage() {
   usePageTitle('users');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const defaultLimit = 10;
 
-  // Get sort from URL or use defaults
+  // Get sort and limit from URL or use defaults
   const sortField = searchParams.get('sortField') as UserSortableField | null;
   const sortOrder = searchParams.get('sortOrder') as UserSortOrder | null;
+  const currentLimit = Number(searchParams.get('limit')) || defaultLimit;
   const currentSort = sortField && sortOrder ? { field: sortField, order: sortOrder } : undefined;
 
   const handleSortChange = (field: UserSortableField, order: UserSortOrder) => {
@@ -27,12 +29,25 @@ export default function UsersPage() {
     router.push(`?${params.toString()}`);
   };
 
+  const handleLimitChange = (limit: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('limit', limit.toString());
+    params.set('page', '1'); // Reset to first page when changing limit
+    router.push(`?${params.toString()}`);
+  };
+
   return (
     <div className="space-y-8">
       <DashboardPageTitle
         title={t('title')}
         actions={
-          <UserActions currentPage={1} currentSort={currentSort} onSortChange={handleSortChange} />
+          <UserActions
+            currentPage={1}
+            currentLimit={currentLimit}
+            currentSort={currentSort}
+            onSortChange={handleSortChange}
+            onLimitChange={handleLimitChange}
+          />
         }
       />
       <UserList />
