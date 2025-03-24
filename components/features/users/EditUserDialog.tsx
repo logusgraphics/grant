@@ -1,7 +1,6 @@
 'use client';
 
 import { useMutation } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,7 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
-import { GET_USERS } from './UserList';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -29,20 +27,7 @@ import { useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { User, EditUserFormValues, editUserSchema, EditUserDialogProps } from './types';
 import { evictUsersCache } from './cache';
-
-const UPDATE_USER = gql`
-  mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
-    updateUser(id: $id, input: $input) {
-      id
-      name
-      email
-      roles {
-        id
-        label
-      }
-    }
-  }
-`;
+import { UPDATE_USER } from './mutations';
 
 const AVAILABLE_ROLES = [
   { id: 'admin', label: 'roles.admin' },
@@ -74,7 +59,12 @@ export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUs
 
   const [updateUser] = useMutation(UPDATE_USER, {
     update(cache) {
+      // Evict all users-related queries from cache
       evictUsersCache(cache);
+
+      // Also evict any specific user queries
+      cache.evict({ id: `User:${user?.id}` });
+      cache.gc();
     },
   });
 

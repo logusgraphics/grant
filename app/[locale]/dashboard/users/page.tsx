@@ -2,6 +2,7 @@
 
 import { UserList } from '@/components/features/users/UserList';
 import { UserActions } from '@/components/features/users/UserActions';
+import { UserPagination } from '@/components/features/users/UserPagination';
 import { useTranslations } from 'next-intl';
 import { DashboardPageTitle } from '@/components/common/DashboardPageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -22,6 +23,7 @@ export default function UsersPage() {
   usePageTitle('users');
   const router = useRouter();
   const defaultLimit = 10;
+  const [totalCount, setTotalCount] = useState(0);
 
   // Parse initial URL parameters once
   const initialParams = useMemo<InitialParams>(() => {
@@ -146,6 +148,13 @@ export default function UsersPage() {
           limit={limit}
           search={search}
           sort={sort}
+          onTotalCountChange={setTotalCount}
+        />
+      </div>
+      <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
+        <UserPagination
+          page={page}
+          totalPages={Math.ceil(totalCount / limit)}
           onPageChange={handlePageChange}
         />
       </div>

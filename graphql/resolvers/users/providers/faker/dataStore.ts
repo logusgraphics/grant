@@ -5,8 +5,8 @@ import {
   User,
   CreateUserInput,
   UserSortOrder,
-  UserSortableField,
   UserSortInput,
+  UpdateUserInput,
 } from '@/graphql/generated/types';
 
 const DATA_FILE_PATH = path.join(process.cwd(), 'data', 'users.json');
@@ -98,7 +98,7 @@ export const createUser = (input: CreateUserInput): User => {
 };
 
 // Update a user in the data store
-export const updateUser = (userId: string, updates: Partial<User>): User | null => {
+export const updateUser = (userId: string, input: UpdateUserInput): User | null => {
   const users = getUsers();
   const userIndex = users.findIndex((user) => user.id === userId);
 
@@ -106,13 +106,23 @@ export const updateUser = (userId: string, updates: Partial<User>): User | null 
     return null;
   }
 
-  users[userIndex] = {
+  // Convert roleIds to full role objects
+  const roles =
+    input.roleIds?.map((id) => ({
+      id,
+      label: id === 'admin' ? 'Administrator' : 'Customer',
+    })) || [];
+
+  const updatedUser: User = {
     ...users[userIndex],
-    ...updates,
+    name: input.name,
+    email: input.email,
+    roles,
   };
 
+  users[userIndex] = updatedUser;
   saveUsers(users);
-  return users[userIndex];
+  return updatedUser;
 };
 
 // Delete a user from the data store

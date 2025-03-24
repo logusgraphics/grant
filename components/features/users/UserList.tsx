@@ -1,7 +1,7 @@
 'use client';
 
 import { gql, useQuery, useMutation } from '@apollo/client';
-import { X, Pencil, UserPlus, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import { X, Pencil, UserPlus, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { EditUserDialog } from './EditUserDialog';
 import { CreateUserDialog } from './CreateUserDialog';
@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { User, UsersQueryResult } from './types';
 import { UserSortableField, UserSortOrder } from '@/graphql/generated/types';
 import { evictUsersCache } from './cache';
+import { DELETE_USER } from './mutations';
 
 export const GET_USERS = gql`
   query GetUsers($page: Int!, $limit: Int!, $sort: UserSortInput, $search: String) {
@@ -48,20 +49,6 @@ export const GET_USERS = gql`
   }
 `;
 
-const DELETE_USER = gql`
-  mutation DeleteUser($id: ID!) {
-    deleteUser(id: $id) {
-      id
-      name
-      email
-      roles {
-        id
-        label
-      }
-    }
-  }
-`;
-
 interface UserListProps {
   page: number;
   limit: number;
@@ -70,10 +57,10 @@ interface UserListProps {
     field: UserSortableField;
     order: UserSortOrder;
   };
-  onPageChange: (page: number) => void;
+  onTotalCountChange?: (totalCount: number) => void;
 }
 
-export function UserList({ page, limit, search, sort, onPageChange }: UserListProps) {
+export function UserList({ page, limit, search, sort, onTotalCountChange }: UserListProps) {
   const queryVariables = useMemo(
     () => ({
       page,
@@ -93,6 +80,7 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
   }>(DELETE_USER, {
     update(cache) {
       evictUsersCache(cache);
+      cache.gc();
     },
   });
 
@@ -100,11 +88,12 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const t = useTranslations('users');
 
-  // Memoize derived values and callbacks
-  const totalPages = useMemo(() => {
-    if (!data) return 1;
-    return Math.max(1, Math.ceil(data.users.totalCount / limit));
-  }, [data?.users.totalCount, limit]);
+  // Update parent with total count when data changes
+  useEffect(() => {
+    if (data?.users.totalCount) {
+      onTotalCountChange?.(data.users.totalCount);
+    }
+  }, [data?.users.totalCount, onTotalCountChange]);
 
   const handleDelete = useCallback(async () => {
     if (!userToDelete || !data) return;
@@ -119,16 +108,6 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
 
       // Refetch the current page to get the updated list
       await refetch();
-
-      // If we're on a page greater than 1 and this was the last user on the current page,
-      // navigate to the previous page
-      if (page > 1 && data.users.users.length === 1) {
-        onPageChange(page - 1);
-      }
-      // If we're on the last page and it becomes empty, go back one page
-      else if (page === totalPages && data.users.users.length === 1) {
-        onPageChange(page - 1);
-      }
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error(t('notifications.deleteError'), {
@@ -137,7 +116,7 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
     } finally {
       setUserToDelete(null);
     }
-  }, [userToDelete, deleteUser, refetch, page, data, totalPages, onPageChange, t]);
+  }, [userToDelete, deleteUser, refetch, t]);
 
   const handleEditClick = useCallback((user: User) => {
     setUserToEdit(user);
@@ -147,18 +126,10 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
     setUserToDelete({ id: user.id, name: user.name });
   }, []);
 
-  const handlePreviousPage = useCallback(() => {
-    onPageChange(page - 1);
-  }, [page, onPageChange]);
-
-  const handleNextPage = useCallback(() => {
-    onPageChange(page + 1);
-  }, [page, onPageChange]);
-
   if (error) return <div>Error: {error.message}</div>;
   if (!data) return null;
 
-  const { users, hasNextPage } = data.users;
+  const { users } = data.users;
 
   return (
     <>
@@ -180,24 +151,29 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
                   ? Array.from({ length: limit }).map((_, index) => (
                       <UserCardSkeleton key={index} />
                     ))
-                  : users.map((user: User) => (
+                  : users.map((user) => (
                       <div
                         key={user.id}
-                        className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
+                        className="group relative flex items-start justify-between rounded-lg border p-4 hover:bg-muted/50"
                       >
-                        <div className="flex items-center space-x-4 min-w-0">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg">
-                            {user.name.charAt(0)}
+                        <div className="flex items-start gap-4">
+                          <div
+                            className={cn(
+                              'flex h-10 w-10 items-center justify-center rounded-full',
+                              user.roles.some((role) => role.id === 'admin')
+                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                                : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                            )}
+                          >
+                            <span className="text-sm font-medium text-white">
+                              {user.name.charAt(0).toUpperCase()}
+                            </span>
                           </div>
-                          <div className="min-w-0">
-                            <h3 className="font-medium text-sm md:text-base truncate">
-                              {user.name}
-                            </h3>
-                            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">
-                              {user.email}
-                            </p>
+                          <div>
+                            <h3 className="font-medium">{user.name}</h3>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {user.roles.map((role: { id: string; label: string }) => (
+                              {user.roles.map((role) => (
                                 <span
                                   key={role.id}
                                   className={cn(
@@ -213,30 +189,27 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2 ml-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEditClick(user)}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="hover:bg-accent dark:hover:bg-white/10"
-                              >
-                                <MoreVertical className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="size-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => handleEditClick(user)}
-                                className="cursor-pointer"
-                              >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                {t('actions.edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
                                 onClick={() => handleDeleteClick(user)}
-                                className="cursor-pointer text-red-600 focus:text-red-600"
                               >
-                                <X className="h-4 w-4 mr-2" />
+                                <X className="mr-2 size-4" />
                                 {t('actions.delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -249,25 +222,7 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
           )}
         </div>
       </div>
-      {users.length > 0 && (
-        <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
-          <div className="mx-auto p-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handlePreviousPage} disabled={page === 1}>
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                {t('pagination.previous')}
-              </Button>
-              <span className="text-sm text-gray-500">
-                {t('pagination.info', { current: page, total: totalPages })}
-              </span>
-              <Button variant="outline" onClick={handleNextPage} disabled={!hasNextPage}>
-                {t('pagination.next')}
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -278,12 +233,13 @@ export function UserList({ page, limit, search, sort, onPageChange }: UserListPr
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleDelete}>
               {t('deleteDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <EditUserDialog
         user={userToEdit}
         open={!!userToEdit}
