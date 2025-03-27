@@ -1,6 +1,5 @@
 'use client';
 
-import { UserList } from '@/components/features/users/UserList';
 import { UserActions } from '@/components/features/users/UserActions';
 import { UserPagination } from '@/components/features/users/UserPagination';
 import { useTranslations } from 'next-intl';
@@ -9,6 +8,10 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { UserSortableField, UserSortOrder } from '@/graphql/generated/types';
 import { useRouter } from 'next/navigation';
 import { useMemo, useCallback, useState } from 'react';
+import { UsersContainer } from '@/components/features/users/UsersContainer';
+import { UserList } from '@/components/features/users/UserList';
+import { UserTable } from '@/components/features/users/UserTable';
+import { UserView } from '@/components/features/users/UserViewSwitcher';
 
 interface InitialParams {
   page: number;
@@ -16,13 +19,14 @@ interface InitialParams {
   search: string;
   sortField: UserSortableField | null;
   sortOrder: UserSortOrder | null;
+  view: UserView | null;
 }
 
 export default function UsersPage() {
   const t = useTranslations('users');
   usePageTitle('users');
   const router = useRouter();
-  const defaultLimit = 10;
+  const defaultLimit = 50;
   const [totalCount, setTotalCount] = useState(0);
 
   // Parse initial URL parameters once
@@ -34,6 +38,7 @@ export default function UsersPage() {
         search: '',
         sortField: null,
         sortOrder: null,
+        view: null,
       };
     }
     const params = new URLSearchParams(window.location.search);
@@ -43,6 +48,7 @@ export default function UsersPage() {
       search: params.get('search') || '',
       sortField: params.get('sortField') as UserSortableField | null,
       sortOrder: params.get('sortOrder') as UserSortOrder | null,
+      view: (params.get('view') as UserView) || null,
     };
   }, []); // Empty dependency array since we only want to parse once
 
@@ -57,6 +63,7 @@ export default function UsersPage() {
   const [limit, setLimit] = useState(initialParams.limit);
   const [search, setSearch] = useState(initialParams.search);
   const [sort, setSort] = useState(initialSort);
+  const [view, setView] = useState<UserView>(initialParams.view || 'card');
 
   // Memoize callback functions
   const handleSortChange = useCallback(
@@ -123,6 +130,19 @@ export default function UsersPage() {
     [page, router]
   );
 
+  const handleViewChange = useCallback(
+    (newView: UserView) => {
+      if (newView !== view) {
+        setView(newView);
+
+        const params = new URLSearchParams(window.location.search);
+        params.set('view', newView);
+        router.push(('?' + params.toString()) as any);
+      }
+    },
+    [view, router]
+  );
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -134,22 +154,26 @@ export default function UsersPage() {
                 limit={limit}
                 search={search}
                 sort={sort}
+                currentView={view}
                 onSortChange={handleSortChange}
                 onLimitChange={handleLimitChange}
                 onSearchChange={handleSearchChange}
+                onViewChange={handleViewChange}
               />
             }
           />
         </div>
       </div>
-      <div className="flex-1">
-        <UserList
+      <div className="flex-1 max-w-screen">
+        <UsersContainer
           page={page}
           limit={limit}
           search={search}
           sort={sort}
           onTotalCountChange={setTotalCount}
-        />
+        >
+          {(props) => (view === 'card' ? <UserList {...props} /> : <UserTable {...props} />)}
+        </UsersContainer>
       </div>
       <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
         <UserPagination

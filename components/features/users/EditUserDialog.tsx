@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/form';
 import { useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, EditUserFormValues, editUserSchema, EditUserDialogProps } from './types';
+import { EditUserFormValues, editUserSchema, EditUserDialogProps } from './types';
 import { evictUsersCache } from './cache';
 import { UPDATE_USER } from './mutations';
 

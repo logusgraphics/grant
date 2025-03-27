@@ -164,6 +164,17 @@
       "updateError": "Failed to update user",
       "deleteSuccess": "User deleted",
       "deleteError": "Failed to delete user"
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "actions": "Actions",
+      "loading": "Loading users..."
     }
   },
   "account": {

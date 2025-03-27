@@ -1,6 +1,5 @@
 'use client';
 
-import { gql, useQuery, useMutation } from '@apollo/client';
 import { X, Pencil, UserPlus, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,121 +18,46 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
 import { EditUserDialog } from './EditUserDialog';
 import { CreateUserDialog } from './CreateUserDialog';
 import { UserCardSkeleton } from './UserCardSkeleton';
-import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
-import { User, UsersQueryResult } from './types';
-import { UserSortableField, UserSortOrder } from '@/graphql/generated/types';
-import { evictUsersCache } from './cache';
-import { DELETE_USER } from './mutations';
-
-export const GET_USERS = gql`
-  query GetUsers($page: Int!, $limit: Int!, $sort: UserSortInput, $search: String) {
-    users(page: $page, limit: $limit, sort: $sort, search: $search) {
-      users {
-        id
-        name
-        email
-        roles {
-          id
-          label
-        }
-      }
-      totalCount
-      hasNextPage
-    }
-  }
-`;
+import { User } from '@/graphql/generated/types';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 interface UserListProps {
-  page: number;
   limit: number;
-  search: string;
-  sort?: {
-    field: UserSortableField;
-    order: UserSortOrder;
-  };
-  onTotalCountChange?: (totalCount: number) => void;
+  users: User[];
+  loading: boolean;
+  onEditClick: (user: User) => void;
+  onDeleteClick: (user: User) => void;
+  userToDelete: { id: string; name: string } | null;
+  userToEdit: User | null;
+  onDeleteConfirm: () => Promise<void>;
+  onDeleteCancel: () => void;
+  onEditClose: () => void;
+  currentPage: number;
 }
 
-export function UserList({ page, limit, search, sort, onTotalCountChange }: UserListProps) {
-  const queryVariables = useMemo(
-    () => ({
-      page,
-      limit,
-      sort,
-      search,
-    }),
-    [page, limit, sort, search]
-  );
-
-  const { loading, error, data, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
-    variables: queryVariables,
-  });
-
-  const [deleteUser] = useMutation<{
-    deleteUser: User;
-  }>(DELETE_USER, {
-    update(cache) {
-      evictUsersCache(cache);
-      cache.gc();
-    },
-  });
-
-  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
-  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+export function UserList({
+  limit,
+  users,
+  loading,
+  onEditClick,
+  onDeleteClick,
+  userToDelete,
+  userToEdit,
+  onDeleteConfirm,
+  onDeleteCancel,
+  onEditClose,
+  currentPage,
+}: UserListProps) {
   const t = useTranslations('users');
-
-  // Update parent with total count when data changes
-  useEffect(() => {
-    if (data?.users.totalCount) {
-      onTotalCountChange?.(data.users.totalCount);
-    }
-  }, [data?.users.totalCount, onTotalCountChange]);
-
-  const handleDelete = useCallback(async () => {
-    if (!userToDelete || !data) return;
-
-    try {
-      await deleteUser({
-        variables: { id: userToDelete.id },
-      });
-      toast.success(t('notifications.deleteSuccess'), {
-        description: `${userToDelete.name} has been removed from the system`,
-      });
-
-      // Refetch the current page to get the updated list
-      await refetch();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error(t('notifications.deleteError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-    } finally {
-      setUserToDelete(null);
-    }
-  }, [userToDelete, deleteUser, refetch, t]);
-
-  const handleEditClick = useCallback((user: User) => {
-    setUserToEdit(user);
-  }, []);
-
-  const handleDeleteClick = useCallback((user: User) => {
-    setUserToDelete({ id: user.id, name: user.name });
-  }, []);
-
-  if (error) return <div>Error: {error.message}</div>;
-  if (!data) return null;
-
-  const { users } = data.users;
 
   return (
     <>
-      <div className="max-w-5xl mx-auto p-4">
+      <div className="w-full p-4">
         <div className="space-y-4">
           {users.length === 0 && !loading ? (
             <div className="text-center py-10 border-2 border-dashed rounded-lg">
@@ -145,21 +69,22 @@ export function UserList({ page, limit, search, sort, onTotalCountChange }: User
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {loading
-                  ? Array.from({ length: limit }).map((_, index) => (
-                      <UserCardSkeleton key={index} />
-                    ))
-                  : users.map((user) => (
-                      <div
-                        key={user.id}
-                        className="group relative flex items-start justify-between rounded-lg border p-4 hover:bg-muted/50"
-                      >
-                        <div className="flex items-start gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              {loading ? (
+                <>
+                  {Array.from({ length: limit }).map((_, i) => (
+                    <UserCardSkeleton key={i} />
+                  ))}
+                </>
+              ) : (
+                users.map((user) => (
+                  <div key={user.id} className="group relative h-full">
+                    <Card className="h-full">
+                      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1">
+                        <div className="flex items-start gap-4 min-w-0">
                           <div
                             className={cn(
-                              'flex h-10 w-10 items-center justify-center rounded-full',
+                              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
                               user.roles.some((role) => role.id === 'admin')
                                 ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
                                 : 'bg-gradient-to-br from-blue-500 to-indigo-600'
@@ -169,57 +94,59 @@ export function UserList({ page, limit, search, sort, onTotalCountChange }: User
                               {user.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <div>
-                            <h3 className="font-medium">{user.name}</h3>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {user.roles.map((role) => (
-                                <span
-                                  key={role.id}
-                                  className={cn(
-                                    'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                                    role.id === 'admin'
-                                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                  )}
-                                >
-                                  {t(`roles.${role.id}`)}
-                                </span>
-                              ))}
-                            </div>
+                          <div className="min-w-0">
+                            <CardTitle className="text-base truncate">{user.name}</CardTitle>
+                            <CardDescription className="truncate">{user.email}</CardDescription>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="size-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditClick(user)}>
-                                <Pencil className="mr-2 size-4" />
-                                {t('actions.edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => handleDeleteClick(user)}
-                              >
-                                <X className="mr-2 size-4" />
-                                {t('actions.delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                              <MoreVertical className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onEditClick(user)}>
+                              <Pencil className="mr-2 size-4" />
+                              {t('actions.edit')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => onDeleteClick(user)}
+                            >
+                              <X className="mr-2 size-4" />
+                              {t('actions.delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex flex-wrap gap-2">
+                          {user.roles.map((role) => (
+                            <span
+                              key={role.id}
+                              className={cn(
+                                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                                role.id === 'admin'
+                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                              )}
+                            >
+                              {t(`roles.${role.id}`)}
+                            </span>
+                          ))}
                         </div>
-                      </div>
-                    ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
       </div>
 
-      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+      <AlertDialog open={!!userToDelete} onOpenChange={onDeleteCancel}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
@@ -229,7 +156,7 @@ export function UserList({ page, limit, search, sort, onTotalCountChange }: User
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogAction onClick={onDeleteConfirm}>
               {t('deleteDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -239,8 +166,8 @@ export function UserList({ page, limit, search, sort, onTotalCountChange }: User
       <EditUserDialog
         user={userToEdit}
         open={!!userToEdit}
-        onOpenChange={(open) => !open && setUserToEdit(null)}
-        currentPage={page}
+        onOpenChange={(open) => !open && onEditClose()}
+        currentPage={currentPage}
       />
     </>
   );

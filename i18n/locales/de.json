@@ -164,6 +164,17 @@
       "updateError": "Benutzer konnte nicht aktualisiert werden",
       "deleteSuccess": "Benutzer gelöscht",
       "deleteError": "Benutzer konnte nicht gelöscht werden"
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
+    },
+    "table": {
+      "name": "Name",
+      "email": "E-Mail",
+      "roles": "Rollen",
+      "actions": "Aktionen",
+      "loading": "Benutzer werden geladen..."
     }
   },
   "account": {

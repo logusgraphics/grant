@@ -16,7 +16,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
-import { GET_USERS } from './UserList';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -30,7 +29,7 @@ import {
 import { UserPlus } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ROLES } from '@/shared/constants/roles';
-import { User, CreateUserFormValues, createUserSchema, UsersQueryResult } from './types';
+import { CreateUserFormValues, createUserSchema } from './types';
 import { evictUsersCache } from './cache';
 
 const CREATE_USER = gql`
