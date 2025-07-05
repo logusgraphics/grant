@@ -1,4 +1,3 @@
-import { User } from '@/graphql/generated/types';
 import { DeleteUserParams, DeleteUserResult } from '../types';
 import { deleteUser as deleteUserFromStore } from './dataStore';
 import { ApolloServerErrorCode } from '@apollo/server/errors';

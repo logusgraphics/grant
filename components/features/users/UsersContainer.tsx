@@ -1,31 +1,13 @@
 'use client';
 
-import { gql, useQuery, useMutation } from '@apollo/client';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useMutation } from '@apollo/client';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
-import { UsersQueryResult } from './types';
 import { User, UserSortableField, UserSortOrder } from '@/graphql/generated/types';
 import { evictUsersCache } from './cache';
 import { DELETE_USER } from './mutations';
 import { useTranslations } from 'next-intl';
-
-export const GET_USERS = gql`
-  query GetUsers($page: Int!, $limit: Int!, $sort: UserSortInput, $search: String) {
-    users(page: $page, limit: $limit, sort: $sort, search: $search) {
-      users {
-        id
-        name
-        email
-        roles {
-          id
-          label
-        }
-      }
-      totalCount
-      hasNextPage
-    }
-  }
-`;
+import { useUsers } from '@/hooks/useUsers';
 
 interface UsersContainerProps {
   page: number;
@@ -59,18 +41,11 @@ export function UsersContainer({
   onTotalCountChange,
   children,
 }: UsersContainerProps) {
-  const queryVariables = useMemo(
-    () => ({
-      page,
-      limit,
-      sort,
-      search,
-    }),
-    [page, limit, sort, search]
-  );
-
-  const { loading, error, data, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
-    variables: queryVariables,
+  const { users, loading, error, totalCount, refetch } = useUsers({
+    page,
+    limit,
+    search,
+    sort,
   });
 
   const [deleteUser] = useMutation<{
@@ -88,13 +63,13 @@ export function UsersContainer({
 
   // Update parent with total count when data changes
   useEffect(() => {
-    if (data?.users.totalCount) {
-      onTotalCountChange?.(data.users.totalCount);
+    if (totalCount) {
+      onTotalCountChange?.(totalCount);
     }
-  }, [data?.users.totalCount, onTotalCountChange]);
+  }, [totalCount, onTotalCountChange]);
 
   const handleDelete = useCallback(async () => {
-    if (!userToDelete || !data) return;
+    if (!userToDelete) return;
 
     try {
       await deleteUser({
@@ -114,7 +89,7 @@ export function UsersContainer({
     } finally {
       setUserToDelete(null);
     }
-  }, [data, userToDelete, deleteUser, refetch, t]);
+  }, [userToDelete, deleteUser, refetch, t]);
 
   const handleEditClick = useCallback((user: User) => {
     setUserToEdit(user);
@@ -125,11 +100,11 @@ export function UsersContainer({
   }, []);
 
   if (error) return <div>Error: {error.message}</div>;
-  if (!data) return null;
+  if (!users.length && !loading) return null;
 
   return children({
     limit,
-    users: data.users.users,
+    users,
     loading,
     onEditClick: handleEditClick,
     onDeleteClick: handleDeleteClick,

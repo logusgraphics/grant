@@ -28,14 +28,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { EditUserFormValues, editUserSchema, EditUserDialogProps } from './types';
 import { evictUsersCache } from './cache';
 import { UPDATE_USER } from './mutations';
-
-const AVAILABLE_ROLES = [
-  { id: 'admin', label: 'roles.admin' },
-  { id: 'customer', label: 'roles.customer' },
-];
+import { useRoles } from '@/hooks/useRoles';
 
 export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUserDialogProps) {
   const t = useTranslations('users');
+  const { roles, loading: rolesLoading } = useRoles();
 
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
@@ -151,37 +148,45 @@ export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUs
                 <FormItem>
                   <FormLabel>{t('form.roles')}</FormLabel>
                   <div className="space-y-2">
-                    {AVAILABLE_ROLES.map((role) => (
-                      <FormField
-                        key={role.id}
-                        control={form.control}
-                        name="roleIds"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={role.id}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(role.id)}
-                                  onCheckedChange={(checked: boolean) => {
-                                    return checked
-                                      ? field.onChange([...(field.value || []), role.id])
-                                      : field.onChange(
-                                          field.value?.filter((value) => value !== role.id)
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>{t(`roles.${role.id}`)}</FormLabel>
-                              </div>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
+                    {rolesLoading ? (
+                      <div className="text-sm text-muted-foreground">{t('form.rolesLoading')}</div>
+                    ) : roles.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        {t('form.noRolesAvailable')}
+                      </div>
+                    ) : (
+                      roles.map((role) => (
+                        <FormField
+                          key={role.id}
+                          control={form.control}
+                          name="roleIds"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={role.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(role.id)}
+                                    onCheckedChange={(checked: boolean) => {
+                                      return checked
+                                        ? field.onChange([...(field.value || []), role.id])
+                                        : field.onChange(
+                                            field.value?.filter((value) => value !== role.id)
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>{role.label}</FormLabel>
+                                </div>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))
+                    )}
                   </div>
                   {form.formState.errors.roleIds && (
                     <FormMessage className="text-red-500 text-sm mt-1">

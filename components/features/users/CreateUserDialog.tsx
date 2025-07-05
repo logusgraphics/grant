@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { Button } from '@/components/ui/button';
@@ -28,9 +28,9 @@ import {
 } from '@/components/ui/form';
 import { UserPlus } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ROLES } from '@/shared/constants/roles';
 import { CreateUserFormValues, createUserSchema } from './types';
 import { evictUsersCache } from './cache';
+import { useRoles } from '@/hooks/useRoles';
 
 const CREATE_USER = gql`
   mutation CreateUser($input: CreateUserInput!) {
@@ -49,13 +49,14 @@ const CREATE_USER = gql`
 export function CreateUserDialog() {
   const [open, setOpen] = useState(false);
   const t = useTranslations('users');
+  const { roles, loading: rolesLoading } = useRoles();
 
   const form = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: '',
       email: '',
-      roleIds: ['customer'], // Default to customer role
+      roleIds: [], // Will be set after roles are loaded
     },
     mode: 'onSubmit',
   });
@@ -129,37 +130,45 @@ export function CreateUserDialog() {
                 <FormItem>
                   <FormLabel>{t('form.roles')}</FormLabel>
                   <div className="space-y-2">
-                    {ROLES.map((role) => (
-                      <FormField
-                        key={role.id}
-                        control={form.control}
-                        name="roleIds"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={role.id}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(role.id)}
-                                  onCheckedChange={(checked: boolean) => {
-                                    return checked
-                                      ? field.onChange([...(field.value || []), role.id])
-                                      : field.onChange(
-                                          field.value?.filter((value) => value !== role.id)
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>{t(`roles.${role.id}`)}</FormLabel>
-                              </div>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
+                    {rolesLoading ? (
+                      <div className="text-sm text-muted-foreground">{t('form.rolesLoading')}</div>
+                    ) : roles.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        {t('form.noRolesAvailable')}
+                      </div>
+                    ) : (
+                      roles.map((role) => (
+                        <FormField
+                          key={role.id}
+                          control={form.control}
+                          name="roleIds"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={role.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(role.id)}
+                                    onCheckedChange={(checked: boolean) => {
+                                      return checked
+                                        ? field.onChange([...(field.value || []), role.id])
+                                        : field.onChange(
+                                            field.value?.filter((value) => value !== role.id)
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>{role.label}</FormLabel>
+                                </div>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))
+                    )}
                   </div>
                   {form.formState.errors.roleIds && (
                     <FormMessage className="text-red-500 text-sm mt-1">

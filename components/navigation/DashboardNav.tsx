@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { NavLink } from './NavLink';
-import { Users, UserCircle, Settings } from 'lucide-react';
+import { Users, UserCircle, Settings, Shield } from 'lucide-react';
 import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useCallback } from 'react';
@@ -53,6 +53,11 @@ export function DashboardNav() {
       path: '/dashboard/users',
       icon: <Users className={iconClasses('/dashboard/users')} />,
       translationKey: 'users',
+    },
+    {
+      path: '/dashboard/roles',
+      icon: <Shield className={iconClasses('/dashboard/roles')} />,
+      translationKey: 'roles',
     },
     {
       path: '/dashboard/account',

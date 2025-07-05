@@ -20,52 +20,52 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { EditUserDialog } from './EditUserDialog';
-import { CreateUserDialog } from './CreateUserDialog';
-import { UserCardSkeleton } from './UserCardSkeleton';
-import { User } from '@/graphql/generated/types';
+import { EditRoleDialog } from './EditRoleDialog';
+import { CreateRoleDialog } from './CreateRoleDialog';
+import { RoleCardSkeleton } from './RoleCardSkeleton';
+import { Role } from '@/graphql/generated/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
-interface UserListProps {
+interface RoleListProps {
   limit: number;
-  users: User[];
+  roles: Role[];
   loading: boolean;
-  onEditClick: (user: User) => void;
-  onDeleteClick: (user: User) => void;
-  userToDelete: { id: string; name: string } | null;
-  userToEdit: User | null;
+  onEditClick: (role: Role) => void;
+  onDeleteClick: (role: Role) => void;
+  roleToDelete: { id: string; label: string } | null;
+  roleToEdit: Role | null;
   onDeleteConfirm: () => Promise<void>;
   onDeleteCancel: () => void;
   onEditClose: () => void;
   currentPage: number;
 }
 
-export function UserList({
+export function RoleList({
   limit,
-  users,
+  roles,
   loading,
   onEditClick,
   onDeleteClick,
-  userToDelete,
-  userToEdit,
+  roleToDelete,
+  roleToEdit,
   onDeleteConfirm,
   onDeleteCancel,
   onEditClose,
   currentPage,
-}: UserListProps) {
-  const t = useTranslations('users');
+}: RoleListProps) {
+  const t = useTranslations('roles');
 
   return (
     <>
       <div className="w-full p-4">
         <div className="space-y-4">
-          {users.length === 0 && !loading ? (
+          {roles.length === 0 && !loading ? (
             <div className="text-center py-10 border-2 border-dashed rounded-lg">
               <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-lg font-semibold text-gray-500">{t('noUsers.title')}</h3>
-              <p className="mt-1 text-sm text-gray-500">{t('noUsers.description')}</p>
+              <h3 className="mt-4 text-lg font-semibold text-gray-500">{t('noRoles.title')}</h3>
+              <p className="mt-1 text-sm text-gray-500">{t('noRoles.description')}</p>
               <div className="mt-6">
-                <CreateUserDialog />
+                <CreateRoleDialog />
               </div>
             </div>
           ) : (
@@ -73,30 +73,25 @@ export function UserList({
               {loading ? (
                 <>
                   {Array.from({ length: limit }).map((_, i) => (
-                    <UserCardSkeleton key={i} />
+                    <RoleCardSkeleton key={i} />
                   ))}
                 </>
               ) : (
-                users.map((user) => (
-                  <div key={user.id} className="group relative h-full">
+                roles.map((role) => (
+                  <div key={role.id} className="group relative h-full">
                     <Card className="h-full">
                       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1">
                         <div className="flex items-start gap-4 min-w-0">
-                          <div
-                            className={cn(
-                              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-                              user.roles.some((role) => role.id === 'admin')
-                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
-                                : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                            )}
-                          >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600">
                             <span className="text-sm font-medium text-white">
-                              {user.name.charAt(0).toUpperCase()}
+                              {role.label.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <CardTitle className="text-base truncate">{user.name}</CardTitle>
-                            <CardDescription className="truncate">{user.email}</CardDescription>
+                            <CardTitle className="text-base truncate">{role.label}</CardTitle>
+                            <CardDescription className="truncate">
+                              {role.description || t('noDescription')}
+                            </CardDescription>
                           </div>
                         </div>
                         <DropdownMenu>
@@ -106,13 +101,13 @@ export function UserList({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEditClick(user)}>
+                            <DropdownMenuItem onClick={() => onEditClick(role)}>
                               <Pencil className="mr-2 size-4" />
                               {t('actions.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
-                              onClick={() => onDeleteClick(user)}
+                              onClick={() => onDeleteClick(role)}
                             >
                               <X className="mr-2 size-4" />
                               {t('actions.delete')}
@@ -122,19 +117,9 @@ export function UserList({
                       </CardHeader>
                       <CardContent className="pt-0">
                         <div className="flex flex-wrap gap-2">
-                          {user.roles.map((role) => (
-                            <span
-                              key={role.id}
-                              className={cn(
-                                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                                role.id === 'admin'
-                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                              )}
-                            >
-                              {role.label}
-                            </span>
-                          ))}
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {role.id}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -146,12 +131,12 @@ export function UserList({
         </div>
       </div>
 
-      <AlertDialog open={!!userToDelete} onOpenChange={onDeleteCancel}>
+      <AlertDialog open={!!roleToDelete} onOpenChange={onDeleteCancel}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('deleteDialog.description', { name: userToDelete?.name || '' })}
+              {t('deleteDialog.description', { name: roleToDelete?.label || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -163,9 +148,9 @@ export function UserList({
         </AlertDialogContent>
       </AlertDialog>
 
-      <EditUserDialog
-        user={userToEdit}
-        open={!!userToEdit}
+      <EditRoleDialog
+        role={roleToEdit}
+        open={!!roleToEdit}
         onOpenChange={(open) => !open && onEditClose()}
         currentPage={currentPage}
       />

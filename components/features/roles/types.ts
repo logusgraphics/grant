@@ -1,0 +1,34 @@
+import { Role } from '@/graphql/generated/types';
+import { z } from 'zod';
+
+// Form schemas
+export const createRoleSchema = z.object({
+  label: z.string().min(2, 'Label must be at least 2 characters'),
+  description: z.string().optional(),
+});
+
+export const editRoleSchema = z.object({
+  label: z.string().min(2, 'Label must be at least 2 characters'),
+  description: z.string().optional(),
+});
+
+// Form types
+export type CreateRoleFormValues = z.infer<typeof createRoleSchema>;
+export type EditRoleFormValues = z.infer<typeof editRoleSchema>;
+
+// Component props
+export interface EditRoleDialogProps {
+  role: Role | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentPage: number;
+}
+
+// Query result types
+export interface RolesQueryResult {
+  roles: {
+    roles: Role[];
+    totalCount: number;
+    hasNextPage: boolean;
+  };
+}

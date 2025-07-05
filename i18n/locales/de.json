@@ -29,6 +29,7 @@
   "dashboard": {
     "navigation": {
       "users": "Benutzer",
+      "roles": "Rollen",
       "account": "Konto",
       "settings": "Einstellungen"
     }
@@ -129,7 +130,9 @@
       "roles": "Rollen",
       "validation": {
         "rolesRequired": "Benutzer muss mindestens eine Rolle haben"
-      }
+      },
+      "rolesLoading": "Rollen werden geladen...",
+      "noRolesAvailable": "Keine Rollen verfügbar"
     },
     "roles": {
       "admin": "Administrator",
@@ -176,6 +179,74 @@
       "actions": "Aktionen",
       "loading": "Benutzer werden geladen..."
     }
+  },
+  "roles": {
+    "title": "Rollenverwaltung",
+    "noRoles": {
+      "title": "Keine Rollen gefunden",
+      "description": "Erstellen Sie Ihre erste Rolle"
+    },
+    "actions": {
+      "create": "Rolle erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "label": "Aktionen anzeigen/ausblenden"
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "name": "Name",
+      "default": "Standard"
+    },
+    "limit": "Einträge pro Seite",
+    "search": {
+      "placeholder": "Rollen suchen..."
+    },
+    "form": {
+      "label": "Bezeichnung",
+      "description": "Beschreibung"
+    },
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter",
+      "info": "Seite {current} von {total}"
+    },
+    "createDialog": {
+      "title": "Neue Rolle erstellen",
+      "description": "Fügen Sie eine neue Rolle zum System hinzu",
+      "confirm": "Rolle erstellen",
+      "submitting": "Wird erstellt..."
+    },
+    "editDialog": {
+      "title": "Rolle bearbeiten",
+      "description": "Aktualisieren Sie die Rolleninformationen",
+      "confirm": "Änderungen speichern"
+    },
+    "deleteDialog": {
+      "title": "Rolle löschen",
+      "description": "Sind Sie sicher, dass Sie {name} löschen möchten?",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen"
+    },
+    "notifications": {
+      "createSuccess": "Rolle erstellt",
+      "createError": "Rolle konnte nicht erstellt werden",
+      "updateSuccess": "Rolle aktualisiert",
+      "updateError": "Rolle konnte nicht aktualisiert werden",
+      "deleteSuccess": "Rolle gelöscht",
+      "deleteError": "Rolle konnte nicht gelöscht werden"
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
+    },
+    "table": {
+      "label": "Bezeichnung",
+      "description": "Beschreibung",
+      "id": "ID",
+      "actions": "Aktionen",
+      "loading": "Rollen werden geladen..."
+    },
+    "noDescription": "Keine Beschreibung"
   },
   "account": {
     "title": "Kontoverwaltung",

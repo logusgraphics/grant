@@ -69,11 +69,8 @@ export const sortUsers = (users: User[], sortConfig?: UserSortInput): User[] => 
 
 // Get all users from the data store with optional sorting
 export const getUsers = (sortConfig?: UserSortInput): User[] => {
-  if (!fs.existsSync(DATA_FILE_PATH)) {
-    return sortUsers(initializeDataStore(), sortConfig);
-  }
-  const data = fs.readFileSync(DATA_FILE_PATH, 'utf-8');
-  return sortUsers(JSON.parse(data), sortConfig);
+  const data = initializeDataStore();
+  return sortUsers(data, sortConfig);
 };
 
 // Create a new user in the data store

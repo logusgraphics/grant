@@ -29,6 +29,7 @@
   "dashboard": {
     "navigation": {
       "users": "Users",
+      "roles": "Roles",
       "account": "Account",
       "settings": "Settings"
     }
@@ -129,7 +130,9 @@
       "roles": "Roles",
       "validation": {
         "rolesRequired": "User must have at least one role"
-      }
+      },
+      "rolesLoading": "Loading roles...",
+      "noRolesAvailable": "No roles available"
     },
     "roles": {
       "admin": "Administrator",
@@ -176,6 +179,74 @@
       "actions": "Actions",
       "loading": "Loading users..."
     }
+  },
+  "roles": {
+    "title": "Role Management",
+    "noRoles": {
+      "title": "No roles found",
+      "description": "Get started by creating your first role"
+    },
+    "actions": {
+      "create": "Create Role",
+      "edit": "Edit",
+      "delete": "Delete",
+      "label": "Show/Hide Actions"
+    },
+    "sort": {
+      "label": "Sort by",
+      "name": "Name",
+      "default": "Default"
+    },
+    "limit": "Items per page",
+    "search": {
+      "placeholder": "Search roles..."
+    },
+    "form": {
+      "label": "Label",
+      "description": "Description"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "info": "Page {current} of {total}"
+    },
+    "createDialog": {
+      "title": "Create New Role",
+      "description": "Add a new role to the system",
+      "confirm": "Create Role",
+      "submitting": "Creating..."
+    },
+    "editDialog": {
+      "title": "Edit Role",
+      "description": "Update role information",
+      "confirm": "Save Changes"
+    },
+    "deleteDialog": {
+      "title": "Delete Role",
+      "description": "Are you sure you want to delete {name}?",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "notifications": {
+      "createSuccess": "Role created",
+      "createError": "Failed to create role",
+      "updateSuccess": "Role updated",
+      "updateError": "Failed to update role",
+      "deleteSuccess": "Role deleted",
+      "deleteError": "Failed to delete role"
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
+    },
+    "table": {
+      "label": "Label",
+      "description": "Description",
+      "id": "ID",
+      "actions": "Actions",
+      "loading": "Loading roles..."
+    },
+    "noDescription": "No description"
   },
   "account": {
     "title": "Account Management",
