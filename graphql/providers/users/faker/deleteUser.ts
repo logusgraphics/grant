@@ -2,6 +2,7 @@ import { DeleteUserParams, DeleteUserResult } from '@/graphql/providers/users/ty
 import { deleteUser as deleteUserFromStore } from '@/graphql/providers/users/faker/dataStore';
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 import { ApiError } from '@/graphql/errors';
+import { User } from '@/graphql/generated/types';
 
 export async function deleteUser({ id }: DeleteUserParams): Promise<DeleteUserResult> {
   const deletedUser = deleteUserFromStore(id);
@@ -10,5 +11,5 @@ export async function deleteUser({ id }: DeleteUserParams): Promise<DeleteUserRe
     throw new ApiError('User not found', ApolloServerErrorCode.PERSISTED_QUERY_NOT_FOUND);
   }
 
-  return deletedUser;
+  return deletedUser as User;
 }

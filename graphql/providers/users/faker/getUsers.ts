@@ -1,6 +1,6 @@
 import { GetUsersParams, GetUsersResult } from '@/graphql/providers/users/types';
 import { getUsers as getUsersFromDataStore } from '@/graphql/providers/users/faker/dataStore';
-import { UserSortableField, UserSortOrder } from '@/graphql/generated/types';
+import { UserSortableField, UserSortOrder, User } from '@/graphql/generated/types';
 
 const SEARCHABLE_FIELDS = ['name', 'email'] as const;
 const DEFAULT_SORT = { field: UserSortableField.Name, order: UserSortOrder.Asc };
@@ -26,7 +26,7 @@ export async function getUsers({
   const users = filteredBySearchUsers.slice(startIndex, endIndex);
 
   return {
-    users,
+    users: users as User[],
     totalCount,
     hasNextPage,
   };

@@ -83,8 +83,10 @@ export const sortRoles = (roles: Role[], sortConfig?: RoleSortInput): Role[] => 
     order: sortConfig.order,
   });
 };
-export const getRoles = (sortConfig?: RoleSortInput): Role[] => {
-  return rolesDataStore.getEntities(
+
+// Updated getRoles function with optional ids parameter
+export const getRoles = (sortConfig?: RoleSortInput, ids?: string[]): Role[] => {
+  let allRoles = rolesDataStore.getEntities(
     sortConfig
       ? {
           field: sortConfig.field,
@@ -92,7 +94,15 @@ export const getRoles = (sortConfig?: RoleSortInput): Role[] => {
         }
       : undefined
   );
+
+  // If ids are provided, filter by those IDs
+  if (ids && ids.length > 0) {
+    allRoles = allRoles.filter((role) => ids.includes(role.id));
+  }
+
+  return allRoles;
 };
+
 export const isRoleUnique = (roleId: string): boolean => {
   return !rolesDataStore.entityExists(roleId);
 };

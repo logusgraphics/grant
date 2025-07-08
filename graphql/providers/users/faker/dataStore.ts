@@ -1,20 +1,19 @@
 import { faker } from '@faker-js/faker';
-import { User, CreateUserInput, UpdateUserInput, UserSortInput } from '@/graphql/generated/types';
+import { CreateUserInput, UpdateUserInput, UserSortInput } from '@/graphql/generated/types';
 import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker/genericDataStore';
-import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
+import { UserData } from '@/graphql/providers/users/types';
 
 // Generate fake users for initial data
-const generateFakeUsers = (count: number = 50): User[] => {
+const generateFakeUsers = (count: number = 50): UserData[] => {
   return Array.from({ length: count }, () => ({
     id: faker.string.uuid(),
     name: faker.person.fullName(),
     email: faker.internet.email(),
-    roles: getRoles().filter(() => faker.datatype.boolean()),
   }));
 };
 
 // Users-specific configuration
-const usersConfig: EntityConfig<User, CreateUserInput, UpdateUserInput> = {
+const usersConfig: EntityConfig<UserData, CreateUserInput, UpdateUserInput> = {
   entityName: 'User',
   dataFileName: 'users.json',
 
@@ -22,19 +21,17 @@ const usersConfig: EntityConfig<User, CreateUserInput, UpdateUserInput> = {
   generateId: () => faker.string.uuid(),
 
   // Generate user entity from input
-  generateEntity: (input: CreateUserInput, id: string): User => ({
+  generateEntity: (input: CreateUserInput, id: string): UserData => ({
     id,
     name: input.name,
     email: input.email,
-    roles: getRoles().filter((role) => input.roleIds?.includes(role.id)) || [],
   }),
 
   // Update user entity
-  updateEntity: (entity: User, input: UpdateUserInput): User => ({
+  updateEntity: (entity: UserData, input: UpdateUserInput): UserData => ({
     ...entity,
     name: input.name,
     email: input.email,
-    roles: getRoles().filter((role) => input.roleIds?.includes(role.id)) || entity.roles,
   }),
 
   // Sortable fields
@@ -55,11 +52,11 @@ export const usersDataStore = createFakerDataStore(usersConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => usersDataStore.getEntities();
-export const saveUsers = (users: User[]) => {
+export const saveUsers = (users: UserData[]) => {
   // This is handled internally by the data store
   // We keep this for backward compatibility but it's a no-op
 };
-export const sortUsers = (users: User[], sortConfig?: UserSortInput): User[] => {
+export const sortUsers = (users: UserData[], sortConfig?: UserSortInput): UserData[] => {
   if (!sortConfig) return users;
 
   return usersDataStore.getEntities({
@@ -67,7 +64,7 @@ export const sortUsers = (users: User[], sortConfig?: UserSortInput): User[] => 
     order: sortConfig.order,
   });
 };
-export const getUsers = (sortConfig?: UserSortInput): User[] => {
+export const getUsers = (sortConfig?: UserSortInput): UserData[] => {
   return usersDataStore.getEntities(
     sortConfig
       ? {
@@ -77,12 +74,12 @@ export const getUsers = (sortConfig?: UserSortInput): User[] => {
       : undefined
   );
 };
-export const createUser = (input: CreateUserInput): User => {
+export const createUser = (input: CreateUserInput): UserData => {
   return usersDataStore.createEntity(input);
 };
-export const updateUser = (userId: string, input: UpdateUserInput): User | null => {
+export const updateUser = (userId: string, input: UpdateUserInput): UserData | null => {
   return usersDataStore.updateEntity(userId, input);
 };
-export const deleteUser = (userId: string): User | null => {
+export const deleteUser = (userId: string): UserData | null => {
   return usersDataStore.deleteEntity(userId);
 };

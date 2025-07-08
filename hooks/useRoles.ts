@@ -4,8 +4,8 @@ import { Role, RoleSortableField, RoleSortOrder, QueryRolesArgs } from '@/graphq
 import { RolesQueryResult } from '@/components/features/roles/types';
 
 export const GET_ROLES = gql`
-  query GetRoles($page: Int!, $limit: Int!, $sort: RoleSortInput, $search: String) {
-    roles(page: $page, limit: $limit, sort: $sort, search: $search) {
+  query GetRoles($page: Int!, $limit: Int!, $sort: RoleSortInput, $search: String, $ids: [ID!]) {
+    roles(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
       roles {
         id
         name
@@ -32,6 +32,7 @@ export function useRoles(options: UseRolesOptions = {}): UseRolesResult {
     limit = 1000, // Default to 1000 to get all roles for dropdown
     search = '',
     sort = { field: RoleSortableField.Name, order: RoleSortOrder.Asc },
+    ids,
   } = options;
 
   const { data, loading, error } = useQuery<RolesQueryResult>(GET_ROLES, {
@@ -40,6 +41,7 @@ export function useRoles(options: UseRolesOptions = {}): UseRolesResult {
       limit,
       search,
       sort,
+      ids,
     },
   });
 

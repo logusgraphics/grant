@@ -40,8 +40,6 @@ export type CreateUserInput = {
   email: Scalars['String']['input'];
   /** Full name of the user. */
   name: Scalars['String']['input'];
-  /** List of role IDs to assign to the user. */
-  roleIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 export type Group = {
@@ -239,6 +237,8 @@ export type Query = {
   permissions: PermissionPage;
   /** Retrieves a paginated list of roles. */
   roles: RolePage;
+  /** Retrieves user-role relationships for a specific user. */
+  userRoles: Array<UserRole>;
   /** Retrieves a paginated list of users. */
   users: UserPage;
 };
@@ -261,10 +261,16 @@ export type QueryPermissionsArgs = {
 
 
 export type QueryRolesArgs = {
-  limit: Scalars['Int']['input'];
-  page: Scalars['Int']['input'];
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<RoleSortInput>;
+};
+
+
+export type QueryUserRolesArgs = {
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -334,8 +340,6 @@ export type UpdateUserInput = {
   email: Scalars['String']['input'];
   /** Full name of the user. */
   name: Scalars['String']['input'];
-  /** List of role IDs to assign to the user. */
-  roleIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 /** Represents a user in the system. */
@@ -360,6 +364,21 @@ export type UserPage = {
   totalCount: Scalars['Int']['output'];
   /** List of users for the current page. */
   users: Array<User>;
+};
+
+/** Represents a user-role relationship in the system. */
+export type UserRole = {
+  __typename?: 'UserRole';
+  /** Unique identifier for the user-role relationship. */
+  id: Scalars['ID']['output'];
+  /** The role associated with this relationship. */
+  role: Role;
+  /** ID of the role. */
+  roleId: Scalars['ID']['output'];
+  /** The user associated with this relationship. */
+  user: User;
+  /** ID of the user. */
+  userId: Scalars['ID']['output'];
 };
 
 /** Input for sorting users. */
@@ -485,6 +504,7 @@ export type ResolversTypes = ResolversObject<{
   UpdateUserInput: UpdateUserInput;
   User: ResolverTypeWrapper<User>;
   UserPage: ResolverTypeWrapper<UserPage>;
+  UserRole: ResolverTypeWrapper<UserRole>;
   UserSortInput: UserSortInput;
   UserSortOrder: UserSortOrder;
   UserSortableField: UserSortableField;
@@ -519,6 +539,7 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateUserInput: UpdateUserInput;
   User: User;
   UserPage: UserPage;
+  UserRole: UserRole;
   UserSortInput: UserSortInput;
 }>;
 
@@ -577,7 +598,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   groups?: Resolver<ResolversTypes['GroupPage'], ParentType, ContextType, RequireFields<QueryGroupsArgs, 'limit' | 'page'>>;
   permissions?: Resolver<ResolversTypes['PermissionPage'], ParentType, ContextType, RequireFields<QueryPermissionsArgs, 'limit' | 'page'>>;
-  roles?: Resolver<ResolversTypes['RolePage'], ParentType, ContextType, RequireFields<QueryRolesArgs, 'limit' | 'page'>>;
+  roles?: Resolver<ResolversTypes['RolePage'], ParentType, ContextType, Partial<QueryRolesArgs>>;
+  userRoles?: Resolver<Array<ResolversTypes['UserRole']>, ParentType, ContextType, RequireFields<QueryUserRolesArgs, 'userId'>>;
   users?: Resolver<ResolversTypes['UserPage'], ParentType, ContextType, RequireFields<QueryUsersArgs, 'limit' | 'page'>>;
 }>;
 
@@ -611,6 +633,15 @@ export type UserPageResolvers<ContextType = Context, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type UserRoleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserRole'] = ResolversParentTypes['UserRole']> = ResolversObject<{
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  role?: Resolver<ResolversTypes['Role'], ParentType, ContextType>;
+  roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Group?: GroupResolvers<ContextType>;
   GroupPage?: GroupPageResolvers<ContextType>;
@@ -623,5 +654,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   RolePage?: RolePageResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserPage?: UserPageResolvers<ContextType>;
+  UserRole?: UserRoleResolvers<ContextType>;
 }>;
 

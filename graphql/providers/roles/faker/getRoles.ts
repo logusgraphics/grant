@@ -10,7 +10,19 @@ export async function getRoles({
   limit = 50,
   sort,
   search,
+  ids,
 }: GetRolesParams): Promise<GetRolesResult> {
+  // If ids are provided and not empty, ignore pagination and return filtered results
+  if (ids && ids.length > 0) {
+    const filteredRoles = getRolesFromDataStore(sort || DEFAULT_SORT, ids);
+
+    return {
+      roles: filteredRoles,
+      totalCount: filteredRoles.length,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
+  }
+
   // Ensure page and limit are always numbers
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
   const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;

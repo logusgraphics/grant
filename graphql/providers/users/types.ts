@@ -7,6 +7,9 @@ import {
   UserPage,
 } from '@/graphql/generated/types';
 
+// Type for user data without the resolved fields (userRoles and roles)
+export type UserData = Omit<User, 'userRoles' | 'roles'>;
+
 export type GetUsersParams = QueryUsersArgs;
 export type GetUsersResult = UserPage;
 

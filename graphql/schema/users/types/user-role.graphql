@@ -1,0 +1,25 @@
+"""
+Represents a user-role relationship in the system.
+"""
+type UserRole {
+  """
+  Unique identifier for the user-role relationship.
+  """
+  id: ID!
+  """
+  ID of the user.
+  """
+  userId: ID!
+  """
+  ID of the role.
+  """
+  roleId: ID!
+  """
+  The user associated with this relationship.
+  """
+  user: User!
+  """
+  The role associated with this relationship.
+  """
+  role: Role!
+} 

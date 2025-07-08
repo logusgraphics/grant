@@ -1,5 +1,3 @@
-
-
 extend type Query {
   """
   Retrieves a paginated list of roles.
@@ -8,11 +6,11 @@ extend type Query {
     """
     Page number (1-based).
     """
-    page: Int!
+    page: Int
     """
     Number of roles per page.
     """
-    limit: Int!
+    limit: Int
     """
     Search term to filter roles by name or description.
     """
@@ -21,5 +19,10 @@ extend type Query {
     Sorting configuration for the results.
     """
     sort: RoleSortInput
+    """
+    Optional array of role IDs to filter by.
+    If provided and not empty, pagination parameters (page, limit) will be ignored.
+    """
+    ids: [ID!]
   ): RolePage!
 }

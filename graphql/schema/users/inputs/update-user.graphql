@@ -10,8 +10,4 @@ input UpdateUserInput {
   Email address of the user.
   """
   email: String!
-  """
-  List of role IDs to assign to the user.
-  """
-  roleIds: [ID!]
 }
