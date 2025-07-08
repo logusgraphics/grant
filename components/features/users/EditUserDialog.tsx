@@ -27,7 +27,7 @@ import { useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EditUserFormValues, editUserSchema, EditUserDialogProps } from './types';
 import { evictUsersCache } from './cache';
-import { UPDATE_USER } from './mutations';
+import { UPDATE_USER, ADD_USER_ROLE, REMOVE_USER_ROLE } from './mutations';
 import { useRoles } from '@/hooks/useRoles';
 
 export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUserDialogProps) {
@@ -65,20 +65,73 @@ export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUs
     },
   });
 
+  const [addUserRole] = useMutation(ADD_USER_ROLE, {
+    update(cache) {
+      evictUsersCache(cache);
+    },
+  });
+
+  const [removeUserRole] = useMutation(REMOVE_USER_ROLE, {
+    update(cache) {
+      evictUsersCache(cache);
+    },
+  });
+
   const onSubmit = async (values: EditUserFormValues) => {
     if (!user) return;
 
     try {
+      // Update user data first
       await updateUser({
         variables: {
           id: user.id,
           input: {
             name: values.name,
             email: values.email,
-            roleIds: values.roleIds,
           },
         },
       });
+
+      // Handle role assignments
+      const currentRoleIds = user.roles.map((role) => role.id);
+      const newRoleIds = values.roleIds || [];
+
+      // Find roles to add (in newRoleIds but not in currentRoleIds)
+      const rolesToAdd = newRoleIds.filter((roleId) => !currentRoleIds.includes(roleId));
+
+      // Find roles to remove (in currentRoleIds but not in newRoleIds)
+      const rolesToRemove = currentRoleIds.filter((roleId) => !newRoleIds.includes(roleId));
+
+      // Add new roles
+      if (rolesToAdd.length > 0) {
+        const addPromises = rolesToAdd.map((roleId) =>
+          addUserRole({
+            variables: {
+              input: {
+                userId: user.id,
+                roleId,
+              },
+            },
+          })
+        );
+        await Promise.all(addPromises);
+      }
+
+      // Remove roles
+      if (rolesToRemove.length > 0) {
+        const removePromises = rolesToRemove.map((roleId) =>
+          removeUserRole({
+            variables: {
+              input: {
+                userId: user.id,
+                roleId,
+              },
+            },
+          })
+        );
+        await Promise.all(removePromises);
+      }
+
       toast.success(t('notifications.updateSuccess'));
       onOpenChange(false);
     } catch (error) {

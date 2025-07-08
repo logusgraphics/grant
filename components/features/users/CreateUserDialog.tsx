@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -31,20 +30,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CreateUserFormValues, createUserSchema } from './types';
 import { evictUsersCache } from './cache';
 import { useRoles } from '@/hooks/useRoles';
-
-const CREATE_USER = gql`
-  mutation CreateUser($input: CreateUserInput!) {
-    createUser(input: $input) {
-      id
-      name
-      email
-      roles {
-        id
-        name
-      }
-    }
-  }
-`;
+import { CREATE_USER, ADD_USER_ROLE } from './mutations';
 
 export function CreateUserDialog() {
   const [open, setOpen] = useState(false);
@@ -67,13 +53,42 @@ export function CreateUserDialog() {
     },
   });
 
+  const [addUserRole] = useMutation(ADD_USER_ROLE, {
+    update(cache) {
+      evictUsersCache(cache);
+    },
+  });
+
   const onSubmit = async (values: CreateUserFormValues) => {
     try {
-      await createUser({
+      // Create the user first
+      const result = await createUser({
         variables: {
-          input: values,
+          input: {
+            name: values.name,
+            email: values.email,
+          },
         },
       });
+
+      const userId = result.data?.createUser.id;
+
+      if (userId && values.roleIds && values.roleIds.length > 0) {
+        // Add roles to the user
+        const rolePromises = values.roleIds.map((roleId) =>
+          addUserRole({
+            variables: {
+              input: {
+                userId,
+                roleId,
+              },
+            },
+          })
+        );
+
+        await Promise.all(rolePromises);
+      }
+
       toast.success(t('notifications.createSuccess'));
       form.reset();
       setOpen(false);
