@@ -1,0 +1,25 @@
+"""
+Represents a role-group relationship in the system.
+"""
+type RoleGroup {
+  """
+  Unique identifier for the role-group relationship.
+  """
+  id: ID!
+  """
+  ID of the group.
+  """
+  groupId: ID!
+  """
+  ID of the role.
+  """
+  roleId: ID!
+  """
+  The group associated with this relationship.
+  """
+  group: Group!
+  """
+  The role associated with this relationship.
+  """
+  role: Role!
+} 

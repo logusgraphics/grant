@@ -10,6 +10,8 @@ import { groupFakerProvider } from './providers/groups/faker';
 import { permissionFakerProvider } from './providers/permissions/faker';
 import { UserRoleDataProvider } from './providers/user-roles/types';
 import { userRoleFakerProvider } from './providers/user-roles/faker';
+import { RoleGroupDataProvider } from './providers/role-groups/types';
+import { roleGroupFakerProvider } from './providers/role-groups/faker';
 
 export interface ModuleProviders {
   auth: AuthDataProvider;
@@ -18,6 +20,7 @@ export interface ModuleProviders {
   groups: GroupDataProvider;
   permissions: PermissionDataProvider;
   userRoles: UserRoleDataProvider;
+  roleGroups: RoleGroupDataProvider;
   // Add other modules here as we create them
 }
 
@@ -34,5 +37,6 @@ export const graphqlConfig: GraphQLConfig = {
     groups: groupFakerProvider,
     permissions: permissionFakerProvider,
     userRoles: userRoleFakerProvider,
+    roleGroups: roleGroupFakerProvider,
   },
 };

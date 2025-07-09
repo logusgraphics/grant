@@ -5,6 +5,8 @@ import { Query } from '@/graphql/resolvers/queries';
 import { Mutation } from '@/graphql/resolvers/mutations';
 import { User } from '@/graphql/resolvers/users/fields';
 import { UserRole } from '@/graphql/resolvers/user-roles/fields';
+import { RoleGroup } from '@/graphql/resolvers/role-groups/fields';
+import { Role } from '@/graphql/resolvers/roles/fields';
 
 // Load all schema files
 const typeDefs = loadFilesSync(join(process.cwd(), 'graphql/schema'), {
@@ -20,5 +22,7 @@ export const schema = makeExecutableSchema({
     Mutation,
     User,
     UserRole,
+    Role,
+    RoleGroup,
   },
 });

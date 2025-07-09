@@ -1,0 +1,13 @@
+"""
+Input type for adding a role-group relationship.
+"""
+input AddRoleGroupInput {
+  """
+  ID of the group.
+  """
+  groupId: ID!
+  """
+  ID of the role.
+  """
+  roleId: ID!
+} 
