@@ -6,11 +6,11 @@ extend type Query {
     """
     Page number (1-based).
     """
-    page: Int!
+    page: Int
     """
     Number of users per page.
     """
-    limit: Int!
+    limit: Int
     """
     Search term to filter users by name or email.
     """
@@ -19,5 +19,10 @@ extend type Query {
     Sorting configuration for the results.
     """
     sort: UserSortInput
+    """
+    Optional array of user IDs to filter by.
+    If provided and not empty, pagination parameters (page, limit) will be ignored.
+    """
+    ids: [ID!]
   ): UserPage!
 }

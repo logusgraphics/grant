@@ -10,7 +10,18 @@ export async function getUsers({
   limit,
   sort,
   search,
+  ids,
 }: GetUsersParams): Promise<GetUsersResult> {
+  // If ids are provided and not empty, ignore pagination and return filtered results
+  if (ids && ids.length > 0) {
+    const filteredUsers = getUsersFromDataStore(sort || DEFAULT_SORT, ids);
+    return {
+      users: filteredUsers as User[],
+      totalCount: filteredUsers.length,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
+  }
+
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
   const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
   const allUsers = getUsersFromDataStore(sort || DEFAULT_SORT);

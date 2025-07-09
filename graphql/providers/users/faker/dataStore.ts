@@ -64,8 +64,8 @@ export const sortUsers = (users: UserData[], sortConfig?: UserSortInput): UserDa
     order: sortConfig.order,
   });
 };
-export const getUsers = (sortConfig?: UserSortInput): UserData[] => {
-  return usersDataStore.getEntities(
+export const getUsers = (sortConfig?: UserSortInput, ids?: string[]): UserData[] => {
+  let allUsers = usersDataStore.getEntities(
     sortConfig
       ? {
           field: sortConfig.field,
@@ -73,6 +73,13 @@ export const getUsers = (sortConfig?: UserSortInput): UserData[] => {
         }
       : undefined
   );
+
+  // If ids are provided, filter by those IDs
+  if (ids && ids.length > 0) {
+    allUsers = allUsers.filter((user) => ids.includes(user.id));
+  }
+
+  return allUsers;
 };
 export const createUser = (input: CreateUserInput): UserData => {
   return usersDataStore.createEntity(input);
