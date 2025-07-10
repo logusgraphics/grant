@@ -25,6 +25,8 @@ import { CreateUserDialog } from './CreateUserDialog';
 import { UserCardSkeleton } from './UserCardSkeleton';
 import { User } from '@/graphql/generated/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { ColoredList } from '@/components/common/ColoredList';
+import { Shield } from 'lucide-react';
 
 interface UserListProps {
   limit: number;
@@ -79,7 +81,7 @@ export function UserList({
               ) : (
                 users.map((user) => (
                   <div key={user.id} className="group relative h-full">
-                    <Card className="h-full">
+                    <Card className="h-full gap-1">
                       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1">
                         <div className="flex items-start gap-4 min-w-0">
                           <div
@@ -121,21 +123,13 @@ export function UserList({
                         </DropdownMenu>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <div className="flex flex-wrap gap-2">
-                          {user.roles.map((role) => (
-                            <span
-                              key={role.id}
-                              className={cn(
-                                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                                role.id === 'admin'
-                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                              )}
-                            >
-                              {role.name}
-                            </span>
-                          ))}
-                        </div>
+                        <ColoredList
+                          items={user.roles}
+                          labelField="name"
+                          title={t('form.roles')}
+                          icon={<Shield className="h-3 w-3" />}
+                          height={80}
+                        />
                       </CardContent>
                     </Card>
                   </div>

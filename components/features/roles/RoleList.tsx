@@ -19,12 +19,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
 import { EditRoleDialog } from './EditRoleDialog';
 import { CreateRoleDialog } from './CreateRoleDialog';
 import { RoleCardSkeleton } from './RoleCardSkeleton';
 import { Role } from '@/graphql/generated/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { ColoredList } from '@/components/common/ColoredList';
+import { Group } from 'lucide-react';
 
 interface RoleListProps {
   limit: number;
@@ -79,7 +80,7 @@ export function RoleList({
               ) : (
                 roles.map((role) => (
                   <div key={role.id} className="group relative h-full">
-                    <Card className="h-full">
+                    <Card className="h-full gap-1">
                       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1">
                         <div className="flex items-start gap-4 min-w-0">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600">
@@ -116,11 +117,13 @@ export function RoleList({
                         </DropdownMenu>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <div className="flex flex-wrap gap-2">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            {role.id}
-                          </span>
-                        </div>
+                        <ColoredList
+                          items={role.groups}
+                          labelField="name"
+                          title={t('groups')}
+                          icon={<Group className="h-3 w-3" />}
+                          height={80}
+                        />
                       </CardContent>
                     </Card>
                   </div>

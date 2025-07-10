@@ -248,6 +248,8 @@
       "actions": "Aktionen",
       "loading": "Rollen werden geladen..."
     },
+    "groups": "Gruppen",
+    "emptyElements": "Es gibt keine {title} zum Anzeigen",
     "noDescription": "Keine Beschreibung"
   },
   "account": {

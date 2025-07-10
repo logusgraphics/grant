@@ -10,6 +10,10 @@ export const GET_ROLES = gql`
         id
         name
         description
+        groups {
+          id
+          name
+        }
       }
       totalCount
       hasNextPage

@@ -248,6 +248,8 @@
       "actions": "Actions",
       "loading": "Loading roles..."
     },
+    "groups": "Groups",
+    "emptyElements": "There are no {title} to display",
     "noDescription": "No description"
   },
   "account": {
