@@ -23,12 +23,17 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const locale = getLocaleFromPath(path);
 
+  // Check if the path is a static file
+  const isStaticFile =
+    /\.(jpg|jpeg|png|gif|svg|ico|webp|mp4|webm|ogg|mp3|wav|pdf|txt|css|js)$/i.test(path);
+
   // Public paths that don't require authentication
   const isPublicPath =
     path.startsWith(`/${locale}/auth`) ||
     path === '/' ||
     path.startsWith('/_next') ||
-    path.startsWith('/api');
+    path.startsWith('/api') ||
+    isStaticFile;
 
   // Get the token from the cookies
   const token = request.cookies.get(AUTH_TOKEN_KEY)?.value;

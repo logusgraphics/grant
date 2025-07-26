@@ -1,6 +1,6 @@
-# Customer Portal
+# Identity Central
 
-A modern, full-stack customer portal built with Next.js, featuring a beautiful UI, internationalization, and GraphQL API.
+A modern, full-stack identity management platform built with Next.js, featuring unified identity management across multiple authentication systems, beautiful UI, internationalization, and GraphQL API.
 
 ## Features
 

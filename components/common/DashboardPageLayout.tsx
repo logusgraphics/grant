@@ -39,7 +39,7 @@ export function DashboardPageLayout({
 
       {/* Sticky Footer */}
       {footer && (
-        <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
+        <div className="sticky bottom-[3.3rem] md:bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
           {footer}
         </div>
       )}

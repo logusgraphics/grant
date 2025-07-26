@@ -1,8 +1,8 @@
 {
   "common": {
     "app": {
-      "title": "Identitätsportal",
-      "description": "Ein modernes Benutzerverwaltungssystem"
+      "title": "Identity Central",
+      "description": "Vereinheitlichte Identitätsverwaltung über mehrere Authentifizierungssysteme"
     },
     "auth": {
       "login": "Anmelden",
@@ -44,8 +44,8 @@
   },
   "auth": {
     "welcome": {
-      "title": "Willkommen in Ihrem Versicherungsportal",
-      "description": "Verwalten Sie Ihre Versicherungspolicen, reichen Sie Schadensfälle ein und aktualisieren Sie Ihre Informationen an einem Ort. Greifen Sie auf Ihre Versicherungsdetails zu und erhalten Sie Unterstützung, wann immer Sie sie benötigen."
+      "title": "Willkommen bei Identity Central",
+      "description": "Ihr vereinheitlichtes Gateway zur Verwaltung von Identitäten über mehrere Authentifizierungssysteme. Nahtlos verbinden, migrieren und orchestrieren Sie den Benutzerzugriff mit unserer strukturierten Identitätsverwaltungsplattform."
     },
     "form": {
       "name": {
@@ -67,7 +67,7 @@
     },
     "login": {
       "title": "Anmelden",
-      "description": "Geben Sie Ihre Anmeldedaten ein",
+      "description": "Greifen Sie auf Ihre vereinheitlichte Identität über alle verbundenen Systeme zu",
       "email": "E-Mail",
       "emailPlaceholder": "E-Mail eingeben",
       "emailError": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
@@ -76,24 +76,24 @@
       "passwordError": "Das Passwort muss mindestens 6 Zeichen lang sein",
       "forgotPassword": "Passwort vergessen?",
       "submit": "Anmelden",
-      "noAccount": "Noch kein Konto?",
-      "register": "Jetzt registrieren",
-      "success": "Anmeldung erfolgreich",
-      "error": "Anmeldung fehlgeschlagen",
+      "noAccount": "Noch keine Identität?",
+      "register": "Identität erstellen",
+      "success": "Identitätszugriff gewährt",
+      "error": "Identitätsverifizierung fehlgeschlagen",
       "errorUnknown": "Ein unbekannter Fehler ist aufgetreten"
     },
     "register": {
-      "title": "Konto erstellen",
-      "description": "Füllen Sie Ihre Daten aus, um mit unserer Plattform zu beginnen",
+      "title": "Identität erstellen",
+      "description": "Erstellen Sie Ihre vereinheitlichte Identität über alle verbundenen Authentifizierungssysteme",
       "submit": "Registrieren",
-      "haveAccount": "Bereits ein Konto?",
+      "haveAccount": "Bereits eine Identität?",
       "login": "Anmelden"
     },
     "forgotPassword": {
-      "title": "Passwort vergessen",
-      "description": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
+      "title": "Identitätszugriff zurücksetzen",
+      "description": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen sicheren Link zum Zurücksetzen Ihres Identitätszugriffs über alle verbundenen Systeme.",
       "submit": "Link senden",
-      "rememberPassword": "Passwort wieder eingefallen?",
+      "rememberPassword": "Anmeldedaten wieder eingefallen?",
       "backToLogin": "Zurück zur Anmeldung"
     },
     "validation": {

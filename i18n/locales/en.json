@@ -1,12 +1,12 @@
 {
   "common": {
     "app": {
-      "title": "Identity Portal",
-      "description": "A modern user management system"
+      "title": "Identity Central",
+      "description": "Unified identity management across multiple authentication systems"
     },
     "auth": {
-      "login": "Login",
-      "logout": "Logout",
+      "login": "Sign In",
+      "logout": "Sign Out",
       "email": "Email",
       "password": "Password",
       "submit": "Sign In",
@@ -44,8 +44,8 @@
   },
   "auth": {
     "welcome": {
-      "title": "Welcome to Your Insurance Portal",
-      "description": "Manage your insurance policies, submit claims, and update your information all in one place. Access your coverage details and get support whenever you need it."
+      "title": "Welcome to Identity Central",
+      "description": "Your unified gateway to manage identities across multiple authentication systems. Seamlessly bridge, migrate, and orchestrate user access with our opinionated identity management platform."
     },
     "form": {
       "name": {
@@ -66,8 +66,8 @@
       }
     },
     "login": {
-      "title": "Login",
-      "description": "Enter your credentials to access your account",
+      "title": "Sign In",
+      "description": "Access your unified identity across all connected systems",
       "email": "Email",
       "emailPlaceholder": "Enter your email",
       "emailError": "Please enter a valid email address",
@@ -76,24 +76,24 @@
       "passwordError": "Password must be at least 6 characters",
       "forgotPassword": "Forgot password?",
       "submit": "Login",
-      "noAccount": "Don't have an account?",
-      "register": "Register here",
-      "success": "Login successful",
-      "error": "Login failed",
+      "noAccount": "Don't have an identity?",
+      "register": "Create identity",
+      "success": "Identity access granted",
+      "error": "Identity verification failed",
       "errorUnknown": "An unknown error occurred"
     },
     "register": {
-      "title": "Create an account",
-      "description": "Fill in your details to get started with our platform",
+      "title": "Create Identity",
+      "description": "Establish your unified identity across all connected authentication systems",
       "submit": "Sign Up",
-      "haveAccount": "Already have an account?",
+      "haveAccount": "Already have an identity?",
       "login": "Sign in"
     },
     "forgotPassword": {
-      "title": "Forgot Password",
-      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "title": "Reset Identity Access",
+      "description": "Enter your email address and we'll send you a secure link to reset your identity access across all connected systems.",
       "submit": "Send Reset Link",
-      "rememberPassword": "Remember your password?",
+      "rememberPassword": "Remember your credentials?",
       "backToLogin": "Back to login"
     },
     "validation": {

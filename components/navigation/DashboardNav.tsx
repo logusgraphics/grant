@@ -48,7 +48,7 @@ export function DashboardNav() {
     [isActive]
   );
 
-  const navItems: NavItem[] = [
+  const mainNavItems: NavItem[] = [
     {
       path: '/dashboard/users',
       icon: <Users className={iconClasses('/dashboard/users')} />,
@@ -64,6 +64,9 @@ export function DashboardNav() {
       icon: <Group className={iconClasses('/dashboard/groups')} />,
       translationKey: 'groups',
     },
+  ];
+
+  const accountNavItems: NavItem[] = [
     {
       path: '/dashboard/account',
       icon: <UserCircle className={iconClasses('/dashboard/account')} />,
@@ -76,9 +79,9 @@ export function DashboardNav() {
     },
   ];
 
-  return (
-    <nav className="grid grid-cols-3 md:flex md:flex-col md:space-y-1">
-      {navItems.map((item) => (
+  const renderNavItems = (items: NavItem[]) => (
+    <>
+      {items.map((item) => (
         <div key={item.path} className={cn(navItemClasses(item.path), 'md:flex-none')}>
           <NavLink href={item.path}>
             <div className="flex flex-col md:flex-row items-center justify-center md:justify-start space-y-1 md:space-y-0 md:space-x-2 px-3 py-2">
@@ -95,6 +98,26 @@ export function DashboardNav() {
           </NavLink>
         </div>
       ))}
+    </>
+  );
+
+  return (
+    <nav className="md:flex md:flex-col md:h-full">
+      {/* Mobile: All items in single row */}
+      <div className="grid grid-cols-5 md:hidden">
+        {renderNavItems([...mainNavItems, ...accountNavItems])}
+      </div>
+
+      {/* Desktop: Separated sections */}
+      <div className="hidden md:flex md:flex-col md:h-full">
+        {/* Main Navigation - Top */}
+        <div className="md:flex md:flex-col md:space-y-1">{renderNavItems(mainNavItems)}</div>
+
+        {/* Account Navigation - Bottom */}
+        <div className="md:flex md:flex-col md:space-y-1 md:mt-auto md:pt-4">
+          {renderNavItems(accountNavItems)}
+        </div>
+      </div>
     </nav>
   );
 }

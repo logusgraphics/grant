@@ -16,9 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Customer Portal',
-  description:
-    'Manage your insurance policies, submit claims, and update your information all in one place.',
+  title: 'Identity Central',
+  description: 'Unified identity management across multiple authentication systems.',
   icons: {
     icon: [{ url: '/favicon.svg?v=3', type: 'image/svg+xml' }, { url: '/favicon.svg?v=3' }],
   },
