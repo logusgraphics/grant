@@ -24,7 +24,7 @@ import { CreateRoleDialog } from './CreateRoleDialog';
 import { RoleCardSkeleton } from './RoleCardSkeleton';
 import { Role } from '@/graphql/generated/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ColoredList } from '@/components/common/ColoredList';
+import { ColoredList } from '@/components/ui/colored-list';
 import { Group } from 'lucide-react';
 
 interface RoleListProps {

@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { Role } from '@/graphql/generated/types';
 import { EditRoleDialog } from './EditRoleDialog';
 import { CreateRoleDialog } from './CreateRoleDialog';
-import { ColoredList } from '@/components/common/ColoredList';
+import { ColoredList } from '@/components/ui/colored-list';
 import {
   Table,
   TableBody,

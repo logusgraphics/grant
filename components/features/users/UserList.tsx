@@ -25,7 +25,7 @@ import { CreateUserDialog } from './CreateUserDialog';
 import { UserCardSkeleton } from './UserCardSkeleton';
 import { User } from '@/graphql/generated/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ColoredList } from '@/components/common/ColoredList';
+import { ColoredList } from '@/components/ui/colored-list';
 import { Shield } from 'lucide-react';
 
 interface UserListProps {

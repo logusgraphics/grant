@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { User } from '@/graphql/generated/types';
 import { EditUserDialog } from './EditUserDialog';
 import { CreateUserDialog } from './CreateUserDialog';
-import { ColoredList } from '@/components/common/ColoredList';
+import { ColoredList } from '@/components/ui/colored-list';
 import {
   Table,
   TableBody,
