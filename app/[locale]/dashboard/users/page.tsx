@@ -3,7 +3,7 @@
 import { UserActions } from '@/components/features/users/UserActions';
 import { UserPagination } from '@/components/features/users/UserPagination';
 import { useTranslations } from 'next-intl';
-import { DashboardPageTitle } from '@/components/common/DashboardPageTitle';
+import { DashboardPageLayout } from '@/components/common/DashboardPageLayout';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { UserSortableField, UserSortOrder } from '@/graphql/generated/types';
 import { useRouter } from 'next/navigation';
@@ -144,44 +144,37 @@ export default function UsersPage() {
   );
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-3.5rem-1px)]">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="p-4">
-          <DashboardPageTitle
-            title={t('title')}
-            actions={
-              <UserActions
-                limit={limit}
-                search={search}
-                sort={sort}
-                currentView={view}
-                onSortChange={handleSortChange}
-                onLimitChange={handleLimitChange}
-                onSearchChange={handleSearchChange}
-                onViewChange={handleViewChange}
-              />
-            }
-          />
-        </div>
-      </div>
-      <div className="flex-1 max-w-screen">
-        <UsersContainer
-          page={page}
+    <DashboardPageLayout
+      title={t('title')}
+      actions={
+        <UserActions
           limit={limit}
           search={search}
           sort={sort}
-          onTotalCountChange={setTotalCount}
-        >
-          {(props) => (view === 'card' ? <UserList {...props} /> : <UserTable {...props} />)}
-        </UsersContainer>
-      </div>
-      <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
+          currentView={view}
+          onSortChange={handleSortChange}
+          onLimitChange={handleLimitChange}
+          onSearchChange={handleSearchChange}
+          onViewChange={handleViewChange}
+        />
+      }
+      footer={
         <UserPagination
           page={page}
           totalPages={Math.ceil(totalCount / limit)}
           onPageChange={handlePageChange}
         />
-      </div>
-    </div>
+      }
+    >
+      <UsersContainer
+        page={page}
+        limit={limit}
+        search={search}
+        sort={sort}
+        onTotalCountChange={setTotalCount}
+      >
+        {(props) => (view === 'card' ? <UserList {...props} /> : <UserTable {...props} />)}
+      </UsersContainer>
+    </DashboardPageLayout>
   );
 }

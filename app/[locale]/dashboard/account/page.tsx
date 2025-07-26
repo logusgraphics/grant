@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { DashboardPageTitle } from '@/components/common/DashboardPageTitle';
+import { DashboardPageLayout } from '@/components/common/DashboardPageLayout';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function AccountPage() {
@@ -9,9 +9,8 @@ export default function AccountPage() {
   usePageTitle('account');
 
   return (
-    <div className="space-y-8">
-      <DashboardPageTitle title={t('title')} />
+    <DashboardPageLayout title={t('title')} variant="simple">
       <p className="text-muted-foreground">{t('description')}</p>
-    </div>
+    </DashboardPageLayout>
   );
 }
