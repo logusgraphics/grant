@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +9,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
@@ -25,15 +23,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { UserPlus } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CreateUserFormValues, createUserSchema } from './types';
+import { CreateUserFormValues, createUserSchema, CreateUserDialogProps } from './types';
 import { evictUsersCache } from './cache';
-import { useRoles } from '@/hooks/useRoles';
 import { CREATE_USER, ADD_USER_ROLE } from './mutations';
+import { useRoles } from '@/hooks/useRoles';
+import { CheckboxList } from '@/components/ui/checkbox-list';
 
-export function CreateUserDialog() {
-  const [open, setOpen] = useState(false);
+export function CreateUserDialog({ open, onOpenChange, currentPage }: CreateUserDialogProps) {
   const t = useTranslations('users');
   const { roles, loading: rolesLoading } = useRoles();
 
@@ -42,7 +38,7 @@ export function CreateUserDialog() {
     defaultValues: {
       name: '',
       email: '',
-      roleIds: [], // Will be set after roles are loaded
+      roleIds: [],
     },
     mode: 'onSubmit',
   });
@@ -61,7 +57,7 @@ export function CreateUserDialog() {
 
   const onSubmit = async (values: CreateUserFormValues) => {
     try {
-      // Create the user first
+      // Create user first
       const result = await createUser({
         variables: {
           input: {
@@ -69,13 +65,14 @@ export function CreateUserDialog() {
             email: values.email,
           },
         },
+        refetchQueries: ['GetUsers'],
       });
 
-      const userId = result.data?.createUser.id;
+      const userId = result.data?.createUser?.id;
 
+      // Add roles if user was created and roles are selected
       if (userId && values.roleIds && values.roleIds.length > 0) {
-        // Add roles to the user
-        const rolePromises = values.roleIds.map((roleId) =>
+        const addPromises = values.roleIds.map((roleId) =>
           addUserRole({
             variables: {
               input: {
@@ -83,28 +80,27 @@ export function CreateUserDialog() {
                 roleId,
               },
             },
+          }).catch((error) => {
+            console.error('Error adding user role:', error);
+            // Continue with other role assignments even if one fails
           })
         );
-
-        await Promise.all(rolePromises);
+        await Promise.all(addPromises);
       }
 
       toast.success(t('notifications.createSuccess'));
+      onOpenChange(false);
       form.reset();
-      setOpen(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('notifications.createError'));
+      console.error('Error creating user:', error);
+      toast.error(t('notifications.createError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="w-full">
-          <UserPlus className="h-4 w-4 mr-2" />
-          {t('actions.create')}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('createDialog.title')}</DialogTitle>
@@ -119,9 +115,17 @@ export function CreateUserDialog() {
                 <FormItem>
                   <FormLabel>{t('form.name')}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      placeholder={t('form.name')}
+                      {...field}
+                      className={form.formState.errors.name ? 'border-red-500' : ''}
+                    />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.name && (
+                    <FormMessage className="text-red-500 text-sm mt-1">
+                      {form.formState.errors.name.message}
+                    </FormMessage>
+                  )}
                 </FormItem>
               )}
             />
@@ -132,73 +136,37 @@ export function CreateUserDialog() {
                 <FormItem>
                   <FormLabel>{t('form.email')}</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" />
+                    <Input
+                      type="email"
+                      placeholder={t('form.email')}
+                      {...field}
+                      className={form.formState.errors.email ? 'border-red-500' : ''}
+                    />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="roleIds"
-              render={() => (
-                <FormItem>
-                  <FormLabel>{t('form.roles')}</FormLabel>
-                  <div className="space-y-2">
-                    {rolesLoading ? (
-                      <div className="text-sm text-muted-foreground">{t('form.rolesLoading')}</div>
-                    ) : roles.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">
-                        {t('form.noRolesAvailable')}
-                      </div>
-                    ) : (
-                      roles.map((role) => (
-                        <FormField
-                          key={role.id}
-                          control={form.control}
-                          name="roleIds"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={role.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(role.id)}
-                                    onCheckedChange={(checked: boolean) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), role.id])
-                                        : field.onChange(
-                                            field.value?.filter((value) => value !== role.id)
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>{role.name}</FormLabel>
-                                </div>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))
-                    )}
-                  </div>
-                  {form.formState.errors.roleIds && (
+                  {form.formState.errors.email && (
                     <FormMessage className="text-red-500 text-sm mt-1">
-                      {t('form.validation.rolesRequired')}
+                      {form.formState.errors.email.message}
                     </FormMessage>
                   )}
                 </FormItem>
               )}
             />
+            <CheckboxList
+              control={form.control}
+              name="roleIds"
+              label={t('form.roles')}
+              items={roles.map((role) => ({
+                id: role.id,
+                name: role.name,
+                description: role.description,
+              }))}
+              loading={rolesLoading}
+              loadingText={t('form.rolesLoading')}
+              emptyText={t('form.noRolesAvailable')}
+              error={form.formState.errors.roleIds?.message}
+            />
             <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting
-                  ? t('createDialog.submitting')
-                  : t('createDialog.confirm')}
-              </Button>
+              <Button type="submit">{t('createDialog.confirm')}</Button>
             </DialogFooter>
           </form>
         </Form>

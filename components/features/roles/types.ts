@@ -19,6 +19,12 @@ export type CreateRoleFormValues = z.infer<typeof createRoleSchema>;
 export type EditRoleFormValues = z.infer<typeof editRoleSchema>;
 
 // Component props
+export interface CreateRoleDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentPage: number;
+}
+
 export interface EditRoleDialogProps {
   role: Role | null;
   open: boolean;

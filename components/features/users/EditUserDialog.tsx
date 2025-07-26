@@ -24,11 +24,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useEffect } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { EditUserFormValues, editUserSchema, EditUserDialogProps } from './types';
 import { evictUsersCache } from './cache';
 import { UPDATE_USER, ADD_USER_ROLE, REMOVE_USER_ROLE } from './mutations';
 import { useRoles } from '@/hooks/useRoles';
+import { CheckboxList } from '@/components/ui/checkbox-list';
 
 export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUserDialogProps) {
   const t = useTranslations('users');
@@ -194,60 +194,19 @@ export function EditUserDialog({ user, open, onOpenChange, currentPage }: EditUs
                 </FormItem>
               )}
             />
-            <FormField
+            <CheckboxList
               control={form.control}
               name="roleIds"
-              render={() => (
-                <FormItem>
-                  <FormLabel>{t('form.roles')}</FormLabel>
-                  <div className="space-y-2">
-                    {rolesLoading ? (
-                      <div className="text-sm text-muted-foreground">{t('form.rolesLoading')}</div>
-                    ) : roles.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">
-                        {t('form.noRolesAvailable')}
-                      </div>
-                    ) : (
-                      roles.map((role) => (
-                        <FormField
-                          key={role.id}
-                          control={form.control}
-                          name="roleIds"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={role.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(role.id)}
-                                    onCheckedChange={(checked: boolean) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), role.id])
-                                        : field.onChange(
-                                            field.value?.filter((value) => value !== role.id)
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>{role.name}</FormLabel>
-                                </div>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))
-                    )}
-                  </div>
-                  {form.formState.errors.roleIds && (
-                    <FormMessage className="text-red-500 text-sm mt-1">
-                      {t('form.validation.rolesRequired')}
-                    </FormMessage>
-                  )}
-                </FormItem>
-              )}
+              label={t('form.roles')}
+              items={roles.map((role) => ({
+                id: role.id,
+                name: role.name,
+                description: role.description,
+              }))}
+              loading={rolesLoading}
+              loadingText={t('form.rolesLoading')}
+              emptyText={t('form.noRolesAvailable')}
+              error={form.formState.errors.roleIds?.message}
             />
             <DialogFooter>
               <Button type="submit">{t('editDialog.confirm')}</Button>

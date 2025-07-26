@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,10 +9,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
@@ -26,15 +23,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { UserPlus } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CreateRoleFormValues, createRoleSchema } from './types';
+import { CreateRoleFormValues, createRoleSchema, CreateRoleDialogProps } from './types';
 import { evictRolesCache } from './cache';
-import { useGroups } from '@/hooks/useGroups';
 import { CREATE_ROLE, ADD_ROLE_GROUP } from './mutations';
+import { useGroups } from '@/hooks/useGroups';
+import { CheckboxList } from '@/components/ui/checkbox-list';
 
-export function CreateRoleDialog() {
-  const [open, setOpen] = useState(false);
+export function CreateRoleDialog({ open, onOpenChange, currentPage }: CreateRoleDialogProps) {
   const t = useTranslations('roles');
   const { groups, loading: groupsLoading } = useGroups();
 
@@ -52,19 +47,16 @@ export function CreateRoleDialog() {
     update(cache) {
       evictRolesCache(cache);
     },
-    refetchQueries: ['GetRoles'], // Force refetch of roles after creation
+    refetchQueries: ['GetRoles'],
   });
 
   const [addRoleGroup] = useMutation(ADD_ROLE_GROUP, {
-    update(cache) {
-      evictRolesCache(cache);
-    },
-    refetchQueries: ['GetRoles'], // Force refetch of roles after adding group
+    refetchQueries: ['GetRoles'],
   });
 
   const onSubmit = async (values: CreateRoleFormValues) => {
     try {
-      // Create the role first
+      // Create role first
       const result = await createRole({
         variables: {
           input: {
@@ -74,11 +66,11 @@ export function CreateRoleDialog() {
         },
       });
 
-      const roleId = result.data?.createRole.id;
+      const roleId = result.data?.createRole?.id;
 
+      // Add groups if role was created and groups are selected
       if (roleId && values.groupIds && values.groupIds.length > 0) {
-        // Add groups to the role
-        const groupPromises = values.groupIds.map((groupId: string) =>
+        const addPromises = values.groupIds.map((groupId) =>
           addRoleGroup({
             variables: {
               input: {
@@ -87,31 +79,26 @@ export function CreateRoleDialog() {
               },
             },
           }).catch((error) => {
-            // If there's an error adding a group, log it but don't fail the entire operation
-            console.warn(`Failed to add group ${groupId} to role ${roleId}:`, error);
-            return null;
+            console.error('Error adding role group:', error);
+            // Continue with other group assignments even if one fails
           })
         );
-
-        await Promise.all(groupPromises);
+        await Promise.all(addPromises);
       }
 
       toast.success(t('notifications.createSuccess'));
+      onOpenChange(false);
       form.reset();
-      setOpen(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('notifications.createError'));
+      console.error('Error creating role:', error);
+      toast.error(t('notifications.createError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="w-full">
-          <UserPlus className="h-4 w-4 mr-2" />
-          {t('actions.create')}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('createDialog.title')}</DialogTitle>
@@ -126,9 +113,17 @@ export function CreateRoleDialog() {
                 <FormItem>
                   <FormLabel>{t('form.name')}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      placeholder={t('form.name')}
+                      {...field}
+                      className={form.formState.errors.name ? 'border-red-500' : ''}
+                    />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.name && (
+                    <FormMessage className="text-red-500 text-sm mt-1">
+                      {form.formState.errors.name.message}
+                    </FormMessage>
+                  )}
                 </FormItem>
               )}
             />
@@ -139,75 +134,36 @@ export function CreateRoleDialog() {
                 <FormItem>
                   <FormLabel>{t('form.description')}</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Input
+                      placeholder={t('form.description')}
+                      {...field}
+                      className={form.formState.errors.description ? 'border-red-500' : ''}
+                    />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="groupIds"
-              render={() => (
-                <FormItem>
-                  <FormLabel>{t('form.groups')}</FormLabel>
-                  <div className="space-y-2">
-                    {groupsLoading ? (
-                      <div className="text-sm text-muted-foreground">{t('form.groupsLoading')}</div>
-                    ) : groups.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">
-                        {t('form.noGroupsAvailable')}
-                      </div>
-                    ) : (
-                      groups.map((group: any) => (
-                        <FormField
-                          key={group.id}
-                          control={form.control}
-                          name="groupIds"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={group.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(group.id)}
-                                    onCheckedChange={(checked: boolean) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), group.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value: string) => value !== group.id
-                                            )
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>{group.name}</FormLabel>
-                                </div>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))
-                    )}
-                  </div>
-                  {form.formState.errors.groupIds && (
+                  {form.formState.errors.description && (
                     <FormMessage className="text-red-500 text-sm mt-1">
-                      {t('form.validation.groupsRequired')}
+                      {form.formState.errors.description.message}
                     </FormMessage>
                   )}
                 </FormItem>
               )}
             />
+            <CheckboxList
+              control={form.control}
+              name="groupIds"
+              label={t('form.groups')}
+              items={groups.map((group) => ({
+                id: group.id,
+                name: group.name,
+                description: group.description ?? undefined,
+              }))}
+              loading={groupsLoading}
+              loadingText={t('form.groupsLoading')}
+              emptyText={t('form.noGroupsAvailable')}
+              error={form.formState.errors.groupIds?.message}
+            />
             <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting
-                  ? t('createDialog.submitting')
-                  : t('createDialog.confirm')}
-              </Button>
+              <Button type="submit">{t('createDialog.confirm')}</Button>
             </DialogFooter>
           </form>
         </Form>

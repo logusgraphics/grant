@@ -11,7 +11,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
@@ -25,11 +24,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useEffect } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { EditRoleFormValues, editRoleSchema, EditRoleDialogProps } from './types';
 import { evictRolesCache } from './cache';
 import { UPDATE_ROLE, ADD_ROLE_GROUP, REMOVE_ROLE_GROUP } from './mutations';
 import { useGroups } from '@/hooks/useGroups';
+import { CheckboxList } from '@/components/ui/checkbox-list';
 
 export function EditRoleDialog({ role, open, onOpenChange, currentPage }: EditRoleDialogProps) {
   const t = useTranslations('roles');
@@ -57,28 +56,17 @@ export function EditRoleDialog({ role, open, onOpenChange, currentPage }: EditRo
 
   const [updateRole] = useMutation(UPDATE_ROLE, {
     update(cache) {
-      // Evict all roles-related queries from cache
       evictRolesCache(cache);
-
-      // Also evict any specific role queries
-      cache.evict({ id: `Role:${role?.id}` });
-      cache.gc();
     },
-    refetchQueries: ['GetRoles'], // Force refetch of roles after update
+    refetchQueries: ['GetRoles'],
   });
 
   const [addRoleGroup] = useMutation(ADD_ROLE_GROUP, {
-    update(cache) {
-      evictRolesCache(cache);
-    },
-    refetchQueries: ['GetRoles'], // Force refetch of roles after adding group
+    refetchQueries: ['GetRoles'],
   });
 
   const [removeRoleGroup] = useMutation(REMOVE_ROLE_GROUP, {
-    update(cache) {
-      evictRolesCache(cache);
-    },
-    refetchQueries: ['GetRoles'], // Force refetch of roles after removing group
+    refetchQueries: ['GetRoles'],
   });
 
   const onSubmit = async (values: EditRoleFormValues) => {
@@ -101,18 +89,14 @@ export function EditRoleDialog({ role, open, onOpenChange, currentPage }: EditRo
       const newGroupIds = values.groupIds || [];
 
       // Find groups to add (in newGroupIds but not in currentGroupIds)
-      const groupsToAdd = newGroupIds.filter(
-        (groupId: string) => !currentGroupIds.includes(groupId)
-      );
+      const groupsToAdd = newGroupIds.filter((groupId) => !currentGroupIds.includes(groupId));
 
       // Find groups to remove (in currentGroupIds but not in newGroupIds)
-      const groupsToRemove = currentGroupIds.filter(
-        (groupId: string) => !newGroupIds.includes(groupId)
-      );
+      const groupsToRemove = currentGroupIds.filter((groupId) => !newGroupIds.includes(groupId));
 
       // Add new groups
       if (groupsToAdd.length > 0) {
-        const addPromises = groupsToAdd.map((groupId: string) =>
+        const addPromises = groupsToAdd.map((groupId) =>
           addRoleGroup({
             variables: {
               input: {
@@ -120,14 +104,17 @@ export function EditRoleDialog({ role, open, onOpenChange, currentPage }: EditRo
                 groupId,
               },
             },
+          }).catch((error) => {
+            console.error('Error adding role group:', error);
+            // Continue with other group assignments even if one fails
           })
         );
         await Promise.all(addPromises);
       }
 
-      // Remove groups (only if they exist)
+      // Remove groups
       if (groupsToRemove.length > 0) {
-        const removePromises = groupsToRemove.map((groupId: string) =>
+        const removePromises = groupsToRemove.map((groupId) =>
           removeRoleGroup({
             variables: {
               input: {
@@ -136,21 +123,17 @@ export function EditRoleDialog({ role, open, onOpenChange, currentPage }: EditRo
               },
             },
           }).catch((error) => {
-            // If the role-group relationship doesn't exist, just log it and continue
+            // Handle "RoleGroup not found" error gracefully
             if (error.message?.includes('RoleGroup not found')) {
-              console.warn(
-                `RoleGroup relationship for role ${role.id} and group ${groupId} not found, skipping removal`
-              );
-              return null;
+              console.warn('RoleGroup not found, skipping removal:', { roleId: role.id, groupId });
+              return;
             }
+            console.error('Error removing role group:', error);
             throw error;
           })
         );
         await Promise.all(removePromises);
       }
-
-      // Small delay to ensure cache invalidation and refetch complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
       toast.success(t('notifications.updateSuccess'));
       onOpenChange(false);
@@ -199,7 +182,7 @@ export function EditRoleDialog({ role, open, onOpenChange, currentPage }: EditRo
                 <FormItem>
                   <FormLabel>{t('form.description')}</FormLabel>
                   <FormControl>
-                    <Textarea
+                    <Input
                       placeholder={t('form.description')}
                       {...field}
                       className={form.formState.errors.description ? 'border-red-500' : ''}
@@ -213,62 +196,19 @@ export function EditRoleDialog({ role, open, onOpenChange, currentPage }: EditRo
                 </FormItem>
               )}
             />
-            <FormField
+            <CheckboxList
               control={form.control}
               name="groupIds"
-              render={() => (
-                <FormItem>
-                  <FormLabel>{t('form.groups')}</FormLabel>
-                  <div className="space-y-2">
-                    {groupsLoading ? (
-                      <div className="text-sm text-muted-foreground">{t('form.groupsLoading')}</div>
-                    ) : groups.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">
-                        {t('form.noGroupsAvailable')}
-                      </div>
-                    ) : (
-                      groups.map((group: any) => (
-                        <FormField
-                          key={group.id}
-                          control={form.control}
-                          name="groupIds"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={group.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(group.id)}
-                                    onCheckedChange={(checked: boolean) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), group.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value: string) => value !== group.id
-                                            )
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>{group.name}</FormLabel>
-                                </div>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))
-                    )}
-                  </div>
-                  {form.formState.errors.groupIds && (
-                    <FormMessage className="text-red-500 text-sm mt-1">
-                      {t('form.validation.groupsRequired')}
-                    </FormMessage>
-                  )}
-                </FormItem>
-              )}
+              label={t('form.groups')}
+              items={groups.map((group) => ({
+                id: group.id,
+                name: group.name,
+                description: group.description ?? undefined,
+              }))}
+              loading={groupsLoading}
+              loadingText={t('form.groupsLoading')}
+              emptyText={t('form.noGroupsAvailable')}
+              error={form.formState.errors.groupIds?.message}
             />
             <DialogFooter>
               <Button type="submit">{t('editDialog.confirm')}</Button>
