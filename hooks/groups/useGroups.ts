@@ -1,31 +1,11 @@
 import { useQuery, ApolloError } from '@apollo/client';
-import { gql } from '@apollo/client';
 import {
   Group,
   GroupSortableField,
   GroupSortOrder,
   QueryGroupsArgs,
 } from '@/graphql/generated/types';
-
-export const GET_GROUPS = gql`
-  query GetGroups($page: Int!, $limit: Int!, $sort: GroupSortInput, $search: String, $ids: [ID!]) {
-    groups(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
-      groups {
-        id
-        name
-        description
-        permissions {
-          id
-          name
-          action
-          description
-        }
-      }
-      totalCount
-      hasNextPage
-    }
-  }
-`;
+import { GET_GROUPS } from './queries';
 
 interface UseGroupsOptions extends Partial<QueryGroupsArgs> {}
 

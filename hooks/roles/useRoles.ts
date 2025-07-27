@@ -1,25 +1,7 @@
 import { useQuery, ApolloError } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { Role, RoleSortableField, RoleSortOrder, QueryRolesArgs } from '@/graphql/generated/types';
 import { RolesQueryResult } from '@/components/features/roles/types';
-
-export const GET_ROLES = gql`
-  query GetRoles($page: Int!, $limit: Int!, $sort: RoleSortInput, $search: String, $ids: [ID!]) {
-    roles(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
-      roles {
-        id
-        name
-        description
-        groups {
-          id
-          name
-        }
-      }
-      totalCount
-      hasNextPage
-    }
-  }
-`;
+import { GET_ROLES } from './queries';
 
 interface UseRolesOptions extends Partial<QueryRolesArgs> {}
 

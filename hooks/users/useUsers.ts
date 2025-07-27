@@ -1,25 +1,7 @@
 import { useQuery, ApolloError } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { User, UserSortableField, UserSortOrder, QueryUsersArgs } from '@/graphql/generated/types';
 import { UsersQueryResult } from '@/components/features/users/types';
-
-export const GET_USERS = gql`
-  query GetUsers($page: Int!, $limit: Int!, $sort: UserSortInput, $search: String) {
-    users(page: $page, limit: $limit, sort: $sort, search: $search) {
-      users {
-        id
-        name
-        email
-        roles {
-          id
-          name
-        }
-      }
-      totalCount
-      hasNextPage
-    }
-  }
-`;
+import { GET_USERS } from './queries';
 
 interface UseUsersOptions extends Partial<QueryUsersArgs> {}
 

@@ -1,31 +1,10 @@
 import { useQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
 import {
   Permission,
   PermissionSortableField,
   PermissionSortOrder,
 } from '@/graphql/generated/types';
-
-export const GET_PERMISSIONS = gql`
-  query GetPermissions(
-    $page: Int!
-    $limit: Int!
-    $sort: PermissionSortInput
-    $search: String
-    $ids: [ID!]
-  ) {
-    permissions(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
-      permissions {
-        id
-        name
-        action
-        description
-      }
-      totalCount
-      hasNextPage
-    }
-  }
-`;
+import { GET_PERMISSIONS } from './queries';
 
 interface UsePermissionsOptions {
   page?: number;
