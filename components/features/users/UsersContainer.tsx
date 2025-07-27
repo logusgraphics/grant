@@ -5,6 +5,8 @@ import { User, UserSortableField, UserSortOrder } from '@/graphql/generated/type
 import { useUsers, useUserMutations } from '@/hooks/users';
 import { EditUserDialog } from './EditUserDialog';
 import { DeleteUserDialog } from './DeleteUserDialog';
+import { UserViewer } from './UserViewer';
+import { UserView } from './UserViewSwitcher';
 
 interface UsersContainerProps {
   page: number;
@@ -14,15 +16,8 @@ interface UsersContainerProps {
     field: UserSortableField;
     order: UserSortOrder;
   };
+  view: UserView;
   onTotalCountChange?: (totalCount: number) => void;
-  children: (props: {
-    limit: number;
-    users: User[];
-    loading: boolean;
-    search: string;
-    onEditClick: (user: User) => void;
-    onDeleteClick: (user: User) => void;
-  }) => React.ReactNode;
 }
 
 export function UsersContainer({
@@ -30,8 +25,8 @@ export function UsersContainer({
   limit,
   search,
   sort,
+  view,
   onTotalCountChange,
-  children,
 }: UsersContainerProps) {
   const { users, loading, error, totalCount, refetch } = useUsers({
     page,
@@ -62,14 +57,15 @@ export function UsersContainer({
 
   return (
     <>
-      {children({
-        limit,
-        users,
-        loading,
-        search,
-        onEditClick: handleEditClick,
-        onDeleteClick: handleDeleteClick,
-      })}
+      <UserViewer
+        limit={limit}
+        users={users}
+        loading={loading}
+        search={search}
+        view={view}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteClick}
+      />
 
       <DeleteUserDialog
         userToDelete={userToDelete}

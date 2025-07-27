@@ -9,8 +9,6 @@ import { RoleSortableField, RoleSortOrder } from '@/graphql/generated/types';
 import { useRouter } from 'next/navigation';
 import { useMemo, useCallback, useState } from 'react';
 import { RolesContainer } from '@/components/features/roles/RolesContainer';
-import { RoleCards } from '@/components/features/roles/RoleCards';
-import { RoleTable } from '@/components/features/roles/RoleTable';
 import { RoleView } from '@/components/features/roles/RoleViewSwitcher';
 
 interface InitialParams {
@@ -171,10 +169,9 @@ export default function RolesPage() {
         limit={limit}
         search={search}
         sort={sort}
+        view={view}
         onTotalCountChange={setTotalCount}
-      >
-        {(props) => (view === 'card' ? <RoleCards {...props} /> : <RoleTable {...props} />)}
-      </RolesContainer>
+      />
     </DashboardPageLayout>
   );
 }

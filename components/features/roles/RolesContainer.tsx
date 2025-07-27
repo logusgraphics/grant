@@ -5,6 +5,8 @@ import { Role, RoleSortableField, RoleSortOrder } from '@/graphql/generated/type
 import { useRoles, useRoleMutations } from '@/hooks/roles';
 import { EditRoleDialog } from './EditRoleDialog';
 import { DeleteRoleDialog } from './DeleteRoleDialog';
+import { RoleViewer } from './RoleViewer';
+import { RoleView } from './RoleViewSwitcher';
 
 interface RolesContainerProps {
   page: number;
@@ -14,15 +16,8 @@ interface RolesContainerProps {
     field: RoleSortableField;
     order: RoleSortOrder;
   };
+  view: RoleView;
   onTotalCountChange?: (totalCount: number) => void;
-  children: (props: {
-    limit: number;
-    roles: Role[];
-    loading: boolean;
-    search: string;
-    onEditClick: (role: Role) => void;
-    onDeleteClick: (role: Role) => void;
-  }) => React.ReactNode;
 }
 
 export function RolesContainer({
@@ -30,8 +25,8 @@ export function RolesContainer({
   limit,
   search,
   sort,
+  view,
   onTotalCountChange,
-  children,
 }: RolesContainerProps) {
   const { roles, loading, error, totalCount } = useRoles({
     page,
@@ -62,14 +57,15 @@ export function RolesContainer({
 
   return (
     <>
-      {children({
-        limit,
-        roles,
-        loading,
-        search,
-        onEditClick: handleEditClick,
-        onDeleteClick: handleDeleteClick,
-      })}
+      <RoleViewer
+        limit={limit}
+        roles={roles}
+        loading={loading}
+        search={search}
+        view={view}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteClick}
+      />
 
       <DeleteRoleDialog roleToDelete={roleToDelete} onOpenChange={() => setRoleToDelete(null)} />
 

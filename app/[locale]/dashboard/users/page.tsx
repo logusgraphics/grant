@@ -9,8 +9,6 @@ import { UserSortableField, UserSortOrder } from '@/graphql/generated/types';
 import { useRouter } from 'next/navigation';
 import { useMemo, useCallback, useState } from 'react';
 import { UsersContainer } from '@/components/features/users/UsersContainer';
-import { UserCards } from '@/components/features/users/UserCards';
-import { UserTable } from '@/components/features/users/UserTable';
 import { UserView } from '@/components/features/users/UserViewSwitcher';
 
 interface InitialParams {
@@ -171,10 +169,9 @@ export default function UsersPage() {
         limit={limit}
         search={search}
         sort={sort}
+        view={view}
         onTotalCountChange={setTotalCount}
-      >
-        {(props) => (view === 'card' ? <UserCards {...props} /> : <UserTable {...props} />)}
-      </UsersContainer>
+      />
     </DashboardPageLayout>
   );
 }

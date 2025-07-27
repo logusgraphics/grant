@@ -1,37 +1,41 @@
-import { useQuery, ApolloError } from '@apollo/client';
-import { gql } from '@apollo/client';
-import { User } from '@/graphql/generated/types';
+import { useState, useEffect } from 'react';
+import { isAuthenticated, getDecodedToken } from '@/lib/auth';
 
-export const GET_CURRENT_USER = gql`
-  query GetCurrentUser {
-    currentUser {
-      id
-      name
-      email
-      roles {
-        id
-        name
-      }
-    }
-  }
-`;
+interface JWTPayload {
+  exp: number;
+  sub: string;
+  email: string;
+}
 
 interface UseAuthResult {
-  user: User | null;
+  user: JWTPayload | null;
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   isAuthenticated: boolean;
 }
 
 export function useAuth(): UseAuthResult {
-  const { data, loading, error } = useQuery(GET_CURRENT_USER, {
-    errorPolicy: 'all',
-  });
+  const [user, setUser] = useState<JWTPayload | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | undefined>(undefined);
+
+  useEffect(() => {
+    try {
+      const decodedToken = getDecodedToken();
+
+      setUser(decodedToken);
+      setLoading(false);
+      setError(undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Authentication check failed'));
+      setLoading(false);
+    }
+  }, []);
 
   return {
-    user: data?.currentUser || null,
+    user,
     loading,
     error,
-    isAuthenticated: !!data?.currentUser,
+    isAuthenticated: isAuthenticated(),
   };
 }
