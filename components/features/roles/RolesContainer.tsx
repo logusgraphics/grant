@@ -8,17 +8,8 @@ import { evictRolesCache } from './cache';
 import { DELETE_ROLE } from './mutations';
 import { useTranslations } from 'next-intl';
 import { useRoles } from '@/hooks/useRoles';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { EditRoleDialog } from './EditRoleDialog';
+import { DeleteRoleDialog } from './DeleteRoleDialog';
 
 interface RolesContainerProps {
   page: number;
@@ -117,22 +108,11 @@ export function RolesContainer({
         onDeleteClick: handleDeleteClick,
       })}
 
-      <AlertDialog open={!!roleToDelete} onOpenChange={() => setRoleToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteDialog.description', { name: roleToDelete?.name || '' })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              {t('deleteDialog.confirm')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteRoleDialog
+        roleToDelete={roleToDelete}
+        onDeleteConfirm={handleDelete}
+        onOpenChange={() => setRoleToDelete(null)}
+      />
 
       <EditRoleDialog
         role={roleToEdit}

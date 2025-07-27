@@ -8,17 +8,8 @@ import { evictUsersCache } from './cache';
 import { DELETE_USER } from './mutations';
 import { useTranslations } from 'next-intl';
 import { useUsers } from '@/hooks/useUsers';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { EditUserDialog } from './EditUserDialog';
+import { DeleteUserDialog } from './DeleteUserDialog';
 
 interface UsersContainerProps {
   page: number;
@@ -118,22 +109,11 @@ export function UsersContainer({
         onDeleteClick: handleDeleteClick,
       })}
 
-      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteDialog.description', { name: userToDelete?.name || '' })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              {t('deleteDialog.confirm')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteUserDialog
+        userToDelete={userToDelete}
+        onDeleteConfirm={handleDelete}
+        onOpenChange={() => setUserToDelete(null)}
+      />
 
       <EditUserDialog
         user={userToEdit}
