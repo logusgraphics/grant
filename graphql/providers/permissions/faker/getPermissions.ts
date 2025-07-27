@@ -1,8 +1,12 @@
 import { GetPermissionsParams, GetPermissionsResult } from '@/graphql/providers/permissions/types';
 import { getPermissions as getPermissionsFromDataStore } from '@/graphql/providers/permissions/faker/dataStore';
-import { PermissionSortableField, PermissionSortOrder } from '@/graphql/generated/types';
+import {
+  PermissionSortableField,
+  PermissionSortOrder,
+  Permission,
+} from '@/graphql/generated/types';
 
-const SEARCHABLE_FIELDS = ['name', 'description'] as const;
+const SEARCHABLE_FIELDS = ['name', 'description', 'action'] as const;
 const DEFAULT_SORT = { field: PermissionSortableField.Name, order: PermissionSortOrder.Asc };
 
 export async function getPermissions({
@@ -10,32 +14,38 @@ export async function getPermissions({
   limit = 50,
   sort,
   search,
+  ids,
 }: GetPermissionsParams): Promise<GetPermissionsResult> {
-  // Ensure page and limit are always numbers
-  const safePage = typeof page === 'number' && page > 0 ? page : 1;
-  const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
-
-  let allPermissions = getPermissionsFromDataStore(sort || DEFAULT_SORT);
-
-  // Filter by search (same logic as user provider)
-  if (search) {
-    const lowerSearch = search.toLowerCase();
-    allPermissions = allPermissions.filter((permission) =>
-      SEARCHABLE_FIELDS.some((field) =>
-        (permission[field] ? String(permission[field]).toLowerCase() : '').includes(lowerSearch)
-      )
-    );
+  // If ids are provided and not empty, ignore pagination and return filtered results
+  if (ids && ids.length > 0) {
+    const filteredPermissions = getPermissionsFromDataStore(sort || DEFAULT_SORT, ids);
+    return {
+      permissions: filteredPermissions as Permission[],
+      totalCount: filteredPermissions.length,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
   }
 
-  // Pagination
-  const totalCount = allPermissions.length;
+  const safePage = typeof page === 'number' && page > 0 ? page : 1;
+  const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
+  const allPermissions = getPermissionsFromDataStore(sort || DEFAULT_SORT);
+  const filteredBySearchPermissions = search
+    ? allPermissions.filter((permission) =>
+        SEARCHABLE_FIELDS.some((field) =>
+          (permission[field] ? String(permission[field]).toLowerCase() : '').includes(
+            search.toLowerCase()
+          )
+        )
+      )
+    : allPermissions;
+  const totalCount = filteredBySearchPermissions.length;
+  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
   const startIndex = (safePage - 1) * safeLimit;
   const endIndex = startIndex + safeLimit;
-  const permissions = allPermissions.slice(startIndex, endIndex);
-  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
+  const permissions = filteredBySearchPermissions.slice(startIndex, endIndex);
 
   return {
-    permissions,
+    permissions: permissions as Permission[],
     totalCount,
     hasNextPage,
   };

@@ -29,7 +29,7 @@ import { CREATE_USER, ADD_USER_ROLE } from './mutations';
 import { useRoles } from '@/hooks/useRoles';
 import { CheckboxList } from '@/components/ui/checkbox-list';
 
-export function CreateUserDialog({ open, onOpenChange, currentPage }: CreateUserDialogProps) {
+export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   const t = useTranslations('users');
   const { roles, loading: rolesLoading } = useRoles();
 

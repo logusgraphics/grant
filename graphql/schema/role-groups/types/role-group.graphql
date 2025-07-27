@@ -17,9 +17,9 @@ type RoleGroup {
   """
   The group associated with this relationship.
   """
-  group: Group!
+  group: Group
   """
   The role associated with this relationship.
   """
-  role: Role!
+  role: Role
 } 

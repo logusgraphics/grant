@@ -22,14 +22,12 @@ export type EditRoleFormValues = z.infer<typeof editRoleSchema>;
 export interface CreateRoleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentPage: number;
 }
 
 export interface EditRoleDialogProps {
   role: Role | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentPage: number;
 }
 
 // Query result types

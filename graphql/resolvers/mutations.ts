@@ -5,6 +5,7 @@ import * as groupMutations from './groups/mutations';
 import * as permissionMutations from './permissions/mutations';
 import * as userRoleMutations from './user-roles/mutations';
 import * as roleGroupMutations from './role-groups/mutations';
+import * as groupPermissionMutations from './group-permissions/mutations';
 
 export const Mutation = {
   login: authMutations.login,
@@ -24,4 +25,6 @@ export const Mutation = {
   removeUserRole: userRoleMutations.removeUserRole,
   addRoleGroup: roleGroupMutations.addRoleGroup,
   removeRoleGroup: roleGroupMutations.removeRoleGroup,
+  addGroupPermission: groupPermissionMutations.addGroupPermission,
+  removeGroupPermission: groupPermissionMutations.removeGroupPermission,
 } as const;

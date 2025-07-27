@@ -29,7 +29,7 @@ import { CREATE_ROLE, ADD_ROLE_GROUP } from './mutations';
 import { useGroups } from '@/hooks/useGroups';
 import { CheckboxList } from '@/components/ui/checkbox-list';
 
-export function CreateRoleDialog({ open, onOpenChange, currentPage }: CreateRoleDialogProps) {
+export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) {
   const t = useTranslations('roles');
   const { groups, loading: groupsLoading } = useGroups();
 

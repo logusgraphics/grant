@@ -4,6 +4,7 @@ import * as groupQueries from './groups/queries';
 import * as permissionQueries from './permissions/queries';
 import * as userRoleQueries from './user-roles/queries';
 import * as roleGroupQueries from './role-groups/queries';
+import * as groupPermissionQueries from './group-permissions/queries';
 
 export const Query = {
   _empty: () => null,
@@ -13,4 +14,5 @@ export const Query = {
   permissions: permissionQueries.getPermissions,
   userRoles: userRoleQueries.getUserRoles,
   roleGroups: roleGroupQueries.getRoleGroups,
+  groupPermissions: groupPermissionQueries.getGroupPermissions,
 } as const;

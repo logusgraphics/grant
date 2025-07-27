@@ -3,6 +3,7 @@ import {
   CreateGroupInput,
   UpdateGroupInput,
   GroupSortInput,
+  GroupPage,
 } from '@/graphql/generated/types';
 import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker';
 import { slugifySafe } from '@/shared/lib/slugify';
@@ -202,7 +203,6 @@ export const sortGroups = (groups: Group[], sortConfig?: GroupSortInput): Group[
     order: sortConfig.order,
   });
 };
-// Updated getGroups function with optional ids parameter
 export const getGroups = (sortConfig?: GroupSortInput, ids?: string[]): Group[] => {
   let allGroups = groupsDataStore.getEntities(
     sortConfig

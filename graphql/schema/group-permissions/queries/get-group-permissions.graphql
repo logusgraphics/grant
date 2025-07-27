@@ -1,0 +1,11 @@
+extend type Query {
+  """
+  Retrieves group-permission relationships.
+  """
+  groupPermissions(
+    """
+    ID of the group to get permissions for.
+    """
+    groupId: ID!
+  ): [GroupPermission!]!
+} 

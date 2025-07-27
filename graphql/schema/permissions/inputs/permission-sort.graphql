@@ -1,5 +1,5 @@
 """
-Sort order for groups.
+Sort order for permissions.
 """
 enum PermissionSortOrder {
   ASC
@@ -7,14 +7,15 @@ enum PermissionSortOrder {
 }
 
 """
-Fields by which groups can be sorted.
+Fields by which permissions can be sorted.
 """
 enum PermissionSortableField {
   name
+  action
 }
 
 """
-Input for sorting groups.
+Input for sorting permissions.
 """
 input PermissionSortInput {
   field: PermissionSortableField!

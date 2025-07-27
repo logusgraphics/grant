@@ -1,0 +1,11 @@
+extend type Mutation {
+  """
+  Removes a group-permission relationship.
+  """
+  removeGroupPermission(
+    """
+    Input data for removing the group-permission relationship.
+    """
+    input: RemoveGroupPermissionInput!
+  ): Boolean!
+} 

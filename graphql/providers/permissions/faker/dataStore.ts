@@ -3,6 +3,7 @@ import {
   CreatePermissionInput,
   UpdatePermissionInput,
   PermissionSortInput,
+  PermissionPage,
 } from '@/graphql/generated/types';
 import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker';
 import { slugifySafe } from '@/shared/lib/slugify';
@@ -13,21 +14,25 @@ const generateInitialPermissions = (): Permission[] => [
     id: 'get-policies',
     name: 'Get Policies',
     description: 'Permission to get policies',
+    action: 'policies:read',
   },
   {
     id: 'create-policy',
     name: 'Create Policy',
     description: 'Permission to create policies',
+    action: 'policies:create',
   },
   {
     id: 'update-policy',
     name: 'Update Policy',
     description: 'Permission to update policies',
+    action: 'policies:update',
   },
   {
     id: 'delete-policy',
     name: 'Delete Policy',
     description: 'Permission to delete policies',
+    action: 'policies:delete',
   },
 ];
 
@@ -44,6 +49,7 @@ const permissionsConfig: EntityConfig<Permission, CreatePermissionInput, UpdateP
     id,
     name: input.name,
     description: input.description || '',
+    action: input.action,
   }),
 
   // Update permission entity
@@ -51,6 +57,7 @@ const permissionsConfig: EntityConfig<Permission, CreatePermissionInput, UpdateP
     ...entity,
     name: input.name || entity.name,
     description: input.description || entity.description,
+    action: input.action || entity.action,
   }),
 
   // Sortable fields
@@ -59,7 +66,8 @@ const permissionsConfig: EntityConfig<Permission, CreatePermissionInput, UpdateP
   // Validation rules
   validationRules: [
     { field: 'id', unique: true },
-    { field: 'name', unique: true, required: true },
+    { field: 'name', unique: false, required: true },
+    { field: 'action', unique: true, required: true },
   ],
 
   // Initial data
@@ -86,8 +94,8 @@ export const sortPermissions = (
     order: sortConfig.order,
   });
 };
-export const getPermissions = (sortConfig?: PermissionSortInput): Permission[] => {
-  return permissionsDataStore.getEntities(
+export const getPermissions = (sortConfig?: PermissionSortInput, ids?: string[]): Permission[] => {
+  let allPermissions = permissionsDataStore.getEntities(
     sortConfig
       ? {
           field: sortConfig.field,
@@ -95,6 +103,13 @@ export const getPermissions = (sortConfig?: PermissionSortInput): Permission[] =
         }
       : undefined
   );
+
+  // If ids are provided, filter by those IDs
+  if (ids && ids.length > 0) {
+    allPermissions = allPermissions.filter((permission) => ids.includes(permission.id));
+  }
+
+  return allPermissions;
 };
 export const isPermissionUnique = (permissionId: string): boolean => {
   return !permissionsDataStore.entityExists(permissionId);
