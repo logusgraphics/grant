@@ -147,6 +147,7 @@
     "createDialog": {
       "title": "Neuen Benutzer erstellen",
       "description": "Fügen Sie einen neuen Benutzer zum System hinzu",
+      "trigger": "Benutzer erstellen",
       "confirm": "Benutzer erstellen",
       "submitting": "Wird erstellt..."
     },
@@ -221,6 +222,7 @@
     "createDialog": {
       "title": "Neue Rolle erstellen",
       "description": "Fügen Sie eine neue Rolle zum System hinzu",
+      "trigger": "Rolle erstellen",
       "confirm": "Rolle erstellen",
       "submitting": "Wird erstellt..."
     },

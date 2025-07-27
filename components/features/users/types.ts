@@ -19,6 +19,11 @@ export type CreateUserFormValues = z.infer<typeof createUserSchema>;
 export type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 // Component props
+export interface CreateUserDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
 export interface EditUserDialogProps {
   user: User | null;
   open: boolean;

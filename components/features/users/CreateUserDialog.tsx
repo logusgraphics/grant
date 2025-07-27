@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
@@ -28,10 +29,24 @@ import { evictUsersCache } from './cache';
 import { CREATE_USER, ADD_USER_ROLE } from './mutations';
 import { useRoles } from '@/hooks/useRoles';
 import { CheckboxList } from '@/components/ui/checkbox-list';
+import { UserPlus } from 'lucide-react';
+import { useState } from 'react';
 
-export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
+interface CreateUserDialogComponentProps extends Partial<CreateUserDialogProps> {
+  children?: React.ReactNode;
+}
+
+export function CreateUserDialog({ open, onOpenChange, children }: CreateUserDialogComponentProps) {
   const t = useTranslations('users');
   const { roles, loading: rolesLoading } = useRoles();
+
+  // Internal state for uncontrolled usage
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use provided props or internal state
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const dialogOpen = isControlled ? open : internalOpen;
+  const setDialogOpen = isControlled ? onOpenChange : setInternalOpen;
 
   const form = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
@@ -89,7 +104,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       }
 
       toast.success(t('notifications.createSuccess'));
-      onOpenChange(false);
+      setDialogOpen(false);
       form.reset();
     } catch (error) {
       console.error('Error creating user:', error);
@@ -100,7 +115,17 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {children ? (
+        <DialogTrigger asChild>{children}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button>
+            <UserPlus className="size-4" />
+            {t('createDialog.trigger')}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('createDialog.title')}</DialogTitle>
@@ -158,7 +183,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
               items={roles.map((role) => ({
                 id: role.id,
                 name: role.name,
-                description: role.description,
+                description: role.description ?? undefined,
               }))}
               loading={rolesLoading}
               loadingText={t('form.rolesLoading')}

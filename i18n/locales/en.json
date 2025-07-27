@@ -147,6 +147,7 @@
     "createDialog": {
       "title": "Create New User",
       "description": "Add a new user to the system",
+      "trigger": "Create User",
       "confirm": "Create User",
       "submitting": "Creating..."
     },
@@ -221,6 +222,7 @@
     "createDialog": {
       "title": "Create New Role",
       "description": "Add a new role to the system",
+      "trigger": "Create Role",
       "confirm": "Create Role",
       "submitting": "Creating..."
     },

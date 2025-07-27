@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
@@ -28,10 +29,24 @@ import { evictRolesCache } from './cache';
 import { CREATE_ROLE, ADD_ROLE_GROUP } from './mutations';
 import { useGroups } from '@/hooks/useGroups';
 import { CheckboxList } from '@/components/ui/checkbox-list';
+import { UserPlus } from 'lucide-react';
+import { useState } from 'react';
 
-export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) {
+interface CreateRoleDialogComponentProps extends Partial<CreateRoleDialogProps> {
+  children?: React.ReactNode;
+}
+
+export function CreateRoleDialog({ open, onOpenChange, children }: CreateRoleDialogComponentProps) {
   const t = useTranslations('roles');
   const { groups, loading: groupsLoading } = useGroups();
+
+  // Internal state for uncontrolled usage
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use provided props or internal state
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const dialogOpen = isControlled ? open : internalOpen;
+  const setDialogOpen = isControlled ? onOpenChange : setInternalOpen;
 
   const form = useForm<CreateRoleFormValues>({
     resolver: zodResolver(createRoleSchema),
@@ -87,7 +102,7 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
       }
 
       toast.success(t('notifications.createSuccess'));
-      onOpenChange(false);
+      setDialogOpen(false);
       form.reset();
     } catch (error) {
       console.error('Error creating role:', error);
@@ -98,7 +113,17 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {children ? (
+        <DialogTrigger asChild>{children}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button>
+            <UserPlus className="size-4" />
+            {t('createDialog.trigger')}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('createDialog.title')}</DialogTitle>
