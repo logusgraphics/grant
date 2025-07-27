@@ -1,6 +1,6 @@
 'use client';
 
-import { RoleActions } from '@/components/features/roles/RoleActions';
+import { RoleToolbar } from '@/components/features/roles/RoleToolbar';
 import { RolePagination } from '@/components/features/roles/RolePagination';
 import { useTranslations } from 'next-intl';
 import { DashboardPageLayout } from '@/components/common/DashboardPageLayout';
@@ -145,7 +145,7 @@ export default function RolesPage() {
     <DashboardPageLayout
       title={t('title')}
       actions={
-        <RoleActions
+        <RoleToolbar
           limit={limit}
           search={search}
           sort={sort}

@@ -1,13 +1,6 @@
 'use client';
 
-import { X, Pencil, UserPlus, MoreVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { CreateUserDialog } from './CreateUserDialog';
@@ -17,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { ColoredList } from '@/components/ui/colored-list';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Shield } from 'lucide-react';
+import { UserActions } from './UserActions';
 
 interface UserCardsProps {
   limit: number;
@@ -79,26 +73,11 @@ export function UserCards({
                             <CardDescription className="truncate">{user.email}</CardDescription>
                           </div>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                              <MoreVertical className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEditClick(user)}>
-                              <Pencil className="mr-2 size-4" />
-                              {t('actions.edit')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => onDeleteClick(user)}
-                            >
-                              <X className="mr-2 size-4" />
-                              {t('actions.delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <UserActions
+                          user={user}
+                          onEditClick={onEditClick}
+                          onDeleteClick={onDeleteClick}
+                        />
                       </CardHeader>
                       <CardContent className="pt-0">
                         <ColoredList

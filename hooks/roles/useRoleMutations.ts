@@ -2,7 +2,7 @@ import { useMutation } from '@apollo/client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Role } from '@/graphql/generated/types';
-import { evictRolesCache } from '@/components/features/roles/cache';
+import { evictRolesCache } from './cache';
 import {
   CREATE_ROLE,
   UPDATE_ROLE,

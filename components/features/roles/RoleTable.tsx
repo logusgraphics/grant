@@ -1,13 +1,6 @@
 'use client';
 
-import { X, Pencil, Shield, MoreVertical, Group } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Shield, Group } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Role } from '@/graphql/generated/types';
 import { CreateRoleDialog } from './CreateRoleDialog';
@@ -21,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { RoleActions } from './RoleActions';
 
 interface RoleTableProps {
   roles: Role[];
@@ -77,26 +71,11 @@ export function RoleTable({ roles, loading, search, onEditClick, onDeleteClick }
                           />
                         </TableCell>
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="size-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => onEditClick(role)}>
-                                <Pencil className="mr-2 size-4" />
-                                {t('actions.edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => onDeleteClick(role)}
-                              >
-                                <X className="mr-2 size-4" />
-                                {t('actions.delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <RoleActions
+                            role={role}
+                            onEditClick={onEditClick}
+                            onDeleteClick={onDeleteClick}
+                          />
                         </TableCell>
                       </TableRow>
                     ))

@@ -2,7 +2,7 @@ import { useMutation } from '@apollo/client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Group } from '@/graphql/generated/types';
-import { evictGroupsCache } from '@/components/features/groups/cache';
+import { evictGroupsCache } from './cache';
 import {
   CREATE_GROUP,
   UPDATE_GROUP,

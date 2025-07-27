@@ -1,49 +1,44 @@
-import { CreateUserDialog } from './CreateUserDialog';
-import { UserSorter } from './UserSorter';
-import { UserLimit } from './UserLimit';
-import { UserSearch } from './UserSearch';
-import { UserViewSwitcher, UserView } from './UserViewSwitcher';
-import { UserSortableField, UserSortOrder, UserSortInput } from '@/graphql/generated/types';
-import { useTranslations } from 'use-intl';
+'use client';
+
+import { User } from '@/graphql/generated/types';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Edit, Trash2, MoreVertical } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface UserActionsProps {
-  limit: number;
-  search: string;
-  sort?: UserSortInput;
-  currentView: UserView;
-  onLimitChange: (limit: number) => void;
-  onSearchChange: (search: string) => void;
-  onSortChange: (field: UserSortableField, order: UserSortOrder) => void;
-  onViewChange: (view: UserView) => void;
+  user: User;
+  onEditClick: (user: User) => void;
+  onDeleteClick: (user: User) => void;
 }
 
-export function UserActions({
-  limit,
-  search,
-  sort,
-  currentView,
-  onLimitChange,
-  onSearchChange,
-  onSortChange,
-  onViewChange,
-}: UserActionsProps) {
+export function UserActions({ user, onEditClick, onDeleteClick }: UserActionsProps) {
+  const t = useTranslations('users.actions');
+  const a11y = useTranslations('common.accessibility');
+
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-      <div className="w-full sm:w-auto">
-        <UserSearch search={search} onSearchChange={onSearchChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <UserSorter sort={sort} onSortChange={onSortChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <UserLimit limit={limit} onLimitChange={onLimitChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <UserViewSwitcher currentView={currentView} onViewChange={onViewChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <CreateUserDialog />
-      </div>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">{a11y('openMenu')}</span>
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onEditClick(user)}>
+          <Edit className="mr-2 h-4 w-4" />
+          {t('edit')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onDeleteClick(user)} className="text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          {t('delete')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

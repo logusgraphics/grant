@@ -5,7 +5,7 @@ import { GroupSearch } from './GroupSearch';
 import { GroupViewSwitcher, GroupView } from './GroupViewSwitcher';
 import { GroupSortableField, GroupSortOrder, GroupSortInput } from '@/graphql/generated/types';
 
-interface GroupActionsToolbarProps {
+interface GroupToolbarProps {
   limit: number;
   search: string;
   sort?: GroupSortInput;
@@ -16,7 +16,7 @@ interface GroupActionsToolbarProps {
   onViewChange: (view: GroupView) => void;
 }
 
-export function GroupActionsToolbar({
+export function GroupToolbar({
   limit,
   search,
   sort,
@@ -25,7 +25,7 @@ export function GroupActionsToolbar({
   onSearchChange,
   onSortChange,
   onViewChange,
-}: GroupActionsToolbarProps) {
+}: GroupToolbarProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
       <div className="w-full sm:w-auto">

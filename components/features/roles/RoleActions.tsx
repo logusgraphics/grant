@@ -1,49 +1,44 @@
-import { CreateRoleDialog } from './CreateRoleDialog';
-import { RoleSorter } from './RoleSorter';
-import { RoleLimit } from './RoleLimit';
-import { RoleSearch } from './RoleSearch';
-import { RoleViewSwitcher, RoleView } from './RoleViewSwitcher';
-import { RoleSortableField, RoleSortOrder, RoleSortInput } from '@/graphql/generated/types';
-import { useTranslations } from 'use-intl';
+'use client';
+
+import { Role } from '@/graphql/generated/types';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Edit, Trash2, MoreVertical } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface RoleActionsProps {
-  limit: number;
-  search: string;
-  sort?: RoleSortInput;
-  currentView: RoleView;
-  onLimitChange: (limit: number) => void;
-  onSearchChange: (search: string) => void;
-  onSortChange: (field: RoleSortableField, order: RoleSortOrder) => void;
-  onViewChange: (view: RoleView) => void;
+  role: Role;
+  onEditClick: (role: Role) => void;
+  onDeleteClick: (role: Role) => void;
 }
 
-export function RoleActions({
-  limit,
-  search,
-  sort,
-  currentView,
-  onLimitChange,
-  onSearchChange,
-  onSortChange,
-  onViewChange,
-}: RoleActionsProps) {
+export function RoleActions({ role, onEditClick, onDeleteClick }: RoleActionsProps) {
+  const t = useTranslations('roles.actions');
+  const a11y = useTranslations('common.accessibility');
+
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-      <div className="w-full sm:w-auto">
-        <RoleSearch search={search} onSearchChange={onSearchChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <RoleSorter sort={sort} onSortChange={onSortChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <RoleLimit limit={limit} onLimitChange={onLimitChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <RoleViewSwitcher currentView={currentView} onViewChange={onViewChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <CreateRoleDialog />
-      </div>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">{a11y('openMenu')}</span>
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onEditClick(role)}>
+          <Edit className="mr-2 h-4 w-4" />
+          {t('edit')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onDeleteClick(role)} className="text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          {t('delete')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

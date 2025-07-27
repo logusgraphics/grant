@@ -2,7 +2,7 @@ import { useMutation } from '@apollo/client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { User } from '@/graphql/generated/types';
-import { evictUsersCache } from '@/components/features/users/cache';
+import { evictUsersCache } from './cache';
 import {
   CREATE_USER,
   UPDATE_USER,

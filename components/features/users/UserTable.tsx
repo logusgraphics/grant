@@ -1,13 +1,6 @@
 'use client';
 
-import { X, Pencil, UserPlus, MoreVertical, Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { UserPlus, Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { User } from '@/graphql/generated/types';
 import { CreateUserDialog } from './CreateUserDialog';
@@ -21,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { UserActions } from './UserActions';
 
 interface UserTableProps {
   users: User[];
@@ -77,26 +71,11 @@ export function UserTable({ users, loading, search, onEditClick, onDeleteClick }
                           />
                         </TableCell>
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="size-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => onEditClick(user)}>
-                                <Pencil className="mr-2 size-4" />
-                                {t('actions.edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => onDeleteClick(user)}
-                              >
-                                <X className="mr-2 size-4" />
-                                {t('actions.delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <UserActions
+                            user={user}
+                            onEditClick={onEditClick}
+                            onDeleteClick={onDeleteClick}
+                          />
                         </TableCell>
                       </TableRow>
                     ))

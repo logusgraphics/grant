@@ -1,6 +1,6 @@
 'use client';
 
-import { UserActions } from '@/components/features/users/UserActions';
+import { UserToolbar } from '@/components/features/users/UserToolbar';
 import { UserPagination } from '@/components/features/users/UserPagination';
 import { useTranslations } from 'next-intl';
 import { DashboardPageLayout } from '@/components/common/DashboardPageLayout';
@@ -145,7 +145,7 @@ export default function UsersPage() {
     <DashboardPageLayout
       title={t('title')}
       actions={
-        <UserActions
+        <UserToolbar
           limit={limit}
           search={search}
           sort={sort}

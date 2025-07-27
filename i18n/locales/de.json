@@ -24,6 +24,10 @@
     },
     "language": {
       "label": "Sprache"
+    },
+    "accessibility": {
+      "openMenu": "Menü öffnen",
+      "closeMenu": "Menü schließen"
     }
   },
   "dashboard": {
