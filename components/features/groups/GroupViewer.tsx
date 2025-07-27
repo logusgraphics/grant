@@ -15,30 +15,6 @@ interface GroupViewerProps {
   onDeleteClick: (group: Group) => void;
 }
 
-export function GroupViewer({
-  groups,
-  loading,
-  search,
-  view,
-  limit,
-  onEditClick,
-  onDeleteClick,
-}: GroupViewerProps) {
-  return view === 'table' ? (
-    <GroupTable
-      groups={groups}
-      loading={loading}
-      search={search}
-      onEditClick={onEditClick}
-      onDeleteClick={onDeleteClick}
-    />
-  ) : (
-    <GroupCards
-      groups={groups}
-      loading={loading}
-      search={search}
-      onEditClick={onEditClick}
-      onDeleteClick={onDeleteClick}
-    />
-  );
+export function GroupViewer({ view, ...props }: GroupViewerProps) {
+  return view === 'table' ? <GroupTable {...props} /> : <GroupCards {...props} />;
 }

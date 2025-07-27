@@ -15,23 +15,6 @@ interface UserViewerProps {
   onDeleteClick: (user: User) => void;
 }
 
-export function UserViewer({
-  limit,
-  users,
-  loading,
-  search,
-  view,
-  onEditClick,
-  onDeleteClick,
-}: UserViewerProps) {
-  const props = {
-    limit,
-    users,
-    loading,
-    search,
-    onEditClick,
-    onDeleteClick,
-  };
-
+export function UserViewer({ view, ...props }: UserViewerProps) {
   return view === 'card' ? <UserCards {...props} /> : <UserTable {...props} />;
 }

@@ -15,23 +15,6 @@ interface RoleViewerProps {
   onDeleteClick: (role: Role) => void;
 }
 
-export function RoleViewer({
-  limit,
-  roles,
-  loading,
-  search,
-  view,
-  onEditClick,
-  onDeleteClick,
-}: RoleViewerProps) {
-  const props = {
-    limit,
-    roles,
-    loading,
-    search,
-    onEditClick,
-    onDeleteClick,
-  };
-
+export function RoleViewer({ view, ...props }: RoleViewerProps) {
   return view === 'card' ? <RoleCards {...props} /> : <RoleTable {...props} />;
 }
