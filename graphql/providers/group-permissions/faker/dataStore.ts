@@ -1,11 +1,22 @@
 import { faker } from '@faker-js/faker';
-import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker/genericDataStore';
+import {
+  createFakerDataStore,
+  EntityConfig,
+  generateAuditTimestamps,
+  updateAuditTimestamp,
+} from '@/lib/providers/faker/genericDataStore';
 import { getGroups } from '@/graphql/providers/groups/faker/dataStore';
 import { getPermissions } from '@/graphql/providers/permissions/faker/dataStore';
+import { Auditable } from '@/graphql/generated/types';
 
 // Type for GroupPermission data without the resolved fields
-export interface GroupPermissionData {
-  id: string;
+export interface GroupPermissionData extends Auditable {
+  groupId: string;
+  permissionId: string;
+}
+
+// Input type for creating group-permission relationships
+export interface CreateGroupPermissionInput {
   groupId: string;
   permissionId: string;
 }
@@ -27,10 +38,12 @@ const generateFakeGroupPermissions = (count: number = 100): GroupPermissionData[
       (gp) => gp.groupId === randomGroup.id && gp.permissionId === randomPermission.id
     );
     if (!exists) {
+      const auditTimestamps = generateAuditTimestamps();
       groupPermissions.push({
         id: faker.string.uuid(),
         groupId: randomGroup.id,
         permissionId: randomPermission.id,
+        ...auditTimestamps,
       });
     }
   }
@@ -39,36 +52,43 @@ const generateFakeGroupPermissions = (count: number = 100): GroupPermissionData[
 };
 
 // GroupPermission-specific configuration
-const groupPermissionConfig: EntityConfig<GroupPermissionData, never, never> = {
-  entityName: 'GroupPermission',
-  dataFileName: 'group-permissions.json',
+const groupPermissionConfig: EntityConfig<GroupPermissionData, CreateGroupPermissionInput, never> =
+  {
+    entityName: 'GroupPermission',
+    dataFileName: 'group-permissions.json',
 
-  // Generate UUID for group-permission IDs
-  generateId: () => faker.string.uuid(),
+    // Generate UUID for group-permission IDs
+    generateId: () => faker.string.uuid(),
 
-  // Generate group-permission entity from input (not used for this pivot)
-  generateEntity: () => {
-    throw new Error('GroupPermission entities should be created through specific methods');
-  },
+    // Generate group-permission entity from input
+    generateEntity: (input: CreateGroupPermissionInput, id: string): GroupPermissionData => {
+      const auditTimestamps = generateAuditTimestamps();
+      return {
+        id,
+        groupId: input.groupId,
+        permissionId: input.permissionId,
+        ...auditTimestamps,
+      };
+    },
 
-  // Update group-permission entity (not used for this pivot)
-  updateEntity: () => {
-    throw new Error('GroupPermission entities should be updated through specific methods');
-  },
+    // Update group-permission entity (not used for this pivot)
+    updateEntity: () => {
+      throw new Error('GroupPermission entities should be updated through specific methods');
+    },
 
-  // Sortable fields
-  sortableFields: ['groupId', 'permissionId'],
+    // Sortable fields
+    sortableFields: ['groupId', 'permissionId', 'createdAt', 'updatedAt'],
 
-  // Validation rules
-  validationRules: [
-    { field: 'id', unique: true },
-    { field: 'groupId', unique: false, required: true },
-    { field: 'permissionId', unique: false, required: true },
-  ],
+    // Validation rules
+    validationRules: [
+      { field: 'id', unique: true },
+      { field: 'groupId', unique: false, required: true },
+      { field: 'permissionId', unique: false, required: true },
+    ],
 
-  // Initial data
-  initialData: generateFakeGroupPermissions,
-};
+    // Initial data
+    initialData: generateFakeGroupPermissions,
+  };
 
 // Create the group-permissions data store instance
 export const groupPermissionsDataStore = createFakerDataStore(groupPermissionConfig);
@@ -86,75 +106,51 @@ export const getGroupPermissionsByPermissionId = (permissionId: string): GroupPe
 };
 
 export const addGroupPermission = (groupId: string, permissionId: string): GroupPermissionData => {
-  // Get current entities and check if permission already exists
-  const entities = groupPermissionsDataStore.getEntities();
-  const existingPermission = entities.find(
-    (gp) => gp.groupId === groupId && gp.permissionId === permissionId
-  );
+  // Check if permission already exists
+  const existingPermission = groupPermissionsDataStore
+    .getEntities()
+    .find((gp) => gp.groupId === groupId && gp.permissionId === permissionId);
 
   if (existingPermission) {
     return existingPermission;
   }
 
-  const groupPermission: GroupPermissionData = {
-    id: faker.string.uuid(),
-    groupId,
-    permissionId,
-  };
-
-  entities.push(groupPermission);
-
-  // Save back to the data store
-  const fs = require('fs');
-  const path = require('path');
-  const dataFilePath = path.join(process.cwd(), 'data', 'group-permissions.json');
-  fs.writeFileSync(dataFilePath, JSON.stringify(entities, null, 2));
-
-  return groupPermission;
+  return groupPermissionsDataStore.createEntity({ groupId, permissionId });
 };
 
 export const deleteGroupPermission = (id: string): GroupPermissionData | null => {
   return groupPermissionsDataStore.deleteEntity(id);
 };
 
-// New function to delete by groupId and permissionId
 export const deleteGroupPermissionByGroupAndPermission = (
   groupId: string,
   permissionId: string
 ): GroupPermissionData | null => {
-  const entities = groupPermissionsDataStore.getEntities();
-  const groupPermissionIndex = entities.findIndex(
-    (gp) => gp.groupId === groupId && gp.permissionId === permissionId
-  );
+  const groupPermission = groupPermissionsDataStore
+    .getEntities()
+    .find((gp) => gp.groupId === groupId && gp.permissionId === permissionId);
 
-  if (groupPermissionIndex === -1) {
+  if (!groupPermission) {
     return null;
   }
 
-  const groupPermission = entities[groupPermissionIndex];
-  entities.splice(groupPermissionIndex, 1);
-
-  // Save back to the data store
-  const fs = require('fs');
-  const path = require('path');
-  const dataFilePath = path.join(process.cwd(), 'data', 'group-permissions.json');
-  fs.writeFileSync(dataFilePath, JSON.stringify(entities, null, 2));
-
-  return groupPermission;
+  return groupPermissionsDataStore.deleteEntity(groupPermission.id);
 };
 
 export const deleteGroupPermissionsByGroupId = (groupId: string): GroupPermissionData[] => {
-  const groupPermissions = getGroupPermissionsByGroupId(groupId);
-  return groupPermissions
-    .map((gp) => groupPermissionsDataStore.deleteEntity(gp.id))
-    .filter(Boolean) as GroupPermissionData[];
+  const groupPermissions = groupPermissionsDataStore
+    .getEntities()
+    .filter((gp) => gp.groupId === groupId);
+  groupPermissions.forEach((gp) => groupPermissionsDataStore.deleteEntity(gp.id));
+  return groupPermissions;
 };
 
 export const deleteGroupPermissionsByPermissionId = (
   permissionId: string
 ): GroupPermissionData[] => {
-  const groupPermissions = getGroupPermissionsByPermissionId(permissionId);
-  return groupPermissions
-    .map((gp) => groupPermissionsDataStore.deleteEntity(gp.id))
-    .filter(Boolean) as GroupPermissionData[];
+  const groupPermissions = groupPermissionsDataStore
+    .getEntities()
+    .filter((gp) => gp.permissionId === permissionId);
+  groupPermissions.forEach((gp) => groupPermissionsDataStore.deleteEntity(gp.id));
+  return groupPermissions;
 };

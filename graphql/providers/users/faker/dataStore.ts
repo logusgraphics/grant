@@ -1,15 +1,24 @@
 import { faker } from '@faker-js/faker';
 import { CreateUserInput, UpdateUserInput, UserSortInput } from '@/graphql/generated/types';
-import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker/genericDataStore';
+import {
+  createFakerDataStore,
+  EntityConfig,
+  generateAuditTimestamps,
+  updateAuditTimestamp,
+} from '@/lib/providers/faker/genericDataStore';
 import { UserData } from '@/graphql/providers/users/types';
 
 // Generate fake users for initial data
 const generateFakeUsers = (count: number = 50): UserData[] => {
-  return Array.from({ length: count }, () => ({
-    id: faker.string.uuid(),
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-  }));
+  return Array.from({ length: count }, () => {
+    const auditTimestamps = generateAuditTimestamps();
+    return {
+      id: faker.string.uuid(),
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      ...auditTimestamps,
+    };
+  });
 };
 
 // Users-specific configuration
@@ -21,21 +30,29 @@ const usersConfig: EntityConfig<UserData, CreateUserInput, UpdateUserInput> = {
   generateId: () => faker.string.uuid(),
 
   // Generate user entity from input
-  generateEntity: (input: CreateUserInput, id: string): UserData => ({
-    id,
-    name: input.name,
-    email: input.email,
-  }),
+  generateEntity: (input: CreateUserInput, id: string): UserData => {
+    const auditTimestamps = generateAuditTimestamps();
+    return {
+      id,
+      name: input.name,
+      email: input.email,
+      ...auditTimestamps,
+    };
+  },
 
   // Update user entity
-  updateEntity: (entity: UserData, input: UpdateUserInput): UserData => ({
-    ...entity,
-    name: input.name,
-    email: input.email,
-  }),
+  updateEntity: (entity: UserData, input: UpdateUserInput): UserData => {
+    const auditTimestamp = updateAuditTimestamp();
+    return {
+      ...entity,
+      name: input.name,
+      email: input.email,
+      ...auditTimestamp,
+    };
+  },
 
   // Sortable fields
-  sortableFields: ['name', 'email'],
+  sortableFields: ['name', 'email', 'createdAt', 'updatedAt'],
 
   // Validation rules
   validationRules: [

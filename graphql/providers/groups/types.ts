@@ -9,6 +9,9 @@ import {
   GroupPage,
 } from '@/graphql/generated/types';
 
+// Type for group data without the resolved fields (permissions)
+export type GroupData = Omit<Group, 'permissions'>;
+
 export type GetGroupsParams = QueryGroupsArgs;
 export type GetGroupsResult = GroupPage;
 

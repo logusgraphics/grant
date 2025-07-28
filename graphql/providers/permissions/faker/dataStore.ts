@@ -5,63 +5,88 @@ import {
   PermissionSortInput,
   PermissionPage,
 } from '@/graphql/generated/types';
-import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker';
-import { slugifySafe } from '@/shared/lib/slugify';
+import {
+  createFakerDataStore,
+  EntityConfig,
+  generateAuditTimestamps,
+  updateAuditTimestamp,
+} from '@/lib/providers/faker';
+import { PermissionData } from '@/graphql/providers/permissions/types';
+import { faker } from '@faker-js/faker';
 
 // Generate initial permissions (hardcoded)
-const generateInitialPermissions = (): Permission[] => [
-  {
-    id: 'get-policies',
-    name: 'Get Policies',
-    description: 'Permission to get policies',
-    action: 'policies:read',
-  },
-  {
-    id: 'create-policy',
-    name: 'Create Policy',
-    description: 'Permission to create policies',
-    action: 'policies:create',
-  },
-  {
-    id: 'update-policy',
-    name: 'Update Policy',
-    description: 'Permission to update policies',
-    action: 'policies:update',
-  },
-  {
-    id: 'delete-policy',
-    name: 'Delete Policy',
-    description: 'Permission to delete policies',
-    action: 'policies:delete',
-  },
-];
+const generateInitialPermissions = (): PermissionData[] => {
+  const auditTimestamps = generateAuditTimestamps();
+  return [
+    {
+      id: faker.string.uuid(),
+      name: 'Get Policies',
+      description: 'Permission to get policies',
+      action: 'policies:read',
+      ...auditTimestamps,
+    },
+    {
+      id: faker.string.uuid(),
+      name: 'Create Policy',
+      description: 'Permission to create policies',
+      action: 'policies:create',
+      ...auditTimestamps,
+    },
+    {
+      id: faker.string.uuid(),
+      name: 'Update Policy',
+      description: 'Permission to update policies',
+      action: 'policies:update',
+      ...auditTimestamps,
+    },
+    {
+      id: faker.string.uuid(),
+      name: 'Delete Policy',
+      description: 'Permission to delete policies',
+      action: 'policies:delete',
+      ...auditTimestamps,
+    },
+  ];
+};
 
 // Permissions-specific configuration
-const permissionsConfig: EntityConfig<Permission, CreatePermissionInput, UpdatePermissionInput> = {
+const permissionsConfig: EntityConfig<
+  PermissionData,
+  CreatePermissionInput,
+  UpdatePermissionInput
+> = {
   entityName: 'Permission',
   dataFileName: 'permissions.json',
 
-  // Generate slugified ID from name
-  generateId: (input: CreatePermissionInput) => slugifySafe(input.name),
+  // Generate UUID for permission IDs
+  generateId: () => faker.string.uuid(),
 
   // Generate permission entity from input
-  generateEntity: (input: CreatePermissionInput, id: string): Permission => ({
-    id,
-    name: input.name,
-    description: input.description || '',
-    action: input.action,
-  }),
+  generateEntity: (input: CreatePermissionInput, id: string): PermissionData => {
+    const auditTimestamps = generateAuditTimestamps();
+    return {
+      id,
+      name: input.name,
+      description: input.description || '',
+      action: input.action,
+      ...auditTimestamps,
+    };
+  },
 
   // Update permission entity
-  updateEntity: (entity: Permission, input: UpdatePermissionInput): Permission => ({
-    ...entity,
-    name: input.name || entity.name,
-    description: input.description || entity.description,
-    action: input.action || entity.action,
-  }),
+  updateEntity: (entity: PermissionData, input: UpdatePermissionInput): PermissionData => {
+    const auditTimestamp = updateAuditTimestamp();
+    return {
+      ...entity,
+      name: input.name || entity.name,
+      description: input.description || entity.description,
+      action: input.action || entity.action,
+      ...auditTimestamp,
+    };
+  },
 
   // Sortable fields
-  sortableFields: ['name'],
+  sortableFields: ['name', 'createdAt', 'updatedAt'],
 
   // Validation rules
   validationRules: [
@@ -79,14 +104,14 @@ export const permissionsDataStore = createFakerDataStore(permissionsConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => permissionsDataStore.getEntities();
-export const savePermissions = (permissions: Permission[]) => {
+export const savePermissions = (permissions: PermissionData[]) => {
   // This is handled internally by the data store
   // We keep this for backward compatibility but it's a no-op
 };
 export const sortPermissions = (
-  permissions: Permission[],
+  permissions: PermissionData[],
   sortConfig?: PermissionSortInput
-): Permission[] => {
+): PermissionData[] => {
   if (!sortConfig) return permissions;
 
   return permissionsDataStore.getEntities({
@@ -94,7 +119,10 @@ export const sortPermissions = (
     order: sortConfig.order,
   });
 };
-export const getPermissions = (sortConfig?: PermissionSortInput, ids?: string[]): Permission[] => {
+export const getPermissions = (
+  sortConfig?: PermissionSortInput,
+  ids?: string[]
+): PermissionData[] => {
   let allPermissions = permissionsDataStore.getEntities(
     sortConfig
       ? {
@@ -111,18 +139,22 @@ export const getPermissions = (sortConfig?: PermissionSortInput, ids?: string[])
 
   return allPermissions;
 };
+
 export const isPermissionUnique = (permissionId: string): boolean => {
-  return !permissionsDataStore.entityExists(permissionId);
+  return permissionsDataStore.entityExists(permissionId);
 };
-export const createPermission = (input: CreatePermissionInput): Permission => {
+
+export const createPermission = (input: CreatePermissionInput): PermissionData => {
   return permissionsDataStore.createEntity(input);
 };
+
 export const updatePermission = (
   permissionId: string,
   input: UpdatePermissionInput
-): Permission | null => {
+): PermissionData | null => {
   return permissionsDataStore.updateEntity(permissionId, input);
 };
-export const deletePermission = (permissionId: string): Permission | null => {
+
+export const deletePermission = (permissionId: string): PermissionData | null => {
   return permissionsDataStore.deleteEntity(permissionId);
 };

@@ -1,11 +1,22 @@
 import { faker } from '@faker-js/faker';
-import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker/genericDataStore';
+import {
+  createFakerDataStore,
+  EntityConfig,
+  generateAuditTimestamps,
+  updateAuditTimestamp,
+} from '@/lib/providers/faker/genericDataStore';
 import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
 import { getGroups } from '../../groups/faker/dataStore';
+import { Auditable } from '@/graphql/generated/types';
 
 // Type for RoleGroup data without the resolved fields
-export interface RoleGroupData {
-  id: string;
+export interface RoleGroupData extends Auditable {
+  groupId: string;
+  roleId: string;
+}
+
+// Input type for creating role-group relationships
+export interface CreateRoleGroupInput {
   groupId: string;
   roleId: string;
 }
@@ -27,10 +38,12 @@ const generateFakeRoleGroups = (count: number = 100): RoleGroupData[] => {
       (rg) => rg.groupId === randomGroup.id && rg.roleId === randomRole.id
     );
     if (!exists) {
+      const auditTimestamps = generateAuditTimestamps();
       roleGroups.push({
         id: faker.string.uuid(),
         groupId: randomGroup.id,
         roleId: randomRole.id,
+        ...auditTimestamps,
       });
     }
   }
@@ -39,16 +52,22 @@ const generateFakeRoleGroups = (count: number = 100): RoleGroupData[] => {
 };
 
 // RoleGroup-specific configuration
-const roleGroupConfig: EntityConfig<RoleGroupData, never, never> = {
+const roleGroupConfig: EntityConfig<RoleGroupData, CreateRoleGroupInput, never> = {
   entityName: 'RoleGroup',
   dataFileName: 'role-groups.json',
 
   // Generate UUID for role-group IDs
   generateId: () => faker.string.uuid(),
 
-  // Generate role-group entity from input (not used for this pivot)
-  generateEntity: () => {
-    throw new Error('RoleGroup entities should be created through specific methods');
+  // Generate role-group entity from input
+  generateEntity: (input: CreateRoleGroupInput, id: string): RoleGroupData => {
+    const auditTimestamps = generateAuditTimestamps();
+    return {
+      id,
+      groupId: input.groupId,
+      roleId: input.roleId,
+      ...auditTimestamps,
+    };
   },
 
   // Update role-group entity (not used for this pivot)
@@ -57,7 +76,7 @@ const roleGroupConfig: EntityConfig<RoleGroupData, never, never> = {
   },
 
   // Sortable fields
-  sortableFields: ['groupId', 'roleId'],
+  sortableFields: ['groupId', 'roleId', 'createdAt', 'updatedAt'],
 
   // Validation rules
   validationRules: [
@@ -84,69 +103,45 @@ export const getRoleGroupsByGroupId = (groupId: string): RoleGroupData[] => {
 };
 
 export const addRoleGroup = (groupId: string, roleId: string): RoleGroupData => {
-  // Get current entities and check if role already exists
-  const entities = roleGroupsDataStore.getEntities();
-  const existingRole = entities.find((rg) => rg.groupId === groupId && rg.roleId === roleId);
+  // Check if role already exists
+  const existingRole = roleGroupsDataStore
+    .getEntities()
+    .find((rg) => rg.groupId === groupId && rg.roleId === roleId);
 
   if (existingRole) {
     return existingRole;
   }
 
-  const roleGroup: RoleGroupData = {
-    id: faker.string.uuid(),
-    groupId,
-    roleId,
-  };
-
-  entities.push(roleGroup);
-
-  // Save back to the data store
-  const fs = require('fs');
-  const path = require('path');
-  const dataFilePath = path.join(process.cwd(), 'data', 'role-groups.json');
-  fs.writeFileSync(dataFilePath, JSON.stringify(entities, null, 2));
-
-  return roleGroup;
+  return roleGroupsDataStore.createEntity({ groupId, roleId });
 };
 
 export const deleteRoleGroup = (id: string): RoleGroupData | null => {
   return roleGroupsDataStore.deleteEntity(id);
 };
 
-// New function to delete by groupId and roleId
 export const deleteRoleGroupByGroupAndRole = (
   groupId: string,
   roleId: string
 ): RoleGroupData | null => {
-  const entities = roleGroupsDataStore.getEntities();
-  const roleGroupIndex = entities.findIndex((rg) => rg.groupId === groupId && rg.roleId === roleId);
+  const roleGroup = roleGroupsDataStore
+    .getEntities()
+    .find((rg) => rg.groupId === groupId && rg.roleId === roleId);
 
-  if (roleGroupIndex === -1) {
+  if (!roleGroup) {
     return null;
   }
 
-  const roleGroup = entities[roleGroupIndex];
-  entities.splice(roleGroupIndex, 1);
-
-  // Save back to the data store
-  const fs = require('fs');
-  const path = require('path');
-  const dataFilePath = path.join(process.cwd(), 'data', 'role-groups.json');
-  fs.writeFileSync(dataFilePath, JSON.stringify(entities, null, 2));
-
-  return roleGroup;
+  return roleGroupsDataStore.deleteEntity(roleGroup.id);
 };
 
 export const deleteRoleGroupsByGroupId = (groupId: string): RoleGroupData[] => {
-  const roleGroups = getRoleGroupsByGroupId(groupId);
-  return roleGroups
-    .map((rg) => roleGroupsDataStore.deleteEntity(rg.id))
-    .filter(Boolean) as RoleGroupData[];
+  const roleGroups = roleGroupsDataStore.getEntities().filter((rg) => rg.groupId === groupId);
+  roleGroups.forEach((rg) => roleGroupsDataStore.deleteEntity(rg.id));
+  return roleGroups;
 };
 
 export const deleteRoleGroupsByRoleId = (roleId: string): RoleGroupData[] => {
-  const roleGroups = getRoleGroupsByRoleId(roleId);
-  return roleGroups
-    .map((rg) => roleGroupsDataStore.deleteEntity(rg.id))
-    .filter(Boolean) as RoleGroupData[];
+  const roleGroups = roleGroupsDataStore.getEntities().filter((rg) => rg.roleId === roleId);
+  roleGroups.forEach((rg) => roleGroupsDataStore.deleteEntity(rg.id));
+  return roleGroups;
 };

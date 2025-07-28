@@ -19,14 +19,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
       {/* Right side - Image or gradient */}
       <div className="hidden lg:flex items-center justify-center bg-gradient-to-r from-blue-600/90 to-blue-400/90 p-8 relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/identity-central-bg.jpg)' }}
-        />
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" />
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-blue-400/90" />
-        <div className="max-w-2xl text-white relative z-10">
+        <div className="max-w-lg text-white relative z-10">
           <div className="flex items-center">
-            <Logo size={250} className="text-white flex-shrink-0" />
             <div className="space-y-4">
               <h2 className="text-3xl font-bold">{t('welcome.title')}</h2>
               <p className="text-lg opacity-90">{t('welcome.description')}</p>

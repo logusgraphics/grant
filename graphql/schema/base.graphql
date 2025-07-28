@@ -1,0 +1,31 @@
+"""
+Base interface for entities with audit fields.
+"""
+interface Auditable {
+  """
+  Unique identifier for the entity.
+  """
+  id: ID!
+  """
+  Timestamp when the entity was created.
+  """
+  createdAt: String!
+  """
+  Timestamp when the entity was last updated.
+  """
+  updatedAt: String!
+}
+
+"""
+Base interface for entities that can be created and updated.
+"""
+interface Creatable {
+  """
+  Timestamp when the entity was created.
+  """
+  createdAt: String!
+  """
+  Timestamp when the entity was last updated.
+  """
+  updatedAt: String!
+} 

@@ -9,6 +9,9 @@ import {
   RolePage,
 } from '@/graphql/generated/types';
 
+// Type for role data without the resolved fields (groups)
+export type RoleData = Omit<Role, 'groups'>;
+
 export type GetRolesParams = QueryRolesArgs;
 export type GetRolesResult = RolePage;
 

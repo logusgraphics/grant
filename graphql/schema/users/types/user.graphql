@@ -1,7 +1,7 @@
 """
 Represents a user in the system.
 """
-type User {
+type User implements Auditable {
   """
   Unique identifier for the user.
   """
@@ -18,4 +18,12 @@ type User {
   List of roles assigned to the user.
   """
   roles: [Role!]!
+  """
+  Timestamp when the user was created.
+  """
+  createdAt: String!
+  """
+  Timestamp when the user was last updated.
+  """
+  updatedAt: String!
 }

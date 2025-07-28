@@ -9,6 +9,9 @@ import {
   PermissionPage,
 } from '@/graphql/generated/types';
 
+// Type for permission data without the resolved fields (none for permissions)
+export type PermissionData = Permission;
+
 export type GetPermissionsParams = QueryPermissionsArgs;
 export type GetPermissionsResult = PermissionPage;
 

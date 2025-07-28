@@ -1,7 +1,7 @@
 """
 Represents a role-group relationship in the system.
 """
-type RoleGroup {
+type RoleGroup implements Auditable {
   """
   Unique identifier for the role-group relationship.
   """
@@ -22,4 +22,12 @@ type RoleGroup {
   The role associated with this relationship.
   """
   role: Role
+  """
+  Timestamp when the role-group relationship was created.
+  """
+  createdAt: String!
+  """
+  Timestamp when the role-group relationship was last updated.
+  """
+  updatedAt: String!
 }

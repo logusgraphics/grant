@@ -1,7 +1,7 @@
 """
 Represents a group-permission relationship in the system.
 """
-type GroupPermission {
+type GroupPermission implements Auditable {
   """
   Unique identifier for the group-permission relationship.
   """
@@ -22,4 +22,12 @@ type GroupPermission {
   The permission associated with this relationship.
   """
   permission: Permission
+  """
+  Timestamp when the group-permission relationship was created.
+  """
+  createdAt: String!
+  """
+  Timestamp when the group-permission relationship was last updated.
+  """
+  updatedAt: String!
 }

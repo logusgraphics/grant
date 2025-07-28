@@ -1,60 +1,76 @@
-import { Role, CreateRoleInput, UpdateRoleInput, RoleSortInput } from '@/graphql/generated/types';
-import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker/genericDataStore';
-import { slugifySafe } from '@/shared/lib/slugify';
+import { faker } from '@faker-js/faker';
+import { CreateRoleInput, UpdateRoleInput, RoleSortInput } from '@/graphql/generated/types';
+import {
+  createFakerDataStore,
+  EntityConfig,
+  generateAuditTimestamps,
+  updateAuditTimestamp,
+} from '@/lib/providers/faker/genericDataStore';
+import { RoleData } from '@/graphql/providers/roles/types';
 
 // Generate initial roles (hardcoded)
-const generateInitialRoles = (): Role[] => [
-  {
-    id: 'admin',
-    name: 'Admin',
-    description: 'Admin role with all permission groups',
-    groups: [],
-  },
-  {
-    id: 'support',
-    name: 'Support',
-    description: 'Support user with support permission groups',
-    groups: [],
-  },
-  {
-    id: 'partner',
-    name: 'Partner',
-    description: 'Partner user with partner permission groups',
-    groups: [],
-  },
-  {
-    id: 'customer',
-    name: 'Customer',
-    description: 'Customer tenant level with customer permission groups',
-    groups: [],
-  },
-];
+const generateInitialRoles = (): RoleData[] => {
+  const auditTimestamps = generateAuditTimestamps();
+  return [
+    {
+      id: faker.string.uuid(),
+      name: 'Admin',
+      description: 'Admin role with all permission groups',
+      ...auditTimestamps,
+    },
+    {
+      id: faker.string.uuid(),
+      name: 'Support',
+      description: 'Support user with support permission groups',
+      ...auditTimestamps,
+    },
+    {
+      id: faker.string.uuid(),
+      name: 'Partner',
+      description: 'Partner user with partner permission groups',
+      ...auditTimestamps,
+    },
+    {
+      id: faker.string.uuid(),
+      name: 'Customer',
+      description: 'Customer tenant level with customer permission groups',
+      ...auditTimestamps,
+    },
+  ];
+};
 
 // Roles-specific configuration
-const rolesConfig: EntityConfig<Role, CreateRoleInput, UpdateRoleInput> = {
+const rolesConfig: EntityConfig<RoleData, CreateRoleInput, UpdateRoleInput> = {
   entityName: 'Role',
   dataFileName: 'roles.json',
 
-  // Generate slugified ID from name
-  generateId: (input: CreateRoleInput) => slugifySafe(input.name),
+  // Generate UUID for role IDs
+  generateId: () => faker.string.uuid(),
 
   // Generate role entity from input
-  generateEntity: (input: CreateRoleInput, id: string): Role => ({
-    id,
-    name: input.name,
-    description: input.description || '',
-    groups: [],
-  }),
+  generateEntity: (input: CreateRoleInput, id: string): RoleData => {
+    const auditTimestamps = generateAuditTimestamps();
+    return {
+      id,
+      name: input.name,
+      description: input.description || '',
+      ...auditTimestamps,
+    };
+  },
 
   // Update role entity
-  updateEntity: (entity: Role, input: UpdateRoleInput): Role => ({
-    ...entity,
-    name: input.name || entity.name,
-    description: input.description || entity.description,
-  }),
+  updateEntity: (entity: RoleData, input: UpdateRoleInput): RoleData => {
+    const auditTimestamp = updateAuditTimestamp();
+    return {
+      ...entity,
+      name: input.name || entity.name,
+      description: input.description || entity.description,
+      ...auditTimestamp,
+    };
+  },
 
   // Sortable fields
-  sortableFields: ['name'],
+  sortableFields: ['name', 'createdAt', 'updatedAt'],
 
   // Validation rules
   validationRules: [
@@ -71,11 +87,11 @@ export const rolesDataStore = createFakerDataStore(rolesConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => rolesDataStore.getEntities();
-export const saveRoles = (roles: Role[]) => {
+export const saveRoles = (roles: RoleData[]) => {
   // This is handled internally by the data store
   // We keep this for backward compatibility but it's a no-op
 };
-export const sortRoles = (roles: Role[], sortConfig?: RoleSortInput): Role[] => {
+export const sortRoles = (roles: RoleData[], sortConfig?: RoleSortInput): RoleData[] => {
   if (!sortConfig) return roles;
 
   return rolesDataStore.getEntities({
@@ -85,7 +101,7 @@ export const sortRoles = (roles: Role[], sortConfig?: RoleSortInput): Role[] => 
 };
 
 // Updated getRoles function with optional ids parameter
-export const getRoles = (sortConfig?: RoleSortInput, ids?: string[]): Role[] => {
+export const getRoles = (sortConfig?: RoleSortInput, ids?: string[]): RoleData[] => {
   let allRoles = rolesDataStore.getEntities(
     sortConfig
       ? {
@@ -104,14 +120,17 @@ export const getRoles = (sortConfig?: RoleSortInput, ids?: string[]): Role[] => 
 };
 
 export const isRoleUnique = (roleId: string): boolean => {
-  return !rolesDataStore.entityExists(roleId);
+  return rolesDataStore.entityExists(roleId);
 };
-export const createRole = (input: CreateRoleInput): Role => {
+
+export const createRole = (input: CreateRoleInput): RoleData => {
   return rolesDataStore.createEntity(input);
 };
-export const updateRole = (roleId: string, input: UpdateRoleInput): Role | null => {
+
+export const updateRole = (roleId: string, input: UpdateRoleInput): RoleData | null => {
   return rolesDataStore.updateEntity(roleId, input);
 };
-export const deleteRole = (roleId: string): Role | null => {
+
+export const deleteRole = (roleId: string): RoleData | null => {
   return rolesDataStore.deleteEntity(roleId);
 };

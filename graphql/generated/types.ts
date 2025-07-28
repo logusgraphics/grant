@@ -41,6 +41,24 @@ export type AddUserRoleInput = {
   userId: Scalars['ID']['input'];
 };
 
+/** Base interface for entities with audit fields. */
+export type Auditable = {
+  /** Timestamp when the entity was created. */
+  createdAt: Scalars['String']['output'];
+  /** Unique identifier for the entity. */
+  id: Scalars['ID']['output'];
+  /** Timestamp when the entity was last updated. */
+  updatedAt: Scalars['String']['output'];
+};
+
+/** Base interface for entities that can be created and updated. */
+export type Creatable = {
+  /** Timestamp when the entity was created. */
+  createdAt: Scalars['String']['output'];
+  /** Timestamp when the entity was last updated. */
+  updatedAt: Scalars['String']['output'];
+};
+
 export type CreateGroupInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
@@ -66,12 +84,21 @@ export type CreateUserInput = {
   name: Scalars['String']['input'];
 };
 
-export type Group = {
+/** Represents a group in the system. */
+export type Group = Auditable & {
   __typename?: 'Group';
+  /** Timestamp when the group was created. */
+  createdAt: Scalars['String']['output'];
+  /** Description of the group. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Unique identifier for the group. */
   id: Scalars['ID']['output'];
+  /** Name of the group. */
   name: Scalars['String']['output'];
+  /** List of permissions associated with this group. */
   permissions: Array<Permission>;
+  /** Timestamp when the group was last updated. */
+  updatedAt: Scalars['String']['output'];
 };
 
 /** Represents a paginated list of groups. */
@@ -86,8 +113,10 @@ export type GroupPage = {
 };
 
 /** Represents a group-permission relationship in the system. */
-export type GroupPermission = {
+export type GroupPermission = Auditable & {
   __typename?: 'GroupPermission';
+  /** Timestamp when the group-permission relationship was created. */
+  createdAt: Scalars['String']['output'];
   /** The group associated with this relationship. */
   group?: Maybe<Group>;
   /** ID of the group. */
@@ -98,6 +127,8 @@ export type GroupPermission = {
   permission?: Maybe<Permission>;
   /** ID of the permission. */
   permissionId: Scalars['ID']['output'];
+  /** Timestamp when the group-permission relationship was last updated. */
+  updatedAt: Scalars['String']['output'];
 };
 
 /** Input for sorting groups. */
@@ -274,12 +305,21 @@ export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
 };
 
-export type Permission = {
+/** Represents a permission in the system. */
+export type Permission = Auditable & {
   __typename?: 'Permission';
+  /** Action associated with the permission. */
   action: Scalars['String']['output'];
+  /** Timestamp when the permission was created. */
+  createdAt: Scalars['String']['output'];
+  /** Description of the permission. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Unique identifier for the permission. */
   id: Scalars['ID']['output'];
+  /** Name of the permission. */
   name: Scalars['String']['output'];
+  /** Timestamp when the permission was last updated. */
+  updatedAt: Scalars['String']['output'];
 };
 
 /** Represents a paginated list of permissions. */
@@ -405,17 +445,28 @@ export type RemoveUserRoleInput = {
   userId: Scalars['ID']['input'];
 };
 
-export type Role = {
+/** Represents a role in the system. */
+export type Role = Auditable & {
   __typename?: 'Role';
+  /** Timestamp when the role was created. */
+  createdAt: Scalars['String']['output'];
+  /** Description of the role. */
   description?: Maybe<Scalars['String']['output']>;
+  /** List of groups associated with this role. */
   groups: Array<Group>;
+  /** Unique identifier for the role. */
   id: Scalars['ID']['output'];
+  /** Name of the role. */
   name: Scalars['String']['output'];
+  /** Timestamp when the role was last updated. */
+  updatedAt: Scalars['String']['output'];
 };
 
 /** Represents a role-group relationship in the system. */
-export type RoleGroup = {
+export type RoleGroup = Auditable & {
   __typename?: 'RoleGroup';
+  /** Timestamp when the role-group relationship was created. */
+  createdAt: Scalars['String']['output'];
   /** The group associated with this relationship. */
   group?: Maybe<Group>;
   /** ID of the group. */
@@ -426,6 +477,8 @@ export type RoleGroup = {
   role?: Maybe<Role>;
   /** ID of the role. */
   roleId: Scalars['ID']['output'];
+  /** Timestamp when the role-group relationship was last updated. */
+  updatedAt: Scalars['String']['output'];
 };
 
 /** Represents a paginated list of roles. */
@@ -482,8 +535,10 @@ export type UpdateUserInput = {
 };
 
 /** Represents a user in the system. */
-export type User = {
+export type User = Auditable & {
   __typename?: 'User';
+  /** Timestamp when the user was created. */
+  createdAt: Scalars['String']['output'];
   /** Email address of the user. */
   email: Scalars['String']['output'];
   /** Unique identifier for the user. */
@@ -492,6 +547,8 @@ export type User = {
   name: Scalars['String']['output'];
   /** List of roles assigned to the user. */
   roles: Array<Role>;
+  /** Timestamp when the user was last updated. */
+  updatedAt: Scalars['String']['output'];
 };
 
 /** Represents a paginated list of users. */
@@ -506,14 +563,18 @@ export type UserPage = {
 };
 
 /** Represents a user-role relationship in the system. */
-export type UserRole = {
+export type UserRole = Auditable & {
   __typename?: 'UserRole';
+  /** Timestamp when the user-role relationship was created. */
+  createdAt: Scalars['String']['output'];
   /** Unique identifier for the user-role relationship. */
   id: Scalars['ID']['output'];
   /** The role associated with this relationship. */
   role: Role;
   /** ID of the role. */
   roleId: Scalars['ID']['output'];
+  /** Timestamp when the user-role relationship was last updated. */
+  updatedAt: Scalars['String']['output'];
   /** The user associated with this relationship. */
   user: User;
   /** ID of the user. */
@@ -607,13 +668,20 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 ) => TResult | Promise<TResult>;
 
 
+/** Mapping of interface types */
+export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = ResolversObject<{
+  Auditable: ( Group ) | ( GroupPermission ) | ( Permission ) | ( Role ) | ( RoleGroup ) | ( User ) | ( UserRole );
+  Creatable: never;
+}>;
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
   AddGroupPermissionInput: AddGroupPermissionInput;
   AddRoleGroupInput: AddRoleGroupInput;
   AddUserRoleInput: AddUserRoleInput;
+  Auditable: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Auditable']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Creatable: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Creatable']>;
   CreateGroupInput: CreateGroupInput;
   CreatePermissionInput: CreatePermissionInput;
   CreateRoleInput: CreateRoleInput;
@@ -662,7 +730,9 @@ export type ResolversParentTypes = ResolversObject<{
   AddGroupPermissionInput: AddGroupPermissionInput;
   AddRoleGroupInput: AddRoleGroupInput;
   AddUserRoleInput: AddUserRoleInput;
+  Auditable: ResolversInterfaceTypes<ResolversParentTypes>['Auditable'];
   Boolean: Scalars['Boolean']['output'];
+  Creatable: ResolversInterfaceTypes<ResolversParentTypes>['Creatable'];
   CreateGroupInput: CreateGroupInput;
   CreatePermissionInput: CreatePermissionInput;
   CreateRoleInput: CreateRoleInput;
@@ -698,11 +768,26 @@ export type ResolversParentTypes = ResolversObject<{
   UserSortInput: UserSortInput;
 }>;
 
+export type AuditableResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Auditable'] = ResolversParentTypes['Auditable']> = ResolversObject<{
+  __resolveType: TypeResolveFn<'Group' | 'GroupPermission' | 'Permission' | 'Role' | 'RoleGroup' | 'User' | 'UserRole', ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
+export type CreatableResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Creatable'] = ResolversParentTypes['Creatable']> = ResolversObject<{
+  __resolveType: TypeResolveFn<null, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
 export type GroupResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Group'] = ResolversParentTypes['Group']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   permissions?: Resolver<Array<ResolversTypes['Permission']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -714,11 +799,13 @@ export type GroupPageResolvers<ContextType = Context, ParentType extends Resolve
 }>;
 
 export type GroupPermissionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['GroupPermission'] = ResolversParentTypes['GroupPermission']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   group?: Resolver<Maybe<ResolversTypes['Group']>, ParentType, ContextType>;
   groupId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   permission?: Resolver<Maybe<ResolversTypes['Permission']>, ParentType, ContextType>;
   permissionId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -752,9 +839,11 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 
 export type PermissionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Permission'] = ResolversParentTypes['Permission']> = ResolversObject<{
   action?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -777,19 +866,23 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 }>;
 
 export type RoleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Role'] = ResolversParentTypes['Role']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   groups?: Resolver<Array<ResolversTypes['Group']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type RoleGroupResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RoleGroup'] = ResolversParentTypes['RoleGroup']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   group?: Resolver<Maybe<ResolversTypes['Group']>, ParentType, ContextType>;
   groupId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   role?: Resolver<Maybe<ResolversTypes['Role']>, ParentType, ContextType>;
   roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -801,10 +894,12 @@ export type RolePageResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['Role']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -816,15 +911,19 @@ export type UserPageResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type UserRoleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserRole'] = ResolversParentTypes['UserRole']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   role?: Resolver<ResolversTypes['Role'], ParentType, ContextType>;
   roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
+  Auditable?: AuditableResolvers<ContextType>;
+  Creatable?: CreatableResolvers<ContextType>;
   Group?: GroupResolvers<ContextType>;
   GroupPage?: GroupPageResolvers<ContextType>;
   GroupPermission?: GroupPermissionResolvers<ContextType>;

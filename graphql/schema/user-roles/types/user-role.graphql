@@ -1,7 +1,7 @@
 """
 Represents a user-role relationship in the system.
 """
-type UserRole {
+type UserRole implements Auditable {
   """
   Unique identifier for the user-role relationship.
   """
@@ -22,4 +22,12 @@ type UserRole {
   The role associated with this relationship.
   """
   role: Role!
+  """
+  Timestamp when the user-role relationship was created.
+  """
+  createdAt: String!
+  """
+  Timestamp when the user-role relationship was last updated.
+  """
+  updatedAt: String!
 }

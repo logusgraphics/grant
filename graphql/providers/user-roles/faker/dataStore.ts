@@ -1,11 +1,22 @@
 import { faker } from '@faker-js/faker';
-import { createFakerDataStore, EntityConfig } from '@/lib/providers/faker/genericDataStore';
+import {
+  createFakerDataStore,
+  EntityConfig,
+  generateAuditTimestamps,
+  updateAuditTimestamp,
+} from '@/lib/providers/faker/genericDataStore';
 import { getUsers } from '@/graphql/providers/users/faker/dataStore';
 import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
+import { Auditable } from '@/graphql/generated/types';
 
 // Type for UserRole data without the resolved fields
-export interface UserRoleData {
-  id: string;
+export interface UserRoleData extends Auditable {
+  userId: string;
+  roleId: string;
+}
+
+// Input type for creating user-role relationships
+export interface CreateUserRoleInput {
   userId: string;
   roleId: string;
 }
@@ -27,10 +38,12 @@ const generateFakeUserRoles = (count: number = 100): UserRoleData[] => {
       (ur) => ur.userId === randomUser.id && ur.roleId === randomRole.id
     );
     if (!exists) {
+      const auditTimestamps = generateAuditTimestamps();
       userRoles.push({
         id: faker.string.uuid(),
         userId: randomUser.id,
         roleId: randomRole.id,
+        ...auditTimestamps,
       });
     }
   }
@@ -39,16 +52,22 @@ const generateFakeUserRoles = (count: number = 100): UserRoleData[] => {
 };
 
 // UserRole-specific configuration
-const userRoleConfig: EntityConfig<UserRoleData, never, never> = {
+const userRoleConfig: EntityConfig<UserRoleData, CreateUserRoleInput, never> = {
   entityName: 'UserRole',
   dataFileName: 'user-roles.json',
 
   // Generate UUID for user-role IDs
   generateId: () => faker.string.uuid(),
 
-  // Generate user-role entity from input (not used for this pivot)
-  generateEntity: () => {
-    throw new Error('UserRole entities should be created through specific methods');
+  // Generate user-role entity from input
+  generateEntity: (input: CreateUserRoleInput, id: string): UserRoleData => {
+    const auditTimestamps = generateAuditTimestamps();
+    return {
+      id,
+      userId: input.userId,
+      roleId: input.roleId,
+      ...auditTimestamps,
+    };
   },
 
   // Update user-role entity (not used for this pivot)
@@ -57,7 +76,7 @@ const userRoleConfig: EntityConfig<UserRoleData, never, never> = {
   },
 
   // Sortable fields
-  sortableFields: ['userId', 'roleId'],
+  sortableFields: ['userId', 'roleId', 'createdAt', 'updatedAt'],
 
   // Validation rules
   validationRules: [
@@ -92,63 +111,36 @@ export const addUserRole = (userId: string, roleId: string): UserRoleData => {
     return existingRole;
   }
 
-  const userRole: UserRoleData = {
-    id: faker.string.uuid(),
-    userId,
-    roleId,
-  };
-
-  // Manually add to the data store
-  const entities = userRolesDataStore.getEntities();
-  entities.push(userRole);
-
-  // Save using the data store's private method (we'll need to access it differently)
-  const fs = require('fs');
-  const path = require('path');
-  const dataFilePath = path.join(process.cwd(), 'data', 'user-roles.json');
-  fs.writeFileSync(dataFilePath, JSON.stringify(entities, null, 2));
-
-  return userRole;
+  return userRolesDataStore.createEntity({ userId, roleId });
 };
 
 export const deleteUserRole = (id: string): UserRoleData | null => {
   return userRolesDataStore.deleteEntity(id);
 };
 
-// New function to delete by userId and roleId
 export const deleteUserRoleByUserAndRole = (
   userId: string,
   roleId: string
 ): UserRoleData | null => {
-  const entities = userRolesDataStore.getEntities();
-  const userRoleIndex = entities.findIndex((ur) => ur.userId === userId && ur.roleId === roleId);
+  const userRole = userRolesDataStore
+    .getEntities()
+    .find((ur) => ur.userId === userId && ur.roleId === roleId);
 
-  if (userRoleIndex === -1) {
+  if (!userRole) {
     return null;
   }
 
-  const userRole = entities[userRoleIndex];
-  entities.splice(userRoleIndex, 1);
-
-  // Save back to the data store
-  const fs = require('fs');
-  const path = require('path');
-  const dataFilePath = path.join(process.cwd(), 'data', 'user-roles.json');
-  fs.writeFileSync(dataFilePath, JSON.stringify(entities, null, 2));
-
-  return userRole;
+  return userRolesDataStore.deleteEntity(userRole.id);
 };
 
 export const deleteUserRolesByUserId = (userId: string): UserRoleData[] => {
-  const userRoles = getUserRolesByUserId(userId);
-  return userRoles
-    .map((ur) => userRolesDataStore.deleteEntity(ur.id))
-    .filter(Boolean) as UserRoleData[];
+  const userRoles = userRolesDataStore.getEntities().filter((ur) => ur.userId === userId);
+  userRoles.forEach((ur) => userRolesDataStore.deleteEntity(ur.id));
+  return userRoles;
 };
 
 export const deleteUserRolesByRoleId = (roleId: string): UserRoleData[] => {
-  const userRoles = getUserRolesByRoleId(roleId);
-  return userRoles
-    .map((ur) => userRolesDataStore.deleteEntity(ur.id))
-    .filter(Boolean) as UserRoleData[];
+  const userRoles = userRolesDataStore.getEntities().filter((ur) => ur.roleId === roleId);
+  userRoles.forEach((ur) => userRolesDataStore.deleteEntity(ur.id));
+  return userRoles;
 };

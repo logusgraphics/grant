@@ -1,6 +1,6 @@
 import { GetRolesParams, GetRolesResult } from '@/graphql/providers/roles/types';
 import { getRoles as getRolesFromDataStore } from '@/graphql/providers/roles/faker/dataStore';
-import { RoleSortableField, RoleSortOrder } from '@/graphql/generated/types';
+import { RoleSortableField, RoleSortOrder, Role } from '@/graphql/generated/types';
 
 const SEARCHABLE_FIELDS = ['name', 'description'] as const;
 const DEFAULT_SORT = { field: RoleSortableField.Name, order: RoleSortOrder.Asc };
@@ -17,7 +17,7 @@ export async function getRoles({
     const filteredRoles = getRolesFromDataStore(sort || DEFAULT_SORT, ids);
 
     return {
-      roles: filteredRoles,
+      roles: filteredRoles.map((role) => ({ ...role, groups: [] })),
       totalCount: filteredRoles.length,
       hasNextPage: false, // No pagination when filtering by IDs
     };
@@ -47,7 +47,7 @@ export async function getRoles({
   const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
 
   return {
-    roles,
+    roles: roles.map((role) => ({ ...role, groups: [] })),
     totalCount,
     hasNextPage,
   };

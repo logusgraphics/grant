@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 import { ApiError } from '@/graphql/errors';
+import { Auditable } from '@/graphql/generated/types';
 
 // Generic types for the data store
-export interface BaseEntity {
-  id: string;
+export interface BaseEntity extends Auditable {
   [key: string]: any;
 }
 
@@ -28,6 +28,22 @@ export interface ValidationRule {
   required?: boolean;
   validator?: (value: any) => boolean;
 }
+
+// Helper function to generate audit timestamps
+export const generateAuditTimestamps = () => {
+  const now = new Date().toISOString();
+  return {
+    createdAt: now,
+    updatedAt: now,
+  };
+};
+
+// Helper function to update audit timestamp
+export const updateAuditTimestamp = () => {
+  return {
+    updatedAt: new Date().toISOString(),
+  };
+};
 
 export interface EntityConfig<T extends BaseEntity, C extends CreateInput, U extends UpdateInput> {
   entityName: string;
