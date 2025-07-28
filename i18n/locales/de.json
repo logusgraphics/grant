@@ -201,9 +201,12 @@
       "table": "Tabellenansicht"
     },
     "table": {
+      "id": "ID",
       "name": "Name",
       "email": "E-Mail",
       "roles": "Rollen",
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
       "actions": "Aktionen",
       "loading": "Benutzer werden geladen..."
     }
@@ -285,6 +288,8 @@
       "name": "Name",
       "description": "Beschreibung",
       "id": "ID",
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
       "actions": "Aktionen",
       "loading": "Rollen werden geladen..."
     },
@@ -379,9 +384,12 @@
       "table": "Tabellenansicht"
     },
     "table": {
+      "id": "ID",
       "name": "Name",
       "description": "Beschreibung",
       "permissions": "Berechtigungen",
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
       "actions": "Aktionen",
       "loading": "Gruppen werden geladen..."
     },

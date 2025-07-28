@@ -1,11 +1,10 @@
 'use client';
 
 import { Role } from '@/graphql/generated/types';
-import { DataTable, type TableColumn } from '@/components/common/DataTable';
+import { EnhancedDataTable, type FieldConfig } from '@/components/common/DataTable';
 import { type ColumnConfig } from '@/components/common/TableSkeleton';
 import { RoleActions } from './RoleActions';
 import { CreateRoleDialog } from './CreateRoleDialog';
-import { ColoredList } from '@/components/ui/colored-list';
 import { Shield, Group } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -28,45 +27,73 @@ export function RoleTable({
 }: RoleTableProps) {
   const t = useTranslations('roles');
 
-  const columns: TableColumn<Role>[] = [
+  const fields: FieldConfig<Role>[] = [
     {
+      type: 'id',
+      key: 'id',
+      header: t('table.id'),
+      width: '120px',
+    },
+    {
+      type: 'avatar',
       key: 'name',
       header: t('table.label'),
-      render: (role) => <span className="font-medium">{role.name}</span>,
+      width: '300px',
+      avatar: {
+        getInitial: (role: Role) => role.name.charAt(0).toUpperCase(),
+        defaultBackgroundClass: 'bg-primary/10',
+        size: 'md',
+      },
     },
     {
+      type: 'description',
       key: 'description',
       header: t('table.description'),
-      render: (role) => role.description || t('noDescription'),
+      width: '250px',
     },
     {
+      type: 'list',
       key: 'groups',
       header: t('groups'),
-      render: (role) => (
-        <ColoredList
-          items={role.groups}
-          labelField="name"
-          title=""
-          icon={<Group className="h-3 w-3" />}
-          height={60}
-        />
-      ),
+      width: '200px',
+      list: {
+        items: (role: Role) => role.groups || [],
+        labelField: 'name',
+        icon: <Group className="h-3 w-3" />,
+        height: 60,
+        maxItems: 3,
+      },
+    },
+    {
+      type: 'timestamp',
+      key: 'createdAt',
+      header: t('table.created'),
+      width: '150px',
+    },
+    {
+      type: 'timestamp',
+      key: 'updatedAt',
+      header: t('table.updated'),
+      width: '150px',
     },
   ];
 
   const skeletonConfig: { columns: ColumnConfig[]; rowCount?: number } = {
     columns: [
-      { key: 'name', type: 'text' },
+      { key: 'id', type: 'text' },
+      { key: 'name', type: 'avatar' },
       { key: 'description', type: 'text' },
       { key: 'groups', type: 'list' },
+      { key: 'createdAt', type: 'text' },
+      { key: 'updatedAt', type: 'text' },
     ],
     rowCount: limit,
   };
 
   return (
-    <DataTable
+    <EnhancedDataTable
       data={roles}
-      columns={columns}
+      fields={fields}
       loading={loading}
       emptyState={{
         icon: <Shield className="h-12 w-12" />,

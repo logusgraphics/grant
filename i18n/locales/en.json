@@ -201,9 +201,12 @@
       "table": "Table View"
     },
     "table": {
+      "id": "ID",
       "name": "Name",
       "email": "Email",
       "roles": "Roles",
+      "created": "Created",
+      "updated": "Updated",
       "actions": "Actions",
       "loading": "Loading users..."
     }
@@ -285,6 +288,8 @@
       "name": "Name",
       "description": "Description",
       "id": "ID",
+      "created": "Created",
+      "updated": "Updated",
       "actions": "Actions",
       "loading": "Loading roles..."
     },
@@ -379,9 +384,12 @@
       "table": "Table View"
     },
     "table": {
+      "id": "ID",
       "name": "Name",
       "description": "Description",
       "permissions": "Permissions",
+      "created": "Created",
+      "updated": "Updated",
       "actions": "Actions",
       "loading": "Loading groups..."
     },

@@ -1,12 +1,11 @@
 'use client';
 
 import { User } from '@/graphql/generated/types';
-import { DataTable, type TableColumn } from '@/components/common/DataTable';
+import { EnhancedDataTable, type FieldConfig } from '@/components/common/DataTable';
 import { type ColumnConfig } from '@/components/common/TableSkeleton';
 import { UserActions } from './UserActions';
 import { CreateUserDialog } from './CreateUserDialog';
-import { ColoredList } from '@/components/ui/colored-list';
-import { UserPlus, Shield } from 'lucide-react';
+import { Shield, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface UserTableProps {
@@ -28,45 +27,73 @@ export function UserTable({
 }: UserTableProps) {
   const t = useTranslations('users');
 
-  const columns: TableColumn<User>[] = [
+  const fields: FieldConfig<User>[] = [
     {
+      type: 'id',
+      key: 'id',
+      header: t('table.id'),
+      width: '120px',
+    },
+    {
+      type: 'avatar',
       key: 'name',
       header: t('table.name'),
-      render: (user) => <span className="font-medium">{user.name}</span>,
+      width: '300px',
+      avatar: {
+        getInitial: (user: User) => user.name.charAt(0).toUpperCase(),
+        defaultBackgroundClass: 'bg-primary/10',
+        size: 'md',
+      },
     },
     {
+      type: 'email',
       key: 'email',
       header: t('table.email'),
-      render: (user) => user.email,
+      width: '250px',
     },
     {
+      type: 'list',
       key: 'roles',
       header: t('table.roles'),
-      render: (user) => (
-        <ColoredList
-          items={user.roles}
-          labelField="name"
-          title=""
-          icon={<Shield className="h-3 w-3" />}
-          height={60}
-        />
-      ),
+      width: '200px',
+      list: {
+        items: (user: User) => user.roles || [],
+        labelField: 'name',
+        icon: <Shield className="h-3 w-3" />,
+        height: 60,
+        maxItems: 3,
+      },
+    },
+    {
+      type: 'timestamp',
+      key: 'createdAt',
+      header: t('table.created'),
+      width: '150px',
+    },
+    {
+      type: 'timestamp',
+      key: 'updatedAt',
+      header: t('table.updated'),
+      width: '150px',
     },
   ];
 
   const skeletonConfig: { columns: ColumnConfig[]; rowCount?: number } = {
     columns: [
-      { key: 'name', type: 'text' },
+      { key: 'id', type: 'text' },
+      { key: 'name', type: 'avatar' },
       { key: 'email', type: 'text' },
       { key: 'roles', type: 'list' },
+      { key: 'createdAt', type: 'text' },
+      { key: 'updatedAt', type: 'text' },
     ],
     rowCount: limit,
   };
 
   return (
-    <DataTable
+    <EnhancedDataTable
       data={users}
-      columns={columns}
+      fields={fields}
       loading={loading}
       emptyState={{
         icon: <UserPlus className="h-12 w-12" />,

@@ -17,6 +17,15 @@ export { Limit, type LimitProps } from './Limit';
 export { ViewSwitcher, type ViewOption } from './ViewSwitcher';
 export { Pagination, type PaginationProps } from './Pagination';
 export { DataTable, type DataTableProps, type TableColumn } from './DataTable';
+export {
+  EnhancedDataTable,
+  type EnhancedDataTableProps,
+  type FieldConfig,
+  type FieldType,
+  type AvatarConfig,
+  type ListConfig,
+  type DateConfig,
+} from './DataTable';
 export { CardSkeleton, type CardSkeletonProps } from './CardSkeleton';
 export {
   TableSkeleton,
