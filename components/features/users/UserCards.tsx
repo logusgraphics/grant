@@ -1,16 +1,12 @@
 'use client';
 
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
 import { CreateUserDialog } from './CreateUserDialog';
 import { UserCardSkeleton } from './UserCardSkeleton';
 import { User } from '@/graphql/generated/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ColoredList } from '@/components/ui/colored-list';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Shield } from 'lucide-react';
 import { UserActions } from './UserActions';
+import { CardGrid } from '@/components/common';
 
 interface UserCardsProps {
   limit: number;
@@ -32,70 +28,41 @@ export function UserCards({
   const t = useTranslations('users');
 
   return (
-    <>
-      <div className="w-full p-4">
-        <div className="space-y-4">
-          {users.length === 0 && !loading ? (
-            <EmptyState
-              icon={<UserPlus className="h-12 w-12" />}
-              title={search ? t('noSearchResults.title') : t('noUsers.title')}
-              description={search ? t('noSearchResults.description') : t('noUsers.description')}
-              action={search ? undefined : <CreateUserDialog />}
-            />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-              {loading ? (
-                <>
-                  {Array.from({ length: limit }).map((_, i) => (
-                    <UserCardSkeleton key={i} />
-                  ))}
-                </>
-              ) : (
-                users.map((user) => (
-                  <div key={user.id} className="group relative h-full">
-                    <Card className="h-full gap-1">
-                      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1">
-                        <div className="flex items-start gap-4 min-w-0">
-                          <div
-                            className={cn(
-                              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-                              user.roles.some((role) => role.id === 'admin')
-                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
-                                : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                            )}
-                          >
-                            <span className="text-sm font-medium text-white">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <CardTitle className="text-base truncate">{user.name}</CardTitle>
-                            <CardDescription className="truncate">{user.email}</CardDescription>
-                          </div>
-                        </div>
-                        <UserActions
-                          user={user}
-                          onEditClick={onEditClick}
-                          onDeleteClick={onDeleteClick}
-                        />
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <ColoredList
-                          items={user.roles}
-                          labelField="name"
-                          title={t('form.roles')}
-                          icon={<Shield className="h-3 w-3" />}
-                          height={80}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </>
+    <CardGrid<User>
+      entities={users}
+      loading={loading}
+      translationNamespace="users"
+      avatar={{
+        getInitial: (user: User) => user.name.charAt(0).toUpperCase(),
+        getBackgroundClass: (user: User) => {
+          return user.roles.some((role) => role.id === 'admin')
+            ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+            : 'bg-gradient-to-br from-blue-500 to-indigo-600';
+        },
+      }}
+      list={{
+        items: (user: User) => user.roles || [],
+        labelField: 'name',
+        title: 'form.roles',
+        icon: Shield,
+        height: 80,
+      }}
+      actions={{
+        component: (user: User) => (
+          <UserActions user={user} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
+        ),
+      }}
+      emptyState={{
+        icon: UserPlus,
+        titleKey: search ? 'noSearchResults.title' : 'noUsers.title',
+        descriptionKey: search ? 'noSearchResults.description' : 'noUsers.description',
+        action: search ? undefined : <CreateUserDialog />,
+      }}
+      skeleton={{
+        component: <UserCardSkeleton />,
+        count: limit,
+      }}
+      getDescription={(user: User) => user.email}
+    />
   );
 }
