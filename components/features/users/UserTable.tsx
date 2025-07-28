@@ -1,20 +1,12 @@
 'use client';
 
-import { UserPlus, Shield } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { User } from '@/graphql/generated/types';
+import { DataTable, type TableColumn } from '@/components/common/DataTable';
+import { UserActions } from './UserActions';
 import { CreateUserDialog } from './CreateUserDialog';
 import { ColoredList } from '@/components/ui/colored-list';
-import { EmptyState } from '@/components/ui/empty-state';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { UserActions } from './UserActions';
+import { UserPlus, Shield } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface UserTableProps {
   users: User[];
@@ -27,65 +19,48 @@ interface UserTableProps {
 export function UserTable({ users, loading, search, onEditClick, onDeleteClick }: UserTableProps) {
   const t = useTranslations('users');
 
+  const columns: TableColumn<User>[] = [
+    {
+      key: 'name',
+      header: t('table.name'),
+      render: (user) => <span className="font-medium">{user.name}</span>,
+    },
+    {
+      key: 'email',
+      header: t('table.email'),
+      render: (user) => user.email,
+    },
+    {
+      key: 'roles',
+      header: t('table.roles'),
+      render: (user) => (
+        <ColoredList
+          items={user.roles}
+          labelField="name"
+          title=""
+          icon={<Shield className="h-3 w-3" />}
+          height={60}
+        />
+      ),
+    },
+  ];
+
   return (
-    <>
-      <div className="w-full px-4">
-        <div className="space-y-4">
-          {users.length === 0 && !loading ? (
-            <EmptyState
-              icon={<UserPlus className="h-12 w-12" />}
-              title={search ? t('noSearchResults.title') : t('noUsers.title')}
-              description={search ? t('noSearchResults.description') : t('noUsers.description')}
-              action={search ? undefined : <CreateUserDialog />}
-            />
-          ) : (
-            <div className="w-full">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('table.name')}</TableHead>
-                    <TableHead>{t('table.email')}</TableHead>
-                    <TableHead>{t('table.roles')}</TableHead>
-                    <TableHead className="w-[100px]">{t('table.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8">
-                        {t('table.loading')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <ColoredList
-                            items={user.roles}
-                            labelField="name"
-                            title=""
-                            icon={<Shield className="h-3 w-3" />}
-                            height={60}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <UserActions
-                            user={user}
-                            onEditClick={onEditClick}
-                            onDeleteClick={onDeleteClick}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </div>
-    </>
+    <DataTable
+      data={users}
+      columns={columns}
+      loading={loading}
+      search={search}
+      emptyStateIcon={<UserPlus className="h-12 w-12" />}
+      emptyStateTitle={search ? t('noSearchResults.title') : t('noUsers.title')}
+      emptyStateDescription={search ? t('noSearchResults.description') : t('noUsers.description')}
+      emptyStateAction={search ? undefined : <CreateUserDialog />}
+      loadingText={t('table.loading')}
+      actionsColumn={{
+        render: (user) => (
+          <UserActions user={user} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
+        ),
+      }}
+    />
   );
 }
