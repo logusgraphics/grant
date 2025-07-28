@@ -28,6 +28,11 @@
     "accessibility": {
       "openMenu": "Open menu",
       "closeMenu": "Close menu"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "info": "Page {current} of {total}"
     }
   },
   "dashboard": {
@@ -148,11 +153,6 @@
       "admin": "Administrator",
       "customer": "Customer"
     },
-    "pagination": {
-      "previous": "Previous",
-      "next": "Next",
-      "info": "Page {current} of {total}"
-    },
     "createDialog": {
       "title": "Create New User",
       "description": "Add a new user to the system",
@@ -232,11 +232,6 @@
       "validation": {
         "groupsRequired": "Role must have at least one group"
       }
-    },
-    "pagination": {
-      "previous": "Previous",
-      "next": "Next",
-      "info": "Page {current} of {total}"
     },
     "createDialog": {
       "title": "Create New Role",
@@ -326,11 +321,6 @@
       "permissions": "Permissions",
       "permissionsLoading": "Loading permissions...",
       "noPermissionsAvailable": "No permissions available"
-    },
-    "pagination": {
-      "previous": "Previous",
-      "next": "Next",
-      "info": "Page {current} of {total}"
     },
     "create": {
       "title": "Create New Group",

@@ -15,3 +15,4 @@ export {
 } from './Sorter';
 export { Limit, type LimitProps } from './Limit';
 export { ViewSwitcher, type ViewOption } from './ViewSwitcher';
+export { Pagination, type PaginationProps } from './Pagination';

@@ -28,6 +28,11 @@
     "accessibility": {
       "openMenu": "Menü öffnen",
       "closeMenu": "Menü schließen"
+    },
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter",
+      "info": "Seite {current} von {total}"
     }
   },
   "dashboard": {
@@ -148,11 +153,6 @@
       "admin": "Administrator",
       "customer": "Kunde"
     },
-    "pagination": {
-      "previous": "Zurück",
-      "next": "Weiter",
-      "info": "Seite {current} von {total}"
-    },
     "createDialog": {
       "title": "Neuen Benutzer erstellen",
       "description": "Fügen Sie einen neuen Benutzer zum System hinzu",
@@ -232,11 +232,6 @@
       "validation": {
         "groupsRequired": "Rolle muss mindestens eine Gruppe haben"
       }
-    },
-    "pagination": {
-      "previous": "Zurück",
-      "next": "Weiter",
-      "info": "Seite {current} von {total}"
     },
     "createDialog": {
       "title": "Neue Rolle erstellen",
@@ -326,11 +321,6 @@
       "permissions": "Berechtigungen",
       "permissionsLoading": "Berechtigungen werden geladen...",
       "noPermissionsAvailable": "Keine Berechtigungen verfügbar"
-    },
-    "pagination": {
-      "previous": "Zurück",
-      "next": "Weiter",
-      "info": "Seite {current} von {total}"
     },
     "create": {
       "title": "Neue Gruppe erstellen",
