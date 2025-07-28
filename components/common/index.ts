@@ -24,3 +24,4 @@ export {
   type ColumnConfig,
   type ColumnType,
 } from './TableSkeleton';
+export { CopyToClipboard } from './CopyToClipboard';

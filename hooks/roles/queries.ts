@@ -7,6 +7,8 @@ export const GET_ROLES = gql`
         id
         name
         description
+        createdAt
+        updatedAt
         groups {
           id
           name

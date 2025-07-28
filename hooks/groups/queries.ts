@@ -7,6 +7,8 @@ export const GET_GROUPS = gql`
         id
         name
         description
+        createdAt
+        updatedAt
         permissions {
           id
           name

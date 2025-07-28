@@ -33,6 +33,18 @@
       "previous": "Zurück",
       "next": "Weiter",
       "info": "Seite {current} von {total}"
+    },
+    "audit": {
+      "id": "ID",
+      "created": "Erstellt",
+      "updated": "Aktualisiert"
+    },
+    "copy": {
+      "title": "In Zwischenablage kopieren",
+      "action": "Kopieren",
+      "copied": "Kopiert!",
+      "success": "In Zwischenablage kopiert",
+      "error": "Kopieren in Zwischenablage fehlgeschlagen"
     }
   },
   "dashboard": {

@@ -33,6 +33,18 @@
       "previous": "Previous",
       "next": "Next",
       "info": "Page {current} of {total}"
+    },
+    "audit": {
+      "id": "ID",
+      "created": "Created",
+      "updated": "Updated"
+    },
+    "copy": {
+      "title": "Copy to clipboard",
+      "action": "Copy",
+      "copied": "Copied!",
+      "success": "Copied to clipboard",
+      "error": "Failed to copy to clipboard"
     }
   },
   "dashboard": {

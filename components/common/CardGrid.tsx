@@ -1,16 +1,25 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { ColoredList } from '@/components/ui/colored-list';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, Clock, Calendar, Fingerprint } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { Auditable } from '@/graphql/generated/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { CopyToClipboard } from './CopyToClipboard';
 
 // Generic entity interface
-export interface BaseEntity {
-  id: string;
+export interface BaseEntity extends Auditable {
   name: string;
   description?: string | null;
   [key: string]: any;
@@ -51,6 +60,14 @@ export interface SkeletonConfig {
   count: number;
 }
 
+// Audit field configuration
+export interface AuditFieldConfig<TEntity extends BaseEntity> {
+  key: keyof Auditable;
+  icon: LucideIcon;
+  translationKey: string;
+  getValue: (entity: TEntity) => string;
+}
+
 export interface CardGridProps<TEntity extends BaseEntity> {
   // Data
   entities: TEntity[];
@@ -71,6 +88,8 @@ export interface CardGridProps<TEntity extends BaseEntity> {
   cardClassName?: string;
   renderCustomContent?: (entity: TEntity) => ReactNode;
   getDescription?: (entity: TEntity) => string | null | undefined;
+  showAuditFields?: boolean;
+  auditFields?: AuditFieldConfig<TEntity>[];
 }
 
 export function CardGrid<TEntity extends BaseEntity>({
@@ -86,8 +105,11 @@ export function CardGrid<TEntity extends BaseEntity>({
   cardClassName,
   renderCustomContent,
   getDescription,
+  showAuditFields = true,
+  auditFields,
 }: CardGridProps<TEntity>) {
   const t = useTranslations(translationNamespace);
+  const commonT = useTranslations('common');
 
   const getAvatarBackground = (entity: TEntity) => {
     if (avatar.getBackgroundClass) {
@@ -102,6 +124,48 @@ export function CardGrid<TEntity extends BaseEntity>({
     }
     return entity.description;
   };
+
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatDateOnly = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  // Default audit fields configuration
+  const defaultAuditFields: AuditFieldConfig<TEntity>[] = [
+    {
+      key: 'id',
+      icon: Fingerprint,
+      translationKey: 'audit.id',
+      getValue: (entity: TEntity) => entity.id,
+    },
+    {
+      key: 'createdAt',
+      icon: Calendar,
+      translationKey: 'audit.created',
+      getValue: (entity: TEntity) => formatTimestamp(entity.createdAt),
+    },
+    {
+      key: 'updatedAt',
+      icon: Clock,
+      translationKey: 'audit.updated',
+      getValue: (entity: TEntity) => formatTimestamp(entity.updatedAt),
+    },
+  ];
+
+  const auditFieldsToRender = auditFields || defaultAuditFields;
 
   return (
     <>
@@ -168,6 +232,33 @@ export function CardGrid<TEntity extends BaseEntity>({
                         />
                       )}
                     </CardContent>
+                    {showAuditFields && (
+                      <CardFooter className="p0 px-6">
+                        <TooltipProvider>
+                          <div className="w-full flex items-center gap-3 text-xs text-muted-foreground/60">
+                            {auditFieldsToRender.map((field) => {
+                              const IconComponent = field.icon;
+                              const value = field.getValue(entity);
+
+                              return (
+                                <Tooltip key={field.key}>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-1 cursor-help">
+                                      <IconComponent className="h-3 w-3" />
+                                      <span>{commonT(field.translationKey)}</span>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="flex items-center gap-2">
+                                    <span>{value}</span>
+                                    <CopyToClipboard text={value} size="sm" variant="ghost" />
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })}
+                          </div>
+                        </TooltipProvider>
+                      </CardFooter>
+                    )}
                   </Card>
                 ))
               )}

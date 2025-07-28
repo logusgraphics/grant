@@ -4,11 +4,11 @@ import { updateGroup as updateGroupInStore } from '@/graphql/providers/groups/fa
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 
 export async function updateGroup({ id, input }: UpdateGroupParams): Promise<UpdateGroupResult> {
-  const updatedGroup = updateGroupInStore(id, input);
+  const updatedGroupData = updateGroupInStore(id, input);
 
-  if (!updatedGroup) {
+  if (!updatedGroupData) {
     throw new ApiError('Group not found', ApolloServerErrorCode.PERSISTED_QUERY_NOT_FOUND);
   }
 
-  return updatedGroup;
+  return { ...updatedGroupData, permissions: [] };
 }

@@ -6,6 +6,8 @@ export const CREATE_GROUP = gql`
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -16,6 +18,8 @@ export const UPDATE_GROUP = gql`
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -32,6 +36,8 @@ export const ADD_GROUP_PERMISSION = gql`
       id
       groupId
       permissionId
+      createdAt
+      updatedAt
     }
   }
 `;

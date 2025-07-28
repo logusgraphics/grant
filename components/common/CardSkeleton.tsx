@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 
 export interface CardSkeletonProps {
   /**
@@ -12,9 +12,18 @@ export interface CardSkeletonProps {
    * Additional CSS classes to apply to the card
    */
   className?: string;
+  /**
+   * Whether to show audit field placeholders in the footer
+   * @default true
+   */
+  showAuditFields?: boolean;
 }
 
-export function CardSkeleton({ tagCount = 4, className }: CardSkeletonProps) {
+export function CardSkeleton({
+  tagCount = 4,
+  className,
+  showAuditFields = true,
+}: CardSkeletonProps) {
   return (
     <div className="group relative h-full">
       <Card className={`h-full ${className || ''}`}>
@@ -46,6 +55,24 @@ export function CardSkeleton({ tagCount = 4, className }: CardSkeletonProps) {
             ))}
           </div>
         </CardContent>
+        {showAuditFields && (
+          <CardFooter className="p-0 px-4">
+            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 bg-muted rounded animate-pulse" />
+                <div className="h-3 w-8 bg-muted rounded animate-pulse" />
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 bg-muted rounded animate-pulse" />
+                <div className="h-3 w-12 bg-muted rounded animate-pulse" />
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 bg-muted rounded animate-pulse" />
+                <div className="h-3 w-12 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );

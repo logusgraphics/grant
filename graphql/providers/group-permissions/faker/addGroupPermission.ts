@@ -16,10 +16,10 @@ export const addGroupPermission = async (
   const groups = getGroups();
   const permissions = getPermissions();
 
-  const group = groups.find((g) => g.id === groupId);
+  const groupData = groups.find((g) => g.id === groupId);
   const permission = permissions.find((p) => p.id === permissionId);
 
-  if (!group) {
+  if (!groupData) {
     throw new Error(`Group with ID ${groupId} not found`);
   }
 
@@ -30,11 +30,16 @@ export const addGroupPermission = async (
   // Add the group-permission relationship
   const groupPermissionData = addGroupPermissionData(groupId, permissionId);
 
+  // Map GroupData to Group by adding the permissions field
+  const group = { ...groupData, permissions: [] };
+
   // Return the resolved relationship
   return {
     id: groupPermissionData.id,
     groupId: groupPermissionData.groupId,
     permissionId: groupPermissionData.permissionId,
+    createdAt: groupPermissionData.createdAt,
+    updatedAt: groupPermissionData.updatedAt,
     group,
     permission,
   };

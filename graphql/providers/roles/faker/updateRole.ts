@@ -4,11 +4,11 @@ import { updateRole as updateRoleInStore } from '@/graphql/providers/roles/faker
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 
 export async function updateRole({ id, input }: UpdateRoleParams): Promise<UpdateRoleResult> {
-  const updatedRole = updateRoleInStore(id, input);
+  const updatedRoleData = updateRoleInStore(id, input);
 
-  if (!updatedRole) {
+  if (!updatedRoleData) {
     throw new ApiError('Role not found', ApolloServerErrorCode.PERSISTED_QUERY_NOT_FOUND);
   }
 
-  return updatedRole;
+  return { ...updatedRoleData, groups: [] };
 }

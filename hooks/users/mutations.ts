@@ -6,6 +6,8 @@ export const CREATE_USER = gql`
       id
       name
       email
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -16,6 +18,8 @@ export const UPDATE_USER = gql`
       id
       name
       email
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -24,6 +28,10 @@ export const ADD_USER_ROLE = gql`
   mutation AddUserRole($input: AddUserRoleInput!) {
     addUserRole(input: $input) {
       id
+      userId
+      roleId
+      createdAt
+      updatedAt
       user {
         id
         name
@@ -40,6 +48,10 @@ export const REMOVE_USER_ROLE = gql`
   mutation RemoveUserRole($input: RemoveUserRoleInput!) {
     removeUserRole(input: $input) {
       id
+      userId
+      roleId
+      createdAt
+      updatedAt
       user {
         id
         name
@@ -58,6 +70,8 @@ export const DELETE_USER = gql`
       id
       name
       email
+      createdAt
+      updatedAt
     }
   }
 `;
