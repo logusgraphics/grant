@@ -10,4 +10,4 @@ input AddRoleGroupInput {
   ID of the role.
   """
   roleId: ID!
-} 
+}

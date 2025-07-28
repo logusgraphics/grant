@@ -3,4 +3,4 @@ extend type Query {
   Retrieves user-role relationships for a specific user.
   """
   userRoles(userId: ID!): [UserRole!]!
-} 
+}

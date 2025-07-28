@@ -4,7 +4,7 @@ import { RoleLimit } from './RoleLimit';
 import { RoleSearch } from './RoleSearch';
 import { RoleViewSwitcher, RoleView } from './RoleViewSwitcher';
 import { RoleSortableField, RoleSortOrder, RoleSortInput } from '@/graphql/generated/types';
-import { useTranslations } from 'use-intl';
+import { Toolbar } from '@/components/common';
 
 interface RoleToolbarProps {
   limit: number;
@@ -27,23 +27,13 @@ export function RoleToolbar({
   onSortChange,
   onViewChange,
 }: RoleToolbarProps) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-      <div className="w-full sm:w-auto">
-        <RoleSearch search={search} onSearchChange={onSearchChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <RoleSorter sort={sort} onSortChange={onSortChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <RoleLimit limit={limit} onLimitChange={onLimitChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <RoleViewSwitcher currentView={currentView} onViewChange={onViewChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <CreateRoleDialog />
-      </div>
-    </div>
-  );
+  const toolbarItems = [
+    <RoleSearch key="search" search={search} onSearchChange={onSearchChange} />,
+    <RoleSorter key="sorter" sort={sort} onSortChange={onSortChange} />,
+    <RoleLimit key="limit" limit={limit} onLimitChange={onLimitChange} />,
+    <RoleViewSwitcher key="view" currentView={currentView} onViewChange={onViewChange} />,
+    <CreateRoleDialog key="create" />,
+  ];
+
+  return <Toolbar items={toolbarItems} />;
 }

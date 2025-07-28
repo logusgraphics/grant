@@ -4,7 +4,7 @@ import { UserLimit } from './UserLimit';
 import { UserSearch } from './UserSearch';
 import { UserViewSwitcher, UserView } from './UserViewSwitcher';
 import { UserSortableField, UserSortOrder, UserSortInput } from '@/graphql/generated/types';
-import { useTranslations } from 'use-intl';
+import { Toolbar } from '@/components/common';
 
 interface UserToolbarProps {
   limit: number;
@@ -27,23 +27,13 @@ export function UserToolbar({
   onSortChange,
   onViewChange,
 }: UserToolbarProps) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-      <div className="w-full sm:w-auto">
-        <UserSearch search={search} onSearchChange={onSearchChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <UserSorter sort={sort} onSortChange={onSortChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <UserLimit limit={limit} onLimitChange={onLimitChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <UserViewSwitcher currentView={currentView} onViewChange={onViewChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <CreateUserDialog />
-      </div>
-    </div>
-  );
+  const toolbarItems = [
+    <UserSearch key="search" search={search} onSearchChange={onSearchChange} />,
+    <UserSorter key="sorter" sort={sort} onSortChange={onSortChange} />,
+    <UserLimit key="limit" limit={limit} onLimitChange={onLimitChange} />,
+    <UserViewSwitcher key="view" currentView={currentView} onViewChange={onViewChange} />,
+    <CreateUserDialog key="create" />,
+  ];
+
+  return <Toolbar items={toolbarItems} />;
 }

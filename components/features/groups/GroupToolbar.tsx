@@ -4,6 +4,7 @@ import { GroupLimit } from './GroupLimit';
 import { GroupSearch } from './GroupSearch';
 import { GroupViewSwitcher, GroupView } from './GroupViewSwitcher';
 import { GroupSortableField, GroupSortOrder, GroupSortInput } from '@/graphql/generated/types';
+import { Toolbar } from '@/components/common';
 
 interface GroupToolbarProps {
   limit: number;
@@ -26,23 +27,13 @@ export function GroupToolbar({
   onSortChange,
   onViewChange,
 }: GroupToolbarProps) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-      <div className="w-full sm:w-auto">
-        <GroupSearch search={search} onSearchChange={onSearchChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <GroupSorter sort={sort} onSortChange={onSortChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <GroupLimit limit={limit} onLimitChange={onLimitChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <GroupViewSwitcher currentView={currentView} onViewChange={onViewChange} />
-      </div>
-      <div className="w-full sm:w-auto">
-        <CreateGroupDialog />
-      </div>
-    </div>
-  );
+  const toolbarItems = [
+    <GroupSearch key="search" search={search} onSearchChange={onSearchChange} />,
+    <GroupSorter key="sorter" sort={sort} onSortChange={onSortChange} />,
+    <GroupLimit key="limit" limit={limit} onLimitChange={onLimitChange} />,
+    <GroupViewSwitcher key="view" currentView={currentView} onViewChange={onViewChange} />,
+    <CreateGroupDialog key="create" />,
+  ];
+
+  return <Toolbar items={toolbarItems} />;
 }

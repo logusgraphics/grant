@@ -22,4 +22,4 @@ type GroupPermission {
   The permission associated with this relationship.
   """
   permission: Permission
-} 
+}

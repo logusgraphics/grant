@@ -10,4 +10,4 @@ input AddGroupPermissionInput {
   ID of the permission.
   """
   permissionId: ID!
-} 
+}

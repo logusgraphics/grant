@@ -3,4 +3,4 @@ extend type Query {
   Retrieves role-group relationships for a specific role.
   """
   roleGroups(roleId: ID!): [RoleGroup!]!
-} 
+}

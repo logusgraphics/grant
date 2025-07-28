@@ -22,4 +22,4 @@ type RoleGroup {
   The role associated with this relationship.
   """
   role: Role
-} 
+}

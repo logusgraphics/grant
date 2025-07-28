@@ -10,4 +10,4 @@ input RemoveGroupPermissionInput {
   ID of the permission.
   """
   permissionId: ID!
-} 
+}
