@@ -18,3 +18,9 @@ export { ViewSwitcher, type ViewOption } from './ViewSwitcher';
 export { Pagination, type PaginationProps } from './Pagination';
 export { DataTable, type DataTableProps, type TableColumn } from './DataTable';
 export { CardSkeleton, type CardSkeletonProps } from './CardSkeleton';
+export {
+  TableSkeleton,
+  type TableSkeletonProps,
+  type ColumnConfig,
+  type ColumnType,
+} from './TableSkeleton';

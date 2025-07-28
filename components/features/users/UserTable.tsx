@@ -2,6 +2,7 @@
 
 import { User } from '@/graphql/generated/types';
 import { DataTable, type TableColumn } from '@/components/common/DataTable';
+import { type ColumnConfig } from '@/components/common/TableSkeleton';
 import { UserActions } from './UserActions';
 import { CreateUserDialog } from './CreateUserDialog';
 import { ColoredList } from '@/components/ui/colored-list';
@@ -9,6 +10,7 @@ import { UserPlus, Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface UserTableProps {
+  limit: number;
   users: User[];
   loading: boolean;
   search: string;
@@ -16,7 +18,14 @@ interface UserTableProps {
   onDeleteClick: (user: User) => void;
 }
 
-export function UserTable({ users, loading, search, onEditClick, onDeleteClick }: UserTableProps) {
+export function UserTable({
+  limit,
+  users,
+  loading,
+  search,
+  onEditClick,
+  onDeleteClick,
+}: UserTableProps) {
   const t = useTranslations('users');
 
   const columns: TableColumn<User>[] = [
@@ -45,22 +54,32 @@ export function UserTable({ users, loading, search, onEditClick, onDeleteClick }
     },
   ];
 
+  const skeletonConfig: { columns: ColumnConfig[]; rowCount?: number } = {
+    columns: [
+      { key: 'name', type: 'text' },
+      { key: 'email', type: 'text' },
+      { key: 'roles', type: 'list' },
+    ],
+    rowCount: limit,
+  };
+
   return (
     <DataTable
       data={users}
       columns={columns}
       loading={loading}
-      search={search}
-      emptyStateIcon={<UserPlus className="h-12 w-12" />}
-      emptyStateTitle={search ? t('noSearchResults.title') : t('noUsers.title')}
-      emptyStateDescription={search ? t('noSearchResults.description') : t('noUsers.description')}
-      emptyStateAction={search ? undefined : <CreateUserDialog />}
-      loadingText={t('table.loading')}
+      emptyState={{
+        icon: <UserPlus className="h-12 w-12" />,
+        title: search ? t('noSearchResults.title') : t('noUsers.title'),
+        description: search ? t('noSearchResults.description') : t('noUsers.description'),
+        action: search ? undefined : <CreateUserDialog />,
+      }}
       actionsColumn={{
         render: (user) => (
           <UserActions user={user} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
         ),
       }}
+      skeletonConfig={skeletonConfig}
     />
   );
 }
