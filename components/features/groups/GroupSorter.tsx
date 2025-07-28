@@ -1,15 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { Sorter, type SortInput, type SortOrder } from '@/components/common';
 import { GroupSortableField, GroupSortOrder, GroupSortInput } from '@/graphql/generated/types';
+import { useTranslations } from 'next-intl';
 
 interface GroupSorterProps {
   sort?: GroupSortInput;
@@ -19,59 +12,35 @@ interface GroupSorterProps {
 export function GroupSorter({ sort, onSortChange }: GroupSorterProps) {
   const t = useTranslations('groups');
 
-  const getSortLabel = (field: GroupSortableField) => {
-    switch (field) {
-      case GroupSortableField.Name:
-        return t('sort.name');
-      default:
-        return field;
-    }
+  // Convert GraphQL types to generic Sorter types
+  const convertSort = (gqlSort?: GroupSortInput): SortInput<GroupSortableField> | undefined => {
+    if (!gqlSort) return undefined;
+    return {
+      field: gqlSort.field,
+      order: gqlSort.order === GroupSortOrder.Asc ? 'ASC' : 'DESC',
+    };
   };
 
-  // If no sort is provided, use name ASC as default
-  const currentSort = sort || { field: GroupSortableField.Name, order: GroupSortOrder.Asc };
+  const handleSortChange = (field: GroupSortableField, order: SortOrder) => {
+    const gqlOrder = order === 'ASC' ? GroupSortOrder.Asc : GroupSortOrder.Desc;
+    onSortChange(field, gqlOrder);
+  };
+
+  const fields = [
+    {
+      value: GroupSortableField.Name,
+      label: t('sort.name'),
+    },
+  ];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="default" className="w-full sm:w-auto">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              {t('sort.label')}:{' '}
-              <>
-                {getSortLabel(currentSort.field)}
-                {currentSort.order === GroupSortOrder.Asc ? (
-                  <ArrowUp className="size-4" />
-                ) : (
-                  <ArrowDown className="size-4" />
-                )}
-              </>
-            </div>
-            <ChevronDown className="size-4" />
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          className="flex items-center justify-between px-3 py-1.5 text-sm"
-          onClick={() => {
-            const newOrder =
-              currentSort.field === GroupSortableField.Name &&
-              currentSort.order === GroupSortOrder.Asc
-                ? GroupSortOrder.Desc
-                : GroupSortOrder.Asc;
-            onSortChange(GroupSortableField.Name, newOrder);
-          }}
-        >
-          <span>{getSortLabel(GroupSortableField.Name)}</span>
-          {currentSort.field === GroupSortableField.Name &&
-            (currentSort.order === GroupSortOrder.Asc ? (
-              <ArrowUp className="size-4" />
-            ) : (
-              <ArrowDown className="size-4" />
-            ))}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Sorter
+      sort={convertSort(sort)}
+      onSortChange={handleSortChange}
+      fields={fields}
+      defaultField={GroupSortableField.Name}
+      translationNamespace="groups"
+      showLabel={false}
+    />
   );
 }
