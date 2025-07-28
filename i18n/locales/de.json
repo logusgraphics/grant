@@ -121,6 +121,7 @@
       "create": "Benutzer erstellen",
       "edit": "Bearbeiten",
       "delete": "Löschen",
+      "cancel": "Abbrechen",
       "label": "Aktionen anzeigen/ausblenden"
     },
     "sort": {
@@ -209,6 +210,7 @@
       "create": "Rolle erstellen",
       "edit": "Bearbeiten",
       "delete": "Löschen",
+      "cancel": "Abbrechen",
       "label": "Aktionen anzeigen/ausblenden"
     },
     "sort": {

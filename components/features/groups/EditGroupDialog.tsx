@@ -1,32 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useGroupMutations } from '@/hooks/groups';
 import { usePermissions } from '@/hooks/permissions/usePermissions';
 import { Group, Permission } from '@/graphql/generated/types';
-import { CheckboxList } from '@/components/ui/checkbox-list';
+import {
+  EditDialog,
+  EditDialogField,
+  EditDialogRelationship,
+} from '@/components/common/EditDialog';
 import { editGroupSchema, EditGroupFormValues } from './types';
 
 interface EditGroupDialogProps {
@@ -42,169 +25,125 @@ export function EditGroupDialog({ group, open, onOpenChange, currentPage }: Edit
   const { updateGroup, addGroupPermission, removeGroupPermission } = useGroupMutations();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<EditGroupFormValues>({
-    resolver: zodResolver(editGroupSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      permissionIds: [],
+  const fields: EditDialogField[] = [
+    {
+      name: 'name',
+      label: 'form.name',
+      placeholder: 'form.namePlaceholder',
+      type: 'text',
+      required: true,
     },
-    mode: 'onSubmit',
+    {
+      name: 'description',
+      label: 'form.description',
+      placeholder: 'form.descriptionPlaceholder',
+      type: 'textarea',
+    },
+  ];
+
+  const relationships: EditDialogRelationship[] = [
+    {
+      name: 'permissionIds',
+      label: 'form.permissions',
+      items: permissions.map((permission: Permission) => ({
+        id: permission.id,
+        name: permission.name,
+        description: permission.description ?? undefined,
+      })),
+      loading: permissionsLoading,
+      loadingText: 'form.permissionsLoading',
+      emptyText: 'form.noPermissionsAvailable',
+    },
+  ];
+
+  const mapGroupToFormValues = (group: Group): EditGroupFormValues => ({
+    name: group.name,
+    description: group.description || '',
+    permissionIds: group.permissions.map((permission) => permission.id),
   });
 
-  // Update form values when group changes
-  useEffect(() => {
-    if (group) {
-      form.reset({
-        name: group.name,
-        description: group.description || '',
-        permissionIds: group.permissions.map((permission) => permission.id),
-      });
-    }
-  }, [group, form]);
-
-  const onSubmit = async (values: EditGroupFormValues) => {
-    if (!group) return;
-
+  const handleUpdate = async (groupId: string, values: EditGroupFormValues) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      // Update group data first
-      await updateGroup(group.id, {
+      await updateGroup(groupId, {
         name: values.name,
         description: values.description,
       });
-
-      // Handle permission assignments
-      const currentPermissionIds = group.permissions.map((permission) => permission.id);
-      const newPermissionIds = values.permissionIds || [];
-
-      // Find permissions to add (in newPermissionIds but not in currentPermissionIds)
-      const permissionsToAdd = newPermissionIds.filter(
-        (permissionId) => !currentPermissionIds.includes(permissionId)
-      );
-
-      // Find permissions to remove (in currentPermissionIds but not in newPermissionIds)
-      const permissionsToRemove = currentPermissionIds.filter(
-        (permissionId) => !newPermissionIds.includes(permissionId)
-      );
-
-      // Add new permissions
-      if (permissionsToAdd.length > 0) {
-        const addPromises = permissionsToAdd.map((permissionId) =>
-          addGroupPermission({
-            groupId: group.id,
-            permissionId,
-          }).catch((error: any) => {
-            console.error('Error adding group permission:', error);
-            // Continue with other permission assignments even if one fails
-          })
-        );
-        await Promise.all(addPromises);
-      }
-
-      // Remove permissions
-      if (permissionsToRemove.length > 0) {
-        const removePromises = permissionsToRemove.map((permissionId) =>
-          removeGroupPermission({
-            groupId: group.id,
-            permissionId,
-          }).catch((error: any) => {
-            // Handle "GroupPermission not found" error gracefully
-            if (error.message?.includes('GroupPermission not found')) {
-              console.warn('GroupPermission not found, skipping removal:', {
-                groupId: group.id,
-                permissionId,
-              });
-              return;
-            }
-            console.error('Error removing group permission:', error);
-            throw error;
-          })
-        );
-        await Promise.all(removePromises);
-      }
-
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error updating group:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      form.reset();
+  const handleAddRelationships = async (
+    groupId: string,
+    relationshipName: string,
+    itemIds: string[]
+  ) => {
+    if (relationshipName === 'permissionIds') {
+      const addPromises = itemIds.map((permissionId) =>
+        addGroupPermission({
+          groupId,
+          permissionId,
+        }).catch((error: any) => {
+          console.error('Error adding group permission:', error);
+          // Continue with other permission assignments even if one fails
+        })
+      );
+      await Promise.all(addPromises);
     }
-    onOpenChange(newOpen);
   };
 
-  if (!group) return null;
+  const handleRemoveRelationships = async (
+    groupId: string,
+    relationshipName: string,
+    itemIds: string[]
+  ) => {
+    if (relationshipName === 'permissionIds') {
+      const removePromises = itemIds.map((permissionId) =>
+        removeGroupPermission({
+          groupId,
+          permissionId,
+        }).catch((error: any) => {
+          // Handle "GroupPermission not found" error gracefully
+          if (error.message?.includes('GroupPermission not found')) {
+            console.warn('GroupPermission not found, skipping removal:', {
+              groupId,
+              permissionId,
+            });
+            return;
+          }
+          console.error('Error removing group permission:', error);
+          throw error;
+        })
+      );
+      await Promise.all(removePromises);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{t('edit.title')}</DialogTitle>
-          <DialogDescription>{t('edit.description')}</DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('form.name')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={t('form.namePlaceholder')} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('form.description')}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t('form.descriptionPlaceholder')}
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <CheckboxList
-              control={form.control}
-              name="permissionIds"
-              label={t('form.permissions')}
-              items={permissions.map((permission: Permission) => ({
-                id: permission.id,
-                name: permission.name,
-                description: permission.description ?? undefined,
-              }))}
-              loading={permissionsLoading}
-              loadingText={t('form.permissionsLoading')}
-              emptyText={t('form.noPermissionsAvailable')}
-              error={form.formState.errors.permissionIds?.message}
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-                {t('actions.cancel')}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t('actions.updating') : t('actions.update')}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+    <EditDialog
+      entity={group}
+      open={open}
+      onOpenChange={onOpenChange}
+      title="edit.title"
+      description="edit.description"
+      confirmText="actions.update"
+      cancelText="actions.cancel"
+      updatingText="actions.updating"
+      schema={editGroupSchema}
+      defaultValues={{
+        name: '',
+        description: '',
+        permissionIds: [],
+      }}
+      fields={fields}
+      relationships={relationships}
+      mapEntityToFormValues={mapGroupToFormValues}
+      onUpdate={handleUpdate}
+      onAddRelationships={handleAddRelationships}
+      onRemoveRelationships={handleRemoveRelationships}
+      translationNamespace="groups"
+      isSubmitting={isSubmitting}
+    />
   );
 }

@@ -83,9 +83,10 @@ export const getUserRolesByRoleId = (roleId: string): UserRoleData[] => {
 };
 
 export const addUserRole = (userId: string, roleId: string): UserRoleData => {
-  // Get current entities and check if role already exists
-  const entities = userRolesDataStore.getEntities();
-  const existingRole = entities.find((ur) => ur.userId === userId && ur.roleId === roleId);
+  // Check if role already exists
+  const existingRole = userRolesDataStore
+    .getEntities()
+    .find((ur) => ur.userId === userId && ur.roleId === roleId);
 
   if (existingRole) {
     return existingRole;
@@ -97,9 +98,11 @@ export const addUserRole = (userId: string, roleId: string): UserRoleData => {
     roleId,
   };
 
+  // Manually add to the data store
+  const entities = userRolesDataStore.getEntities();
   entities.push(userRole);
 
-  // Save back to the data store
+  // Save using the data store's private method (we'll need to access it differently)
   const fs = require('fs');
   const path = require('path');
   const dataFilePath = path.join(process.cwd(), 'data', 'user-roles.json');

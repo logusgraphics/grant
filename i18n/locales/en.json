@@ -121,6 +121,7 @@
       "create": "Create User",
       "edit": "Edit",
       "delete": "Delete",
+      "cancel": "Cancel",
       "label": "Show/Hide Actions"
     },
     "sort": {
@@ -209,6 +210,7 @@
       "create": "Create Role",
       "edit": "Edit",
       "delete": "Delete",
+      "cancel": "Cancel",
       "label": "Show/Hide Actions"
     },
     "sort": {
