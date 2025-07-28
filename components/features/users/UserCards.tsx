@@ -34,11 +34,7 @@ export function UserCards({
       translationNamespace="users"
       avatar={{
         getInitial: (user: User) => user.name.charAt(0).toUpperCase(),
-        getBackgroundClass: (user: User) => {
-          return user.roles.some((role) => role.id === 'admin')
-            ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
-            : 'bg-gradient-to-br from-blue-500 to-indigo-600';
-        },
+        defaultBackgroundClass: 'bg-primary/10',
       }}
       list={{
         items: (user: User) => user.roles || [],

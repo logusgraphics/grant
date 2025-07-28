@@ -34,7 +34,7 @@ export function RoleCards({
       translationNamespace="roles"
       avatar={{
         getInitial: (role: Role) => role.name.charAt(0).toUpperCase(),
-        defaultBackgroundClass: 'bg-gradient-to-br from-blue-500 to-indigo-600',
+        defaultBackgroundClass: 'bg-primary/10',
       }}
       list={{
         items: (role: Role) => role.groups || [],
