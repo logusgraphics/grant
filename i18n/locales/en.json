@@ -380,11 +380,13 @@
     "createDialog": {
       "title": "Create New Group",
       "description": "Add a new group to the system",
-      "trigger": "Create Group"
+      "trigger": "Create Group",
+      "confirm": "Create Group"
     },
     "editDialog": {
       "title": "Edit Group",
-      "description": "Update group information"
+      "description": "Update group information",
+      "confirm": "Save Changes"
     },
     "deleteDialog": {
       "title": "Delete Group",

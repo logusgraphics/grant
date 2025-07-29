@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 
 import { Control } from 'react-hook-form';
 
@@ -37,11 +37,65 @@ export function CheckboxList({
   maxHeight = '200px',
   disabled = false,
 }: CheckboxListProps) {
+  const phantomRef = useRef<HTMLDivElement>(null);
+  const [needsScroll, setNeedsScroll] = useState(false);
+
+  const renderItems = useCallback(
+    (field: any) => (
+      <div className="space-y-2 pr-4">
+        {items.map((item) => (
+          <FormField
+            key={item.id}
+            control={control}
+            name={name}
+            render={({ field: itemField }) => {
+              return (
+                <FormItem key={item.id} className="flex flex-row items-start space-x-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={itemField.value?.includes(item.id)}
+                      onCheckedChange={(checked: boolean) => {
+                        if (disabled) return;
+                        return checked
+                          ? itemField.onChange([...(itemField.value || []), item.id])
+                          : itemField.onChange(
+                              itemField.value?.filter((value: string) => value !== item.id)
+                            );
+                      }}
+                      disabled={disabled}
+                      className="mt-0.75"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-normal">{item.name}</FormLabel>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
+                    )}
+                  </div>
+                </FormItem>
+              );
+            }}
+          />
+        ))}
+      </div>
+    ),
+    [items, control, name, disabled]
+  );
+
+  // Measure the natural height of the content
+  useEffect(() => {
+    if (phantomRef.current) {
+      const naturalHeight = phantomRef.current.clientHeight;
+      const maxHeightPx = parseInt(maxHeight.replace('px', ''));
+      setNeedsScroll(naturalHeight > maxHeightPx);
+    }
+  }, [items, maxHeight]);
+
   return (
     <FormField
       control={control}
       name={name}
-      render={() => (
+      render={({ field }) => (
         <FormItem>
           <FormLabel className="mb-2">{label}</FormLabel>
           <div className="space-y-2">
@@ -50,47 +104,67 @@ export function CheckboxList({
             ) : items.length === 0 ? (
               <div className="text-sm text-muted-foreground">{emptyText}</div>
             ) : (
-              <ScrollArea className="w-full" style={{ height: maxHeight }}>
-                <div className="space-y-2 pr-4">
-                  {items.map((item) => (
-                    <FormField
-                      key={item.id}
-                      control={control}
-                      name={name}
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={item.id}
-                            className="flex flex-row items-start space-x-2 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(item.id)}
-                                onCheckedChange={(checked: boolean) => {
-                                  if (disabled) return;
-                                  return checked
-                                    ? field.onChange([...(field.value || []), item.id])
-                                    : field.onChange(
-                                        field.value?.filter((value: string) => value !== item.id)
-                                      );
-                                }}
-                                disabled={disabled}
-                                className="mt-0.75"
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-sm font-normal">{item.name}</FormLabel>
-                              {item.description && (
-                                <p className="text-xs text-muted-foreground">{item.description}</p>
-                              )}
-                            </div>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
+              <>
+                {/* Phantom element to measure natural height */}
+                <div
+                  ref={phantomRef}
+                  className="invisible absolute pointer-events-none"
+                  style={{ visibility: 'hidden', position: 'absolute' }}
+                >
+                  {renderItems(field)}
                 </div>
-              </ScrollArea>
+
+                {/* Actual content */}
+                {needsScroll ? (
+                  <ScrollArea className="w-full" style={{ height: maxHeight }}>
+                    {renderItems(field)}
+                  </ScrollArea>
+                ) : (
+                  <div className="space-y-2">
+                    {items.map((item) => (
+                      <FormField
+                        key={item.id}
+                        control={control}
+                        name={name}
+                        render={({ field: itemField }) => {
+                          return (
+                            <FormItem
+                              key={item.id}
+                              className="flex flex-row items-start space-x-2 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={itemField.value?.includes(item.id)}
+                                  onCheckedChange={(checked: boolean) => {
+                                    if (disabled) return;
+                                    return checked
+                                      ? itemField.onChange([...(itemField.value || []), item.id])
+                                      : itemField.onChange(
+                                          itemField.value?.filter(
+                                            (value: string) => value !== item.id
+                                          )
+                                        );
+                                  }}
+                                  disabled={disabled}
+                                  className="mt-0.75"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="text-sm font-normal">{item.name}</FormLabel>
+                                {item.description && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {item.description}
+                                  </p>
+                                )}
+                              </div>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
           {error && <FormMessage className="text-red-500 text-sm mt-1">{error}</FormMessage>}
