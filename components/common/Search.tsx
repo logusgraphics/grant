@@ -3,7 +3,6 @@
 import { Input } from '@/components/ui/input';
 import { Search as SearchIcon } from 'lucide-react';
 import { useDebounce } from '@/hooks/common';
-import { useTranslations } from 'next-intl';
 
 export interface SearchProps {
   search: string;

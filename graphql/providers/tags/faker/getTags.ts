@@ -1,4 +1,4 @@
-import { GetTagsParams, GetTagsResult, TagData } from '@/graphql/providers/tags/types';
+import { GetTagsParams, GetTagsResult } from '@/graphql/providers/tags/types';
 import { getTags as getTagsFromStore } from './dataStore';
 import { TagSortField, SortDirection } from '@/graphql/generated/types';
 

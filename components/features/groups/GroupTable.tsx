@@ -8,7 +8,7 @@ import { GroupActions } from './GroupActions';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { getTagColorClasses, getAvatarBorderColorClasses } from '@/lib/tag-colors';
+import { getAvatarBorderColorClasses } from '@/lib/tag-colors';
 import { ScrollBadges } from '@/components/ui/scroll-badges';
 import { GroupAudit } from './GroupAudit';
 

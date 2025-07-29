@@ -1,6 +1,6 @@
 'use client';
 
-import { Shield, Fingerprint, Calendar, Clock } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { GroupCardSkeleton } from './GroupCardSkeleton';

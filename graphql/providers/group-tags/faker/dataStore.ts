@@ -3,7 +3,6 @@ import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-  updateAuditTimestamp,
 } from '@/lib/providers/faker/genericDataStore';
 import { getGroups } from '@/graphql/providers/groups/faker/dataStore';
 import { getTags } from '@/graphql/providers/tags/faker/dataStore';

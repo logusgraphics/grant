@@ -1,6 +1,6 @@
 'use client';
 
-import { User, UserSortableField, UserSortOrder } from '@/graphql/generated/types';
+import { User } from '@/graphql/generated/types';
 import { UserCards } from './UserCards';
 import { UserTable } from './UserTable';
 import { UserView } from './UserViewSwitcher';

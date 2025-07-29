@@ -1,10 +1,4 @@
-import {
-  Group,
-  CreateGroupInput,
-  UpdateGroupInput,
-  GroupSortInput,
-  GroupPage,
-} from '@/graphql/generated/types';
+import { CreateGroupInput, UpdateGroupInput, GroupSortInput } from '@/graphql/generated/types';
 import {
   createFakerDataStore,
   EntityConfig,

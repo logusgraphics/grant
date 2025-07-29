@@ -1,9 +1,7 @@
 import {
-  Permission,
   CreatePermissionInput,
   UpdatePermissionInput,
   PermissionSortInput,
-  PermissionPage,
 } from '@/graphql/generated/types';
 import {
   createFakerDataStore,

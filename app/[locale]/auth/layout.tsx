@@ -1,7 +1,6 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Logo } from '@/components/common/Logo';
 
 interface AuthLayoutProps {
   children: React.ReactNode;

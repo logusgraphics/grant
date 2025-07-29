@@ -1,6 +1,6 @@
 import { GetRolesParams, GetRolesResult } from '@/graphql/providers/roles/types';
 import { getRoles as getRolesFromDataStore } from '@/graphql/providers/roles/faker/dataStore';
-import { RoleSortableField, RoleSortOrder, Role } from '@/graphql/generated/types';
+import { RoleSortableField, RoleSortOrder } from '@/graphql/generated/types';
 
 const SEARCHABLE_FIELDS = ['name', 'description'] as const;
 const DEFAULT_SORT = { field: RoleSortableField.Name, order: RoleSortOrder.Asc };

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { User, UserSortableField, UserSortOrder } from '@/graphql/generated/types';
-import { useUsers, useUserMutations } from '@/hooks/users';
+import { useUsers } from '@/hooks/users';
 import { EditUserDialog } from './EditUserDialog';
 import { DeleteUserDialog } from './DeleteUserDialog';
 import { UserViewer } from './UserViewer';

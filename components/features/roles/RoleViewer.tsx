@@ -1,6 +1,6 @@
 'use client';
 
-import { Role, RoleSortableField, RoleSortOrder } from '@/graphql/generated/types';
+import { Role } from '@/graphql/generated/types';
 import { RoleCards } from './RoleCards';
 import { RoleTable } from './RoleTable';
 import { RoleView } from './RoleViewSwitcher';

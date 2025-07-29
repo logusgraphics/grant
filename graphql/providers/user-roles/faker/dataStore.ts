@@ -3,7 +3,6 @@ import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-  updateAuditTimestamp,
 } from '@/lib/providers/faker/genericDataStore';
 import { getUsers } from '@/graphql/providers/users/faker/dataStore';
 import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
