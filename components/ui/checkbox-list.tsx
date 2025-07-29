@@ -1,10 +1,10 @@
-import React, { useCallback, useRef, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { Control } from 'react-hook-form';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { AutoScrollArea } from '@/components/ui/scroll-area';
 
 export interface CheckboxItem {
   id: string;
@@ -37,9 +37,6 @@ export function CheckboxList({
   maxHeight = '200px',
   disabled = false,
 }: CheckboxListProps) {
-  const phantomRef = useRef<HTMLDivElement>(null);
-  const [needsScroll, setNeedsScroll] = useState(false);
-
   const renderItems = useCallback(
     (field: any) => (
       <div className="space-y-2 pr-4">
@@ -82,15 +79,6 @@ export function CheckboxList({
     [items, control, name, disabled]
   );
 
-  // Measure the natural height of the content
-  useEffect(() => {
-    if (phantomRef.current) {
-      const naturalHeight = phantomRef.current.clientHeight;
-      const maxHeightPx = parseInt(maxHeight.replace('px', ''));
-      setNeedsScroll(naturalHeight > maxHeightPx);
-    }
-  }, [items, maxHeight]);
-
   return (
     <FormField
       control={control}
@@ -104,67 +92,9 @@ export function CheckboxList({
             ) : items.length === 0 ? (
               <div className="text-sm text-muted-foreground">{emptyText}</div>
             ) : (
-              <>
-                {/* Phantom element to measure natural height */}
-                <div
-                  ref={phantomRef}
-                  className="invisible absolute pointer-events-none"
-                  style={{ visibility: 'hidden', position: 'absolute' }}
-                >
-                  {renderItems(field)}
-                </div>
-
-                {/* Actual content */}
-                {needsScroll ? (
-                  <ScrollArea className="w-full" style={{ height: maxHeight }}>
-                    {renderItems(field)}
-                  </ScrollArea>
-                ) : (
-                  <div className="space-y-2">
-                    {items.map((item) => (
-                      <FormField
-                        key={item.id}
-                        control={control}
-                        name={name}
-                        render={({ field: itemField }) => {
-                          return (
-                            <FormItem
-                              key={item.id}
-                              className="flex flex-row items-start space-x-2 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={itemField.value?.includes(item.id)}
-                                  onCheckedChange={(checked: boolean) => {
-                                    if (disabled) return;
-                                    return checked
-                                      ? itemField.onChange([...(itemField.value || []), item.id])
-                                      : itemField.onChange(
-                                          itemField.value?.filter(
-                                            (value: string) => value !== item.id
-                                          )
-                                        );
-                                  }}
-                                  disabled={disabled}
-                                  className="mt-0.75"
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel className="text-sm font-normal">{item.name}</FormLabel>
-                                {item.description && (
-                                  <p className="text-xs text-muted-foreground">
-                                    {item.description}
-                                  </p>
-                                )}
-                              </div>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
+              <AutoScrollArea maxHeight={maxHeight} fallbackClassName="space-y-2">
+                {renderItems(field)}
+              </AutoScrollArea>
             )}
           </div>
           {error && <FormMessage className="text-red-500 text-sm mt-1">{error}</FormMessage>}

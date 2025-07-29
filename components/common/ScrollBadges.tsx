@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useRef, useEffect, useState, ReactNode } from 'react';
+import { useCallback, ReactNode } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { AutoScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 export interface BadgeItem {
@@ -36,8 +36,6 @@ export function ScrollBadges({
   showAsRound = false,
 }: ScrollBadgesProps) {
   const t = useTranslations('common');
-  const phantomRef = useRef<HTMLDivElement>(null);
-  const [needsScroll, setNeedsScroll] = useState(false);
 
   const renderItems = useCallback(
     () => (
@@ -59,14 +57,6 @@ export function ScrollBadges({
     ),
     [items, defaultVariant, showAsRound]
   );
-
-  // Measure the natural height of the content
-  useEffect(() => {
-    if (phantomRef.current) {
-      const naturalHeight = phantomRef.current.clientHeight;
-      setNeedsScroll(naturalHeight > height);
-    }
-  }, [items, height]);
 
   if (items.length === 0) {
     return (
@@ -95,35 +85,9 @@ export function ScrollBadges({
         </div>
       )}
 
-      {/* Phantom element to measure natural height */}
-      <div
-        ref={phantomRef}
-        className="invisible absolute pointer-events-none"
-        style={{ visibility: 'hidden', position: 'absolute' }}
-      >
+      <AutoScrollArea maxHeight={height} fallbackClassName="flex flex-wrap gap-2">
         {renderItems()}
-      </div>
-
-      {/* Actual content */}
-      {needsScroll ? (
-        <ScrollArea style={{ height: `${height}px` }}>{renderItems()}</ScrollArea>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {items.map((item) => (
-            <Badge
-              key={item.id}
-              variant={item.variant || defaultVariant}
-              className={cn(
-                item.className,
-                showAsRound && 'w-3 h-3 rounded-full p-0 border-2 bg-transparent',
-                !showAsRound && 'bg-transparent border-2'
-              )}
-            >
-              {!showAsRound && item.label}
-            </Badge>
-          ))}
-        </div>
-      )}
+      </AutoScrollArea>
     </div>
   );
 }

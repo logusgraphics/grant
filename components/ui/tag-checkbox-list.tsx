@@ -1,9 +1,9 @@
-import React, { useCallback, useRef, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { Control } from 'react-hook-form';
 
 import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { AutoScrollArea } from '@/components/ui/scroll-area';
 import { Tag } from '@/graphql/generated/types';
 import { getTagBorderColorClasses } from '@/lib/tag-colors';
 import { cn } from '@/lib/utils';
@@ -33,9 +33,6 @@ export function TagCheckboxList({
   maxHeight = '200px',
   disabled = false,
 }: TagCheckboxListProps) {
-  const phantomRef = useRef<HTMLDivElement>(null);
-  const [needsScroll, setNeedsScroll] = useState(false);
-
   const renderItems = useCallback(
     (field: any) => (
       <div className="flex flex-wrap gap-2 pr-4">
@@ -76,15 +73,6 @@ export function TagCheckboxList({
     [items, disabled]
   );
 
-  // Measure the natural height of the content
-  useEffect(() => {
-    if (phantomRef.current) {
-      const naturalHeight = phantomRef.current.clientHeight;
-      const maxHeightPx = parseInt(maxHeight.replace('px', ''));
-      setNeedsScroll(naturalHeight > maxHeightPx);
-    }
-  }, [items, maxHeight]);
-
   return (
     <FormField
       control={control}
@@ -98,60 +86,9 @@ export function TagCheckboxList({
             ) : items.length === 0 ? (
               <div className="text-sm text-muted-foreground">{emptyText}</div>
             ) : (
-              <>
-                {/* Phantom element to measure natural height */}
-                <div
-                  ref={phantomRef}
-                  className="invisible absolute pointer-events-none"
-                  style={{ visibility: 'hidden', position: 'absolute' }}
-                >
-                  {renderItems(field)}
-                </div>
-
-                {/* Actual content */}
-                {needsScroll ? (
-                  <ScrollArea className="w-full" style={{ height: maxHeight }}>
-                    {renderItems(field)}
-                  </ScrollArea>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {items.map((tag) => {
-                      const isSelected = field.value?.includes(tag.id);
-                      return (
-                        <button
-                          key={tag.id}
-                          type="button"
-                          onClick={() => {
-                            if (disabled) return;
-                            const currentValue = field.value || [];
-                            if (isSelected) {
-                              field.onChange(
-                                currentValue.filter((value: string) => value !== tag.id)
-                              );
-                            } else {
-                              field.onChange([...currentValue, tag.id]);
-                            }
-                          }}
-                          disabled={disabled}
-                          className={cn(
-                            'w-3 h-3 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none relative',
-                            getTagBorderColorClasses(tag.color),
-                            'bg-transparent',
-                            disabled && 'opacity-50 cursor-not-allowed'
-                          )}
-                          title={tag.name}
-                        >
-                          {isSelected && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-current" />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
+              <AutoScrollArea maxHeight={maxHeight} fallbackClassName="flex flex-wrap gap-2">
+                {renderItems(field)}
+              </AutoScrollArea>
             )}
           </div>
           {error && <FormMessage className="text-red-500 text-sm mt-1">{error}</FormMessage>}
