@@ -3,10 +3,10 @@
 import { Shield, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { ScrollBadges } from '@/components/common';
 import { Avatar } from '@/components/common/Avatar';
 import { DataTable, type ColumnConfig } from '@/components/common/DataTable';
 import { type ColumnConfig as SkeletonColumnConfig } from '@/components/common/TableSkeleton';
-import { ScrollBadges } from '@/components/ui/scroll-badges';
 import { User } from '@/graphql/generated/types';
 import { getTagColorClasses, getAvatarBorderColorClasses } from '@/lib/tag-colors';
 

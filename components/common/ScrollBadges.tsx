@@ -4,12 +4,14 @@ import { useCallback, useRef, useEffect, useState, ReactNode } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 export interface BadgeItem {
   id: string;
   label: string;
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline'; // Badge variant
   className?: string; // Custom className for this specific badge
   [key: string]: any; // Allow any additional properties
 }
@@ -19,7 +21,7 @@ interface ScrollBadgesProps {
   title?: string;
   icon?: ReactNode;
   height?: number; // Height in pixels
-  defaultBadgeClassName?: string; // Default styling for badges
+  defaultVariant?: 'default' | 'secondary' | 'destructive' | 'outline'; // Default badge variant
   className?: string;
 }
 
@@ -28,7 +30,7 @@ export function ScrollBadges({
   title,
   icon,
   height = 80,
-  defaultBadgeClassName = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+  defaultVariant = 'default',
   className,
 }: ScrollBadgesProps) {
   const t = useTranslations('common');
@@ -39,13 +41,13 @@ export function ScrollBadges({
     () => (
       <div className="flex flex-wrap gap-2 pr-4">
         {items.map((item) => (
-          <span key={item.id} className={cn(defaultBadgeClassName, item.className)}>
+          <Badge key={item.id} variant={item.variant || defaultVariant} className={item.className}>
             {item.label}
-          </span>
+          </Badge>
         ))}
       </div>
     ),
-    [items, defaultBadgeClassName]
+    [items, defaultVariant]
   );
 
   // Measure the natural height of the content
@@ -66,9 +68,9 @@ export function ScrollBadges({
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 italic">
+          <Badge variant="secondary" className="italic">
             {t('emptyElements', { title: title || 'items' })}
-          </span>
+          </Badge>
         </div>
       </div>
     );
@@ -98,9 +100,13 @@ export function ScrollBadges({
       ) : (
         <div className="flex flex-wrap gap-2">
           {items.map((item) => (
-            <span key={item.id} className={cn(defaultBadgeClassName, item.className)}>
+            <Badge
+              key={item.id}
+              variant={item.variant || defaultVariant}
+              className={item.className}
+            >
               {item.label}
-            </span>
+            </Badge>
           ))}
         </div>
       )}

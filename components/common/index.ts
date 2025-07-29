@@ -28,3 +28,4 @@ export {
 } from './TableSkeleton';
 export { CopyToClipboard } from './CopyToClipboard';
 export { CardHeader, type CardHeaderProps } from './CardHeader';
+export { ScrollBadges, type BadgeItem } from './ScrollBadges';

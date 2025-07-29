@@ -4,7 +4,7 @@ import { Key, Play, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { CardGrid, CardHeader } from '@/components/common';
-import { ScrollBadges } from '@/components/ui/scroll-badges';
+import { ScrollBadges } from '@/components/common';
 import { Permission } from '@/graphql/generated/types';
 import { getTagColorClasses } from '@/lib/tag-colors';
 
