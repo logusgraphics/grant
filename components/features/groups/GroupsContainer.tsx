@@ -19,6 +19,7 @@ interface GroupsContainerProps {
     order: GroupSortOrder;
   };
   view: GroupView;
+  tagIds?: string[];
   onTotalCountChange?: (totalCount: number) => void;
 }
 
@@ -28,6 +29,7 @@ export function GroupsContainer({
   search,
   sort,
   view,
+  tagIds,
   onTotalCountChange,
 }: GroupsContainerProps) {
   const { groups, loading, error, totalCount } = useGroups({
@@ -35,6 +37,7 @@ export function GroupsContainer({
     limit,
     search,
     sort,
+    tagIds,
   });
 
   const [groupToDelete, setGroupToDelete] = useState<{ id: string; name: string } | null>(null);

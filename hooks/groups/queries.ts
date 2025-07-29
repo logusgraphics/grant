@@ -1,8 +1,15 @@
 import { gql } from '@apollo/client';
 
 export const GET_GROUPS = gql`
-  query GetGroups($page: Int!, $limit: Int!, $sort: GroupSortInput, $search: String, $ids: [ID!]) {
-    groups(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
+  query GetGroups(
+    $page: Int!
+    $limit: Int!
+    $sort: GroupSortInput
+    $search: String
+    $ids: [ID!]
+    $tagIds: [ID!]
+  ) {
+    groups(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids, tagIds: $tagIds) {
       groups {
         id
         name

@@ -23,6 +23,7 @@ interface PermissionsContainerProps {
     order: PermissionSortOrder;
   };
   view: PermissionView;
+  tagIds?: string[];
   onTotalCountChange?: (totalCount: number) => void;
 }
 
@@ -32,6 +33,7 @@ export function PermissionsContainer({
   search,
   sort,
   view,
+  tagIds,
   onTotalCountChange,
 }: PermissionsContainerProps) {
   const { permissions, loading, error, totalCount, refetch } = usePermissions({
@@ -39,6 +41,7 @@ export function PermissionsContainer({
     limit,
     search,
     sort,
+    tagIds,
   });
 
   const [permissionToDelete, setPermissionToDelete] = useState<{ id: string; name: string } | null>(

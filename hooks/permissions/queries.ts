@@ -7,8 +7,16 @@ export const GET_PERMISSIONS = gql`
     $sort: PermissionSortInput
     $search: String
     $ids: [ID!]
+    $tagIds: [ID!]
   ) {
-    permissions(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
+    permissions(
+      page: $page
+      limit: $limit
+      sort: $sort
+      search: $search
+      ids: $ids
+      tagIds: $tagIds
+    ) {
       permissions {
         id
         name

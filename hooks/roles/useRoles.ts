@@ -21,6 +21,7 @@ export function useRoles(options: UseRolesOptions = {}): UseRolesResult {
     search = '',
     sort = { field: RoleSortableField.Name, order: RoleSortOrder.Asc },
     ids,
+    tagIds,
   } = options;
 
   const { data, loading, error } = useQuery<RolesQueryResult>(GET_ROLES, {
@@ -30,6 +31,7 @@ export function useRoles(options: UseRolesOptions = {}): UseRolesResult {
       search,
       sort,
       ids,
+      tagIds,
     },
   });
 

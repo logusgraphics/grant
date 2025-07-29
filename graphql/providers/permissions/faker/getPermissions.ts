@@ -3,6 +3,7 @@ import {
   PermissionSortOrder,
   Permission,
 } from '@/graphql/generated/types';
+import { getPermissionTagsByTagId } from '@/graphql/providers/permission-tags/faker/dataStore';
 import { getPermissions as getPermissionsFromDataStore } from '@/graphql/providers/permissions/faker/dataStore';
 import { GetPermissionsParams, GetPermissionsResult } from '@/graphql/providers/permissions/types';
 
@@ -15,6 +16,7 @@ export async function getPermissions({
   sort,
   search,
   ids,
+  tagIds,
 }: GetPermissionsParams): Promise<GetPermissionsResult> {
   // If ids are provided and not empty, ignore pagination and return filtered results
   if (ids && ids.length > 0) {
@@ -28,7 +30,26 @@ export async function getPermissions({
 
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
   const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
-  const allPermissions = getPermissionsFromDataStore(sort || DEFAULT_SORT);
+  let allPermissions = getPermissionsFromDataStore(sort || DEFAULT_SORT);
+
+  // Filter by tag IDs if provided
+  if (tagIds && tagIds.length > 0) {
+    // Get all permission-tag relationships for the specified tag IDs
+    const permissionTagRelationships = tagIds.flatMap((tagId: string) =>
+      getPermissionTagsByTagId(tagId)
+    );
+
+    // Extract unique permission IDs that have at least one of the specified tags
+    const permissionIdsWithTags = [
+      ...new Set(permissionTagRelationships.map((pt: any) => pt.permissionId)),
+    ];
+
+    // Filter permissions to only include those with the specified tags
+    allPermissions = allPermissions.filter((permission) =>
+      permissionIdsWithTags.includes(permission.id)
+    );
+  }
+
   const filteredBySearchPermissions = search
     ? allPermissions.filter((permission) =>
         SEARCHABLE_FIELDS.some((field) =>

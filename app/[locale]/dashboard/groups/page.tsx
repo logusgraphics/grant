@@ -20,6 +20,7 @@ interface InitialParams {
   sortField: GroupSortableField | null;
   sortOrder: GroupSortOrder | null;
   view: GroupView | null;
+  tagIds: string[];
 }
 
 export default function GroupsPage() {
@@ -39,6 +40,7 @@ export default function GroupsPage() {
         sortField: null,
         sortOrder: null,
         view: null,
+        tagIds: [],
       };
     }
     const params = new URLSearchParams(window.location.search);
@@ -49,6 +51,7 @@ export default function GroupsPage() {
       sortField: params.get('sortField') as GroupSortableField | null,
       sortOrder: params.get('sortOrder') as GroupSortOrder | null,
       view: (params.get('view') as GroupView) || null,
+      tagIds: params.get('tagIds')?.split(',').filter(Boolean) || [],
     };
   }, []); // Empty dependency array since we only want to parse once
 
@@ -64,6 +67,7 @@ export default function GroupsPage() {
   const [search, setSearch] = useState(initialParams.search);
   const [sort, setSort] = useState(initialSort);
   const [view, setView] = useState<GroupView>(initialParams.view || GroupView.CARDS);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialParams.tagIds);
 
   // Memoize callback functions
   const handleSortChange = useCallback(
@@ -117,6 +121,25 @@ export default function GroupsPage() {
     [search, router]
   );
 
+  const handleTagIdsChange = useCallback(
+    (newTagIds: string[]) => {
+      if (JSON.stringify(newTagIds.sort()) !== JSON.stringify(selectedTagIds.sort())) {
+        setSelectedTagIds(newTagIds);
+        setPage(1); // Reset to first page when changing tags
+
+        const params = new URLSearchParams(window.location.search);
+        if (newTagIds.length > 0) {
+          params.set('tagIds', newTagIds.join(','));
+        } else {
+          params.delete('tagIds');
+        }
+        params.set('page', '1');
+        router.push(('?' + params.toString()) as any);
+      }
+    },
+    [selectedTagIds, router]
+  );
+
   const handlePageChange = useCallback(
     (newPage: number) => {
       if (newPage !== page) {
@@ -152,10 +175,12 @@ export default function GroupsPage() {
           search={search}
           sort={sort}
           currentView={view}
+          selectedTagIds={selectedTagIds}
           onSortChange={handleSortChange}
           onLimitChange={handleLimitChange}
           onSearchChange={handleSearchChange}
           onViewChange={handleViewChange}
+          onTagIdsChange={handleTagIdsChange}
         />
       }
       footer={
@@ -172,6 +197,7 @@ export default function GroupsPage() {
         search={search}
         sort={sort}
         view={view}
+        tagIds={selectedTagIds}
         onTotalCountChange={setTotalCount}
       />
     </DashboardPageLayout>

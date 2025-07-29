@@ -19,6 +19,7 @@ interface RolesContainerProps {
     order: RoleSortOrder;
   };
   view: RoleView;
+  tagIds?: string[];
   onTotalCountChange?: (totalCount: number) => void;
 }
 
@@ -28,6 +29,7 @@ export function RolesContainer({
   search,
   sort,
   view,
+  tagIds,
   onTotalCountChange,
 }: RolesContainerProps) {
   const { roles, loading, error, totalCount } = useRoles({
@@ -35,6 +37,7 @@ export function RolesContainer({
     limit,
     search,
     sort,
+    tagIds,
   });
 
   const [roleToDelete, setRoleToDelete] = useState<{ id: string; name: string } | null>(null);

@@ -594,6 +594,7 @@ export type QueryGroupsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<GroupSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 
@@ -608,6 +609,7 @@ export type QueryPermissionsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<PermissionSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 
@@ -627,6 +629,7 @@ export type QueryRolesArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<RoleSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 

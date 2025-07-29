@@ -4,20 +4,12 @@ import {
   Permission,
   PermissionSortableField,
   PermissionSortOrder,
+  QueryPermissionsArgs,
 } from '@/graphql/generated/types';
 
 import { GET_PERMISSIONS } from './queries';
 
-interface UsePermissionsOptions {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sort?: {
-    field: PermissionSortableField;
-    order: PermissionSortOrder;
-  };
-  ids?: string[];
-}
+interface UsePermissionsOptions extends Partial<QueryPermissionsArgs> {}
 
 interface UsePermissionsResult {
   permissions: Permission[];
@@ -34,6 +26,7 @@ export function usePermissions(options: UsePermissionsOptions = {}): UsePermissi
     search = '',
     sort = { field: PermissionSortableField.Name, order: PermissionSortOrder.Asc },
     ids,
+    tagIds,
   } = options;
 
   const { data, loading, error, refetch } = useQuery(GET_PERMISSIONS, {
@@ -43,6 +36,7 @@ export function usePermissions(options: UsePermissionsOptions = {}): UsePermissi
       search,
       sort,
       ids,
+      tagIds,
     },
   });
 

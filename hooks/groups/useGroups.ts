@@ -25,6 +25,7 @@ export function useGroups(options: UseGroupsOptions = {}): UseGroupsResult {
     search = '',
     sort = { field: GroupSortableField.Name, order: GroupSortOrder.Asc },
     ids,
+    tagIds,
   } = options;
 
   const { data, loading, error } = useQuery(GET_GROUPS, {
@@ -34,6 +35,7 @@ export function useGroups(options: UseGroupsOptions = {}): UseGroupsResult {
       search,
       sort,
       ids,
+      tagIds,
     },
   });
 
