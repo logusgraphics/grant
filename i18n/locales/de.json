@@ -53,6 +53,7 @@
       "users": "Benutzer",
       "roles": "Rollen",
       "groups": "Gruppen",
+      "permissions": "Berechtigungen",
       "account": "Konto",
       "settings": "Einstellungen"
     }
@@ -401,6 +402,91 @@
     "permissions": "Berechtigungen",
     "emptyElements": "Es gibt keine {title} zum Anzeigen",
     "noDescription": "Keine Beschreibung"
+  },
+  "permissions": {
+    "title": "Berechtigungsverwaltung",
+    "noPermissions": {
+      "title": "Keine Berechtigungen gefunden",
+      "description": "Erstellen Sie Ihre erste Berechtigung"
+    },
+    "noSearchResults": {
+      "title": "Keine Berechtigungen gefunden",
+      "description": "Versuchen Sie, Ihre Suchbegriffe anzupassen oder erstellen Sie eine neue Berechtigung"
+    },
+    "actions": {
+      "create": "Berechtigung erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "cancel": "Abbrechen",
+      "label": "Aktionen anzeigen/ausblenden"
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "name": "Name",
+      "action": "Aktion",
+      "default": "Standard"
+    },
+    "limit": "Einträge pro Seite",
+    "search": {
+      "placeholder": "Berechtigungen suchen..."
+    },
+    "form": {
+      "name": "Name",
+      "description": "Beschreibung",
+      "action": "Aktion",
+      "tags": "Tags",
+      "validation": {
+        "nameRequired": "Berechtigungsname ist erforderlich"
+      }
+    },
+    "createDialog": {
+      "title": "Neue Berechtigung erstellen",
+      "description": "Fügen Sie eine neue Berechtigung zum System hinzu",
+      "trigger": "Berechtigung erstellen",
+      "confirm": "Berechtigung erstellen",
+      "submitting": "Wird erstellt..."
+    },
+    "editDialog": {
+      "title": "Berechtigung bearbeiten",
+      "description": "Berechtigungsinformationen aktualisieren",
+      "confirm": "Änderungen speichern",
+      "updating": "Wird aktualisiert..."
+    },
+    "deleteDialog": {
+      "title": "Berechtigung löschen",
+      "description": "Sind Sie sicher, dass Sie {name} löschen möchten?",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen",
+      "deleting": "Wird gelöscht..."
+    },
+    "notifications": {
+      "createSuccess": "Berechtigung erstellt",
+      "createError": "Berechtigung konnte nicht erstellt werden",
+      "updateSuccess": "Berechtigung aktualisiert",
+      "updateError": "Berechtigung konnte nicht aktualisiert werden",
+      "deleteSuccess": "Berechtigung gelöscht",
+      "deleteError": "Berechtigung konnte nicht gelöscht werden",
+      "tagAddedSuccess": "Tag zur Berechtigung hinzugefügt",
+      "tagAddedError": "Tag konnte nicht zur Berechtigung hinzugefügt werden",
+      "tagRemovedSuccess": "Tag von der Berechtigung entfernt",
+      "tagRemovedError": "Tag konnte nicht von der Berechtigung entfernt werden"
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "action": "Aktion",
+      "description": "Beschreibung",
+      "tags": "Tags",
+      "audit": "Audit",
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
+      "actions": "Aktionen",
+      "loading": "Berechtigungen werden geladen..."
+    }
   },
   "account": {
     "title": "Kontoverwaltung",

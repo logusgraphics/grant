@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery, ApolloError } from '@apollo/client';
 
 import {
   Permission,
@@ -22,8 +22,9 @@ interface UsePermissionsOptions {
 interface UsePermissionsResult {
   permissions: Permission[];
   loading: boolean;
-  error: any;
+  error: ApolloError | undefined;
   totalCount: number;
+  refetch: () => Promise<any>;
 }
 
 export function usePermissions(options: UsePermissionsOptions = {}): UsePermissionsResult {
@@ -35,7 +36,7 @@ export function usePermissions(options: UsePermissionsOptions = {}): UsePermissi
     ids,
   } = options;
 
-  const { data, loading, error } = useQuery(GET_PERMISSIONS, {
+  const { data, loading, error, refetch } = useQuery(GET_PERMISSIONS, {
     variables: {
       page,
       limit,
@@ -50,5 +51,6 @@ export function usePermissions(options: UsePermissionsOptions = {}): UsePermissi
     loading,
     error,
     totalCount: data?.permissions?.totalCount || 0,
+    refetch,
   };
 }

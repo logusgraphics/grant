@@ -5,6 +5,8 @@ import {
   UpdatePermissionInput,
   PermissionSortInput,
 } from '@/graphql/generated/types';
+import { deleteGroupPermissionsByPermissionId } from '@/graphql/providers/group-permissions/faker/dataStore';
+import { deletePermissionTagsByPermissionId } from '@/graphql/providers/permission-tags/faker/dataStore';
 import { PermissionData } from '@/graphql/providers/permissions/types';
 import {
   createFakerDataStore,
@@ -155,5 +157,10 @@ export const updatePermission = (
 };
 
 export const deletePermission = (permissionId: string): PermissionData | null => {
+  // Clean up related relationships first
+  deleteGroupPermissionsByPermissionId(permissionId);
+  deletePermissionTagsByPermissionId(permissionId);
+
+  // Then delete the permission
   return permissionsDataStore.deleteEntity(permissionId);
 };

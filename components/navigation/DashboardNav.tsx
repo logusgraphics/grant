@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 
-import { Users, UserCircle, Settings, Shield, Group } from 'lucide-react';
+import { Users, UserCircle, Settings, Shield, Group, Key } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { usePathname } from '@/i18n/navigation';
@@ -66,6 +66,11 @@ export function DashboardNav() {
       path: '/dashboard/groups',
       icon: <Group className={iconClasses('/dashboard/groups')} />,
       translationKey: 'groups',
+    },
+    {
+      path: '/dashboard/permissions',
+      icon: <Key className={iconClasses('/dashboard/permissions')} />,
+      translationKey: 'permissions',
     },
   ];
 

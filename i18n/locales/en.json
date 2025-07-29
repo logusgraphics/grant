@@ -53,6 +53,7 @@
       "users": "Users",
       "roles": "Roles",
       "groups": "Groups",
+      "permissions": "Permissions",
       "account": "Account",
       "settings": "Settings"
     }
@@ -401,6 +402,91 @@
     "permissions": "Permissions",
     "emptyElements": "There are no {title} to display",
     "noDescription": "No description"
+  },
+  "permissions": {
+    "title": "Permission Management",
+    "noPermissions": {
+      "title": "No permissions found",
+      "description": "Get started by creating your first permission"
+    },
+    "noSearchResults": {
+      "title": "No permissions found",
+      "description": "Try adjusting your search terms or create a new permission"
+    },
+    "actions": {
+      "create": "Create Permission",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "label": "Show/Hide Actions"
+    },
+    "sort": {
+      "label": "Sort by",
+      "name": "Name",
+      "action": "Action",
+      "default": "Default"
+    },
+    "limit": "Items per page",
+    "search": {
+      "placeholder": "Search permissions..."
+    },
+    "form": {
+      "name": "Name",
+      "description": "Description",
+      "action": "Action",
+      "tags": "Tags",
+      "validation": {
+        "nameRequired": "Permission name is required"
+      }
+    },
+    "createDialog": {
+      "title": "Create New Permission",
+      "description": "Add a new permission to the system",
+      "trigger": "Create Permission",
+      "confirm": "Create Permission",
+      "submitting": "Creating..."
+    },
+    "editDialog": {
+      "title": "Edit Permission",
+      "description": "Update permission information",
+      "confirm": "Save Changes",
+      "updating": "Updating..."
+    },
+    "deleteDialog": {
+      "title": "Delete Permission",
+      "description": "Are you sure you want to delete {name}?",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    },
+    "notifications": {
+      "createSuccess": "Permission created",
+      "createError": "Failed to create permission",
+      "updateSuccess": "Permission updated",
+      "updateError": "Failed to update permission",
+      "deleteSuccess": "Permission deleted",
+      "deleteError": "Failed to delete permission",
+      "tagAddedSuccess": "Tag added to permission",
+      "tagAddedError": "Failed to add tag to permission",
+      "tagRemovedSuccess": "Tag removed from permission",
+      "tagRemovedError": "Failed to remove tag from permission"
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "action": "Action",
+      "description": "Description",
+      "tags": "Tags",
+      "audit": "Audit",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "loading": "Loading permissions..."
+    }
   },
   "account": {
     "title": "Account Management",

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 import { Group } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   CreateDialog,
@@ -25,7 +24,6 @@ export function CreateGroupDialog({
   onOpenChange,
   children,
 }: CreateGroupDialogComponentProps) {
-  const t = useTranslations('groups');
   const { permissions, loading: permissionsLoading } = usePermissions();
   const { createGroup, addGroupPermission } = useGroupMutations();
   const [isSubmitting, setIsSubmitting] = useState(false);

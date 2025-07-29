@@ -137,8 +137,10 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
   useEffect(() => {
     if (entity) {
       const formValues = mapEntityToFormValues(entity);
-      form.reset(formValues);
-      setInitialFormValues(formValues);
+      // Ensure all form values have proper defaults to prevent controlled/uncontrolled issues
+      const safeFormValues = { ...defaultValues, ...formValues };
+      form.reset(safeFormValues);
+      setInitialFormValues(safeFormValues);
     }
   }, [entity, form, mapEntityToFormValues]);
 

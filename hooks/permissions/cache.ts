@@ -1,4 +1,12 @@
+import { ApolloCache } from '@apollo/client';
+
 import { GET_PERMISSIONS } from './queries';
+
+export const evictPermissionsCache = (cache: ApolloCache<any>) => {
+  // Evict all permissions-related queries from cache
+  cache.evict({ fieldName: 'permissions' });
+  cache.gc();
+};
 
 export const updatePermissionsCache = (cache: any, newPermission: any) => {
   // Update the permissions list in cache

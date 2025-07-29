@@ -38,13 +38,6 @@ export const UPDATE_PERMISSION = gql`
 
 export const DELETE_PERMISSION = gql`
   mutation DeletePermission($id: ID!) {
-    deletePermission(id: $id) {
-      id
-      name
-      action
-      description
-      createdAt
-      updatedAt
-    }
+    deletePermission(id: $id)
   }
 `;

@@ -133,7 +133,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
       }
 
       setDialogOpen(false);
-      form.reset();
+      form.reset(defaultValues);
     } catch (error) {
       // Error handling is done in the specific mutation hooks
       console.error('Error creating entity:', error);
@@ -142,7 +142,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      form.reset();
+      form.reset(defaultValues);
     }
     setDialogOpen(newOpen);
   };
