@@ -1,0 +1,13 @@
+"""
+Get tags with pagination and sorting.
+"""
+type Query {
+  """
+  Get tags with pagination and sorting.
+  """
+  tags(
+    page: Int = 1
+    pageSize: Int = 10
+    sort: TagSortInput
+  ): TagPage!
+} 

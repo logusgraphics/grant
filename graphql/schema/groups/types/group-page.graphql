@@ -1,7 +1,7 @@
 """
 Represents a paginated list of groups.
 """
-type GroupPage {
+type GroupPage implements PaginatedResults {
   """
   List of groups for the current page.
   """

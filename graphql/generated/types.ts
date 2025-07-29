@@ -76,6 +76,14 @@ export type CreateRoleInput = {
   name: Scalars['String']['input'];
 };
 
+/** Input for creating a new tag. */
+export type CreateTagInput = {
+  /** Color identifier for the tag (e.g., 'purple', 'indigo', 'blue'). */
+  color: Scalars['String']['input'];
+  /** Name of the tag. */
+  name: Scalars['String']['input'];
+};
+
 /** Input type for creating a new user. */
 export type CreateUserInput = {
   /** Email address of the user. */
@@ -102,7 +110,7 @@ export type Group = Auditable & {
 };
 
 /** Represents a paginated list of groups. */
-export type GroupPage = {
+export type GroupPage = PaginatedResults & {
   __typename?: 'GroupPage';
   /** List of groups for the current page. */
   groups: Array<Group>;
@@ -163,6 +171,7 @@ export type LoginResponse = {
   token: Scalars['String']['output'];
 };
 
+/** Update an existing tag. */
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
@@ -178,6 +187,8 @@ export type Mutation = {
   createPermission: Permission;
   /** Creates a new role. */
   createRole: Role;
+  /** Create a new tag. */
+  createTag: Tag;
   /** Creates a new user. */
   createUser: User;
   /** Deletes a group by ID. */
@@ -186,6 +197,8 @@ export type Mutation = {
   deletePermission: Scalars['Boolean']['output'];
   /** Deletes a role by ID. */
   deleteRole: Scalars['Boolean']['output'];
+  /** Delete a tag. */
+  deleteTag: Scalars['Boolean']['output'];
   /** Deletes a user. */
   deleteUser: User;
   /** Authenticates a user and returns a JWT token. */
@@ -202,107 +215,155 @@ export type Mutation = {
   updatePermission: Permission;
   /** Updates an existing role. */
   updateRole: Role;
+  /** Update an existing tag. */
+  updateTag: Tag;
   /** Updates an existing user. */
   updateUser: User;
 };
 
 
+/** Update an existing tag. */
 export type MutationAddGroupPermissionArgs = {
   input: AddGroupPermissionInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationAddRoleGroupArgs = {
   input: AddRoleGroupInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationAddUserRoleArgs = {
   input: AddUserRoleInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationCreateGroupArgs = {
   input: CreateGroupInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationCreatePermissionArgs = {
   input: CreatePermissionInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationCreateRoleArgs = {
   input: CreateRoleInput;
 };
 
 
+/** Update an existing tag. */
+export type MutationCreateTagArgs = {
+  input: CreateTagInput;
+};
+
+
+/** Update an existing tag. */
 export type MutationCreateUserArgs = {
   input: CreateUserInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationDeleteGroupArgs = {
   id: Scalars['ID']['input'];
 };
 
 
+/** Update an existing tag. */
 export type MutationDeletePermissionArgs = {
   id: Scalars['ID']['input'];
 };
 
 
+/** Update an existing tag. */
 export type MutationDeleteRoleArgs = {
   id: Scalars['ID']['input'];
 };
 
 
+/** Update an existing tag. */
+export type MutationDeleteTagArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** Update an existing tag. */
 export type MutationDeleteUserArgs = {
   id: Scalars['ID']['input'];
 };
 
 
+/** Update an existing tag. */
 export type MutationLoginArgs = {
   input: LoginInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationRemoveGroupPermissionArgs = {
   input: RemoveGroupPermissionInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationRemoveRoleGroupArgs = {
   input: RemoveRoleGroupInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationRemoveUserRoleArgs = {
   input: RemoveUserRoleInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationUpdateGroupArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGroupInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationUpdatePermissionArgs = {
   id: Scalars['ID']['input'];
   input: UpdatePermissionInput;
 };
 
 
+/** Update an existing tag. */
 export type MutationUpdateRoleArgs = {
   id: Scalars['ID']['input'];
   input: UpdateRoleInput;
 };
 
 
+/** Update an existing tag. */
+export type MutationUpdateTagArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateTagInput;
+};
+
+
+/** Update an existing tag. */
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
   input: UpdateUserInput;
+};
+
+/** Base interface for paginated results. */
+export type PaginatedResults = {
+  /** Whether there are more items available on the next page. */
+  hasNextPage: Scalars['Boolean']['output'];
+  /** Total number of items across all pages. */
+  totalCount: Scalars['Int']['output'];
 };
 
 /** Represents a permission in the system. */
@@ -323,7 +384,7 @@ export type Permission = Auditable & {
 };
 
 /** Represents a paginated list of permissions. */
-export type PermissionPage = {
+export type PermissionPage = PaginatedResults & {
   __typename?: 'PermissionPage';
   /** Whether there are more permissions available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
@@ -351,6 +412,7 @@ export enum PermissionSortableField {
   Name = 'name'
 }
 
+/** Get tags with pagination and sorting. */
 export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
@@ -364,6 +426,8 @@ export type Query = {
   roleGroups: Array<RoleGroup>;
   /** Retrieves a paginated list of roles. */
   roles: RolePage;
+  /** Get tags with pagination and sorting. */
+  tags: TagPage;
   /** Retrieves user-role relationships for a specific user. */
   userRoles: Array<UserRole>;
   /** Retrieves a paginated list of users. */
@@ -371,11 +435,13 @@ export type Query = {
 };
 
 
+/** Get tags with pagination and sorting. */
 export type QueryGroupPermissionsArgs = {
   groupId: Scalars['ID']['input'];
 };
 
 
+/** Get tags with pagination and sorting. */
 export type QueryGroupsArgs = {
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -385,6 +451,7 @@ export type QueryGroupsArgs = {
 };
 
 
+/** Get tags with pagination and sorting. */
 export type QueryPermissionsArgs = {
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -394,11 +461,13 @@ export type QueryPermissionsArgs = {
 };
 
 
+/** Get tags with pagination and sorting. */
 export type QueryRoleGroupsArgs = {
   roleId: Scalars['ID']['input'];
 };
 
 
+/** Get tags with pagination and sorting. */
 export type QueryRolesArgs = {
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -408,11 +477,21 @@ export type QueryRolesArgs = {
 };
 
 
+/** Get tags with pagination and sorting. */
+export type QueryTagsArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
+  sort?: InputMaybe<TagSortInput>;
+};
+
+
+/** Get tags with pagination and sorting. */
 export type QueryUserRolesArgs = {
   userId: Scalars['ID']['input'];
 };
 
 
+/** Get tags with pagination and sorting. */
 export type QueryUsersArgs = {
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -482,7 +561,7 @@ export type RoleGroup = Auditable & {
 };
 
 /** Represents a paginated list of roles. */
-export type RolePage = {
+export type RolePage = PaginatedResults & {
   __typename?: 'RolePage';
   /** Whether there are more roles available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
@@ -509,6 +588,60 @@ export enum RoleSortableField {
   Name = 'name'
 }
 
+/** Sort direction. */
+export enum SortDirection {
+  /** Ascending order. */
+  Asc = 'ASC',
+  /** Descending order. */
+  Desc = 'DESC'
+}
+
+/** Represents a tag in the system. */
+export type Tag = Auditable & {
+  __typename?: 'Tag';
+  /** Color identifier for the tag (e.g., 'purple', 'indigo', 'blue'). */
+  color: Scalars['String']['output'];
+  /** Timestamp when the tag was created. */
+  createdAt: Scalars['String']['output'];
+  /** Unique identifier for the tag. */
+  id: Scalars['ID']['output'];
+  /** Name of the tag. */
+  name: Scalars['String']['output'];
+  /** Timestamp when the tag was last updated. */
+  updatedAt: Scalars['String']['output'];
+};
+
+/** Represents a paginated list of tags. */
+export type TagPage = PaginatedResults & {
+  __typename?: 'TagPage';
+  /** Whether there are more tags available on the next page. */
+  hasNextPage: Scalars['Boolean']['output'];
+  /** List of tags in the current page. */
+  tags: Array<Tag>;
+  /** Total number of tags across all pages. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** Available fields for sorting tags. */
+export enum TagSortField {
+  /** Sort by color. */
+  Color = 'COLOR',
+  /** Sort by creation date. */
+  CreatedAt = 'CREATED_AT',
+  /** Sort by name. */
+  Name = 'NAME',
+  /** Sort by last update date. */
+  UpdatedAt = 'UPDATED_AT'
+}
+
+/** Input for sorting tags. */
+export type TagSortInput = {
+  /** Sort direction. */
+  direction: SortDirection;
+  /** Field to sort by. */
+  field: TagSortField;
+};
+
 export type UpdateGroupInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -523,6 +656,14 @@ export type UpdatePermissionInput = {
 export type UpdateRoleInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   groupIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Input for updating an existing tag. */
+export type UpdateTagInput = {
+  /** Color identifier for the tag (e.g., 'purple', 'indigo', 'blue'). */
+  color?: InputMaybe<Scalars['String']['input']>;
+  /** Name of the tag. */
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -552,7 +693,7 @@ export type User = Auditable & {
 };
 
 /** Represents a paginated list of users. */
-export type UserPage = {
+export type UserPage = PaginatedResults & {
   __typename?: 'UserPage';
   /** Whether there are more users available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
@@ -670,8 +811,9 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = ResolversObject<{
-  Auditable: ( Group ) | ( GroupPermission ) | ( Permission ) | ( Role ) | ( RoleGroup ) | ( User ) | ( UserRole );
+  Auditable: ( Group ) | ( GroupPermission ) | ( Permission ) | ( Role ) | ( RoleGroup ) | ( Tag ) | ( User ) | ( UserRole );
   Creatable: never;
+  PaginatedResults: ( GroupPage ) | ( PermissionPage ) | ( RolePage ) | ( TagPage ) | ( UserPage );
 }>;
 
 /** Mapping between all available schema types and the resolvers types */
@@ -685,6 +827,7 @@ export type ResolversTypes = ResolversObject<{
   CreateGroupInput: CreateGroupInput;
   CreatePermissionInput: CreatePermissionInput;
   CreateRoleInput: CreateRoleInput;
+  CreateTagInput: CreateTagInput;
   CreateUserInput: CreateUserInput;
   Group: ResolverTypeWrapper<Group>;
   GroupPage: ResolverTypeWrapper<GroupPage>;
@@ -697,6 +840,7 @@ export type ResolversTypes = ResolversObject<{
   LoginInput: LoginInput;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<{}>;
+  PaginatedResults: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['PaginatedResults']>;
   Permission: ResolverTypeWrapper<Permission>;
   PermissionPage: ResolverTypeWrapper<PermissionPage>;
   PermissionSortInput: PermissionSortInput;
@@ -712,10 +856,16 @@ export type ResolversTypes = ResolversObject<{
   RoleSortInput: RoleSortInput;
   RoleSortOrder: RoleSortOrder;
   RoleSortableField: RoleSortableField;
+  SortDirection: SortDirection;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  Tag: ResolverTypeWrapper<Tag>;
+  TagPage: ResolverTypeWrapper<TagPage>;
+  TagSortField: TagSortField;
+  TagSortInput: TagSortInput;
   UpdateGroupInput: UpdateGroupInput;
   UpdatePermissionInput: UpdatePermissionInput;
   UpdateRoleInput: UpdateRoleInput;
+  UpdateTagInput: UpdateTagInput;
   UpdateUserInput: UpdateUserInput;
   User: ResolverTypeWrapper<User>;
   UserPage: ResolverTypeWrapper<UserPage>;
@@ -736,6 +886,7 @@ export type ResolversParentTypes = ResolversObject<{
   CreateGroupInput: CreateGroupInput;
   CreatePermissionInput: CreatePermissionInput;
   CreateRoleInput: CreateRoleInput;
+  CreateTagInput: CreateTagInput;
   CreateUserInput: CreateUserInput;
   Group: Group;
   GroupPage: GroupPage;
@@ -746,6 +897,7 @@ export type ResolversParentTypes = ResolversObject<{
   LoginInput: LoginInput;
   LoginResponse: LoginResponse;
   Mutation: {};
+  PaginatedResults: ResolversInterfaceTypes<ResolversParentTypes>['PaginatedResults'];
   Permission: Permission;
   PermissionPage: PermissionPage;
   PermissionSortInput: PermissionSortInput;
@@ -758,9 +910,13 @@ export type ResolversParentTypes = ResolversObject<{
   RolePage: RolePage;
   RoleSortInput: RoleSortInput;
   String: Scalars['String']['output'];
+  Tag: Tag;
+  TagPage: TagPage;
+  TagSortInput: TagSortInput;
   UpdateGroupInput: UpdateGroupInput;
   UpdatePermissionInput: UpdatePermissionInput;
   UpdateRoleInput: UpdateRoleInput;
+  UpdateTagInput: UpdateTagInput;
   UpdateUserInput: UpdateUserInput;
   User: User;
   UserPage: UserPage;
@@ -769,7 +925,7 @@ export type ResolversParentTypes = ResolversObject<{
 }>;
 
 export type AuditableResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Auditable'] = ResolversParentTypes['Auditable']> = ResolversObject<{
-  __resolveType: TypeResolveFn<'Group' | 'GroupPermission' | 'Permission' | 'Role' | 'RoleGroup' | 'User' | 'UserRole', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Group' | 'GroupPermission' | 'Permission' | 'Role' | 'RoleGroup' | 'Tag' | 'User' | 'UserRole', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -822,10 +978,12 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createGroup?: Resolver<ResolversTypes['Group'], ParentType, ContextType, RequireFields<MutationCreateGroupArgs, 'input'>>;
   createPermission?: Resolver<ResolversTypes['Permission'], ParentType, ContextType, RequireFields<MutationCreatePermissionArgs, 'input'>>;
   createRole?: Resolver<ResolversTypes['Role'], ParentType, ContextType, RequireFields<MutationCreateRoleArgs, 'input'>>;
+  createTag?: Resolver<ResolversTypes['Tag'], ParentType, ContextType, RequireFields<MutationCreateTagArgs, 'input'>>;
   createUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationCreateUserArgs, 'input'>>;
   deleteGroup?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteGroupArgs, 'id'>>;
   deletePermission?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeletePermissionArgs, 'id'>>;
   deleteRole?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteRoleArgs, 'id'>>;
+  deleteTag?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteTagArgs, 'id'>>;
   deleteUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationDeleteUserArgs, 'id'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType, RequireFields<MutationLoginArgs, 'input'>>;
   removeGroupPermission?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRemoveGroupPermissionArgs, 'input'>>;
@@ -834,7 +992,14 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   updateGroup?: Resolver<ResolversTypes['Group'], ParentType, ContextType, RequireFields<MutationUpdateGroupArgs, 'id' | 'input'>>;
   updatePermission?: Resolver<ResolversTypes['Permission'], ParentType, ContextType, RequireFields<MutationUpdatePermissionArgs, 'id' | 'input'>>;
   updateRole?: Resolver<ResolversTypes['Role'], ParentType, ContextType, RequireFields<MutationUpdateRoleArgs, 'id' | 'input'>>;
+  updateTag?: Resolver<ResolversTypes['Tag'], ParentType, ContextType, RequireFields<MutationUpdateTagArgs, 'id' | 'input'>>;
   updateUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationUpdateUserArgs, 'id' | 'input'>>;
+}>;
+
+export type PaginatedResultsResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PaginatedResults'] = ResolversParentTypes['PaginatedResults']> = ResolversObject<{
+  __resolveType: TypeResolveFn<'GroupPage' | 'PermissionPage' | 'RolePage' | 'TagPage' | 'UserPage', ParentType, ContextType>;
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
 }>;
 
 export type PermissionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Permission'] = ResolversParentTypes['Permission']> = ResolversObject<{
@@ -861,6 +1026,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   permissions?: Resolver<ResolversTypes['PermissionPage'], ParentType, ContextType, Partial<QueryPermissionsArgs>>;
   roleGroups?: Resolver<Array<ResolversTypes['RoleGroup']>, ParentType, ContextType, RequireFields<QueryRoleGroupsArgs, 'roleId'>>;
   roles?: Resolver<ResolversTypes['RolePage'], ParentType, ContextType, Partial<QueryRolesArgs>>;
+  tags?: Resolver<ResolversTypes['TagPage'], ParentType, ContextType, RequireFields<QueryTagsArgs, 'page' | 'pageSize'>>;
   userRoles?: Resolver<Array<ResolversTypes['UserRole']>, ParentType, ContextType, RequireFields<QueryUserRolesArgs, 'userId'>>;
   users?: Resolver<ResolversTypes['UserPage'], ParentType, ContextType, Partial<QueryUsersArgs>>;
 }>;
@@ -889,6 +1055,22 @@ export type RoleGroupResolvers<ContextType = Context, ParentType extends Resolve
 export type RolePageResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RolePage'] = ResolversParentTypes['RolePage']> = ResolversObject<{
   hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['Role']>, ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type TagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Tag'] = ResolversParentTypes['Tag']> = ResolversObject<{
+  color?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type TagPageResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TagPage'] = ResolversParentTypes['TagPage']> = ResolversObject<{
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  tags?: Resolver<Array<ResolversTypes['Tag']>, ParentType, ContextType>;
   totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -929,12 +1111,15 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   GroupPermission?: GroupPermissionResolvers<ContextType>;
   LoginResponse?: LoginResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  PaginatedResults?: PaginatedResultsResolvers<ContextType>;
   Permission?: PermissionResolvers<ContextType>;
   PermissionPage?: PermissionPageResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Role?: RoleResolvers<ContextType>;
   RoleGroup?: RoleGroupResolvers<ContextType>;
   RolePage?: RolePageResolvers<ContextType>;
+  Tag?: TagResolvers<ContextType>;
+  TagPage?: TagPageResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserPage?: UserPageResolvers<ContextType>;
   UserRole?: UserRoleResolvers<ContextType>;

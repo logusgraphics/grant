@@ -9,6 +9,7 @@ import { RoleGroup } from '@/graphql/resolvers/role-groups/fields';
 import { GroupPermission } from '@/graphql/resolvers/group-permissions/fields';
 import { Role } from '@/graphql/resolvers/roles/fields';
 import { Group } from '@/graphql/resolvers/groups/fields';
+import { Tag } from '@/graphql/resolvers/tags/fields';
 
 // Load all schema files
 const typeDefs = loadFilesSync(join(process.cwd(), 'graphql/schema'), {
@@ -28,5 +29,6 @@ export const schema = makeExecutableSchema({
     RoleGroup,
     Group,
     GroupPermission,
+    Tag,
   },
 });

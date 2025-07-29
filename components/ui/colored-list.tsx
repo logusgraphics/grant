@@ -4,6 +4,7 @@ import { useCallback, useRef, useEffect, useState, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslations } from 'next-intl';
+import { getTagColorClasses } from '@/lib/tag-colors';
 
 interface ColoredItem {
   id: string;
@@ -18,6 +19,7 @@ interface ColoredListProps {
   height?: number; // Height in pixels
   colors?: string[];
   className?: string;
+  useTagColors?: boolean; // Whether to use the new tag color system
 }
 
 export function ColoredList({
@@ -37,6 +39,7 @@ export function ColoredList({
     'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
   ],
   className,
+  useTagColors = false,
 }: ColoredListProps) {
   const t = useTranslations('roles');
   const phantomRef = useRef<HTMLDivElement>(null);
@@ -44,6 +47,14 @@ export function ColoredList({
 
   const getItemColor = useCallback(
     (itemLabel: string, allItems: ColoredItem[]) => {
+      if (useTagColors && 'color' in items[0]) {
+        // Use the color field from the item if available
+        const item = items.find((item) => item[labelField] === itemLabel);
+        if (item && 'color' in item) {
+          return getTagColorClasses(item.color as string);
+        }
+      }
+
       const firstWord = itemLabel.split(' ')[0].toLowerCase();
 
       // Create a unique set of item prefixes
@@ -57,7 +68,7 @@ export function ColoredList({
 
       return colors[colorIndex];
     },
-    [labelField, colors]
+    [labelField, colors, useTagColors, items]
   );
 
   const renderItems = useCallback(

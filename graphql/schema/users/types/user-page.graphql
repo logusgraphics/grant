@@ -1,7 +1,7 @@
 """
 Represents a paginated list of users.
 """
-type UserPage {
+type UserPage implements PaginatedResults {
   """
   List of users for the current page.
   """

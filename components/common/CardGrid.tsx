@@ -229,6 +229,7 @@ export function CardGrid<TEntity extends BaseEntity>({
                           title={t(list.title)}
                           icon={<list.icon className="h-3 w-3" />}
                           height={list.height || 80}
+                          useTagColors={true}
                         />
                       )}
                     </CardContent>

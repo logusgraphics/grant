@@ -28,4 +28,18 @@ interface Creatable {
   Timestamp when the entity was last updated.
   """
   updatedAt: String!
+}
+
+"""
+Base interface for paginated results.
+"""
+interface PaginatedResults {
+  """
+  Total number of items across all pages.
+  """
+  totalCount: Int!
+  """
+  Whether there are more items available on the next page.
+  """
+  hasNextPage: Boolean!
 } 
