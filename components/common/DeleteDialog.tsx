@@ -42,9 +42,6 @@ export interface DeleteDialogProps {
 
   // Translation namespace
   translationNamespace: string;
-
-  // Loading state
-  isDeleting?: boolean;
 }
 
 export function DeleteDialog({
@@ -59,25 +56,21 @@ export function DeleteDialog({
   onDelete,
   onSuccess,
   translationNamespace,
-  isDeleting: externalIsDeleting,
 }: DeleteDialogProps) {
   const t = useTranslations(translationNamespace);
 
-  // Internal state for uncontrolled usage
+  // Internal state for uncontrolled usage and loading state
   const [internalIsDeleting, setInternalIsDeleting] = useState(false);
 
   // Use provided props or internal state
   const isControlled = open !== undefined && onOpenChange !== undefined;
   const dialogOpen = isControlled ? open : !!entityToDelete;
   const setDialogOpen = isControlled ? onOpenChange : () => {};
-  const isDeleting = externalIsDeleting !== undefined ? externalIsDeleting : internalIsDeleting;
 
   const handleDelete = async () => {
     if (!entityToDelete) return;
 
-    const setIsDeleting = externalIsDeleting !== undefined ? () => {} : setInternalIsDeleting;
-
-    setIsDeleting(true);
+    setInternalIsDeleting(true);
     try {
       await onDelete(entityToDelete.id, entityToDelete.name);
       onSuccess?.();
@@ -86,7 +79,7 @@ export function DeleteDialog({
       // Error handling is done in the specific mutation hooks
       console.error('Error deleting entity:', error);
     } finally {
-      setIsDeleting(false);
+      setInternalIsDeleting(false);
     }
   };
 
@@ -100,13 +93,13 @@ export function DeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>{t(cancelText)}</AlertDialogCancel>
+          <AlertDialogCancel disabled={internalIsDeleting}>{t(cancelText)}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={isDeleting}
+            disabled={internalIsDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? t(deletingText) : t(confirmText)}
+            {internalIsDeleting ? t(deletingText) : t(confirmText)}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
