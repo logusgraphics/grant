@@ -70,10 +70,7 @@ export const usersDataStore = createFakerDataStore(usersConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => usersDataStore.getEntities();
-export const saveUsers = (users: UserData[]) => {
-  // This is handled internally by the data store
-  // We keep this for backward compatibility but it's a no-op
-};
+
 export const sortUsers = (users: UserData[], sortConfig?: UserSortInput): UserData[] => {
   if (!sortConfig) return users;
 

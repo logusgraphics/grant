@@ -655,6 +655,7 @@ export type QueryUsersArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<UserSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 /** Input type for removing a group-permission relationship. */

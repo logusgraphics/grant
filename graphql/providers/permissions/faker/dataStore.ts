@@ -105,10 +105,7 @@ export const permissionsDataStore = createFakerDataStore(permissionsConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => permissionsDataStore.getEntities();
-export const savePermissions = (permissions: PermissionData[]) => {
-  // This is handled internally by the data store
-  // We keep this for backward compatibility but it's a no-op
-};
+
 export const sortPermissions = (
   permissions: PermissionData[],
   sortConfig?: PermissionSortInput

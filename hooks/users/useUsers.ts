@@ -21,6 +21,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersResult {
     limit = 50, // Default to 50 for pagination
     search = '',
     sort = { field: UserSortableField.Name, order: UserSortOrder.Asc },
+    tagIds,
   } = options;
 
   const { data, loading, error, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
@@ -29,6 +30,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersResult {
       limit,
       search,
       sort,
+      tagIds,
     },
   });
 

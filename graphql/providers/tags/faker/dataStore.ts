@@ -95,10 +95,7 @@ export const tagsDataStore = createFakerDataStore(tagsConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => tagsDataStore.getEntities();
-export const saveTags = (tags: TagData[]) => {
-  // This is handled internally by the data store
-  // We keep this for backward compatibility but it's a no-op
-};
+
 export const sortTags = (tags: TagData[], sortConfig?: any): TagData[] => {
   if (!sortConfig) return tags;
 

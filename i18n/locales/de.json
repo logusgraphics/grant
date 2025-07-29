@@ -46,6 +46,13 @@
       "success": "In Zwischenablage kopiert",
       "error": "Kopieren in Zwischenablage fehlgeschlagen"
     },
+    "tags": {
+      "title": "Nach Tags filtern",
+      "placeholder": "Tags auswählen",
+      "selected": "{count} ausgewählt",
+      "clearAll": "Alle löschen",
+      "loading": "Tags werden geladen..."
+    },
     "emptyElements": "Keine {title} zum Anzeigen"
   },
   "dashboard": {
@@ -210,6 +217,15 @@
       "card": "Kartenansicht",
       "table": "Tabellenansicht"
     },
+    "toolbar": {
+      "tags": {
+        "title": "Nach Tags filtern",
+        "placeholder": "Tags auswählen",
+        "selected": "{count} ausgewählt",
+        "clearAll": "Alle löschen",
+        "loading": "Tags werden geladen..."
+      }
+    },
     "table": {
       "id": "ID",
       "name": "Name",
@@ -315,6 +331,15 @@
       "updated": "Aktualisiert",
       "actions": "Aktionen",
       "loading": "Rollen werden geladen..."
+    },
+    "toolbar": {
+      "tags": {
+        "title": "Nach Tags filtern",
+        "placeholder": "Tags auswählen",
+        "selected": "{count} ausgewählt",
+        "clearAll": "Alle löschen",
+        "loading": "Tags werden geladen..."
+      }
     },
     "groups": "Gruppen",
     "emptyElements": "Es gibt keine {title} zum Anzeigen",
@@ -427,6 +452,15 @@
       "actions": "Aktionen",
       "loading": "Gruppen werden geladen..."
     },
+    "toolbar": {
+      "tags": {
+        "title": "Nach Tags filtern",
+        "placeholder": "Tags auswählen",
+        "selected": "{count} ausgewählt",
+        "clearAll": "Alle löschen",
+        "loading": "Tags werden geladen..."
+      }
+    },
     "permissions": "Berechtigungen",
     "emptyElements": "Es gibt keine {title} zum Anzeigen",
     "noDescription": "Keine Beschreibung"
@@ -517,6 +551,15 @@
       "updated": "Aktualisiert",
       "actions": "Aktionen",
       "loading": "Berechtigungen werden geladen..."
+    },
+    "toolbar": {
+      "tags": {
+        "title": "Nach Tags filtern",
+        "placeholder": "Tags auswählen",
+        "selected": "{count} ausgewählt",
+        "clearAll": "Alle löschen",
+        "loading": "Tags werden geladen..."
+      }
     }
   },
   "account": {

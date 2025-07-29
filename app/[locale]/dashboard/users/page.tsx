@@ -20,6 +20,7 @@ interface InitialParams {
   sortField: UserSortableField | null;
   sortOrder: UserSortOrder | null;
   view: UserView | null;
+  tagIds: string[];
 }
 
 export default function UsersPage() {
@@ -39,6 +40,7 @@ export default function UsersPage() {
         sortField: null,
         sortOrder: null,
         view: null,
+        tagIds: [],
       };
     }
     const params = new URLSearchParams(window.location.search);
@@ -49,6 +51,7 @@ export default function UsersPage() {
       sortField: params.get('sortField') as UserSortableField | null,
       sortOrder: params.get('sortOrder') as UserSortOrder | null,
       view: (params.get('view') as UserView) || null,
+      tagIds: params.get('tagIds')?.split(',').filter(Boolean) || [],
     };
   }, []); // Empty dependency array since we only want to parse once
 
@@ -64,6 +67,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState(initialParams.search);
   const [sort, setSort] = useState(initialSort);
   const [view, setView] = useState<UserView>(initialParams.view || UserView.CARD);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialParams.tagIds);
 
   // Memoize callback functions
   const handleSortChange = useCallback(
@@ -117,6 +121,25 @@ export default function UsersPage() {
     [search, router]
   );
 
+  const handleTagIdsChange = useCallback(
+    (newTagIds: string[]) => {
+      if (JSON.stringify(newTagIds.sort()) !== JSON.stringify(selectedTagIds.sort())) {
+        setSelectedTagIds(newTagIds);
+        setPage(1); // Reset to first page when changing tags
+
+        const params = new URLSearchParams(window.location.search);
+        if (newTagIds.length > 0) {
+          params.set('tagIds', newTagIds.join(','));
+        } else {
+          params.delete('tagIds');
+        }
+        params.set('page', '1');
+        router.push(('?' + params.toString()) as any);
+      }
+    },
+    [selectedTagIds, router]
+  );
+
   const handlePageChange = useCallback(
     (newPage: number) => {
       if (newPage !== page) {
@@ -152,10 +175,12 @@ export default function UsersPage() {
           search={search}
           sort={sort}
           currentView={view}
+          selectedTagIds={selectedTagIds}
           onSortChange={handleSortChange}
           onLimitChange={handleLimitChange}
           onSearchChange={handleSearchChange}
           onViewChange={handleViewChange}
+          onTagIdsChange={handleTagIdsChange}
         />
       }
       footer={
@@ -172,6 +197,7 @@ export default function UsersPage() {
         search={search}
         sort={sort}
         view={view}
+        tagIds={selectedTagIds}
         onTotalCountChange={setTotalCount}
       />
     </DashboardPageLayout>

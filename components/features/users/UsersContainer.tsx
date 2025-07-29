@@ -19,6 +19,7 @@ interface UsersContainerProps {
     order: UserSortOrder;
   };
   view: UserView;
+  tagIds?: string[];
   onTotalCountChange?: (totalCount: number) => void;
 }
 
@@ -28,6 +29,7 @@ export function UsersContainer({
   search,
   sort,
   view,
+  tagIds,
   onTotalCountChange,
 }: UsersContainerProps) {
   const { users, loading, error, totalCount, refetch } = useUsers({
@@ -35,6 +37,7 @@ export function UsersContainer({
     limit,
     search,
     sort,
+    tagIds,
   });
 
   const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);

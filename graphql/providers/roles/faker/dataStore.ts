@@ -88,10 +88,7 @@ export const rolesDataStore = createFakerDataStore(rolesConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => rolesDataStore.getEntities();
-export const saveRoles = (roles: RoleData[]) => {
-  // This is handled internally by the data store
-  // We keep this for backward compatibility but it's a no-op
-};
+
 export const sortRoles = (roles: RoleData[], sortConfig?: RoleSortInput): RoleData[] => {
   if (!sortConfig) return roles;
 

@@ -1,7 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-
 import { DeleteDialog } from '@/components/common';
 import { useGroupMutations } from '@/hooks/groups';
 
@@ -11,7 +9,6 @@ interface DeleteGroupDialogProps {
 }
 
 export function DeleteGroupDialog({ groupToDelete, onOpenChange }: DeleteGroupDialogProps) {
-  const t = useTranslations('groups');
   const { deleteGroup } = useGroupMutations();
 
   const handleDelete = async (id: string, name: string) => {

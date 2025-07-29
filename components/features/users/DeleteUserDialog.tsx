@@ -1,7 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-
 import { DeleteDialog } from '@/components/common';
 import { useUserMutations } from '@/hooks/users';
 
@@ -12,7 +10,6 @@ interface DeleteUserDialogProps {
 }
 
 export function DeleteUserDialog({ userToDelete, onOpenChange, onSuccess }: DeleteUserDialogProps) {
-  const t = useTranslations('users');
   const { deleteUser } = useUserMutations();
 
   const handleDelete = async (id: string, name: string) => {

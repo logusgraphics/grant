@@ -268,10 +268,7 @@ export const groupsDataStore = createFakerDataStore(groupsConfig);
 
 // Export the main functions with the same interface as the original
 export const initializeDataStore = () => groupsDataStore.getEntities();
-export const saveGroups = (groups: GroupData[]) => {
-  // This is handled internally by the data store
-  // We keep this for backward compatibility but it's a no-op
-};
+
 export const sortGroups = (groups: GroupData[], sortConfig?: GroupSortInput): GroupData[] => {
   if (!sortConfig) return groups;
 

@@ -46,6 +46,13 @@
       "success": "Copied to clipboard",
       "error": "Failed to copy to clipboard"
     },
+    "tags": {
+      "title": "Filter by Tags",
+      "placeholder": "Select tags",
+      "selected": "{count} selected",
+      "clearAll": "Clear all",
+      "loading": "Loading tags..."
+    },
     "emptyElements": "No {title} to display"
   },
   "dashboard": {
@@ -210,6 +217,15 @@
       "card": "Card View",
       "table": "Table View"
     },
+    "toolbar": {
+      "tags": {
+        "title": "Filter by Tags",
+        "placeholder": "Select tags",
+        "selected": "{count} selected",
+        "clearAll": "Clear all",
+        "loading": "Loading tags..."
+      }
+    },
     "table": {
       "id": "ID",
       "name": "Name",
@@ -315,6 +331,15 @@
       "updated": "Updated",
       "actions": "Actions",
       "loading": "Loading roles..."
+    },
+    "toolbar": {
+      "tags": {
+        "title": "Filter by Tags",
+        "placeholder": "Select tags",
+        "selected": "{count} selected",
+        "clearAll": "Clear all",
+        "loading": "Loading tags..."
+      }
     },
     "groups": "Groups",
     "emptyElements": "There are no {title} to display",
@@ -427,6 +452,15 @@
       "actions": "Actions",
       "loading": "Loading groups..."
     },
+    "toolbar": {
+      "tags": {
+        "title": "Filter by Tags",
+        "placeholder": "Select tags",
+        "selected": "{count} selected",
+        "clearAll": "Clear all",
+        "loading": "Loading tags..."
+      }
+    },
     "permissions": "Permissions",
     "emptyElements": "There are no {title} to display",
     "noDescription": "No description"
@@ -517,6 +551,15 @@
       "updated": "Updated",
       "actions": "Actions",
       "loading": "Loading permissions..."
+    },
+    "toolbar": {
+      "tags": {
+        "title": "Filter by Tags",
+        "placeholder": "Select tags",
+        "selected": "{count} selected",
+        "clearAll": "Clear all",
+        "loading": "Loading tags..."
+      }
     }
   },
   "account": {

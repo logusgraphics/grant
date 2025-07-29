@@ -24,5 +24,10 @@ extend type Query {
     If provided and not empty, pagination parameters (page, limit) will be ignored.
     """
     ids: [ID!]
+    """
+    Optional array of tag IDs to filter users by.
+    Users must have at least one of the specified tags to be included in the results.
+    """
+    tagIds: [ID!]
   ): UserPage!
 }

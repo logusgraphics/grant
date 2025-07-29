@@ -38,7 +38,7 @@ export function CheckboxList({
   disabled = false,
 }: CheckboxListProps) {
   const renderItems = useCallback(
-    (field: any) => (
+    () => (
       <div className="space-y-2 pr-4">
         {items.map((item) => (
           <FormField
@@ -83,7 +83,7 @@ export function CheckboxList({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
+      render={() => (
         <FormItem>
           <FormLabel className="mb-2">{label}</FormLabel>
           <div className="space-y-2">
@@ -93,7 +93,7 @@ export function CheckboxList({
               <div className="text-sm text-muted-foreground">{emptyText}</div>
             ) : (
               <AutoScrollArea maxHeight={maxHeight} fallbackClassName="space-y-2">
-                {renderItems(field)}
+                {renderItems()}
               </AutoScrollArea>
             )}
           </div>

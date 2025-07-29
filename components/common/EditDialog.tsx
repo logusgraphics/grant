@@ -103,7 +103,6 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
   fields,
   relationships,
   mapEntityToFormValues,
-  onUpdate,
   onAddRelationships,
   onRemoveRelationships,
   translationNamespace,
@@ -142,9 +141,6 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
 
     setIsSubmitting(true);
     try {
-      // Update main entity first
-      const updatedEntity = await onUpdate((entity as any).id, values);
-
       // Handle relationship updates if configured
       if (relationships && onAddRelationships && onRemoveRelationships && initialFormValues) {
         for (const relationship of relationships) {
