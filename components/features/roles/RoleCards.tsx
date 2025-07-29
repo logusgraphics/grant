@@ -1,12 +1,15 @@
 'use client';
 
-import { Shield, Group } from 'lucide-react';
+import { Shield, Fingerprint, Calendar, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { CreateRoleDialog } from './CreateRoleDialog';
 import { RoleCardSkeleton } from './RoleCardSkeleton';
 import { Role } from '@/graphql/generated/types';
 import { RoleActions } from './RoleActions';
-import { CardGrid } from '@/components/common';
+import { CardGrid, CardHeader } from '@/components/common';
+import { getTagColorClasses } from '@/lib/tag-colors';
+import { RoleAudit } from './RoleAudit';
+import { ScrollBadges } from '@/components/ui/scroll-badges';
 
 interface RoleCardsProps {
   limit: number;
@@ -27,38 +30,51 @@ export function RoleCards({
 }: RoleCardsProps) {
   const t = useTranslations('roles');
 
+  const transformGroupsToBadges = (role: Role) => {
+    return (role.groups || []).map((group) => ({
+      id: group.id,
+      label: group.name,
+      className: group.tags?.length ? getTagColorClasses(group.tags[0].color) : undefined,
+    }));
+  };
+
   return (
     <CardGrid<Role>
       entities={roles}
       loading={loading}
-      translationNamespace="roles"
-      avatar={{
-        getInitial: (role: Role) => role.name.charAt(0).toUpperCase(),
-        defaultBackgroundClass: 'bg-primary/10',
-      }}
-      list={{
-        items: (role: Role) => role.groups || [],
-        labelField: 'name',
-        title: 'groups',
-        icon: Group,
-        height: 80,
-      }}
-      actions={{
-        component: (role: Role) => (
-          <RoleActions role={role} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
-        ),
-      }}
       emptyState={{
         icon: Shield,
-        titleKey: search ? 'noSearchResults.title' : 'noRoles.title',
-        descriptionKey: search ? 'noSearchResults.description' : 'noRoles.description',
+        title: search ? t('noSearchResults.title') : t('noRoles.title'),
+        description: search ? t('noSearchResults.description') : t('noRoles.description'),
         action: search ? undefined : <CreateRoleDialog />,
       }}
       skeleton={{
         component: <RoleCardSkeleton />,
         count: limit,
       }}
-      getDescription={(role: Role) => role.description || t('noDescription')}
+      renderHeader={(role: Role) => (
+        <CardHeader
+          avatar={{
+            initial: role.name.charAt(0),
+            size: 'lg',
+          }}
+          title={role.name}
+          description={role.description || undefined}
+          color={role.tags?.[0]?.color}
+          actions={
+            <RoleActions role={role} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
+          }
+        />
+      )}
+      renderBody={(role: Role) => (
+        <ScrollBadges
+          items={transformGroupsToBadges(role)}
+          title={t('form.groups')}
+          icon={<Shield className="h-3 w-3" />}
+          height={80}
+        />
+      )}
+      renderFooter={(role: Role) => <RoleAudit role={role} />}
     />
   );
 }

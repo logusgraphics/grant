@@ -10,6 +10,7 @@ import {
   ADD_GROUP_PERMISSION,
   REMOVE_GROUP_PERMISSION,
 } from './mutations';
+import { ADD_GROUP_TAG, REMOVE_GROUP_TAG } from '@/hooks/tags/mutations';
 
 interface CreateGroupInput {
   name: string;
@@ -29,6 +30,16 @@ interface AddGroupPermissionInput {
 interface RemoveGroupPermissionInput {
   groupId: string;
   permissionId: string;
+}
+
+interface AddGroupTagInput {
+  groupId: string;
+  tagId: string;
+}
+
+interface RemoveGroupTagInput {
+  groupId: string;
+  tagId: string;
 }
 
 export function useGroupMutations() {
@@ -67,6 +78,18 @@ export function useGroupMutations() {
       },
     }
   );
+
+  const [addGroupTag] = useMutation<{ addGroupTag: any }>(ADD_GROUP_TAG, {
+    update(cache) {
+      evictGroupsCache(cache);
+    },
+  });
+
+  const [removeGroupTag] = useMutation<{ removeGroupTag: boolean }>(REMOVE_GROUP_TAG, {
+    update(cache) {
+      evictGroupsCache(cache);
+    },
+  });
 
   const handleCreateGroup = async (input: CreateGroupInput) => {
     try {
@@ -159,11 +182,48 @@ export function useGroupMutations() {
     }
   };
 
+  const handleAddGroupTag = async (input: AddGroupTagInput) => {
+    try {
+      const result = await addGroupTag({
+        variables: { input },
+        refetchQueries: ['GetGroups'],
+      });
+
+      toast.success(t('notifications.tagAddedSuccess'));
+      return result.data?.addGroupTag;
+    } catch (error) {
+      console.error('Error adding group tag:', error);
+      toast.error(t('notifications.tagAddedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
+  const handleRemoveGroupTag = async (input: RemoveGroupTagInput) => {
+    try {
+      await removeGroupTag({
+        variables: { input },
+        refetchQueries: ['GetGroups'],
+      });
+
+      toast.success(t('notifications.tagRemovedSuccess'));
+    } catch (error) {
+      console.error('Error removing group tag:', error);
+      toast.error(t('notifications.tagRemovedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
   return {
     createGroup: handleCreateGroup,
     updateGroup: handleUpdateGroup,
     deleteGroup: handleDeleteGroup,
     addGroupPermission: handleAddGroupPermission,
     removeGroupPermission: handleRemoveGroupPermission,
+    addGroupTag: handleAddGroupTag,
+    removeGroupTag: handleRemoveGroupTag,
   };
 }

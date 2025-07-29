@@ -6,7 +6,10 @@ import { CreateUserDialog } from './CreateUserDialog';
 import { UserCardSkeleton } from './UserCardSkeleton';
 import { User } from '@/graphql/generated/types';
 import { UserActions } from './UserActions';
-import { CardGrid } from '@/components/common';
+import { CardGrid, CardHeader } from '@/components/common';
+import { getTagColorClasses } from '@/lib/tag-colors';
+import { UserAudit } from './UserAudit';
+import { ScrollBadges } from '@/components/ui/scroll-badges';
 
 interface UserCardsProps {
   limit: number;
@@ -27,38 +30,51 @@ export function UserCards({
 }: UserCardsProps) {
   const t = useTranslations('users');
 
+  const transformRolesToBadges = (user: User) => {
+    return (user.roles || []).map((role) => ({
+      id: role.id,
+      label: role.name,
+      className: role.tags?.length ? getTagColorClasses(role.tags[0].color) : undefined,
+    }));
+  };
+
   return (
     <CardGrid<User>
       entities={users}
       loading={loading}
-      translationNamespace="users"
-      avatar={{
-        getInitial: (user: User) => user.name.charAt(0).toUpperCase(),
-        defaultBackgroundClass: 'bg-primary/10',
-      }}
-      list={{
-        items: (user: User) => user.roles || [],
-        labelField: 'name',
-        title: 'form.roles',
-        icon: Shield,
-        height: 80,
-      }}
-      actions={{
-        component: (user: User) => (
-          <UserActions user={user} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
-        ),
-      }}
       emptyState={{
         icon: UserPlus,
-        titleKey: search ? 'noSearchResults.title' : 'noUsers.title',
-        descriptionKey: search ? 'noSearchResults.description' : 'noUsers.description',
+        title: search ? t('noSearchResults.title') : t('noUsers.title'),
+        description: search ? t('noSearchResults.description') : t('noUsers.description'),
         action: search ? undefined : <CreateUserDialog />,
       }}
       skeleton={{
         component: <UserCardSkeleton />,
         count: limit,
       }}
-      getDescription={(user: User) => user.email}
+      renderHeader={(user: User) => (
+        <CardHeader
+          avatar={{
+            initial: user.name.charAt(0),
+            size: 'lg',
+          }}
+          title={user.name}
+          description={user.email}
+          color={user.tags?.[0]?.color}
+          actions={
+            <UserActions user={user} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
+          }
+        />
+      )}
+      renderBody={(user: User) => (
+        <ScrollBadges
+          items={transformRolesToBadges(user)}
+          title={t('form.roles')}
+          icon={<Shield className="h-3 w-3" />}
+          height={80}
+        />
+      )}
+      renderFooter={(user: User) => <UserAudit user={user} />}
     />
   );
 }

@@ -12,6 +12,14 @@ export const GET_ROLES = gql`
         groups {
           id
           name
+          tags {
+            id
+            color
+          }
+        }
+        tags {
+          id
+          color
         }
       }
       totalCount

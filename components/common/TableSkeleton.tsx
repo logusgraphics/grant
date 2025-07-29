@@ -9,7 +9,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-export type ColumnType = 'avatar' | 'text' | 'button' | 'list' | 'actions';
+export type ColumnType =
+  | 'avatar'
+  | 'avatar-only'
+  | 'text'
+  | 'button'
+  | 'list'
+  | 'actions'
+  | 'audit';
 
 export interface ColumnConfig {
   key: string;
@@ -57,6 +64,9 @@ export function TableSkeleton({
           </div>
         );
 
+      case 'avatar-only':
+        return <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />;
+
       case 'text':
         return (
           <div className="space-y-2">
@@ -79,6 +89,13 @@ export function TableSkeleton({
         );
 
       case 'actions':
+        return (
+          <div className="flex gap-1">
+            <div className="h-8 w-8 bg-muted rounded animate-pulse" />
+          </div>
+        );
+
+      case 'audit':
         return (
           <div className="flex gap-1">
             <div className="h-8 w-8 bg-muted rounded animate-pulse" />

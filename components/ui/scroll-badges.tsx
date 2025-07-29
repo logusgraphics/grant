@@ -4,90 +4,46 @@ import { useCallback, useRef, useEffect, useState, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslations } from 'next-intl';
-import { getTagColorClasses } from '@/lib/tag-colors';
 
-interface ColoredItem {
+export interface BadgeItem {
   id: string;
+  label: string;
+  className?: string; // Custom className for this specific badge
   [key: string]: any; // Allow any additional properties
 }
 
-interface ColoredListProps {
-  items: ColoredItem[];
-  labelField: string; // The field to use as the display label
+interface ScrollBadgesProps {
+  items: BadgeItem[];
   title?: string;
   icon?: ReactNode;
   height?: number; // Height in pixels
-  colors?: string[];
+  defaultBadgeClassName?: string; // Default styling for badges
   className?: string;
-  useTagColors?: boolean; // Whether to use the new tag color system
 }
 
-export function ColoredList({
+export function ScrollBadges({
   items,
-  labelField,
   title,
   icon,
   height = 80,
-  colors = [
-    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
-    'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
-    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-    'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200',
-    'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
-  ],
+  defaultBadgeClassName = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
   className,
-  useTagColors = false,
-}: ColoredListProps) {
-  const t = useTranslations('roles');
+}: ScrollBadgesProps) {
+  const t = useTranslations('common');
   const phantomRef = useRef<HTMLDivElement>(null);
   const [needsScroll, setNeedsScroll] = useState(false);
-
-  const getItemColor = useCallback(
-    (itemLabel: string, allItems: ColoredItem[]) => {
-      if (useTagColors && 'color' in items[0]) {
-        // Use the color field from the item if available
-        const item = items.find((item) => item[labelField] === itemLabel);
-        if (item && 'color' in item) {
-          return getTagColorClasses(item.color as string);
-        }
-      }
-
-      const firstWord = itemLabel.split(' ')[0].toLowerCase();
-
-      // Create a unique set of item prefixes
-      const uniquePrefixes = [
-        ...new Set(allItems.map((item) => item[labelField].split(' ')[0].toLowerCase())),
-      ];
-
-      // Map prefix to color by index
-      const prefixIndex = uniquePrefixes.indexOf(firstWord);
-      const colorIndex = prefixIndex % colors.length;
-
-      return colors[colorIndex];
-    },
-    [labelField, colors, useTagColors, items]
-  );
 
   const renderItems = useCallback(
     () => (
       <div className="flex flex-wrap gap-2 pr-4">
         {items.map((item) => (
-          <span
-            key={item.id}
-            className={cn(
-              'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-              getItemColor(item[labelField], items)
-            )}
-          >
-            {item[labelField]}
+          <span key={item.id} className={cn(defaultBadgeClassName, item.className)}>
+            {item.label}
           </span>
         ))}
       </div>
     ),
-    [items, labelField, getItemColor]
+    [items, defaultBadgeClassName]
   );
 
   // Measure the natural height of the content
@@ -140,14 +96,8 @@ export function ColoredList({
       ) : (
         <div className="flex flex-wrap gap-2">
           {items.map((item) => (
-            <span
-              key={item.id}
-              className={cn(
-                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                getItemColor(item[labelField], items)
-              )}
-            >
-              {item[labelField]}
+            <span key={item.id} className={cn(defaultBadgeClassName, item.className)}>
+              {item.label}
             </span>
           ))}
         </div>

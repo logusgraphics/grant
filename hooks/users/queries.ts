@@ -12,6 +12,14 @@ export const GET_USERS = gql`
         roles {
           id
           name
+          tags {
+            id
+            color
+          }
+        }
+        tags {
+          id
+          color
         }
       }
       totalCount

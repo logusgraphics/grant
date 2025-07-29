@@ -10,6 +10,7 @@ import {
   ADD_USER_ROLE,
   REMOVE_USER_ROLE,
 } from './mutations';
+import { ADD_USER_TAG, REMOVE_USER_TAG } from '@/hooks/tags/mutations';
 
 interface CreateUserInput {
   name: string;
@@ -29,6 +30,16 @@ interface AddUserRoleInput {
 interface RemoveUserRoleInput {
   userId: string;
   roleId: string;
+}
+
+interface AddUserTagInput {
+  userId: string;
+  tagId: string;
+}
+
+interface RemoveUserTagInput {
+  userId: string;
+  tagId: string;
 }
 
 export function useUserMutations() {
@@ -60,6 +71,18 @@ export function useUserMutations() {
   });
 
   const [removeUserRole] = useMutation<{ removeUserRole: any }>(REMOVE_USER_ROLE, {
+    update(cache) {
+      evictUsersCache(cache);
+    },
+  });
+
+  const [addUserTag] = useMutation<{ addUserTag: any }>(ADD_USER_TAG, {
+    update(cache) {
+      evictUsersCache(cache);
+    },
+  });
+
+  const [removeUserTag] = useMutation<{ removeUserTag: boolean }>(REMOVE_USER_TAG, {
     update(cache) {
       evictUsersCache(cache);
     },
@@ -156,11 +179,48 @@ export function useUserMutations() {
     }
   };
 
+  const handleAddUserTag = async (input: AddUserTagInput) => {
+    try {
+      const result = await addUserTag({
+        variables: { input },
+        refetchQueries: ['GetUsers'],
+      });
+
+      toast.success(t('notifications.tagAddedSuccess'));
+      return result.data?.addUserTag;
+    } catch (error) {
+      console.error('Error adding user tag:', error);
+      toast.error(t('notifications.tagAddedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
+  const handleRemoveUserTag = async (input: RemoveUserTagInput) => {
+    try {
+      await removeUserTag({
+        variables: { input },
+        refetchQueries: ['GetUsers'],
+      });
+
+      toast.success(t('notifications.tagRemovedSuccess'));
+    } catch (error) {
+      console.error('Error removing user tag:', error);
+      toast.error(t('notifications.tagRemovedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
   return {
     createUser: handleCreateUser,
     updateUser: handleUpdateUser,
     deleteUser: handleDeleteUser,
     addUserRole: handleAddUserRole,
     removeUserRole: handleRemoveUserRole,
+    addUserTag: handleAddUserTag,
+    removeUserTag: handleRemoveUserTag,
   };
 }

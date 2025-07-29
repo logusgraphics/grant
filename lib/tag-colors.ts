@@ -11,6 +11,16 @@ export function getTagColorClasses(color: string): string {
 }
 
 /**
+ * Get border color classes for avatars based on tag color
+ * @param color - The color identifier (e.g., 'purple', 'indigo')
+ * @returns The CSS classes for the avatar border color
+ */
+export function getAvatarBorderColorClasses(color: string): string {
+  const tagBorderColors = tokens.colors.tagBorder as Record<string, string>;
+  return tagBorderColors[color] || tagBorderColors.purple; // Default to purple if color not found
+}
+
+/**
  * Get all available tag colors
  * @returns Array of available color identifiers
  */

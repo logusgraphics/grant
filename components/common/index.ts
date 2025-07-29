@@ -16,21 +16,15 @@ export {
 export { Limit, type LimitProps } from './Limit';
 export { ViewSwitcher, type ViewOption } from './ViewSwitcher';
 export { Pagination, type PaginationProps } from './Pagination';
-export { DataTable, type DataTableProps, type TableColumn } from './DataTable';
-export {
-  EnhancedDataTable,
-  type EnhancedDataTableProps,
-  type FieldConfig,
-  type FieldType,
-  type AvatarConfig,
-  type ListConfig,
-  type DateConfig,
-} from './DataTable';
+export { DataTable, type DataTableProps, type ColumnConfig } from './DataTable';
+export { Audit, type AuditProps, type AuditField } from './Audit';
+export { Avatar, type AvatarProps } from './Avatar';
 export { CardSkeleton, type CardSkeletonProps } from './CardSkeleton';
 export {
   TableSkeleton,
   type TableSkeletonProps,
-  type ColumnConfig,
+  type ColumnConfig as SkeletonColumnConfig,
   type ColumnType,
 } from './TableSkeleton';
 export { CopyToClipboard } from './CopyToClipboard';
+export { CardHeader, type CardHeaderProps } from './CardHeader';

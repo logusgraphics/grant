@@ -1,12 +1,16 @@
 'use client';
 
 import { User } from '@/graphql/generated/types';
-import { EnhancedDataTable, type FieldConfig } from '@/components/common/DataTable';
-import { type ColumnConfig } from '@/components/common/TableSkeleton';
+import { DataTable, type ColumnConfig } from '@/components/common/DataTable';
+import { type ColumnConfig as SkeletonColumnConfig } from '@/components/common/TableSkeleton';
+import { Avatar } from '@/components/common/Avatar';
 import { UserActions } from './UserActions';
 import { CreateUserDialog } from './CreateUserDialog';
 import { Shield, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { getTagColorClasses, getAvatarBorderColorClasses } from '@/lib/tag-colors';
+import { ScrollBadges } from '@/components/ui/scroll-badges';
+import { UserAudit } from './UserAudit';
 
 interface UserTableProps {
   limit: number;
@@ -27,73 +31,84 @@ export function UserTable({
 }: UserTableProps) {
   const t = useTranslations('users');
 
-  const fields: FieldConfig<User>[] = [
+  const transformRolesToBadges = (user: User) => {
+    return (user.roles || []).map((role) => ({
+      id: role.id,
+      label: role.name,
+      className: role.tags?.length ? getTagColorClasses(role.tags[0].color) : undefined,
+    }));
+  };
+
+  const columns: ColumnConfig<User>[] = [
     {
-      type: 'id',
-      key: 'id',
-      header: t('table.id'),
-      width: '120px',
+      key: 'avatar',
+      header: '',
+      width: '60px',
+      className: 'pl-4',
+      render: (user: User) => (
+        <Avatar
+          initial={user.name.charAt(0)}
+          size="md"
+          className={
+            user.tags?.[0]?.color
+              ? `border-2 ${getAvatarBorderColorClasses(user.tags[0].color)}`
+              : undefined
+          }
+        />
+      ),
     },
     {
-      type: 'avatar',
       key: 'name',
       header: t('table.name'),
-      width: '300px',
-      avatar: {
-        getInitial: (user: User) => user.name.charAt(0).toUpperCase(),
-        defaultBackgroundClass: 'bg-primary/10',
-        size: 'md',
-      },
+      width: '240px',
+      render: (user: User) => <span className="text-sm font-medium">{user.name}</span>,
     },
     {
-      type: 'email',
       key: 'email',
       header: t('table.email'),
       width: '250px',
+      render: (user: User) => (
+        <a href={`mailto:${user.email}`} className="text-sm text-primary hover:underline">
+          {user.email}
+        </a>
+      ),
     },
     {
-      type: 'list',
       key: 'roles',
       header: t('table.roles'),
       width: '200px',
-      list: {
-        items: (user: User) => user.roles || [],
-        labelField: 'name',
-        icon: <Shield className="h-3 w-3" />,
-        height: 60,
-        maxItems: 3,
-      },
+      render: (user: User) => (
+        <ScrollBadges
+          items={transformRolesToBadges(user)}
+          title=""
+          icon={<Shield className="h-3 w-3" />}
+          height={60}
+        />
+      ),
     },
     {
-      type: 'timestamp',
-      key: 'createdAt',
-      header: t('table.created'),
-      width: '150px',
-    },
-    {
-      type: 'timestamp',
-      key: 'updatedAt',
-      header: t('table.updated'),
-      width: '150px',
+      key: 'audit',
+      header: t('table.audit'),
+      width: '200px',
+      render: (user: User) => <UserAudit user={user} />,
     },
   ];
 
-  const skeletonConfig: { columns: ColumnConfig[]; rowCount?: number } = {
+  const skeletonConfig: { columns: SkeletonColumnConfig[]; rowCount?: number } = {
     columns: [
-      { key: 'id', type: 'text' },
-      { key: 'name', type: 'avatar' },
+      { key: 'avatar', type: 'avatar-only' },
+      { key: 'name', type: 'text' },
       { key: 'email', type: 'text' },
       { key: 'roles', type: 'list' },
-      { key: 'createdAt', type: 'text' },
-      { key: 'updatedAt', type: 'text' },
+      { key: 'audit', type: 'audit' },
     ],
     rowCount: limit,
   };
 
   return (
-    <EnhancedDataTable
+    <DataTable
       data={users}
-      fields={fields}
+      columns={columns}
       loading={loading}
       emptyState={{
         icon: <UserPlus className="h-12 w-12" />,

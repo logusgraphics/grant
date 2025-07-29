@@ -45,7 +45,8 @@
       "copied": "Kopiert!",
       "success": "In Zwischenablage kopiert",
       "error": "Kopieren in Zwischenablage fehlgeschlagen"
-    }
+    },
+    "emptyElements": "Keine {title} zum Anzeigen"
   },
   "dashboard": {
     "navigation": {
@@ -205,6 +206,7 @@
       "name": "Name",
       "email": "E-Mail",
       "roles": "Rollen",
+      "audit": "Audit",
       "created": "Erstellt",
       "updated": "Aktualisiert",
       "actions": "Aktionen",
@@ -287,6 +289,8 @@
       "label": "Bezeichnung",
       "name": "Name",
       "description": "Beschreibung",
+      "groups": "Gruppen",
+      "audit": "Audit",
       "id": "ID",
       "created": "Erstellt",
       "updated": "Aktualisiert",
@@ -388,6 +392,7 @@
       "name": "Name",
       "description": "Beschreibung",
       "permissions": "Berechtigungen",
+      "audit": "Audit",
       "created": "Erstellt",
       "updated": "Aktualisiert",
       "actions": "Aktionen",

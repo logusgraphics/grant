@@ -1,12 +1,16 @@
 'use client';
 
 import { Group } from '@/graphql/generated/types';
-import { EnhancedDataTable, type FieldConfig } from '@/components/common/DataTable';
-import { type ColumnConfig } from '@/components/common/TableSkeleton';
+import { DataTable, type ColumnConfig } from '@/components/common/DataTable';
+import { type ColumnConfig as SkeletonColumnConfig } from '@/components/common/TableSkeleton';
+import { Avatar } from '@/components/common/Avatar';
 import { GroupActions } from './GroupActions';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { getTagColorClasses, getAvatarBorderColorClasses } from '@/lib/tag-colors';
+import { ScrollBadges } from '@/components/ui/scroll-badges';
+import { GroupAudit } from './GroupAudit';
 
 interface GroupTableProps {
   limit: number;
@@ -27,73 +31,84 @@ export function GroupTable({
 }: GroupTableProps) {
   const t = useTranslations('groups');
 
-  const fields: FieldConfig<Group>[] = [
+  const transformPermissionsToBadges = (group: Group) => {
+    return (group.permissions || []).map((permission) => ({
+      id: permission.id,
+      label: permission.name,
+      className: undefined, // Permissions don't have tags
+    }));
+  };
+
+  const columns: ColumnConfig<Group>[] = [
     {
-      type: 'id',
-      key: 'id',
-      header: t('table.id'),
-      width: '120px',
+      key: 'avatar',
+      header: '',
+      width: '60px',
+      className: 'pl-4',
+      render: (group: Group) => (
+        <Avatar
+          initial={group.name.charAt(0)}
+          size="md"
+          className={
+            group.tags?.[0]?.color
+              ? `border-2 ${getAvatarBorderColorClasses(group.tags[0].color)}`
+              : undefined
+          }
+        />
+      ),
     },
     {
-      type: 'avatar',
       key: 'name',
       header: t('table.name'),
-      width: '300px',
-      avatar: {
-        getInitial: (group: Group) => group.name.charAt(0).toUpperCase(),
-        defaultBackgroundClass: 'bg-primary/10',
-        size: 'md',
-      },
+      width: '240px',
+      render: (group: Group) => <span className="text-sm font-medium">{group.name}</span>,
     },
     {
-      type: 'description',
       key: 'description',
       header: t('table.description'),
       width: '250px',
+      render: (group: Group) => (
+        <span className="text-sm text-muted-foreground">
+          {group.description || t('noDescription')}
+        </span>
+      ),
     },
     {
-      type: 'list',
       key: 'permissions',
-      header: t('permissions'),
+      header: t('form.permissions'),
       width: '200px',
-      list: {
-        items: (group: Group) => group.permissions || [],
-        labelField: 'name',
-        icon: <Shield className="h-3 w-3" />,
-        height: 60,
-        maxItems: 3,
-      },
+      render: (group: Group) => (
+        <ScrollBadges
+          items={transformPermissionsToBadges(group)}
+          title=""
+          icon={<Shield className="h-3 w-3" />}
+          height={60}
+        />
+      ),
     },
     {
-      type: 'timestamp',
-      key: 'createdAt',
-      header: t('table.created'),
-      width: '150px',
-    },
-    {
-      type: 'timestamp',
-      key: 'updatedAt',
-      header: t('table.updated'),
-      width: '150px',
+      key: 'audit',
+      header: t('table.audit'),
+      width: '200px',
+      render: (group: Group) => <GroupAudit group={group} />,
     },
   ];
 
-  const skeletonConfig: { columns: ColumnConfig[]; rowCount?: number } = {
+  const skeletonConfig: { columns: SkeletonColumnConfig[]; rowCount?: number } = {
     columns: [
-      { key: 'id', type: 'text' },
-      { key: 'name', type: 'avatar' },
+      { key: 'avatar', type: 'avatar-only' },
+      { key: 'name', type: 'text' },
       { key: 'description', type: 'text' },
       { key: 'permissions', type: 'list' },
-      { key: 'createdAt', type: 'text' },
-      { key: 'updatedAt', type: 'text' },
+      { key: 'audit', type: 'audit' },
     ],
     rowCount: limit,
   };
 
   return (
-    <EnhancedDataTable
+    <DataTable
       data={groups}
-      fields={fields}
+      columns={columns}
       loading={loading}
       emptyState={{
         icon: <Shield className="h-12 w-12" />,

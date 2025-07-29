@@ -45,7 +45,8 @@
       "copied": "Copied!",
       "success": "Copied to clipboard",
       "error": "Failed to copy to clipboard"
-    }
+    },
+    "emptyElements": "No {title} to display"
   },
   "dashboard": {
     "navigation": {
@@ -205,6 +206,7 @@
       "name": "Name",
       "email": "Email",
       "roles": "Roles",
+      "audit": "Audit",
       "created": "Created",
       "updated": "Updated",
       "actions": "Actions",
@@ -287,6 +289,8 @@
       "label": "Label",
       "name": "Name",
       "description": "Description",
+      "groups": "Groups",
+      "audit": "Audit",
       "id": "ID",
       "created": "Created",
       "updated": "Updated",
@@ -388,6 +392,7 @@
       "name": "Name",
       "description": "Description",
       "permissions": "Permissions",
+      "audit": "Audit",
       "created": "Created",
       "updated": "Updated",
       "actions": "Actions",

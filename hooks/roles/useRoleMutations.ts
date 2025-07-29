@@ -10,6 +10,7 @@ import {
   ADD_ROLE_GROUP,
   REMOVE_ROLE_GROUP,
 } from './mutations';
+import { ADD_ROLE_TAG, REMOVE_ROLE_TAG } from '@/hooks/tags/mutations';
 
 interface CreateRoleInput {
   name: string;
@@ -29,6 +30,16 @@ interface AddRoleGroupInput {
 interface RemoveRoleGroupInput {
   roleId: string;
   groupId: string;
+}
+
+interface AddRoleTagInput {
+  roleId: string;
+  tagId: string;
+}
+
+interface RemoveRoleTagInput {
+  roleId: string;
+  tagId: string;
 }
 
 export function useRoleMutations() {
@@ -60,6 +71,18 @@ export function useRoleMutations() {
   });
 
   const [removeRoleGroup] = useMutation<{ removeRoleGroup: any }>(REMOVE_ROLE_GROUP, {
+    update(cache) {
+      evictRolesCache(cache);
+    },
+  });
+
+  const [addRoleTag] = useMutation<{ addRoleTag: any }>(ADD_ROLE_TAG, {
+    update(cache) {
+      evictRolesCache(cache);
+    },
+  });
+
+  const [removeRoleTag] = useMutation<{ removeRoleTag: boolean }>(REMOVE_ROLE_TAG, {
     update(cache) {
       evictRolesCache(cache);
     },
@@ -156,11 +179,48 @@ export function useRoleMutations() {
     }
   };
 
+  const handleAddRoleTag = async (input: AddRoleTagInput) => {
+    try {
+      const result = await addRoleTag({
+        variables: { input },
+        refetchQueries: ['GetRoles'],
+      });
+
+      toast.success(t('notifications.tagAddedSuccess'));
+      return result.data?.addRoleTag;
+    } catch (error) {
+      console.error('Error adding role tag:', error);
+      toast.error(t('notifications.tagAddedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
+  const handleRemoveRoleTag = async (input: RemoveRoleTagInput) => {
+    try {
+      await removeRoleTag({
+        variables: { input },
+        refetchQueries: ['GetRoles'],
+      });
+
+      toast.success(t('notifications.tagRemovedSuccess'));
+    } catch (error) {
+      console.error('Error removing role tag:', error);
+      toast.error(t('notifications.tagRemovedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
   return {
     createRole: handleCreateRole,
     updateRole: handleUpdateRole,
     deleteRole: handleDeleteRole,
     addRoleGroup: handleAddRoleGroup,
     removeRoleGroup: handleRemoveRoleGroup,
+    addRoleTag: handleAddRoleTag,
+    removeRoleTag: handleRemoveRoleTag,
   };
 }

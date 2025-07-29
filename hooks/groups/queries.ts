@@ -13,7 +13,10 @@ export const GET_GROUPS = gql`
           id
           name
           action
-          description
+        }
+        tags {
+          id
+          color
         }
       }
       totalCount

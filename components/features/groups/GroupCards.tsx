@@ -1,11 +1,14 @@
 'use client';
 
-import { Group } from '@/graphql/generated/types';
-import { Shield } from 'lucide-react';
+import { Shield, Fingerprint, Calendar, Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { CreateGroupDialog } from './CreateGroupDialog';
-import { GroupActions } from './GroupActions';
 import { GroupCardSkeleton } from './GroupCardSkeleton';
-import { CardGrid } from '@/components/common';
+import { Group } from '@/graphql/generated/types';
+import { GroupActions } from './GroupActions';
+import { CardGrid, CardHeader } from '@/components/common';
+import { GroupAudit } from './GroupAudit';
+import { ScrollBadges } from '@/components/ui/scroll-badges';
 
 interface GroupCardsProps {
   limit: number;
@@ -24,37 +27,53 @@ export function GroupCards({
   onEditClick,
   onDeleteClick,
 }: GroupCardsProps) {
+  const t = useTranslations('groups');
+
+  const transformPermissionsToBadges = (group: Group) => {
+    return (group.permissions || []).map((permission) => ({
+      id: permission.id,
+      label: permission.name,
+      className: undefined, // Permissions don't have tags
+    }));
+  };
+
   return (
     <CardGrid<Group>
       entities={groups}
       loading={loading}
-      translationNamespace="groups"
-      avatar={{
-        getInitial: (group: Group) => group.name.charAt(0).toUpperCase(),
-        defaultBackgroundClass: 'bg-primary/10',
-      }}
-      list={{
-        items: (group: Group) => group.permissions || [],
-        labelField: 'name',
-        title: 'permissions',
-        icon: Shield,
-        height: 80,
-      }}
-      actions={{
-        component: (group: Group) => (
-          <GroupActions group={group} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
-        ),
-      }}
       emptyState={{
         icon: Shield,
-        titleKey: search ? 'noSearchResults.title' : 'noGroups.title',
-        descriptionKey: search ? 'noSearchResults.description' : 'noGroups.description',
+        title: search ? t('noSearchResults.title') : t('noGroups.title'),
+        description: search ? t('noSearchResults.description') : t('noGroups.description'),
         action: search ? undefined : <CreateGroupDialog />,
       }}
       skeleton={{
         component: <GroupCardSkeleton />,
         count: limit,
       }}
+      renderHeader={(group: Group) => (
+        <CardHeader
+          avatar={{
+            initial: group.name.charAt(0),
+            size: 'lg',
+          }}
+          title={group.name}
+          description={group.description || undefined}
+          color={group.tags?.[0]?.color}
+          actions={
+            <GroupActions group={group} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
+          }
+        />
+      )}
+      renderBody={(group: Group) => (
+        <ScrollBadges
+          items={transformPermissionsToBadges(group)}
+          title={t('form.permissions')}
+          icon={<Shield className="h-3 w-3" />}
+          height={80}
+        />
+      )}
+      renderFooter={(group: Group) => <GroupAudit group={group} />}
     />
   );
 }

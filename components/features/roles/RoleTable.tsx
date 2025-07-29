@@ -1,12 +1,16 @@
 'use client';
 
 import { Role } from '@/graphql/generated/types';
-import { EnhancedDataTable, type FieldConfig } from '@/components/common/DataTable';
-import { type ColumnConfig } from '@/components/common/TableSkeleton';
+import { DataTable, type ColumnConfig } from '@/components/common/DataTable';
+import { type ColumnConfig as SkeletonColumnConfig } from '@/components/common/TableSkeleton';
+import { Avatar } from '@/components/common/Avatar';
 import { RoleActions } from './RoleActions';
 import { CreateRoleDialog } from './CreateRoleDialog';
-import { Shield, Group } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { getTagColorClasses, getAvatarBorderColorClasses } from '@/lib/tag-colors';
+import { ScrollBadges } from '@/components/ui/scroll-badges';
+import { RoleAudit } from './RoleAudit';
 
 interface RoleTableProps {
   limit: number;
@@ -27,73 +31,84 @@ export function RoleTable({
 }: RoleTableProps) {
   const t = useTranslations('roles');
 
-  const fields: FieldConfig<Role>[] = [
+  const transformGroupsToBadges = (role: Role) => {
+    return (role.groups || []).map((group) => ({
+      id: group.id,
+      label: group.name,
+      className: group.tags?.length ? getTagColorClasses(group.tags[0].color) : undefined,
+    }));
+  };
+
+  const columns: ColumnConfig<Role>[] = [
     {
-      type: 'id',
-      key: 'id',
-      header: t('table.id'),
-      width: '120px',
+      key: 'avatar',
+      header: '',
+      width: '60px',
+      className: 'pl-4',
+      render: (role: Role) => (
+        <Avatar
+          initial={role.name.charAt(0)}
+          size="md"
+          className={
+            role.tags?.[0]?.color
+              ? `border-2 ${getAvatarBorderColorClasses(role.tags[0].color)}`
+              : undefined
+          }
+        />
+      ),
     },
     {
-      type: 'avatar',
       key: 'name',
-      header: t('table.label'),
-      width: '300px',
-      avatar: {
-        getInitial: (role: Role) => role.name.charAt(0).toUpperCase(),
-        defaultBackgroundClass: 'bg-primary/10',
-        size: 'md',
-      },
+      header: t('table.name'),
+      width: '240px',
+      render: (role: Role) => <span className="text-sm font-medium">{role.name}</span>,
     },
     {
-      type: 'description',
       key: 'description',
       header: t('table.description'),
       width: '250px',
+      render: (role: Role) => (
+        <span className="text-sm text-muted-foreground">
+          {role.description || t('noDescription')}
+        </span>
+      ),
     },
     {
-      type: 'list',
       key: 'groups',
-      header: t('groups'),
+      header: t('form.groups'),
       width: '200px',
-      list: {
-        items: (role: Role) => role.groups || [],
-        labelField: 'name',
-        icon: <Group className="h-3 w-3" />,
-        height: 60,
-        maxItems: 3,
-      },
+      render: (role: Role) => (
+        <ScrollBadges
+          items={transformGroupsToBadges(role)}
+          title=""
+          icon={<Shield className="h-3 w-3" />}
+          height={60}
+        />
+      ),
     },
     {
-      type: 'timestamp',
-      key: 'createdAt',
-      header: t('table.created'),
-      width: '150px',
-    },
-    {
-      type: 'timestamp',
-      key: 'updatedAt',
-      header: t('table.updated'),
-      width: '150px',
+      key: 'audit',
+      header: t('table.audit'),
+      width: '200px',
+      render: (role: Role) => <RoleAudit role={role} />,
     },
   ];
 
-  const skeletonConfig: { columns: ColumnConfig[]; rowCount?: number } = {
+  const skeletonConfig: { columns: SkeletonColumnConfig[]; rowCount?: number } = {
     columns: [
-      { key: 'id', type: 'text' },
-      { key: 'name', type: 'avatar' },
+      { key: 'avatar', type: 'avatar-only' },
+      { key: 'name', type: 'text' },
       { key: 'description', type: 'text' },
       { key: 'groups', type: 'list' },
-      { key: 'createdAt', type: 'text' },
-      { key: 'updatedAt', type: 'text' },
+      { key: 'audit', type: 'audit' },
     ],
     rowCount: limit,
   };
 
   return (
-    <EnhancedDataTable
+    <DataTable
       data={roles}
-      fields={fields}
+      columns={columns}
       loading={loading}
       emptyState={{
         icon: <Shield className="h-12 w-12" />,
