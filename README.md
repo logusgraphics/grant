@@ -2,6 +2,20 @@
 
 A modern, full-stack identity management platform built with Next.js, featuring unified identity management across multiple authentication systems, beautiful UI, internationalization, and GraphQL API.
 
+## 📋 Multi-Tenancy Specification
+
+This platform implements a comprehensive multi-tenancy architecture for identity management across multiple organizations and integration environments. For detailed specifications and architecture documentation, see:
+
+**[📖 Multi-Tenancy Platform Specification](./MULTI_TENANCY_SPECIFICATION.md)**
+
+The specification covers:
+
+- **Account-based multi-tenancy** with person-centric identity management
+- **Organization and project isolation** for secure external system management
+- **System roles** for platform management vs. **external roles** for external systems
+- **Complete relationship model** with pivot tables and access control
+- **Implementation strategy** and migration path
+
 ## Features
 
 ### 1. Internationalization (i18n)
