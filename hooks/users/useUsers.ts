@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { useQuery, ApolloError } from '@apollo/client';
 
 import { UsersQueryResult } from '@/components/features/users/types';
@@ -24,14 +26,21 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersResult {
     tagIds,
   } = options;
 
-  const { data, loading, error, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
-    variables: {
+  // Memoize variables to prevent unnecessary re-renders
+  const variables = useMemo(
+    () => ({
       page,
       limit,
       search,
       sort,
       tagIds,
-    },
+    }),
+    [page, limit, search, sort, tagIds]
+  );
+
+  const { data, loading, error, refetch } = useQuery<UsersQueryResult>(GET_USERS, {
+    variables,
+    notifyOnNetworkStatusChange: false, // Prevent re-renders on network status changes
   });
 
   return {

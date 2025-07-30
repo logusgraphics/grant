@@ -4,19 +4,19 @@ import { LayoutGrid, Table } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { ViewSwitcher, type ViewOption } from '@/components/common';
+import { useUsersStore } from '@/stores/users.store';
 
 export enum UserView {
   CARD = 'card',
   TABLE = 'table',
 }
 
-interface UserViewSwitcherProps {
-  currentView: UserView;
-  onViewChange: (view: UserView) => void;
-}
-
-export function UserViewSwitcher({ currentView, onViewChange }: UserViewSwitcherProps) {
+export function UserViewSwitcher() {
   const t = useTranslations('users');
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const view = useUsersStore((state) => state.view);
+  const setView = useUsersStore((state) => state.setView);
 
   const userViewOptions: ViewOption[] = [
     {
@@ -33,8 +33,8 @@ export function UserViewSwitcher({ currentView, onViewChange }: UserViewSwitcher
 
   return (
     <ViewSwitcher
-      currentView={currentView}
-      onViewChange={(view) => onViewChange(view as UserView)}
+      currentView={view}
+      onViewChange={(newView) => setView(newView as UserView)}
       options={userViewOptions}
     />
   );

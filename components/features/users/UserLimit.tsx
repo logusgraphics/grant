@@ -1,15 +1,15 @@
 import { Limit } from '@/components/common';
+import { useUsersStore } from '@/stores/users.store';
 
-interface UserLimitProps {
-  limit: number;
-  onLimitChange: (limit: number) => void;
-}
+export function UserLimit() {
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const limit = useUsersStore((state) => state.limit);
+  const setLimit = useUsersStore((state) => state.setLimit);
 
-export function UserLimit({ limit, onLimitChange }: UserLimitProps) {
   return (
     <Limit
       limit={limit}
-      onLimitChange={onLimitChange}
+      onLimitChange={setLimit}
       namespace="users"
       translationKey="limit"
       options={[10, 20, 50, 100]}

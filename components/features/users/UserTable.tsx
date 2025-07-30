@@ -20,18 +20,9 @@ interface UserTableProps {
   users: User[];
   loading: boolean;
   search: string;
-  onEditClick: (user: User) => void;
-  onDeleteClick: (user: User) => void;
 }
 
-export function UserTable({
-  limit,
-  users,
-  loading,
-  search,
-  onEditClick,
-  onDeleteClick,
-}: UserTableProps) {
+export function UserTable({ limit, users, loading, search }: UserTableProps) {
   const t = useTranslations('users');
 
   const transformRolesToBadges = (user: User) => {
@@ -135,9 +126,7 @@ export function UserTable({
         action: search ? undefined : <CreateUserDialog />,
       }}
       actionsColumn={{
-        render: (user) => (
-          <UserActions user={user} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
-        ),
+        render: (user) => <UserActions user={user} />,
       }}
       skeletonConfig={skeletonConfig}
     />

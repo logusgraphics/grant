@@ -2,24 +2,29 @@
 
 import { DeleteDialog } from '@/components/common';
 import { useUserMutations } from '@/hooks/users';
+import { useUsersStore } from '@/stores/users.store';
 
-interface DeleteUserDialogProps {
-  userToDelete: { id: string; name: string } | null;
-  onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
-}
-
-export function DeleteUserDialog({ userToDelete, onOpenChange, onSuccess }: DeleteUserDialogProps) {
+export function DeleteUserDialog() {
   const { deleteUser } = useUserMutations();
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const userToDelete = useUsersStore((state) => state.userToDelete);
+  const setUserToDelete = useUsersStore((state) => state.setUserToDelete);
 
   const handleDelete = async (id: string, name: string) => {
     await deleteUser(id, name);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setUserToDelete(null);
+    }
+  };
+
   return (
     <DeleteDialog
       open={!!userToDelete}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       entityToDelete={userToDelete}
       title="deleteDialog.title"
       description="deleteDialog.description"
@@ -27,7 +32,6 @@ export function DeleteUserDialog({ userToDelete, onOpenChange, onSuccess }: Dele
       confirmText="deleteDialog.confirm"
       deletingText="deleteDialog.deleting"
       onDelete={handleDelete}
-      onSuccess={onSuccess}
       translationNamespace="users"
     />
   );

@@ -5,28 +5,39 @@ import { useTranslations } from 'next-intl';
 
 import { Actions, ActionItem } from '@/components/common';
 import { User } from '@/graphql/generated/types';
+import { useUsersStore } from '@/stores/users.store';
 
 interface UserActionsProps {
   user: User;
-  onEditClick: (user: User) => void;
-  onDeleteClick: (user: User) => void;
 }
 
-export function UserActions({ user, onEditClick, onDeleteClick }: UserActionsProps) {
+export function UserActions({ user }: UserActionsProps) {
   const t = useTranslations('users.actions');
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const setUserToEdit = useUsersStore((state) => state.setUserToEdit);
+  const setUserToDelete = useUsersStore((state) => state.setUserToDelete);
+
+  const handleEditClick = () => {
+    setUserToEdit(user);
+  };
+
+  const handleDeleteClick = () => {
+    setUserToDelete({ id: user.id, name: user.name });
+  };
 
   const actions: ActionItem<User>[] = [
     {
       key: 'edit',
       label: t('edit'),
       icon: <Edit className="mr-2 h-4 w-4" />,
-      onClick: onEditClick,
+      onClick: handleEditClick,
     },
     {
       key: 'delete',
       label: t('delete'),
       icon: <Trash2 className="mr-2 h-4 w-4" />,
-      onClick: onDeleteClick,
+      onClick: handleDeleteClick,
       variant: 'destructive',
     },
   ];

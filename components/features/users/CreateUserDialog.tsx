@@ -13,17 +13,18 @@ import { Role } from '@/graphql/generated/types';
 import { useRoles } from '@/hooks/roles';
 import { useTags } from '@/hooks/tags';
 import { useUserMutations } from '@/hooks/users';
+import { useUsersStore } from '@/stores/users.store';
 
-import { createUserSchema, CreateUserFormValues, CreateUserDialogProps } from './types';
+import { createUserSchema, CreateUserFormValues } from './types';
 
-interface CreateUserDialogComponentProps extends Partial<CreateUserDialogProps> {
-  children?: React.ReactNode;
-}
-
-export function CreateUserDialog({ open, onOpenChange, children }: CreateUserDialogComponentProps) {
+export function CreateUserDialog() {
   const { roles, loading: rolesLoading } = useRoles();
   const { tags, loading: tagsLoading } = useTags();
   const { createUser, addUserRole, addUserTag } = useUserMutations();
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const isCreateDialogOpen = useUsersStore((state) => state.isCreateDialogOpen);
+  const setCreateDialogOpen = useUsersStore((state) => state.setCreateDialogOpen);
 
   const fields: CreateDialogField[] = [
     {
@@ -104,10 +105,14 @@ export function CreateUserDialog({ open, onOpenChange, children }: CreateUserDia
     await Promise.all(promises);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setCreateDialogOpen(open);
+  };
+
   return (
     <CreateDialog
-      open={open}
-      onOpenChange={onOpenChange}
+      open={isCreateDialogOpen}
+      onOpenChange={handleOpenChange}
       title="createDialog.title"
       description="createDialog.description"
       triggerText="createDialog.trigger"
@@ -127,8 +132,6 @@ export function CreateUserDialog({ open, onOpenChange, children }: CreateUserDia
       onAddRelationships={handleAddRelationships}
       translationNamespace="users"
       submittingText="createDialog.submitting"
-    >
-      {children}
-    </CreateDialog>
+    />
   );
 }

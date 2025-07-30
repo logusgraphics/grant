@@ -19,18 +19,9 @@ interface UserCardsProps {
   users: User[];
   loading: boolean;
   search: string;
-  onEditClick: (user: User) => void;
-  onDeleteClick: (user: User) => void;
 }
 
-export function UserCards({
-  limit,
-  users,
-  loading,
-  search,
-  onEditClick,
-  onDeleteClick,
-}: UserCardsProps) {
+export function UserCards({ limit, users, loading, search }: UserCardsProps) {
   const t = useTranslations('users');
 
   const transformRolesToBadges = (user: User) => {
@@ -64,9 +55,7 @@ export function UserCards({
           title={user.name}
           description={user.email}
           color={user.tags?.[0]?.color}
-          actions={
-            <UserActions user={user} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
-          }
+          actions={<UserActions user={user} />}
         />
       )}
       renderBody={(user: User) => (

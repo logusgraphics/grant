@@ -2,14 +2,14 @@ import { useTranslations } from 'next-intl';
 
 import { Sorter, type SortInput, type SortOrder } from '@/components/common';
 import { UserSortOrder, UserSortableField, UserSortInput } from '@/graphql/generated/types';
+import { useUsersStore } from '@/stores/users.store';
 
-interface UserSorterProps {
-  sort?: UserSortInput;
-  onSortChange: (field: UserSortableField, order: UserSortOrder) => void;
-}
-
-export function UserSorter({ sort, onSortChange }: UserSorterProps) {
+export function UserSorter() {
   const t = useTranslations('users');
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const sort = useUsersStore((state) => state.sort);
+  const setSort = useUsersStore((state) => state.setSort);
 
   // Convert GraphQL types to generic Sorter types
   const convertSort = (gqlSort?: UserSortInput): SortInput<UserSortableField> | undefined => {
@@ -22,7 +22,7 @@ export function UserSorter({ sort, onSortChange }: UserSorterProps) {
 
   const handleSortChange = (field: UserSortableField, order: SortOrder) => {
     const gqlOrder = order === 'ASC' ? UserSortOrder.Asc : UserSortOrder.Desc;
-    onSortChange(field, gqlOrder);
+    setSort(field, gqlOrder);
   };
 
   const fields = [

@@ -11,13 +11,18 @@ import { Role, Tag, User } from '@/graphql/generated/types';
 import { useRoles } from '@/hooks/roles';
 import { useTags } from '@/hooks/tags';
 import { useUserMutations } from '@/hooks/users';
+import { useUsersStore } from '@/stores/users.store';
 
-import { EditUserFormValues, editUserSchema, EditUserDialogProps } from './types';
+import { EditUserFormValues, editUserSchema } from './types';
 
-export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+export function EditUserDialog() {
   const { roles, loading: rolesLoading } = useRoles();
   const { tags, loading: tagsLoading } = useTags();
   const { updateUser, addUserRole, removeUserRole, addUserTag, removeUserTag } = useUserMutations();
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const userToEdit = useUsersStore((state) => state.userToEdit);
+  const setUserToEdit = useUsersStore((state) => state.setUserToEdit);
 
   const fields: EditDialogField[] = [
     {
@@ -135,11 +140,17 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setUserToEdit(null);
+    }
+  };
+
   return (
     <EditDialog
-      entity={user}
-      open={open}
-      onOpenChange={onOpenChange}
+      entity={userToEdit}
+      open={!!userToEdit}
+      onOpenChange={handleOpenChange}
       title="editDialog.title"
       description="editDialog.description"
       confirmText="editDialog.confirm"

@@ -1,12 +1,12 @@
 'use client';
 
 import { Tags } from '@/components/common';
+import { useUsersStore } from '@/stores/users.store';
 
-interface UserTagSelectorProps {
-  selectedTagIds: string[];
-  onTagIdsChange: (tagIds: string[]) => void;
-}
+export function UserTagSelector() {
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const selectedTagIds = useUsersStore((state) => state.selectedTagIds);
+  const setSelectedTagIds = useUsersStore((state) => state.setSelectedTagIds);
 
-export function UserTagSelector({ selectedTagIds, onTagIdsChange }: UserTagSelectorProps) {
-  return <Tags selectedTagIds={selectedTagIds} onTagIdsChange={onTagIdsChange} />;
+  return <Tags selectedTagIds={selectedTagIds} onTagIdsChange={setSelectedTagIds} />;
 }

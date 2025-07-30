@@ -31,7 +31,6 @@ export interface EditUserDialogProps {
   user: User | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentPage: number;
 }
 
 // Query result types

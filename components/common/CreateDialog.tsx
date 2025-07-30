@@ -54,7 +54,6 @@ export interface CreateDialogProps<TFormValues extends Record<string, any>> {
   // Dialog props
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  children?: React.ReactNode;
 
   // Content
   title: string;
@@ -84,7 +83,6 @@ export interface CreateDialogProps<TFormValues extends Record<string, any>> {
 export function CreateDialog<TFormValues extends Record<string, any>>({
   open,
   onOpenChange: _onOpenChange,
-  children,
   title,
   description,
   triggerText,
@@ -179,16 +177,12 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-      {children ? (
-        <DialogTrigger asChild>{children}</DialogTrigger>
-      ) : (
-        <DialogTrigger asChild>
-          <Button>
-            <Icon className="size-4" />
-            {t(triggerText)}
-          </Button>
-        </DialogTrigger>
-      )}
+      <DialogTrigger asChild>
+        <Button>
+          <Icon className="size-4" />
+          {t(triggerText)}
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t(title)}</DialogTitle>
