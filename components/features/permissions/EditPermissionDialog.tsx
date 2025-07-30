@@ -9,16 +9,17 @@ import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { Permission, Tag } from '@/graphql/generated/types';
 import { usePermissionMutations } from '@/hooks/permissions';
 import { useTags } from '@/hooks/tags';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
-import { EditPermissionFormValues, editPermissionSchema, EditPermissionDialogProps } from './types';
+import { EditPermissionFormValues, editPermissionSchema } from './types';
 
-export function EditPermissionDialog({
-  permission,
-  open,
-  onOpenChange,
-}: EditPermissionDialogProps) {
+export function EditPermissionDialog() {
   const { tags, loading: tagsLoading } = useTags();
   const { updatePermission, addPermissionTag, removePermissionTag } = usePermissionMutations();
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const permissionToEdit = usePermissionsStore((state) => state.permissionToEdit);
+  const setPermissionToEdit = usePermissionsStore((state) => state.setPermissionToEdit);
 
   const fields: EditDialogField[] = [
     {
@@ -108,11 +109,17 @@ export function EditPermissionDialog({
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setPermissionToEdit(null);
+    }
+  };
+
   return (
     <EditDialog
-      entity={permission}
-      open={open}
-      onOpenChange={onOpenChange}
+      entity={permissionToEdit}
+      open={!!permissionToEdit}
+      onOpenChange={handleOpenChange}
       title="editDialog.title"
       description="editDialog.description"
       confirmText="editDialog.confirm"

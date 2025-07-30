@@ -7,30 +7,21 @@ import { CardGrid, CardHeader } from '@/components/common';
 import { ScrollBadges } from '@/components/common';
 import { Permission } from '@/graphql/generated/types';
 import { transformTagsToBadges } from '@/lib/tag-utils';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
 import { CreatePermissionDialog } from './CreatePermissionDialog';
 import { PermissionActions } from './PermissionActions';
 import { PermissionAudit } from './PermissionAudit';
 import { PermissionCardSkeleton } from './PermissionCardSkeleton';
 
-interface PermissionCardsProps {
-  limit: number;
-  permissions: Permission[];
-  loading: boolean;
-  search: string;
-  onEditClick: (permission: Permission) => void;
-  onDeleteClick: (permission: Permission) => void;
-}
-
-export function PermissionCards({
-  limit,
-  permissions,
-  loading,
-  search,
-  onEditClick,
-  onDeleteClick,
-}: PermissionCardsProps) {
+export function PermissionCards() {
   const t = useTranslations('permissions');
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const limit = usePermissionsStore((state) => state.limit);
+  const search = usePermissionsStore((state) => state.search);
+  const permissions = usePermissionsStore((state) => state.permissions);
+  const loading = usePermissionsStore((state) => state.loading);
 
   return (
     <CardGrid<Permission>
@@ -55,13 +46,7 @@ export function PermissionCards({
           title={permission.name}
           description={permission.description || undefined}
           color={permission.tags?.[0]?.color}
-          actions={
-            <PermissionActions
-              permission={permission}
-              onEditClick={onEditClick}
-              onDeleteClick={onDeleteClick}
-            />
-          }
+          actions={<PermissionActions permission={permission} />}
         />
       )}
       renderBody={(permission: Permission) => (

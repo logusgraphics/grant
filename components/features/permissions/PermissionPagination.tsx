@@ -1,15 +1,15 @@
+'use client';
+
 import { Pagination } from '@/components/common';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
-interface PermissionPaginationProps {
-  page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}
+export function PermissionPagination() {
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const page = usePermissionsStore((state) => state.page);
+  const limit = usePermissionsStore((state) => state.limit);
+  const totalCount = usePermissionsStore((state) => state.totalCount);
+  const setPage = usePermissionsStore((state) => state.setPage);
+  const totalPages = Math.ceil(totalCount / limit);
 
-export function PermissionPagination({
-  page,
-  totalPages,
-  onPageChange,
-}: PermissionPaginationProps) {
-  return <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />;
+  return <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />;
 }

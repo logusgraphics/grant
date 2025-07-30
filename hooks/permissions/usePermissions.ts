@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { useQuery, ApolloError } from '@apollo/client';
 
 import {
@@ -29,15 +31,22 @@ export function usePermissions(options: UsePermissionsOptions = {}): UsePermissi
     tagIds,
   } = options;
 
-  const { data, loading, error, refetch } = useQuery(GET_PERMISSIONS, {
-    variables: {
+  // Memoize variables to prevent unnecessary re-renders
+  const variables = useMemo(
+    () => ({
       page,
       limit,
       search,
       sort,
       ids,
       tagIds,
-    },
+    }),
+    [page, limit, search, sort, ids, tagIds]
+  );
+
+  const { data, loading, error, refetch } = useQuery(GET_PERMISSIONS, {
+    variables,
+    notifyOnNetworkStatusChange: false, // Prevent re-renders on network status changes
   });
 
   return {

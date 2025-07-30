@@ -1,15 +1,17 @@
+'use client';
+
 import { Limit } from '@/components/common';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
-interface PermissionLimitProps {
-  limit: number;
-  onLimitChange: (limit: number) => void;
-}
+export function PermissionLimit() {
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const limit = usePermissionsStore((state) => state.limit);
+  const setLimit = usePermissionsStore((state) => state.setLimit);
 
-export function PermissionLimit({ limit, onLimitChange }: PermissionLimitProps) {
   return (
     <Limit
       limit={limit}
-      onLimitChange={onLimitChange}
+      onLimitChange={setLimit}
       namespace="permissions"
       translationKey="limit"
       options={[10, 20, 50, 100]}

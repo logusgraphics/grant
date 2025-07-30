@@ -10,29 +10,20 @@ import { type ColumnConfig as SkeletonColumnConfig } from '@/components/common/T
 import { Permission } from '@/graphql/generated/types';
 import { getTagBorderColorClasses } from '@/lib/tag-colors';
 import { transformTagsToBadges } from '@/lib/tag-utils';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
 import { CreatePermissionDialog } from './CreatePermissionDialog';
 import { PermissionActions } from './PermissionActions';
 import { PermissionAudit } from './PermissionAudit';
 
-interface PermissionTableProps {
-  limit: number;
-  permissions: Permission[];
-  loading: boolean;
-  search: string;
-  onEditClick: (permission: Permission) => void;
-  onDeleteClick: (permission: Permission) => void;
-}
-
-export function PermissionTable({
-  limit,
-  permissions,
-  loading,
-  search,
-  onEditClick,
-  onDeleteClick,
-}: PermissionTableProps) {
+export function PermissionTable() {
   const t = useTranslations('permissions');
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const limit = usePermissionsStore((state) => state.limit);
+  const search = usePermissionsStore((state) => state.search);
+  const permissions = usePermissionsStore((state) => state.permissions);
+  const loading = usePermissionsStore((state) => state.loading);
 
   const columns: ColumnConfig<Permission>[] = [
     {
@@ -124,13 +115,7 @@ export function PermissionTable({
         action: search ? undefined : <CreatePermissionDialog />,
       }}
       actionsColumn={{
-        render: (permission) => (
-          <PermissionActions
-            permission={permission}
-            onEditClick={onEditClick}
-            onDeleteClick={onDeleteClick}
-          />
-        ),
+        render: (permission) => <PermissionActions permission={permission} />,
       }}
       skeletonConfig={skeletonConfig}
     />

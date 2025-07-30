@@ -5,32 +5,39 @@ import { useTranslations } from 'next-intl';
 
 import { Actions, ActionItem } from '@/components/common';
 import { Permission } from '@/graphql/generated/types';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
 interface PermissionActionsProps {
   permission: Permission;
-  onEditClick: (permission: Permission) => void;
-  onDeleteClick: (permission: Permission) => void;
 }
 
-export function PermissionActions({
-  permission,
-  onEditClick,
-  onDeleteClick,
-}: PermissionActionsProps) {
+export function PermissionActions({ permission }: PermissionActionsProps) {
   const t = useTranslations('permissions.actions');
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const setPermissionToEdit = usePermissionsStore((state) => state.setPermissionToEdit);
+  const setPermissionToDelete = usePermissionsStore((state) => state.setPermissionToDelete);
+
+  const handleEditClick = () => {
+    setPermissionToEdit(permission);
+  };
+
+  const handleDeleteClick = () => {
+    setPermissionToDelete({ id: permission.id, name: permission.name });
+  };
 
   const actions: ActionItem<Permission>[] = [
     {
       key: 'edit',
       label: t('edit'),
       icon: <Edit className="mr-2 h-4 w-4" />,
-      onClick: onEditClick,
+      onClick: handleEditClick,
     },
     {
       key: 'delete',
       label: t('delete'),
       icon: <Trash2 className="mr-2 h-4 w-4" />,
-      onClick: onDeleteClick,
+      onClick: handleDeleteClick,
       variant: 'destructive',
     },
   ];

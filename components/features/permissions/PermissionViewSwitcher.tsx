@@ -4,19 +4,19 @@ import { LayoutGrid, Table } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { ViewSwitcher, type ViewOption } from '@/components/common';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
 export enum PermissionView {
   CARD = 'card',
   TABLE = 'table',
 }
 
-interface PermissionViewSwitcherProps {
-  currentView: PermissionView;
-  onViewChange: (view: PermissionView) => void;
-}
-
-export function PermissionViewSwitcher({ currentView, onViewChange }: PermissionViewSwitcherProps) {
+export function PermissionViewSwitcher() {
   const t = useTranslations('permissions');
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const view = usePermissionsStore((state) => state.view);
+  const setView = usePermissionsStore((state) => state.setView);
 
   const permissionViewOptions: ViewOption[] = [
     {
@@ -33,8 +33,8 @@ export function PermissionViewSwitcher({ currentView, onViewChange }: Permission
 
   return (
     <ViewSwitcher
-      currentView={currentView}
-      onViewChange={(view) => onViewChange(view as PermissionView)}
+      currentView={view}
+      onViewChange={(newView) => setView(newView as PermissionView)}
       options={permissionViewOptions}
     />
   );

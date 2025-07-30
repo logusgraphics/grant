@@ -1,15 +1,12 @@
 'use client';
 
 import { Tags } from '@/components/common';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
-interface PermissionTagSelectorProps {
-  selectedTagIds: string[];
-  onTagIdsChange: (tagIds: string[]) => void;
-}
+export function PermissionTagSelector() {
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const selectedTagIds = usePermissionsStore((state) => state.selectedTagIds);
+  const setSelectedTagIds = usePermissionsStore((state) => state.setSelectedTagIds);
 
-export function PermissionTagSelector({
-  selectedTagIds,
-  onTagIdsChange,
-}: PermissionTagSelectorProps) {
-  return <Tags selectedTagIds={selectedTagIds} onTagIdsChange={onTagIdsChange} />;
+  return <Tags selectedTagIds={selectedTagIds} onTagIdsChange={setSelectedTagIds} />;
 }

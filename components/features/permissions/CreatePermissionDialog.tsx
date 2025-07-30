@@ -10,24 +10,17 @@ import {
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { usePermissionMutations } from '@/hooks/permissions';
 import { useTags } from '@/hooks/tags';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
-import {
-  createPermissionSchema,
-  CreatePermissionFormValues,
-  CreatePermissionDialogProps,
-} from './types';
+import { createPermissionSchema, CreatePermissionFormValues } from './types';
 
-interface CreatePermissionDialogComponentProps extends Partial<CreatePermissionDialogProps> {
-  children?: React.ReactNode;
-}
-
-export function CreatePermissionDialog({
-  open,
-  onOpenChange,
-  children,
-}: CreatePermissionDialogComponentProps) {
+export function CreatePermissionDialog() {
   const { tags, loading: tagsLoading } = useTags();
   const { createPermission, addPermissionTag } = usePermissionMutations();
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const isCreateDialogOpen = usePermissionsStore((state) => state.isCreateDialogOpen);
+  const setCreateDialogOpen = usePermissionsStore((state) => state.setCreateDialogOpen);
 
   const fields: CreateDialogField[] = [
     {
@@ -92,10 +85,14 @@ export function CreatePermissionDialog({
     await Promise.all(promises);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setCreateDialogOpen(open);
+  };
+
   return (
     <CreateDialog
-      open={open}
-      onOpenChange={onOpenChange}
+      open={isCreateDialogOpen}
+      onOpenChange={handleOpenChange}
       title="createDialog.title"
       description="createDialog.description"
       triggerText="createDialog.trigger"
@@ -115,8 +112,6 @@ export function CreatePermissionDialog({
       onAddRelationships={handleAddRelationships}
       translationNamespace="permissions"
       submittingText="createDialog.submitting"
-    >
-      {children}
-    </CreateDialog>
+    />
   );
 }

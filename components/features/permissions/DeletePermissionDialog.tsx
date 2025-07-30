@@ -2,28 +2,29 @@
 
 import { DeleteDialog } from '@/components/common';
 import { usePermissionMutations } from '@/hooks/permissions';
+import { usePermissionsStore } from '@/stores/permissions.store';
 
-interface DeletePermissionDialogProps {
-  permissionToDelete: { id: string; name: string } | null;
-  onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
-}
-
-export function DeletePermissionDialog({
-  permissionToDelete,
-  onOpenChange,
-  onSuccess,
-}: DeletePermissionDialogProps) {
+export function DeletePermissionDialog() {
   const { deletePermission } = usePermissionMutations();
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const permissionToDelete = usePermissionsStore((state) => state.permissionToDelete);
+  const setPermissionToDelete = usePermissionsStore((state) => state.setPermissionToDelete);
 
   const handleDelete = async (id: string) => {
     await deletePermission(id);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setPermissionToDelete(null);
+    }
+  };
+
   return (
     <DeleteDialog
       open={!!permissionToDelete}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       entityToDelete={permissionToDelete}
       title="deleteDialog.title"
       description="deleteDialog.description"
@@ -31,7 +32,6 @@ export function DeletePermissionDialog({
       confirmText="deleteDialog.confirm"
       deletingText="deleteDialog.deleting"
       onDelete={handleDelete}
-      onSuccess={onSuccess}
       translationNamespace="permissions"
     />
   );
