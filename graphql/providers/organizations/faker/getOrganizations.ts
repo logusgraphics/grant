@@ -4,6 +4,8 @@ import {
   GetOrganizationsResult,
 } from '@/graphql/providers/organizations/types';
 
+const SEARCHABLE_FIELDS = ['name', 'slug'] as const;
+
 export async function getOrganizations({
   page,
   limit,
@@ -11,34 +13,36 @@ export async function getOrganizations({
   sort,
   ids,
 }: GetOrganizationsParams): Promise<GetOrganizationsResult> {
-  // Get all organizations from the store
-  let organizations = getOrganizationsFromStore(sort || undefined);
-
-  // Apply ID filter if provided
+  // If ids are provided and not empty, ignore pagination and return filtered results
   if (ids && ids.length > 0) {
-    organizations = organizations.filter((org) => ids.includes(org.id));
+    const filteredOrganizations = getOrganizationsFromStore(sort || undefined, ids);
+    return {
+      organizations: filteredOrganizations,
+      totalCount: filteredOrganizations.length,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
   }
 
-  // Apply search filter if provided
-  if (search) {
-    organizations = organizations.filter(
-      (org) =>
-        org.name.toLowerCase().includes(search.toLowerCase()) ||
-        org.slug.toLowerCase().includes(search.toLowerCase())
-    );
-  }
+  const safePage = typeof page === 'number' && page > 0 ? page : 1;
+  const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 10;
+  let allOrganizations = getOrganizationsFromStore(sort || undefined);
+
+  // Filter by search term
+  const filteredBySearchOrganizations = search
+    ? allOrganizations.filter((org) =>
+        SEARCHABLE_FIELDS.some((field) => org[field].toLowerCase().includes(search.toLowerCase()))
+      )
+    : allOrganizations;
 
   // Calculate pagination
-  const totalCount = organizations.length;
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedOrganizations = organizations.slice(startIndex, endIndex);
-
-  // Check if there are more pages
-  const hasNextPage = endIndex < totalCount;
+  const totalCount = filteredBySearchOrganizations.length;
+  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
+  const startIndex = (safePage - 1) * safeLimit;
+  const endIndex = startIndex + safeLimit;
+  const organizations = filteredBySearchOrganizations.slice(startIndex, endIndex);
 
   return {
-    organizations: paginatedOrganizations,
+    organizations,
     totalCount,
     hasNextPage,
   };

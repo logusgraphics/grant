@@ -1,0 +1,6 @@
+extend type Query {
+  """
+  Retrieves organization-project relationships for a specific organization.
+  """
+  organizationProjects(organizationId: ID!): [OrganizationProject!]!
+}

@@ -14,7 +14,10 @@ type Organization implements Auditable {
   URL-friendly slug for the organization.
   """
   slug: String!
-
+  """
+  Organization projects.
+  """
+  projects: [Project!]
   """
   Timestamp when the organization was created.
   """
@@ -23,4 +26,4 @@ type Organization implements Auditable {
   Timestamp when the organization was last updated.
   """
   updatedAt: String!
-} 
+}

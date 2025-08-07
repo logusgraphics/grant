@@ -6,6 +6,8 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { GroupPermission } from '@/graphql/resolvers/group-permissions/fields';
 import { Group } from '@/graphql/resolvers/groups/fields';
 import { Mutation } from '@/graphql/resolvers/mutations';
+import { OrganizationProject } from '@/graphql/resolvers/organization-projects/fields';
+import { Organization } from '@/graphql/resolvers/organizations/fields';
 import { Permission } from '@/graphql/resolvers/permissions/fields';
 import { Query } from '@/graphql/resolvers/queries';
 import { RoleGroup } from '@/graphql/resolvers/role-groups/fields';
@@ -32,6 +34,8 @@ export const schema = makeExecutableSchema({
     RoleGroup,
     Group,
     GroupPermission,
+    Organization,
+    OrganizationProject,
     Permission,
     Tag,
   },

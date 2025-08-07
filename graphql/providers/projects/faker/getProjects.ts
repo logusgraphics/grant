@@ -1,6 +1,8 @@
 import { getProjects as getProjectsFromStore } from '@/graphql/providers/projects/faker/dataStore';
 import { GetProjectsParams, GetProjectsResult } from '@/graphql/providers/projects/types';
 
+const SEARCHABLE_FIELDS = ['name', 'slug', 'description'] as const;
+
 export async function getProjects({
   page,
   limit,
@@ -8,35 +10,39 @@ export async function getProjects({
   sort,
   ids,
 }: GetProjectsParams): Promise<GetProjectsResult> {
-  // Get all projects from the store
-  let projects = getProjectsFromStore(sort || undefined);
-
-  // Apply ID filter if provided
+  // If ids are provided and not empty, ignore pagination and return filtered results
   if (ids && ids.length > 0) {
-    projects = projects.filter((project) => ids.includes(project.id));
+    const filteredProjects = getProjectsFromStore(sort || undefined, ids);
+    return {
+      projects: filteredProjects,
+      totalCount: filteredProjects.length,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
   }
 
-  // Apply search filter if provided
-  if (search) {
-    projects = projects.filter(
-      (project) =>
-        project.name.toLowerCase().includes(search.toLowerCase()) ||
-        project.slug.toLowerCase().includes(search.toLowerCase()) ||
-        (project.description && project.description.toLowerCase().includes(search.toLowerCase()))
-    );
-  }
+  const safePage = typeof page === 'number' && page > 0 ? page : 1;
+  const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 10;
+  let allProjects = getProjectsFromStore(sort || undefined);
+
+  // Filter by search term
+  const filteredBySearchProjects = search
+    ? allProjects.filter((project) =>
+        SEARCHABLE_FIELDS.some((field) => {
+          const value = project[field];
+          return value && value.toLowerCase().includes(search.toLowerCase());
+        })
+      )
+    : allProjects;
 
   // Calculate pagination
-  const totalCount = projects.length;
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedProjects = projects.slice(startIndex, endIndex);
-
-  // Check if there are more pages
-  const hasNextPage = endIndex < totalCount;
+  const totalCount = filteredBySearchProjects.length;
+  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
+  const startIndex = (safePage - 1) * safeLimit;
+  const endIndex = startIndex + safeLimit;
+  const projects = filteredBySearchProjects.slice(startIndex, endIndex);
 
   return {
-    projects: paginatedProjects,
+    projects,
     totalCount,
     hasNextPage,
   };

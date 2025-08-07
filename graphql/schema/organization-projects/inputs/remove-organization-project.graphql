@@ -1,0 +1,13 @@
+"""
+Input type for removing an organization-project relationship.
+"""
+input RemoveOrganizationProjectInput {
+  """
+  ID of the organization.
+  """
+  organizationId: ID!
+  """
+  ID of the project.
+  """
+  projectId: ID!
+}

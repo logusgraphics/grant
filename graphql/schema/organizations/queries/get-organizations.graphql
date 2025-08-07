@@ -6,11 +6,11 @@ extend type Query {
     """
     Page number (1-based).
     """
-    page: Int!
+    page: Int
     """
     Number of organizations per page.
     """
-    limit: Int!
+    limit: Int
     """
     Search term to filter organizations.
     """
@@ -25,4 +25,4 @@ extend type Query {
     """
     ids: [ID!]
   ): OrganizationPage!
-} 
+}
