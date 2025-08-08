@@ -10,4 +10,4 @@ input RemoveOrganizationPermissionInput {
   ID of the permission.
   """
   permissionId: ID!
-} 
+}

@@ -25,6 +25,14 @@ import { permissionTagFakerProvider } from './providers/permission-tags/faker';
 import { PermissionTagDataProvider } from './providers/permission-tags/types';
 import { permissionFakerProvider } from './providers/permissions/faker';
 import { PermissionDataProvider } from './providers/permissions/types';
+import { projectGroupFakerProvider } from './providers/project-groups/faker';
+import { ProjectGroupDataProvider } from './providers/project-groups/types';
+import { projectPermissionFakerProvider } from './providers/project-permissions/faker';
+import { ProjectPermissionDataProvider } from './providers/project-permissions/types';
+import { projectRoleFakerProvider } from './providers/project-roles/faker';
+import { ProjectRoleDataProvider } from './providers/project-roles/types';
+import { projectUserFakerProvider } from './providers/project-users/faker';
+import { ProjectUserDataProvider } from './providers/project-users/types';
 import { projectFakerProvider } from './providers/projects/faker';
 import { ProjectDataProvider } from './providers/projects/types';
 import { roleGroupFakerProvider } from './providers/role-groups/faker';
@@ -52,6 +60,10 @@ export interface ModuleProviders {
   organizationPermissions: OrganizationPermissionDataProvider;
   organizationUsers: OrganizationUserDataProvider;
   projects: ProjectDataProvider;
+  projectRoles: ProjectRoleDataProvider;
+  projectGroups: ProjectGroupDataProvider;
+  projectPermissions: ProjectPermissionDataProvider;
+  projectUsers: ProjectUserDataProvider;
   permissions: PermissionDataProvider;
   userRoles: UserRoleDataProvider;
   roleGroups: RoleGroupDataProvider;
@@ -82,6 +94,10 @@ export const graphqlConfig: GraphQLConfig = {
     organizationPermissions: organizationPermissionFakerProvider,
     organizationUsers: organizationUserFakerProvider,
     projects: projectFakerProvider,
+    projectRoles: projectRoleFakerProvider,
+    projectGroups: projectGroupFakerProvider,
+    projectPermissions: projectPermissionFakerProvider,
+    projectUsers: projectUserFakerProvider,
     permissions: permissionFakerProvider,
     userRoles: userRoleFakerProvider,
     roleGroups: roleGroupFakerProvider,

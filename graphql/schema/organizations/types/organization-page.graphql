@@ -14,4 +14,4 @@ type OrganizationPage implements PaginatedResults {
   Whether there are more organizations to load.
   """
   hasNextPage: Boolean!
-} 
+}

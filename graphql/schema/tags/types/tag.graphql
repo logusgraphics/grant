@@ -22,4 +22,4 @@ type Tag implements Auditable {
   Timestamp when the tag was last updated.
   """
   updatedAt: String!
-} 
+}

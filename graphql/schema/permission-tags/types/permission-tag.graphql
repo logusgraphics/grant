@@ -27,4 +27,4 @@ type PermissionTag implements Auditable {
   Timestamp when the permission-tag relationship was last updated.
   """
   updatedAt: String!
-} 
+}

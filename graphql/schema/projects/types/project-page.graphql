@@ -14,4 +14,4 @@ type ProjectPage implements PaginatedResults {
   Whether there are more projects to load.
   """
   hasNextPage: Boolean!
-} 
+}

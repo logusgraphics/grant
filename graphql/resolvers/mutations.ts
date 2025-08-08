@@ -10,6 +10,10 @@ import * as organizationUserMutations from './organization-users/mutations';
 import * as organizationMutations from './organizations/mutations';
 import * as permissionTagMutations from './permission-tags/mutations';
 import * as permissionMutations from './permissions/mutations';
+import * as projectGroupMutations from './project-groups/mutations';
+import * as projectPermissionMutations from './project-permissions/mutations';
+import * as projectRoleMutations from './project-roles/mutations';
+import * as projectUserMutations from './project-users/mutations';
 import * as projectMutations from './projects/mutations';
 import * as roleGroupMutations from './role-groups/mutations';
 import * as roleTagMutations from './role-tags/mutations';
@@ -66,4 +70,12 @@ export const Mutation = {
   removeOrganizationPermission: organizationPermissionMutations.removeOrganizationPermission,
   addOrganizationUser: organizationUserMutations.addOrganizationUser,
   removeOrganizationUser: organizationUserMutations.removeOrganizationUser,
+  addProjectRole: projectRoleMutations.addProjectRole,
+  removeProjectRole: projectRoleMutations.removeProjectRole,
+  addProjectGroup: projectGroupMutations.addProjectGroup,
+  removeProjectGroup: projectGroupMutations.removeProjectGroup,
+  addProjectPermission: projectPermissionMutations.addProjectPermission,
+  removeProjectPermission: projectPermissionMutations.removeProjectPermission,
+  addProjectUser: projectUserMutations.addProjectUser,
+  removeProjectUser: projectUserMutations.removeProjectUser,
 } as const;

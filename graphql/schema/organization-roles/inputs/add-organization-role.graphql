@@ -10,4 +10,4 @@ input AddOrganizationRoleInput {
   ID of the role.
   """
   roleId: ID!
-} 
+}

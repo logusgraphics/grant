@@ -42,4 +42,4 @@ interface PaginatedResults {
   Whether there are more items available on the next page.
   """
   hasNextPage: Boolean!
-} 
+}

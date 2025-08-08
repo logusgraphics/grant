@@ -14,4 +14,4 @@ enum OrganizationSortableField {
   Sort by last update date.
   """
   updatedAt
-} 
+}

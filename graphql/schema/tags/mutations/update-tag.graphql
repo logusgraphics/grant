@@ -6,4 +6,4 @@ type Mutation {
   Update an existing tag.
   """
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
-} 
+}

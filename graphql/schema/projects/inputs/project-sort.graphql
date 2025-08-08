@@ -18,4 +18,4 @@ input ProjectSortInput {
   Sort order.
   """
   order: ProjectSortOrder!
-} 
+}

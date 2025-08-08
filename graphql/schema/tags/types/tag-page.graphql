@@ -14,4 +14,4 @@ type TagPage implements PaginatedResults {
   Whether there are more tags available on the next page.
   """
   hasNextPage: Boolean!
-} 
+}

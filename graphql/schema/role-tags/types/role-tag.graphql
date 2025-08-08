@@ -30,4 +30,4 @@ type RoleTag implements Auditable {
   Timestamp when the role-tag relationship was last updated.
   """
   updatedAt: String!
-} 
+}

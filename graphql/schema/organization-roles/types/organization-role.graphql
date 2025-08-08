@@ -30,4 +30,4 @@ type OrganizationRole implements Auditable {
   Timestamp when the organization-role relationship was last updated.
   """
   updatedAt: String!
-} 
+}

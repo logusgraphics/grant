@@ -6,4 +6,4 @@ type Mutation {
   Create a new tag.
   """
   createTag(input: CreateTagInput!): Tag!
-} 
+}

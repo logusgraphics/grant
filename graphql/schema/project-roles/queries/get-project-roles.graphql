@@ -1,0 +1,6 @@
+extend type Query {
+  """
+  Retrieves project-role relationships for a specific project.
+  """
+  projectRoles(projectId: ID!): [ProjectRole!]!
+}

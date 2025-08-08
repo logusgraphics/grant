@@ -1,0 +1,13 @@
+"""
+Input type for removing a project-group relationship.
+"""
+input RemoveProjectGroupInput {
+  """
+  ID of the project.
+  """
+  projectId: ID!
+  """
+  ID of the group.
+  """
+  groupId: ID!
+}

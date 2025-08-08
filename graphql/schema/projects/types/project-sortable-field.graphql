@@ -14,4 +14,4 @@ enum ProjectSortableField {
   Sort by last update date.
   """
   updatedAt
-} 
+}

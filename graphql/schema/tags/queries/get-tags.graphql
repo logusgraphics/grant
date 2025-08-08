@@ -25,4 +25,4 @@ extend type Query {
     """
     ids: [ID!]
   ): TagPage!
-} 
+}

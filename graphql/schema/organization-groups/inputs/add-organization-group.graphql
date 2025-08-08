@@ -10,4 +10,4 @@ input AddOrganizationGroupInput {
   ID of the group.
   """
   groupId: ID!
-} 
+}

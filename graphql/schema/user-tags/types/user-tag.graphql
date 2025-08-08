@@ -30,4 +30,4 @@ type UserTag implements Auditable {
   Timestamp when the user-tag relationship was last updated.
   """
   updatedAt: String!
-} 
+}

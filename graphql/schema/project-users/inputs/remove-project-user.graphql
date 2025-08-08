@@ -1,0 +1,13 @@
+"""
+Input type for removing a project-user relationship.
+"""
+input RemoveProjectUserInput {
+  """
+  ID of the project.
+  """
+  projectId: ID!
+  """
+  ID of the user.
+  """
+  userId: ID!
+}

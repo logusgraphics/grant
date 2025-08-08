@@ -30,4 +30,4 @@ type OrganizationGroup implements Auditable {
   Timestamp when the organization-group relationship was last updated.
   """
   updatedAt: String!
-} 
+}

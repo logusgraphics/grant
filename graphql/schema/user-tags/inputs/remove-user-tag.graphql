@@ -10,4 +10,4 @@ input RemoveUserTagInput {
   ID of the tag.
   """
   tagId: ID!
-} 
+}

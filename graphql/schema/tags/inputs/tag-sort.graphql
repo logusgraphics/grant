@@ -46,4 +46,4 @@ enum SortDirection {
   Descending order.
   """
   DESC
-} 
+}

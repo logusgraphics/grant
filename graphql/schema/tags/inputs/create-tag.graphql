@@ -10,4 +10,4 @@ input CreateTagInput {
   Color identifier for the tag (e.g., 'purple', 'indigo', 'blue').
   """
   color: String!
-} 
+}

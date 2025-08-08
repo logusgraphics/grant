@@ -30,4 +30,4 @@ type OrganizationPermission implements Auditable {
   Timestamp when the organization-permission relationship was last updated.
   """
   updatedAt: String!
-} 
+}

@@ -30,4 +30,4 @@ type GroupTag implements Auditable {
   Timestamp when the group-tag relationship was last updated.
   """
   updatedAt: String!
-} 
+}

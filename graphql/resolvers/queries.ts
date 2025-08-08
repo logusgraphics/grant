@@ -9,6 +9,10 @@ import * as organizationUserQueries from './organization-users/queries';
 import * as organizationQueries from './organizations/queries';
 import * as permissionTagQueries from './permission-tags/queries';
 import * as permissionQueries from './permissions/queries';
+import * as projectGroupQueries from './project-groups/queries';
+import * as projectPermissionQueries from './project-permissions/queries';
+import * as projectRoleQueries from './project-roles/queries';
+import * as projectUserQueries from './project-users/queries';
 import * as projectQueries from './projects/queries';
 import * as roleGroupQueries from './role-groups/queries';
 import * as roleTagQueries from './role-tags/queries';
@@ -39,4 +43,8 @@ export const Query = {
   organizationGroups: organizationGroupQueries.organizationGroups,
   organizationPermissions: organizationPermissionQueries.organizationPermissions,
   organizationUsers: organizationUserQueries.organizationUsers,
+  projectRoles: projectRoleQueries.projectRoles,
+  projectGroups: projectGroupQueries.projectGroups,
+  projectPermissions: projectPermissionQueries.projectPermissions,
+  projectUsers: projectUserQueries.projectUsers,
 } as const;

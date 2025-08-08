@@ -10,4 +10,4 @@ input RemoveGroupTagInput {
   ID of the tag.
   """
   tagId: ID!
-} 
+}

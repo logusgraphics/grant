@@ -10,4 +10,4 @@ input AddOrganizationUserInput {
   ID of the user.
   """
   userId: ID!
-} 
+}
