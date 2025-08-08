@@ -15,7 +15,7 @@ export async function getGroups({
   tagIds,
 }: GetGroupsParams): Promise<GetGroupsResult> {
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
-  const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
+  const safeLimit = typeof limit === 'number' ? limit : 50;
 
   // Start with all groups or filter by IDs if provided
   let allGroups =
@@ -45,16 +45,16 @@ export async function getGroups({
 
   const totalCount = filteredBySearchGroups.length;
 
-  // If IDs were provided, return all filtered results without pagination
-  if (ids && ids.length > 0) {
+  // If limit is 0 or negative, return all filtered results without pagination
+  if (safeLimit <= 0) {
     return {
       groups: filteredBySearchGroups,
       totalCount,
-      hasNextPage: false, // No pagination when filtering by IDs
+      hasNextPage: false, // No pagination when limit is 0 or negative
     };
   }
 
-  // Apply pagination for normal queries
+  // Apply pagination for normal queries or when limit is specified
   const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
   const startIndex = (safePage - 1) * safeLimit;
   const endIndex = startIndex + safeLimit;

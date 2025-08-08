@@ -17,7 +17,7 @@ type Group implements Auditable {
   """
   List of permissions associated with this group.
   """
-  permissions: [Permission!]
+  permissions(scope: Scope!): [Permission!]
   """
   List of tags assigned to the group.
   """

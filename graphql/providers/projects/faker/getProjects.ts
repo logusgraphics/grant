@@ -10,19 +10,14 @@ export async function getProjects({
   sort,
   ids,
 }: GetProjectsParams): Promise<GetProjectsResult> {
-  // If ids are provided and not empty, ignore pagination and return filtered results
-  if (ids && ids.length > 0) {
-    const filteredProjects = getProjectsFromStore(sort || undefined, ids);
-    return {
-      projects: filteredProjects,
-      totalCount: filteredProjects.length,
-      hasNextPage: false, // No pagination when filtering by IDs
-    };
-  }
-
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
-  const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 10;
-  let allProjects = getProjectsFromStore(sort || undefined);
+  const safeLimit = typeof limit === 'number' ? limit : 10;
+
+  // Start with all projects or filter by IDs if provided
+  let allProjects =
+    ids && ids.length > 0
+      ? getProjectsFromStore(sort || undefined, ids)
+      : getProjectsFromStore(sort || undefined);
 
   // Filter by search term
   const filteredBySearchProjects = search
@@ -34,8 +29,18 @@ export async function getProjects({
       )
     : allProjects;
 
-  // Calculate pagination
   const totalCount = filteredBySearchProjects.length;
+
+  // If limit is 0 or negative, return all filtered results without pagination
+  if (safeLimit <= 0) {
+    return {
+      projects: filteredBySearchProjects,
+      totalCount,
+      hasNextPage: false, // No pagination when limit is 0 or negative
+    };
+  }
+
+  // Apply pagination for normal queries or when limit is specified
   const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
   const startIndex = (safePage - 1) * safeLimit;
   const endIndex = startIndex + safeLimit;

@@ -1,6 +1,6 @@
 import { RoleResolvers } from '@/graphql/generated/types';
 
-export const roleGroupsResolver: RoleResolvers['groups'] = async (parent, _args, context) => {
+export const roleGroupsResolver: RoleResolvers['groups'] = async (parent, { scope }, context) => {
   // Get role-group relationships for this role
   const groups = await context.providers.roleGroups.getRoleGroups({ roleId: parent.id });
 
@@ -10,9 +10,11 @@ export const roleGroupsResolver: RoleResolvers['groups'] = async (parent, _args,
     return [];
   }
 
-  // Get groups by IDs (optimized - no need to fetch all groups)
+  // Get all groups with limit -1
   const groupsResult = await context.providers.groups.getGroups({
     ids: groupIds,
+    scope,
+    limit: -1,
   });
 
   return groupsResult.groups;

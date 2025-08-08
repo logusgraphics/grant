@@ -8,6 +8,8 @@ export const organizationProjectProjectResolver: OrganizationProjectResolvers['p
   // Get the project by projectId (optimized - no need to fetch all projects)
   const projectsResult = await context.providers.projects.getProjects({
     ids: [parent.projectId],
+    organizationId: parent.organizationId,
+    limit: -1,
   });
 
   const project = projectsResult.projects[0];

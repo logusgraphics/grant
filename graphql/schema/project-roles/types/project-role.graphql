@@ -17,7 +17,7 @@ type ProjectRole implements Auditable {
   """
   The project associated with this relationship.
   """
-  project: Project
+  project(organizationId: ID!): Project
   """
   The role associated with this relationship.
   """

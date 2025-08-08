@@ -1,13 +1,14 @@
-import { OrganizationResolvers } from '@/graphql/generated/types';
+import { OrganizationResolvers, Tenant } from '@/graphql/generated/types';
 
 export const organizationGroupsResolver: OrganizationResolvers['groups'] = async (
   parent,
   _args,
   context
 ) => {
+  const organizationId = parent.id;
   // Get organization-group relationships for this organization
   const organizationGroups = await context.providers.organizationGroups.getOrganizationGroups({
-    organizationId: parent.id,
+    organizationId,
   });
 
   // Extract group IDs from organization-group relationships
@@ -17,9 +18,14 @@ export const organizationGroupsResolver: OrganizationResolvers['groups'] = async
     return [];
   }
 
-  // Get groups by IDs (optimized - no need to fetch all groups)
+  // Get all groups with limit -1
   const groupsResult = await context.providers.groups.getGroups({
     ids: groupIds,
+    scope: {
+      tenant: Tenant.Organization,
+      id: organizationId,
+    },
+    limit: -1,
   });
 
   return groupsResult.groups;

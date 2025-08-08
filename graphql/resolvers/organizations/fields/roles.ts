@@ -1,13 +1,14 @@
-import { OrganizationResolvers } from '@/graphql/generated/types';
+import { OrganizationResolvers, Tenant } from '@/graphql/generated/types';
 
 export const organizationRolesResolver: OrganizationResolvers['roles'] = async (
   parent,
   _args,
   context
 ) => {
+  const organizationId = parent.id;
   // Get organization-role relationships for this organization
   const organizationRoles = await context.providers.organizationRoles.getOrganizationRoles({
-    organizationId: parent.id,
+    organizationId,
   });
 
   // Extract role IDs from organization-role relationships
@@ -17,9 +18,14 @@ export const organizationRolesResolver: OrganizationResolvers['roles'] = async (
     return [];
   }
 
-  // Get roles by IDs (optimized - no need to fetch all roles)
+  // Get all roles with limit -1
   const rolesResult = await context.providers.roles.getRoles({
     ids: roleIds,
+    scope: {
+      tenant: Tenant.Organization,
+      id: organizationId,
+    },
+    limit: -1,
   });
 
   return rolesResult.roles;

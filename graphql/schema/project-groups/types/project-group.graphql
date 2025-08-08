@@ -17,7 +17,7 @@ type ProjectGroup implements Auditable {
   """
   The project associated with this relationship.
   """
-  project: Project
+  project(organizationId: ID!): Project
   """
   The group associated with this relationship.
   """

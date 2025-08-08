@@ -1,13 +1,18 @@
-import { ProjectGroupResolvers } from '@/graphql/generated/types';
+import { ProjectGroupResolvers, Tenant } from '@/graphql/generated/types';
 
 export const projectGroupGroupResolver: ProjectGroupResolvers['group'] = async (
   parent,
   _args,
   context
 ) => {
-  // Get the group by groupId (optimized - no need to fetch all groups)
+  // Get all groups with limit -1
   const groupsResult = await context.providers.groups.getGroups({
     ids: [parent.groupId],
+    scope: {
+      tenant: Tenant.Project,
+      id: parent.projectId,
+    },
+    limit: -1,
   });
 
   const group = groupsResult.groups[0];

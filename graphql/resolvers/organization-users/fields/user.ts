@@ -1,4 +1,4 @@
-import { OrganizationUserResolvers } from '@/graphql/generated/types';
+import { OrganizationUserResolvers, Tenant } from '@/graphql/generated/types';
 
 export const organizationUserUserResolver: OrganizationUserResolvers['user'] = async (
   parent,
@@ -8,6 +8,11 @@ export const organizationUserUserResolver: OrganizationUserResolvers['user'] = a
   // Get the user by userId (optimized - no need to fetch all users)
   const usersResult = await context.providers.users.getUsers({
     ids: [parent.userId],
+    scope: {
+      tenant: Tenant.Organization,
+      id: parent.organizationId,
+    },
+    limit: -1,
   });
 
   const user = usersResult.users[0];

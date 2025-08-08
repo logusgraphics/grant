@@ -17,7 +17,7 @@ type ProjectPermission implements Auditable {
   """
   The project associated with this relationship.
   """
-  project: Project
+  project(organizationId: ID!): Project
   """
   The permission associated with this relationship.
   """

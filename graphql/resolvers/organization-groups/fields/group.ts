@@ -1,4 +1,4 @@
-import { OrganizationGroupResolvers } from '@/graphql/generated/types';
+import { OrganizationGroupResolvers, Tenant } from '@/graphql/generated/types';
 
 export const organizationGroupGroupResolver: OrganizationGroupResolvers['group'] = async (
   parent,
@@ -8,6 +8,11 @@ export const organizationGroupGroupResolver: OrganizationGroupResolvers['group']
   // Get the group by groupId (optimized - no need to fetch all groups)
   const groupsResult = await context.providers.groups.getGroups({
     ids: [parent.groupId],
+    scope: {
+      tenant: Tenant.Organization,
+      id: parent.organizationId,
+    },
+    limit: -1,
   });
 
   const group = groupsResult.groups[0];

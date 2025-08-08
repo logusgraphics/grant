@@ -2,11 +2,13 @@ import { GroupPermissionResolvers } from '@/graphql/generated/types';
 
 export const groupPermissionPermissionResolver: GroupPermissionResolvers['permission'] = async (
   parent,
-  _args,
+  { scope },
   context
 ) => {
   const permissionsResult = await context.providers.permissions.getPermissions({
     ids: [parent.permissionId],
+    scope,
+    limit: -1,
   });
 
   const permission = permissionsResult.permissions[0];

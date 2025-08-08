@@ -1,10 +1,15 @@
-import { OrganizationPermissionResolvers } from '@/graphql/generated/types';
+import { OrganizationPermissionResolvers, Tenant } from '@/graphql/generated/types';
 
 export const organizationPermissionPermissionResolver: OrganizationPermissionResolvers['permission'] =
   async (parent, _args, context) => {
     // Get the permission by permissionId (optimized - no need to fetch all permissions)
     const permissionsResult = await context.providers.permissions.getPermissions({
       ids: [parent.permissionId],
+      scope: {
+        tenant: Tenant.Organization,
+        id: parent.organizationId,
+      },
+      limit: -1,
     });
 
     const permission = permissionsResult.permissions[0];

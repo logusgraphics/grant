@@ -2,12 +2,14 @@ import { RoleGroupResolvers } from '@/graphql/generated/types';
 
 export const roleGroupGroupResolver: RoleGroupResolvers['group'] = async (
   parent,
-  _args,
+  { scope },
   context
 ) => {
-  // Get the group by groupId (optimized - no need to fetch all groups)
+  // Get all groups with limit -1
   const groupsResult = await context.providers.groups.getGroups({
     ids: [parent.groupId],
+    scope,
+    limit: -1,
   });
 
   const group = groupsResult.groups[0];

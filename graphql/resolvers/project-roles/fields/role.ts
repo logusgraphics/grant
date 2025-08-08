@@ -1,4 +1,4 @@
-import { ProjectRoleResolvers } from '@/graphql/generated/types';
+import { ProjectRoleResolvers, Tenant } from '@/graphql/generated/types';
 
 export const projectRoleRoleResolver: ProjectRoleResolvers['role'] = async (
   parent,
@@ -8,6 +8,11 @@ export const projectRoleRoleResolver: ProjectRoleResolvers['role'] = async (
   // Get the role by roleId (optimized - no need to fetch all roles)
   const rolesResult = await context.providers.roles.getRoles({
     ids: [parent.roleId],
+    scope: {
+      tenant: Tenant.Project,
+      id: parent.projectId,
+    },
+    limit: -1,
   });
 
   const role = rolesResult.roles[0];

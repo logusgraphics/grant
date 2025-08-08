@@ -5,10 +5,11 @@ export const organizationProjectsResolver: OrganizationResolvers['projects'] = a
   _args,
   context
 ) => {
+  const organizationId = parent.id;
   // Get organization-project relationships for this organization
   const organizationProjects = await context.providers.organizationProjects.getOrganizationProjects(
     {
-      organizationId: parent.id,
+      organizationId,
     }
   );
 
@@ -19,9 +20,11 @@ export const organizationProjectsResolver: OrganizationResolvers['projects'] = a
     return [];
   }
 
-  // Get projects by IDs (optimized - no need to fetch all projects)
+  // Get all projects with limit -1
   const projectsResult = await context.providers.projects.getProjects({
     ids: projectIds,
+    organizationId,
+    limit: -1,
   });
 
   return projectsResult.projects;

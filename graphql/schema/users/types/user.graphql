@@ -17,7 +17,7 @@ type User implements Auditable {
   """
   List of roles assigned to the user.
   """
-  roles: [Role!]
+  roles(scope: Scope!): [Role!]
   """
   List of tags assigned to the user.
   """

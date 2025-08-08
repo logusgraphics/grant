@@ -17,11 +17,11 @@ type GroupPermission implements Auditable {
   """
   The group associated with this relationship.
   """
-  group: Group
+  group(scope: Scope!): Group
   """
   The permission associated with this relationship.
   """
-  permission: Permission
+  permission(scope: Scope!): Permission
   """
   Timestamp when the group-permission relationship was created.
   """

@@ -1,8 +1,12 @@
 extend type Query {
   """
-  Get a paginated list of projects.
+  Get a paginated list of projects within an organization.
   """
   projects(
+    """
+    The organization ID to scope the projects to.
+    """
+    organizationId: ID!
     """
     Page number (1-based).
     """

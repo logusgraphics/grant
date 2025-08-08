@@ -17,11 +17,11 @@ type RoleGroup implements Auditable {
   """
   The group associated with this relationship.
   """
-  group: Group
+  group(scope: Scope!): Group
   """
   The role associated with this relationship.
   """
-  role: Role
+  role(scope: Scope!): Role
   """
   Timestamp when the role-group relationship was created.
   """

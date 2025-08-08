@@ -1,13 +1,19 @@
-import { ProjectUserResolvers } from '@/graphql/generated/types';
+import { ProjectUserResolvers, Tenant } from '@/graphql/generated/types';
 
 export const projectUserUserResolver: ProjectUserResolvers['user'] = async (
   parent,
   _args,
   context
 ) => {
-  // Get the user by userId (optimized - no need to fetch all users)
+  const projectId = parent.id;
+  // Get all users with limit -1
   const usersResult = await context.providers.users.getUsers({
     ids: [parent.userId],
+    scope: {
+      tenant: Tenant.Project,
+      id: projectId,
+    },
+    limit: -1,
   });
 
   const user = usersResult.users[0];

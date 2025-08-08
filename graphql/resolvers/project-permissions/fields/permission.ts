@@ -1,4 +1,4 @@
-import { ProjectPermissionResolvers } from '@/graphql/generated/types';
+import { ProjectPermissionResolvers, Tenant } from '@/graphql/generated/types';
 
 export const projectPermissionPermissionResolver: ProjectPermissionResolvers['permission'] = async (
   parent,
@@ -8,6 +8,11 @@ export const projectPermissionPermissionResolver: ProjectPermissionResolvers['pe
   // Get the permission by permissionId (optimized - no need to fetch all permissions)
   const permissionsResult = await context.providers.permissions.getPermissions({
     ids: [parent.permissionId],
+    scope: {
+      tenant: Tenant.Project,
+      id: parent.projectId,
+    },
+    limit: -1,
   });
 
   const permission = permissionsResult.permissions[0];
