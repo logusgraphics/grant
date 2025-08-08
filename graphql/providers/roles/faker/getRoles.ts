@@ -14,22 +14,14 @@ export async function getRoles({
   ids,
   tagIds,
 }: GetRolesParams): Promise<GetRolesResult> {
-  // If ids are provided and not empty, ignore pagination and return filtered results
-  if (ids && ids.length > 0) {
-    const filteredRoles = getRolesFromDataStore(sort || DEFAULT_SORT, ids);
-
-    return {
-      roles: filteredRoles.map((role) => ({ ...role, groups: [] })),
-      totalCount: filteredRoles.length,
-      hasNextPage: false, // No pagination when filtering by IDs
-    };
-  }
-
-  // Ensure page and limit are always numbers
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
   const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
 
-  let allRoles = getRolesFromDataStore(sort || DEFAULT_SORT);
+  // Start with all roles or filter by IDs if provided
+  let allRoles =
+    ids && ids.length > 0
+      ? getRolesFromDataStore(sort || DEFAULT_SORT, ids)
+      : getRolesFromDataStore(sort || DEFAULT_SORT);
 
   // Filter by tag IDs if provided
   if (tagIds && tagIds.length > 0) {
@@ -44,24 +36,33 @@ export async function getRoles({
   }
 
   // Filter by search (same logic as user provider)
-  if (search) {
-    const lowerSearch = search.toLowerCase();
-    allRoles = allRoles.filter((role) =>
-      SEARCHABLE_FIELDS.some((field) =>
-        (role[field] ? String(role[field]).toLowerCase() : '').includes(lowerSearch)
+  const filteredBySearchRoles = search
+    ? allRoles.filter((role) =>
+        SEARCHABLE_FIELDS.some((field) =>
+          (role[field] ? String(role[field]).toLowerCase() : '').includes(search.toLowerCase())
+        )
       )
-    );
+    : allRoles;
+
+  const totalCount = filteredBySearchRoles.length;
+
+  // If IDs were provided, return all filtered results without pagination
+  if (ids && ids.length > 0) {
+    return {
+      roles: filteredBySearchRoles,
+      totalCount,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
   }
 
-  // Pagination
-  const totalCount = allRoles.length;
+  // Apply pagination for normal queries
+  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
   const startIndex = (safePage - 1) * safeLimit;
   const endIndex = startIndex + safeLimit;
-  const roles = allRoles.slice(startIndex, endIndex);
-  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
+  const roles = filteredBySearchRoles.slice(startIndex, endIndex);
 
   return {
-    roles: roles.map((role) => ({ ...role, groups: [] })),
+    roles,
     totalCount,
     hasNextPage,
   };

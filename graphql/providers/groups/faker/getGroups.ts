@@ -1,4 +1,4 @@
-import { GroupSortableField, GroupSortOrder, Group } from '@/graphql/generated/types';
+import { GroupSortableField, GroupSortOrder } from '@/graphql/generated/types';
 import { getGroupTagsByTagId } from '@/graphql/providers/group-tags/faker/dataStore';
 import { getGroups as getGroupsFromDataStore } from '@/graphql/providers/groups/faker/dataStore';
 import { GetGroupsParams, GetGroupsResult } from '@/graphql/providers/groups/types';
@@ -14,19 +14,14 @@ export async function getGroups({
   ids,
   tagIds,
 }: GetGroupsParams): Promise<GetGroupsResult> {
-  // If ids are provided and not empty, ignore pagination and return filtered results
-  if (ids && ids.length > 0) {
-    const filteredGroups = getGroupsFromDataStore(sort || DEFAULT_SORT, ids);
-    return {
-      groups: filteredGroups as Group[],
-      totalCount: filteredGroups.length,
-      hasNextPage: false, // No pagination when filtering by IDs
-    };
-  }
-
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
   const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
-  let allGroups = getGroupsFromDataStore(sort || DEFAULT_SORT);
+
+  // Start with all groups or filter by IDs if provided
+  let allGroups =
+    ids && ids.length > 0
+      ? getGroupsFromDataStore(sort || DEFAULT_SORT, ids)
+      : getGroupsFromDataStore(sort || DEFAULT_SORT);
 
   // Filter by tag IDs if provided
   if (tagIds && tagIds.length > 0) {
@@ -47,14 +42,26 @@ export async function getGroups({
         )
       )
     : allGroups;
+
   const totalCount = filteredBySearchGroups.length;
+
+  // If IDs were provided, return all filtered results without pagination
+  if (ids && ids.length > 0) {
+    return {
+      groups: filteredBySearchGroups,
+      totalCount,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
+  }
+
+  // Apply pagination for normal queries
   const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
   const startIndex = (safePage - 1) * safeLimit;
   const endIndex = startIndex + safeLimit;
   const groups = filteredBySearchGroups.slice(startIndex, endIndex);
 
   return {
-    groups: groups as Group[],
+    groups,
     totalCount,
     hasNextPage,
   };

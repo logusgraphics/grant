@@ -1,8 +1,12 @@
 extend type Query {
   """
-  Retrieves a paginated list of permissions.
+  Retrieves a paginated list of permissions within the specified scope.
   """
   permissions(
+    """
+    The scope (organization or project) to query permissions within.
+    """
+    scope: Scope!
     """
     Page number (1-based).
     """
@@ -12,7 +16,7 @@ extend type Query {
     """
     limit: Int
     """
-    Search term to filter permissions by name or description.
+    Search term to filter permissions by name or action.
     """
     search: String
     """

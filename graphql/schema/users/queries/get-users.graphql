@@ -1,8 +1,12 @@
 extend type Query {
   """
-  Retrieves a paginated list of users.
+  Retrieves a paginated list of users within the specified scope.
   """
   users(
+    """
+    The scope (organization or project) to query users within.
+    """
+    scope: Scope!
     """
     Page number (1-based).
     """

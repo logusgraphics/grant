@@ -1,8 +1,4 @@
-import {
-  PermissionSortableField,
-  PermissionSortOrder,
-  Permission,
-} from '@/graphql/generated/types';
+import { PermissionSortableField, PermissionSortOrder } from '@/graphql/generated/types';
 import { getPermissionTagsByTagId } from '@/graphql/providers/permission-tags/faker/dataStore';
 import { getPermissions as getPermissionsFromDataStore } from '@/graphql/providers/permissions/faker/dataStore';
 import { GetPermissionsParams, GetPermissionsResult } from '@/graphql/providers/permissions/types';
@@ -18,19 +14,14 @@ export async function getPermissions({
   ids,
   tagIds,
 }: GetPermissionsParams): Promise<GetPermissionsResult> {
-  // If ids are provided and not empty, ignore pagination and return filtered results
-  if (ids && ids.length > 0) {
-    const filteredPermissions = getPermissionsFromDataStore(sort || DEFAULT_SORT, ids);
-    return {
-      permissions: filteredPermissions as Permission[],
-      totalCount: filteredPermissions.length,
-      hasNextPage: false, // No pagination when filtering by IDs
-    };
-  }
-
   const safePage = typeof page === 'number' && page > 0 ? page : 1;
   const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
-  let allPermissions = getPermissionsFromDataStore(sort || DEFAULT_SORT);
+
+  // Start with all permissions or filter by IDs if provided
+  let allPermissions =
+    ids && ids.length > 0
+      ? getPermissionsFromDataStore(sort || DEFAULT_SORT, ids)
+      : getPermissionsFromDataStore(sort || DEFAULT_SORT);
 
   // Filter by tag IDs if provided
   if (tagIds && tagIds.length > 0) {
@@ -59,14 +50,26 @@ export async function getPermissions({
         )
       )
     : allPermissions;
+
   const totalCount = filteredBySearchPermissions.length;
+
+  // If IDs were provided, return all filtered results without pagination
+  if (ids && ids.length > 0) {
+    return {
+      permissions: filteredBySearchPermissions,
+      totalCount,
+      hasNextPage: false, // No pagination when filtering by IDs
+    };
+  }
+
+  // Apply pagination for normal queries
   const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
   const startIndex = (safePage - 1) * safeLimit;
   const endIndex = startIndex + safeLimit;
   const permissions = filteredBySearchPermissions.slice(startIndex, endIndex);
 
   return {
-    permissions: permissions as Permission[],
+    permissions,
     totalCount,
     hasNextPage,
   };
