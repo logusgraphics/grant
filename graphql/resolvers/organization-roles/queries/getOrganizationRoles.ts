@@ -8,5 +8,5 @@ export const getOrganizationRolesResolver: QueryResolvers['organizationRoles'] =
   const organizationRoles = await context.providers.organizationRoles.getOrganizationRoles({
     organizationId,
   });
-  return organizationRoles.organizationRoles;
+  return organizationRoles;
 };

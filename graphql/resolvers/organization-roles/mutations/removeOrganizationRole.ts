@@ -5,6 +5,6 @@ export const removeOrganizationRoleResolver: MutationResolvers['removeOrganizati
   { input },
   context
 ) => {
-  const success = await context.providers.organizationRoles.removeOrganizationRole(input);
+  const success = await context.providers.organizationRoles.removeOrganizationRole({ input });
   return success;
 };

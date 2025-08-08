@@ -5,6 +5,6 @@ export const addOrganizationRoleResolver: MutationResolvers['addOrganizationRole
   { input },
   context
 ) => {
-  const organizationRole = await context.providers.organizationRoles.addOrganizationRole(input);
+  const organizationRole = await context.providers.organizationRoles.addOrganizationRole({ input });
   return organizationRole;
 };
