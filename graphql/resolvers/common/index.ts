@@ -31,3 +31,10 @@ export {
   createOrganizationGroupFieldResolver,
   createProjectGroupFieldResolver,
 } from './group';
+
+// Common tag field resolvers
+export {
+  createTagFieldResolver,
+  createOrganizationTagFieldResolver,
+  createProjectTagFieldResolver,
+} from './tag';

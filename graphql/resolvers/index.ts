@@ -16,6 +16,7 @@ import { Permission } from '@/graphql/resolvers/permissions/fields';
 import { ProjectGroup } from '@/graphql/resolvers/project-groups/fields';
 import { ProjectPermission } from '@/graphql/resolvers/project-permissions/fields';
 import { ProjectRole } from '@/graphql/resolvers/project-roles/fields';
+import { ProjectTag } from '@/graphql/resolvers/project-tags/fields';
 import { ProjectUser } from '@/graphql/resolvers/project-users/fields';
 import { Project } from '@/graphql/resolvers/projects/fields';
 import { Query } from '@/graphql/resolvers/queries';
@@ -56,5 +57,6 @@ export const schema = makeExecutableSchema({
     ProjectPermission,
     ProjectUser,
     Tag,
+    ProjectTag,
   },
 });

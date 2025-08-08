@@ -12,6 +12,7 @@ import * as permissionQueries from './permissions/queries';
 import * as projectGroupQueries from './project-groups/queries';
 import * as projectPermissionQueries from './project-permissions/queries';
 import * as projectRoleQueries from './project-roles/queries';
+import * as projectTagQueries from './project-tags/queries';
 import * as projectUserQueries from './project-users/queries';
 import * as projectQueries from './projects/queries';
 import * as roleGroupQueries from './role-groups/queries';
@@ -47,4 +48,5 @@ export const Query = {
   projectGroups: projectGroupQueries.projectGroups,
   projectPermissions: projectPermissionQueries.projectPermissions,
   projectUsers: projectUserQueries.projectUsers,
+  projectTags: projectTagQueries.projectTags,
 } as const;

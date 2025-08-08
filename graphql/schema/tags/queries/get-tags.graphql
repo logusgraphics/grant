@@ -4,6 +4,10 @@ extend type Query {
   """
   tags(
     """
+    The scope (organization or project) to query tags within.
+    """
+    scope: Scope!
+    """
     Page number (1-based).
     """
     page: Int

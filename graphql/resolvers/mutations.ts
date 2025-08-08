@@ -13,6 +13,7 @@ import * as permissionMutations from './permissions/mutations';
 import * as projectGroupMutations from './project-groups/mutations';
 import * as projectPermissionMutations from './project-permissions/mutations';
 import * as projectRoleMutations from './project-roles/mutations';
+import * as projectTagMutations from './project-tags/mutations';
 import * as projectUserMutations from './project-users/mutations';
 import * as projectMutations from './projects/mutations';
 import * as roleGroupMutations from './role-groups/mutations';
@@ -78,4 +79,6 @@ export const Mutation = {
   removeProjectPermission: projectPermissionMutations.removeProjectPermission,
   addProjectUser: projectUserMutations.addProjectUser,
   removeProjectUser: projectUserMutations.removeProjectUser,
+  addProjectTag: projectTagMutations.addProjectTag,
+  removeProjectTag: projectTagMutations.removeProjectTag,
 } as const;

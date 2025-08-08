@@ -31,6 +31,8 @@ import { projectPermissionFakerProvider } from './providers/project-permissions/
 import { ProjectPermissionDataProvider } from './providers/project-permissions/types';
 import { projectRoleFakerProvider } from './providers/project-roles/faker';
 import { ProjectRoleDataProvider } from './providers/project-roles/types';
+import { projectTagFakerProvider } from './providers/project-tags/faker';
+import { ProjectTagDataProvider } from './providers/project-tags/types';
 import { projectUserFakerProvider } from './providers/project-users/faker';
 import { ProjectUserDataProvider } from './providers/project-users/types';
 import { projectFakerProvider } from './providers/projects/faker';
@@ -64,6 +66,7 @@ export interface ModuleProviders {
   projectGroups: ProjectGroupDataProvider;
   projectPermissions: ProjectPermissionDataProvider;
   projectUsers: ProjectUserDataProvider;
+  projectTags: ProjectTagDataProvider;
   permissions: PermissionDataProvider;
   userRoles: UserRoleDataProvider;
   roleGroups: RoleGroupDataProvider;
@@ -98,6 +101,7 @@ export const graphqlConfig: GraphQLConfig = {
     projectGroups: projectGroupFakerProvider,
     projectPermissions: projectPermissionFakerProvider,
     projectUsers: projectUserFakerProvider,
+    projectTags: projectTagFakerProvider,
     permissions: permissionFakerProvider,
     userRoles: userRoleFakerProvider,
     roleGroups: roleGroupFakerProvider,

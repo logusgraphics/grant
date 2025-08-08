@@ -21,7 +21,7 @@ type Group implements Auditable {
   """
   List of tags assigned to the group.
   """
-  tags: [Tag!]
+  tags(scope: Scope!): [Tag!]
   """
   Timestamp when the group was created.
   """

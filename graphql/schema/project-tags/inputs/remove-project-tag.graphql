@@ -1,0 +1,13 @@
+"""
+Input type for removing a project-tag relationship.
+"""
+input RemoveProjectTagInput {
+  """
+  ID of the project.
+  """
+  projectId: ID!
+  """
+  ID of the tag.
+  """
+  tagId: ID!
+} 

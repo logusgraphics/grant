@@ -9,39 +9,41 @@ const DEFAULT_SORT = { field: TagSortField.Name, direction: SortDirection.Asc };
 export const getTags = async (params: GetTagsParams): Promise<GetTagsResult> => {
   const { page = 1, limit = 50, sort, search, ids } = params;
 
-  // If ids are provided and not empty, ignore pagination and return filtered results
-  if (ids && ids.length > 0) {
-    const filteredTags = getTagsFromStore(sort || DEFAULT_SORT, ids);
+  // Ensure page and limit are always numbers
+  const safePage = typeof page === 'number' && page > 0 ? page : 1;
+  const safeLimit = typeof limit === 'number' ? limit : 50;
 
+  // Start with all tags or filter by IDs if provided
+  let allTags =
+    ids && ids.length > 0
+      ? getTagsFromStore(sort || DEFAULT_SORT, ids)
+      : getTagsFromStore(sort || DEFAULT_SORT);
+
+  // Filter by search (same logic as roles provider)
+  const filteredBySearchTags = search
+    ? allTags.filter((tag) =>
+        SEARCHABLE_FIELDS.some((field) =>
+          (tag[field] ? String(tag[field]).toLowerCase() : '').includes(search.toLowerCase())
+        )
+      )
+    : allTags;
+
+  const totalCount = filteredBySearchTags.length;
+
+  // If limit is 0 or negative, return all filtered results without pagination
+  if (safeLimit <= 0) {
     return {
-      tags: filteredTags,
-      totalCount: filteredTags.length,
-      hasNextPage: false, // No pagination when filtering by IDs
+      tags: filteredBySearchTags,
+      totalCount,
+      hasNextPage: false, // No pagination when limit is 0 or negative
     };
   }
 
-  // Ensure page and limit are always numbers
-  const safePage = typeof page === 'number' && page > 0 ? page : 1;
-  const safeLimit = typeof limit === 'number' && limit > 0 ? limit : 50;
-
-  let allTags = getTagsFromStore(sort || DEFAULT_SORT);
-
-  // Filter by search
-  if (search) {
-    const lowerSearch = search.toLowerCase();
-    allTags = allTags.filter((tag) =>
-      SEARCHABLE_FIELDS.some((field) =>
-        (tag[field] ? String(tag[field]).toLowerCase() : '').includes(lowerSearch)
-      )
-    );
-  }
-
-  // Pagination
-  const totalCount = allTags.length;
+  // Apply pagination for normal queries or when limit is specified
+  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
   const startIndex = (safePage - 1) * safeLimit;
   const endIndex = startIndex + safeLimit;
-  const tags = allTags.slice(startIndex, endIndex);
-  const hasNextPage = safePage < Math.ceil(totalCount / safeLimit);
+  const tags = filteredBySearchTags.slice(startIndex, endIndex);
 
   return {
     tags,

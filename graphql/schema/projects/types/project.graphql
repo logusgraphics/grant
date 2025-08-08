@@ -35,6 +35,10 @@ type Project implements Auditable {
   """
   users: [User!]
   """
+  Project tags.
+  """
+  tags: [Tag!]
+  """
   Timestamp when the project was created.
   """
   createdAt: String!

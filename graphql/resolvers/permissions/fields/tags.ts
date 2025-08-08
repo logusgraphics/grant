@@ -2,7 +2,7 @@ import { PermissionResolvers } from '@/graphql/generated/types';
 
 export const permissionTagsResolver: PermissionResolvers['tags'] = async (
   parent: any,
-  _args: any,
+  { scope },
   context: any
 ) => {
   // Get permission-tag relationships for this permission
@@ -17,9 +17,11 @@ export const permissionTagsResolver: PermissionResolvers['tags'] = async (
     return [];
   }
 
-  // Get tags by IDs (optimized - no need to fetch all tags)
+  // Get tags by IDs with scope (optimized - no need to fetch all tags)
   const tagsResult = await context.providers.tags.getTags({
     ids: tagIds,
+    scope,
+    limit: -1,
   });
 
   return tagsResult.tags;

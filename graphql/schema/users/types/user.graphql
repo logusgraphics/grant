@@ -21,7 +21,7 @@ type User implements Auditable {
   """
   List of tags assigned to the user.
   """
-  tags: [Tag!]
+  tags(scope: Scope!): [Tag!]
   """
   Timestamp when the user was created.
   """

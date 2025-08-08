@@ -21,7 +21,7 @@ type Permission implements Auditable {
   """
   Tags associated with the permission.
   """
-  tags: [Tag!]
+  tags(scope: Scope!): [Tag!]
   """
   Timestamp when the permission was created.
   """
