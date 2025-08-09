@@ -653,6 +653,114 @@
       }
     }
   },
+  "projects": {
+    "title": "Projekte",
+    "description": "Verwalten Sie Ihre Projekte",
+    "empty": {
+      "title": "Keine Projekte gefunden",
+      "description": "Erstellen Sie Ihr erstes Projekt"
+    },
+    "noSearchResults": {
+      "title": "Keine Projekte gefunden",
+      "description": "Versuchen Sie, Ihre Suchbegriffe anzupassen oder erstellen Sie ein neues Projekt"
+    },
+    "actions": {
+      "create": "Projekt erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "view": "Projekt anzeigen",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert..."
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "name": "Name",
+      "createdAt": "Erstellungsdatum",
+      "updatedAt": "Aktualisierungsdatum",
+      "default": "Standard"
+    },
+    "limit": {
+      "label": "Einträge pro Seite"
+    },
+    "search": {
+      "placeholder": "Projekte suchen..."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Projektname eingeben",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Projektbeschreibung eingeben",
+      "roles": "Rollen",
+      "tags": "Tags",
+      "validation": {
+        "nameRequired": "Projektname ist erforderlich"
+      }
+    },
+    "createDialog": {
+      "title": "Neues Projekt erstellen",
+      "description": "Fügen Sie ein neues Projekt zum System hinzu",
+      "trigger": "Projekt erstellen",
+      "confirm": "Projekt erstellen",
+      "cancel": "Abbrechen",
+      "submitting": "Wird erstellt..."
+    },
+    "editDialog": {
+      "title": "Projekt bearbeiten",
+      "description": "Projektinformationen aktualisieren",
+      "confirm": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert..."
+    },
+    "deleteDialog": {
+      "title": "Projekt löschen",
+      "description": "Sind Sie sicher, dass Sie {name} löschen möchten?",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen",
+      "deleting": "Wird gelöscht..."
+    },
+    "notifications": {
+      "createSuccess": "Projekt erstellt",
+      "createError": "Projekt konnte nicht erstellt werden",
+      "updateSuccess": "Projekt aktualisiert",
+      "updateError": "Projekt konnte nicht aktualisiert werden",
+      "deleteSuccess": "Projekt gelöscht",
+      "deleteError": "Projekt konnte nicht gelöscht werden"
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "description": "Beschreibung",
+      "noDescription": "Keine Beschreibung",
+      "roles": "Rollen",
+      "tags": "Tags",
+      "audit": "Audit",
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
+      "actions": "Aktionen",
+      "loading": "Projekte werden geladen..."
+    },
+    "card": {
+      "noDescription": "Keine Beschreibung"
+    },
+    "toolbar": {
+      "title": "Projektverwaltung",
+      "tags": {
+        "title": "Nach Tags filtern",
+        "placeholder": "Tags auswählen",
+        "selected": "{count} ausgewählt",
+        "clearAll": "Alle löschen",
+        "loading": "Tags werden geladen..."
+      }
+    },
+    "audit": {
+      "created": "Erstellt",
+      "updated": "Aktualisiert"
+    }
+  },
   "organization": {
     "projects": {
       "title": "Projekte",
@@ -678,7 +786,9 @@
         "name": "Name",
         "default": "Standard"
       },
-      "limit": "Einträge pro Seite",
+      "limit": {
+        "label": "Einträge pro Seite"
+      },
       "search": {
         "placeholder": "Projekte suchen..."
       },

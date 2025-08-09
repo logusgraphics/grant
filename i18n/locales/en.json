@@ -581,6 +581,7 @@
       "create": "Create Organization",
       "edit": "Edit",
       "delete": "Delete",
+      "view": "View Organization",
       "cancel": "Cancel",
       "updating": "Updating...",
       "label": "Show/Hide Actions"
@@ -588,6 +589,8 @@
     "sort": {
       "label": "Sort by",
       "name": "Name",
+      "createdAt": "Created Date",
+      "updatedAt": "Updated Date",
       "default": "Default"
     },
     "limit": "Items per page",
@@ -597,6 +600,8 @@
     "form": {
       "name": "Name",
       "description": "Description",
+      "roles": "Roles",
+      "tags": "Tags",
       "validation": {
         "nameRequired": "Organization name is required"
       }
@@ -612,6 +617,7 @@
       "title": "Edit Organization",
       "description": "Update organization information",
       "confirm": "Save Changes",
+      "cancel": "Cancel",
       "updating": "Updating..."
     },
     "deleteDialog": {
@@ -636,6 +642,9 @@
     "table": {
       "id": "ID",
       "name": "Name",
+      "slug": "Slug",
+      "roles": "Roles",
+      "tags": "Tags",
       "description": "Description",
       "audit": "Audit",
       "created": "Created",
@@ -651,6 +660,114 @@
         "clearAll": "Clear all",
         "loading": "Loading tags..."
       }
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "Manage your projects",
+    "empty": {
+      "title": "No projects found",
+      "description": "Get started by creating your first project"
+    },
+    "noSearchResults": {
+      "title": "No projects found",
+      "description": "Try adjusting your search terms or create a new project"
+    },
+    "actions": {
+      "create": "Create Project",
+      "edit": "Edit",
+      "delete": "Delete",
+      "view": "View Project",
+      "cancel": "Cancel",
+      "updating": "Updating..."
+    },
+    "sort": {
+      "label": "Sort by",
+      "name": "Name",
+      "createdAt": "Created Date",
+      "updatedAt": "Updated Date",
+      "default": "Default"
+    },
+    "limit": {
+      "label": "Items per page"
+    },
+    "search": {
+      "placeholder": "Search projects..."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Enter project name",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter project description",
+      "roles": "Roles",
+      "tags": "Tags",
+      "validation": {
+        "nameRequired": "Project name is required"
+      }
+    },
+    "createDialog": {
+      "title": "Create New Project",
+      "description": "Add a new project to the system",
+      "trigger": "Create Project",
+      "confirm": "Create Project",
+      "cancel": "Cancel",
+      "submitting": "Creating..."
+    },
+    "editDialog": {
+      "title": "Edit Project",
+      "description": "Update project information",
+      "confirm": "Save Changes",
+      "cancel": "Cancel",
+      "updating": "Updating..."
+    },
+    "deleteDialog": {
+      "title": "Delete Project",
+      "description": "Are you sure you want to delete {name}?",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    },
+    "notifications": {
+      "createSuccess": "Project created",
+      "createError": "Failed to create project",
+      "updateSuccess": "Project updated",
+      "updateError": "Failed to update project",
+      "deleteSuccess": "Project deleted",
+      "deleteError": "Failed to delete project"
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "description": "Description",
+      "noDescription": "No description",
+      "roles": "Roles",
+      "tags": "Tags",
+      "audit": "Audit",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "loading": "Loading projects..."
+    },
+    "card": {
+      "noDescription": "No description"
+    },
+    "toolbar": {
+      "title": "Project Management",
+      "tags": {
+        "title": "Filter by Tags",
+        "placeholder": "Select tags",
+        "selected": "{count} selected",
+        "clearAll": "Clear all",
+        "loading": "Loading tags..."
+      }
+    },
+    "audit": {
+      "created": "Created",
+      "updated": "Updated"
     }
   },
   "organization": {

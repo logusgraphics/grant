@@ -1,0 +1,154 @@
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+
+import { OrganizationView } from '@/components/features/organizations/OrganizationViewSwitcher';
+import {
+  OrganizationSortableField,
+  OrganizationSortOrder,
+  Organization,
+} from '@/graphql/generated/types';
+
+interface OrganizationsState {
+  // State
+  page: number;
+  limit: number;
+  search: string;
+  sort: { field: OrganizationSortableField; order: OrganizationSortOrder };
+  view: OrganizationView;
+  selectedTagIds: string[];
+  totalCount: number;
+  isInitialized: boolean;
+
+  // Selected organization
+  selectedOrganizationId: string | null;
+
+  // Data state
+  organizations: Organization[];
+  loading: boolean;
+
+  // Dialog state
+  organizationToDelete: { id: string; name: string } | null;
+  organizationToEdit: Organization | null;
+  isCreateDialogOpen: boolean;
+
+  // Actions
+  setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
+  setSearch: (search: string) => void;
+  setSort: (field: OrganizationSortableField, order: OrganizationSortOrder) => void;
+  setView: (view: OrganizationView) => void;
+  setSelectedTagIds: (tagIds: string[]) => void;
+  setTotalCount: (count: number) => void;
+  setOrganizations: (organizations: Organization[]) => void;
+  setLoading: (loading: boolean) => void;
+  setSelectedOrganizationId: (organizationId: string | null) => void;
+  resetToDefaults: () => void;
+  initializeFromUrl: (params: URLSearchParams) => void;
+
+  // Dialog actions
+  setOrganizationToDelete: (organization: { id: string; name: string } | null) => void;
+  setOrganizationToEdit: (organization: Organization | null) => void;
+  setCreateDialogOpen: (open: boolean) => void;
+}
+
+const defaultSort = { field: OrganizationSortableField.Name, order: OrganizationSortOrder.Asc };
+
+export const useOrganizationsStore = create<OrganizationsState>()(
+  devtools(
+    (set, get) => ({
+      // Initial state
+      page: 1,
+      limit: 50,
+      search: '',
+      sort: defaultSort,
+      view: OrganizationView.CARD,
+      selectedTagIds: [],
+      totalCount: 0,
+      isInitialized: false,
+
+      // Selected organization - initialize from localStorage
+      selectedOrganizationId:
+        typeof window !== 'undefined' ? localStorage.getItem('selectedOrganizationId') : null,
+
+      // Data state
+      organizations: [],
+      loading: false,
+
+      // Dialog state
+      organizationToDelete: null,
+      organizationToEdit: null,
+      isCreateDialogOpen: false,
+
+      // Actions
+      setPage: (page) => set({ page }),
+      setLimit: (limit) => set({ limit, page: 1 }),
+      setSearch: (search) => set({ search, page: 1 }),
+      setSort: (field, order) => set({ sort: { field, order }, page: 1 }),
+      setView: (view) => set({ view }),
+      setSelectedTagIds: (tagIds) => set({ selectedTagIds: tagIds, page: 1 }),
+      setTotalCount: (totalCount) => set({ totalCount }),
+      setOrganizations: (organizations) => set({ organizations }),
+      setLoading: (loading) => set({ loading }),
+      setSelectedOrganizationId: (organizationId) => {
+        set({ selectedOrganizationId: organizationId });
+        // Persist to localStorage
+        if (typeof window !== 'undefined') {
+          if (organizationId) {
+            localStorage.setItem('selectedOrganizationId', organizationId);
+          } else {
+            localStorage.removeItem('selectedOrganizationId');
+          }
+        }
+      },
+      resetToDefaults: () =>
+        set({
+          page: 1,
+          limit: 50,
+          search: '',
+          sort: defaultSort,
+          view: OrganizationView.CARD,
+          selectedTagIds: [],
+          totalCount: 0,
+          isInitialized: false,
+          selectedOrganizationId: null,
+          organizations: [],
+          loading: false,
+          organizationToDelete: null,
+          organizationToEdit: null,
+          isCreateDialogOpen: false,
+        }),
+      initializeFromUrl: (params) => {
+        const state = get();
+        if (state.isInitialized) return;
+
+        const page = parseInt(params.get('page') || '1');
+        const limit = parseInt(params.get('limit') || '50');
+        const search = params.get('search') || '';
+        const sortField =
+          (params.get('sortField') as OrganizationSortableField) || OrganizationSortableField.Name;
+        const sortOrder =
+          (params.get('sortOrder') as OrganizationSortOrder) || OrganizationSortOrder.Asc;
+        const view = (params.get('view') as OrganizationView) || OrganizationView.CARD;
+        const selectedTagIds = params.get('tagIds')?.split(',').filter(Boolean) || [];
+
+        set({
+          page,
+          limit,
+          search,
+          sort: { field: sortField, order: sortOrder },
+          view,
+          selectedTagIds,
+          isInitialized: true,
+        });
+      },
+
+      // Dialog actions
+      setOrganizationToDelete: (organization) => set({ organizationToDelete: organization }),
+      setOrganizationToEdit: (organization) => set({ organizationToEdit: organization }),
+      setCreateDialogOpen: (open) => set({ isCreateDialogOpen: open }),
+    }),
+    {
+      name: 'organizations-store',
+    }
+  )
+);

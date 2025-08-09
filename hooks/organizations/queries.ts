@@ -1,27 +1,18 @@
 import { gql } from '@apollo/client';
 
-export const GET_PROJECTS = gql`
-  query GetProjects(
-    $organizationId: ID!
+export const GET_ORGANIZATIONS = gql`
+  query GetOrganizations(
     $page: Int
     $limit: Int
-    $sort: ProjectSortInput
+    $sort: OrganizationSortInput
     $search: String
     $ids: [ID!]
   ) {
-    projects(
-      organizationId: $organizationId
-      page: $page
-      limit: $limit
-      sort: $sort
-      search: $search
-      ids: $ids
-    ) {
-      projects {
+    organizations(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
+      organizations {
         id
         name
         slug
-        description
         createdAt
         updatedAt
         tags {

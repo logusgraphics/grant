@@ -87,7 +87,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
   description,
   triggerText,
   confirmText,
-  cancelText = 'actions.cancel',
+  cancelText = 'cancel',
   icon: Icon,
   schema,
   defaultValues,

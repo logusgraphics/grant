@@ -3,55 +3,53 @@ import { useMemo } from 'react';
 import { useQuery, ApolloError } from '@apollo/client';
 
 import {
-  Project,
-  ProjectSortableField,
-  ProjectSortOrder,
-  QueryProjectsArgs,
+  Organization,
+  OrganizationSortableField,
+  OrganizationSortOrder,
+  QueryOrganizationsArgs,
 } from '@/graphql/generated/types';
 
-import { GET_PROJECTS } from './queries';
+import { GET_ORGANIZATIONS } from './queries';
 
-interface UseProjectsResult {
-  projects: Project[];
+interface UseOrganizationsResult {
+  organizations: Organization[];
   loading: boolean;
   error: ApolloError | undefined;
   totalCount: number;
   refetch: () => Promise<any>;
 }
 
-export function useProjects(options: QueryProjectsArgs): UseProjectsResult {
+export function useOrganizations(options: QueryOrganizationsArgs): UseOrganizationsResult {
   const {
-    organizationId,
     page = 1,
     limit = 50, // Default to 50 for pagination
     search = '',
-    sort = { field: ProjectSortableField.Name, order: ProjectSortOrder.Asc },
+    sort = { field: OrganizationSortableField.Name, order: OrganizationSortOrder.Asc },
     ids,
   } = options;
 
   // Memoize variables to prevent unnecessary re-renders
   const variables = useMemo(
     () => ({
-      organizationId,
       page,
       limit,
       search,
       sort,
       ids,
     }),
-    [organizationId, page, limit, search, sort, ids]
+    [page, limit, search, sort, ids]
   );
 
-  const { data, loading, error, refetch } = useQuery(GET_PROJECTS, {
+  const { data, loading, error, refetch } = useQuery(GET_ORGANIZATIONS, {
     variables,
     notifyOnNetworkStatusChange: false, // Prevent re-renders on network status changes
   });
 
   return {
-    projects: data?.projects?.projects || [],
+    organizations: data?.organizations?.organizations || [],
     loading,
     error,
-    totalCount: data?.projects?.totalCount || 0,
+    totalCount: data?.organizations?.totalCount || 0,
     refetch,
   };
 }
