@@ -31,32 +31,47 @@ export const DELETE_ORGANIZATION = gql`
 `;
 
 export const ADD_ORGANIZATION_ROLE = gql`
-  mutation AddOrganizationRole($organizationId: ID!, $roleId: ID!) {
-    addOrganizationRole(organizationId: $organizationId, roleId: $roleId) {
+  mutation AddOrganizationRole($input: AddOrganizationRoleInput!) {
+    addOrganizationRole(input: $input) {
       id
-      name
+      organizationId
+      roleId
+      createdAt
+      updatedAt
+      role {
+        id
+        name
+        description
+      }
     }
   }
 `;
 
 export const REMOVE_ORGANIZATION_ROLE = gql`
-  mutation RemoveOrganizationRole($organizationId: ID!, $roleId: ID!) {
-    removeOrganizationRole(organizationId: $organizationId, roleId: $roleId)
+  mutation RemoveOrganizationRole($input: RemoveOrganizationRoleInput!) {
+    removeOrganizationRole(input: $input)
   }
 `;
 
 export const ADD_ORGANIZATION_TAG = gql`
-  mutation AddOrganizationTag($organizationId: ID!, $tagId: ID!) {
-    addOrganizationTag(organizationId: $organizationId, tagId: $tagId) {
+  mutation AddOrganizationTag($input: AddOrganizationTagInput!) {
+    addOrganizationTag(input: $input) {
       id
-      name
-      color
+      organizationId
+      tagId
+      createdAt
+      updatedAt
+      tag {
+        id
+        name
+        color
+      }
     }
   }
 `;
 
 export const REMOVE_ORGANIZATION_TAG = gql`
-  mutation RemoveOrganizationTag($organizationId: ID!, $tagId: ID!) {
-    removeOrganizationTag(organizationId: $organizationId, tagId: $tagId)
+  mutation RemoveOrganizationTag($input: RemoveOrganizationTagInput!) {
+    removeOrganizationTag(input: $input)
   }
 `;

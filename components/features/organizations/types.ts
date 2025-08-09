@@ -18,6 +18,7 @@ export const createOrganizationSchema = z.object({
 
 export const editOrganizationSchema = z.object({
   name: z.string().min(1, 'Organization name is required'),
+  tagIds: z.array(z.string()).optional(),
 });
 
 // Form value types

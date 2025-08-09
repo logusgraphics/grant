@@ -602,6 +602,8 @@
       "description": "Description",
       "roles": "Roles",
       "tags": "Tags",
+      "tagsLoading": "Loading tags...",
+      "noTagsAvailable": "No tags available",
       "validation": {
         "nameRequired": "Organization name is required"
       }
@@ -633,7 +635,15 @@
       "updateSuccess": "Organization updated",
       "updateError": "Failed to update organization",
       "deleteSuccess": "Organization deleted",
-      "deleteError": "Failed to delete organization"
+      "deleteError": "Failed to delete organization",
+      "roleAddedSuccess": "Role added to organization",
+      "roleAddedError": "Failed to add role to organization",
+      "roleRemovedSuccess": "Role removed from organization",
+      "roleRemovedError": "Failed to remove role from organization",
+      "tagAddedSuccess": "Tag added to organization",
+      "tagAddedError": "Failed to add tag to organization",
+      "tagRemovedSuccess": "Tag removed from organization",
+      "tagRemovedError": "Failed to remove tag from organization"
     },
     "view": {
       "card": "Card View",

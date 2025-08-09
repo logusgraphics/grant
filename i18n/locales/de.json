@@ -597,6 +597,9 @@
     "form": {
       "name": "Name",
       "description": "Beschreibung",
+      "tags": "Tags",
+      "tagsLoading": "Tags werden geladen...",
+      "noTagsAvailable": "Keine Tags verfügbar",
       "validation": {
         "nameRequired": "Organisationsname ist erforderlich"
       }
@@ -627,7 +630,15 @@
       "updateSuccess": "Organisation aktualisiert",
       "updateError": "Organisation konnte nicht aktualisiert werden",
       "deleteSuccess": "Organisation gelöscht",
-      "deleteError": "Organisation konnte nicht gelöscht werden"
+      "deleteError": "Organisation konnte nicht gelöscht werden",
+      "roleAddedSuccess": "Rolle zur Organisation hinzugefügt",
+      "roleAddedError": "Rolle konnte nicht zur Organisation hinzugefügt werden",
+      "roleRemovedSuccess": "Rolle von der Organisation entfernt",
+      "roleRemovedError": "Rolle konnte nicht von der Organisation entfernt werden",
+      "tagAddedSuccess": "Tag zur Organisation hinzugefügt",
+      "tagAddedError": "Tag konnte nicht zur Organisation hinzugefügt werden",
+      "tagRemovedSuccess": "Tag von der Organisation entfernt",
+      "tagRemovedError": "Tag konnte nicht von der Organisation entfernt werden"
     },
     "view": {
       "card": "Kartenansicht",

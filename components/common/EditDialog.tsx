@@ -103,12 +103,14 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
   fields,
   relationships,
   mapEntityToFormValues,
+  onUpdate,
   onAddRelationships,
   onRemoveRelationships,
   translationNamespace,
 }: EditDialogProps<TFormValues, TEntity>) {
   const t = useTranslations(translationNamespace);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = React.useRef(false);
 
   // Internal state for uncontrolled usage
   const [internalOpen, setInternalOpen] = useState(false);
@@ -127,7 +129,7 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
 
   // Update form values when entity changes
   useEffect(() => {
-    if (entity) {
+    if (entity && !isSubmittingRef.current) {
       const formValues = mapEntityToFormValues(entity);
       // Ensure all form values have proper defaults to prevent controlled/uncontrolled issues
       const safeFormValues = { ...defaultValues, ...formValues };
@@ -140,7 +142,11 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
     if (!entity) return;
 
     setIsSubmitting(true);
+    isSubmittingRef.current = true;
     try {
+      // Handle main entity update first
+      await onUpdate((entity as any).id, values);
+
       // Handle relationship updates if configured
       if (relationships && onAddRelationships && onRemoveRelationships && initialFormValues) {
         for (const relationship of relationships) {
@@ -168,11 +174,13 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
       console.error('Error updating entity:', error);
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
+    if (!newOpen && !isSubmittingRef.current) {
+      // Only reset the form when closing manually (not during submission)
       form.reset();
       setInitialFormValues(null);
     }

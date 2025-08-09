@@ -137,7 +137,7 @@ export function useOrganizationMutations() {
     }
   };
 
-  const handleDeleteOrganization = async (id: string, name: string) => {
+  const handleDeleteOrganization = async (id: string, _name: string) => {
     try {
       await deleteOrganization({
         variables: { id },
@@ -157,13 +157,17 @@ export function useOrganizationMutations() {
   const handleAddOrganizationRole = async (input: AddOrganizationRoleInput) => {
     try {
       const result = await addOrganizationRole({
-        variables: input,
+        variables: { input },
         refetchQueries: ['GetOrganizations'],
       });
 
+      toast.success(t('notifications.roleAddedSuccess'));
       return result.data?.addOrganizationRole;
     } catch (error) {
       console.error('Error adding organization role:', error);
+      toast.error(t('notifications.roleAddedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
       throw error;
     }
   };
@@ -171,13 +175,17 @@ export function useOrganizationMutations() {
   const handleRemoveOrganizationRole = async (input: RemoveOrganizationRoleInput) => {
     try {
       const result = await removeOrganizationRole({
-        variables: input,
+        variables: { input },
         refetchQueries: ['GetOrganizations'],
       });
 
+      toast.success(t('notifications.roleRemovedSuccess'));
       return result.data?.removeOrganizationRole;
     } catch (error) {
       console.error('Error removing organization role:', error);
+      toast.error(t('notifications.roleRemovedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
       throw error;
     }
   };
@@ -185,13 +193,17 @@ export function useOrganizationMutations() {
   const handleAddOrganizationTag = async (input: AddOrganizationTagInput) => {
     try {
       const result = await addOrganizationTag({
-        variables: input,
+        variables: { input },
         refetchQueries: ['GetOrganizations'],
       });
 
+      toast.success(t('notifications.tagAddedSuccess'));
       return result.data?.addOrganizationTag;
     } catch (error) {
       console.error('Error adding organization tag:', error);
+      toast.error(t('notifications.tagAddedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
       throw error;
     }
   };
@@ -199,13 +211,17 @@ export function useOrganizationMutations() {
   const handleRemoveOrganizationTag = async (input: RemoveOrganizationTagInput) => {
     try {
       const result = await removeOrganizationTag({
-        variables: input,
+        variables: { input },
         refetchQueries: ['GetOrganizations'],
       });
 
+      toast.success(t('notifications.tagRemovedSuccess'));
       return result.data?.removeOrganizationTag;
     } catch (error) {
       console.error('Error removing organization tag:', error);
+      toast.error(t('notifications.tagRemovedError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
       throw error;
     }
   };
