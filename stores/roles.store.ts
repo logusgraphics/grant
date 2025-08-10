@@ -20,7 +20,7 @@ interface RolesState {
   loading: boolean;
 
   // Dialog state
-  roleToDelete: { id: string; name: string } | null;
+  roleToDelete: Role | null;
   roleToEdit: Role | null;
   isCreateDialogOpen: boolean;
 
@@ -38,7 +38,7 @@ interface RolesState {
   initializeFromUrl: (params: URLSearchParams) => void;
 
   // Dialog actions
-  setRoleToDelete: (role: { id: string; name: string } | null) => void;
+  setRoleToDelete: (role: Role | null) => void;
   setRoleToEdit: (role: Role | null) => void;
   setCreateDialogOpen: (open: boolean) => void;
 }

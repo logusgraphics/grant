@@ -33,32 +33,29 @@ export const DELETE_PROJECT = gql`
 `;
 
 export const ADD_PROJECT_ROLE = gql`
-  mutation AddProjectRole($projectId: ID!, $roleId: ID!) {
-    addProjectRole(projectId: $projectId, roleId: $roleId) {
+  mutation AddProjectRole($input: AddProjectRoleInput!) {
+    addProjectRole(input: $input) {
       id
-      name
     }
   }
 `;
 
 export const REMOVE_PROJECT_ROLE = gql`
-  mutation RemoveProjectRole($projectId: ID!, $roleId: ID!) {
-    removeProjectRole(projectId: $projectId, roleId: $roleId)
+  mutation RemoveProjectRole($input: RemoveProjectRoleInput!) {
+    removeProjectRole(input: $input)
   }
 `;
 
 export const ADD_PROJECT_TAG = gql`
-  mutation AddProjectTag($projectId: ID!, $tagId: ID!) {
-    addProjectTag(projectId: $projectId, tagId: $tagId) {
+  mutation AddProjectTag($input: AddProjectTagInput!) {
+    addProjectTag(input: $input) {
       id
-      name
-      color
     }
   }
 `;
 
 export const REMOVE_PROJECT_TAG = gql`
-  mutation RemoveProjectTag($projectId: ID!, $tagId: ID!) {
-    removeProjectTag(projectId: $projectId, tagId: $tagId)
+  mutation RemoveProjectTag($input: RemoveProjectTagInput!) {
+    removeProjectTag(input: $input)
   }
 `;

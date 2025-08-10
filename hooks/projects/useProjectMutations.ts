@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { ApolloCache, useMutation } from '@apollo/client';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -48,54 +48,48 @@ interface RemoveProjectTagInput {
 export function useProjectMutations() {
   const t = useTranslations('projects');
 
+  const update = (cache: ApolloCache<any>) => {
+    evictProjectsCache(cache);
+  };
+
+  const updateWithGC = (cache: ApolloCache<any>) => {
+    evictProjectsCache(cache);
+    cache.gc();
+  };
+
   const [createProject] = useMutation<{ createProject: Project }>(CREATE_PROJECT, {
-    update(cache) {
-      evictProjectsCache(cache);
-    },
+    update,
   });
 
   const [updateProject] = useMutation<{ updateProject: Project }>(UPDATE_PROJECT, {
-    update(cache) {
-      evictProjectsCache(cache);
-    },
+    update,
   });
 
   const [deleteProject] = useMutation<{ deleteProject: boolean }>(DELETE_PROJECT, {
-    update(cache) {
-      evictProjectsCache(cache);
-      cache.gc();
-    },
+    update: updateWithGC,
   });
 
   const [addProjectRole] = useMutation<{ addProjectRole: any }>(ADD_PROJECT_ROLE, {
-    update(cache) {
-      evictProjectsCache(cache);
-    },
+    update,
   });
 
   const [removeProjectRole] = useMutation<{ removeProjectRole: any }>(REMOVE_PROJECT_ROLE, {
-    update(cache) {
-      evictProjectsCache(cache);
-    },
+    update,
   });
 
   const [addProjectTag] = useMutation<{ addProjectTag: any }>(ADD_PROJECT_TAG, {
-    update(cache) {
-      evictProjectsCache(cache);
-    },
+    update,
   });
 
   const [removeProjectTag] = useMutation<{ removeProjectTag: boolean }>(REMOVE_PROJECT_TAG, {
-    update(cache) {
-      evictProjectsCache(cache);
-    },
+    update,
   });
 
   const handleCreateProject = async (input: CreateProjectInput) => {
     try {
       const result = await createProject({
         variables: { input },
-        refetchQueries: ['GetProjects'],
+        // Remove refetchQueries to prevent "Unknown query" warnings in tenant contexts
       });
 
       toast.success(t('notifications.createSuccess'));
@@ -113,7 +107,7 @@ export function useProjectMutations() {
     try {
       const result = await updateProject({
         variables: { id, input },
-        refetchQueries: ['GetProjects'],
+        // Remove refetchQueries to prevent "Unknown query" warnings in tenant contexts
       });
 
       toast.success(t('notifications.updateSuccess'));
@@ -131,7 +125,7 @@ export function useProjectMutations() {
     try {
       await deleteProject({
         variables: { id },
-        refetchQueries: ['GetProjects'],
+        // Remove refetchQueries to prevent "Unknown query" warnings in tenant contexts
       });
 
       toast.success(t('notifications.deleteSuccess'));
@@ -144,39 +138,11 @@ export function useProjectMutations() {
     }
   };
 
-  const handleAddProjectRole = async (input: AddProjectRoleInput) => {
-    try {
-      const result = await addProjectRole({
-        variables: input,
-        refetchQueries: ['GetProjects'],
-      });
-
-      return result.data?.addProjectRole;
-    } catch (error) {
-      console.error('Error adding project role:', error);
-      throw error;
-    }
-  };
-
-  const handleRemoveProjectRole = async (input: RemoveProjectRoleInput) => {
-    try {
-      const result = await removeProjectRole({
-        variables: input,
-        refetchQueries: ['GetProjects'],
-      });
-
-      return result.data?.removeProjectRole;
-    } catch (error) {
-      console.error('Error removing project role:', error);
-      throw error;
-    }
-  };
-
   const handleAddProjectTag = async (input: AddProjectTagInput) => {
     try {
       const result = await addProjectTag({
-        variables: input,
-        refetchQueries: ['GetProjects'],
+        variables: { input },
+        // Remove refetchQueries to prevent "Unknown query" warnings in tenant contexts
       });
 
       return result.data?.addProjectTag;
@@ -186,11 +152,39 @@ export function useProjectMutations() {
     }
   };
 
+  const handleRemoveProjectRole = async (input: RemoveProjectRoleInput) => {
+    try {
+      const result = await removeProjectRole({
+        variables: { input },
+        // Remove refetchQueries to prevent "Unknown query" warnings in tenant contexts
+      });
+
+      return result.data?.removeProjectRole;
+    } catch (error) {
+      console.error('Error removing project role:', error);
+      throw error;
+    }
+  };
+
+  const handleAddProjectRole = async (input: AddProjectRoleInput) => {
+    try {
+      const result = await addProjectRole({
+        variables: { input },
+        // Remove refetchQueries to prevent "Unknown query" warnings in tenant contexts
+      });
+
+      return result.data?.addProjectRole;
+    } catch (error) {
+      console.error('Error adding project role:', error);
+      throw error;
+    }
+  };
+
   const handleRemoveProjectTag = async (input: RemoveProjectTagInput) => {
     try {
       const result = await removeProjectTag({
-        variables: input,
-        refetchQueries: ['GetProjects'],
+        variables: { input },
+        // Remove refetchQueries to prevent "Unknown query" warnings in tenant contexts
       });
 
       return result.data?.removeProjectTag;

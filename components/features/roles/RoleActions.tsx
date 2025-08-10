@@ -23,7 +23,7 @@ export function RoleActions({ role }: RoleActionsProps) {
   };
 
   const handleDeleteClick = () => {
-    setRoleToDelete({ id: role.id, name: role.name });
+    setRoleToDelete(role);
   };
 
   const actions: ActionItem<Role>[] = [

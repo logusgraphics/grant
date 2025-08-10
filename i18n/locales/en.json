@@ -304,7 +304,9 @@
     "editDialog": {
       "title": "Edit Role",
       "description": "Update role information",
-      "confirm": "Save Changes"
+      "confirm": "Save Changes",
+      "cancel": "Cancel",
+      "updating": "Updating..."
     },
     "deleteDialog": {
       "title": "Delete Role",

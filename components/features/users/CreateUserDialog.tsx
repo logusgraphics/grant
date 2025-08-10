@@ -84,7 +84,6 @@ export function CreateUserDialog() {
   const handleAddRelationships = async (userId: string, values: CreateUserFormValues) => {
     const promises: Promise<any>[] = [];
 
-    // Add user to tenant
     if (scope.tenant === Tenant.Organization) {
       promises.push(
         addOrganizationUser({
@@ -105,7 +104,6 @@ export function CreateUserDialog() {
       );
     }
 
-    // Add roles
     if (values.roleIds && values.roleIds.length > 0) {
       const addRolePromises = values.roleIds.map((roleId) =>
         addUserRole({
@@ -118,7 +116,6 @@ export function CreateUserDialog() {
       promises.push(...addRolePromises);
     }
 
-    // Add tags
     if (values.tagIds && values.tagIds.length > 0) {
       const addTagPromises = values.tagIds.map((tagId) =>
         addUserTag({
@@ -133,20 +130,9 @@ export function CreateUserDialog() {
 
     await Promise.all(promises);
 
-    // Evict relevant caches to ensure the newly created user appears in lists
     evictUsersCache(client.cache);
-
-    // Evict tenant-specific user caches
-    if (scope.tenant === Tenant.Organization) {
-      client.cache.evict({ fieldName: 'organizationUsers' });
-    } else if (scope.tenant === Tenant.Project) {
-      client.cache.evict({ fieldName: 'projectUsers' });
-    }
-
-    // Force garbage collection
     client.cache.gc();
 
-    // Small delay to ensure cache operations complete before dialog closes
     await new Promise((resolve) => setTimeout(resolve, 100));
   };
 

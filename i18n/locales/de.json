@@ -304,7 +304,9 @@
     "editDialog": {
       "title": "Rolle bearbeiten",
       "description": "Aktualisieren Sie die Rolleninformationen",
-      "confirm": "Änderungen speichern"
+      "confirm": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert..."
     },
     "deleteDialog": {
       "title": "Rolle löschen",
