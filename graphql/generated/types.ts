@@ -17,164 +17,104 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
-/** Input type for adding a group-permission relationship. */
 export type AddGroupPermissionInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a group-tag relationship. */
 export type AddGroupTagInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for adding an organization-group relationship. */
 export type AddOrganizationGroupInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
 };
 
-/** Input type for adding an organization-permission relationship. */
 export type AddOrganizationPermissionInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
 };
 
-/** Input type for adding an organization-project relationship. */
 export type AddOrganizationProjectInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
 };
 
-/** Input type for adding an organization-role relationship. */
 export type AddOrganizationRoleInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
 };
 
-/** Input type for adding an organization-tag relationship. */
 export type AddOrganizationTagInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for adding an organization-user relationship. */
 export type AddOrganizationUserInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
 export type AddPermissionTagInput = {
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a project-group relationship. */
 export type AddProjectGroupInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a project-permission relationship. */
 export type AddProjectPermissionInput = {
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a project-role relationship. */
 export type AddProjectRoleInput = {
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a project-tag relationship. */
 export type AddProjectTagInput = {
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a project-user relationship. */
 export type AddProjectUserInput = {
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a role-group relationship. */
 export type AddRoleGroupInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a role-tag relationship. */
 export type AddRoleTagInput = {
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a user-role relationship. */
 export type AddUserRoleInput = {
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
-/** Input type for adding a user-tag relationship. */
 export type AddUserTagInput = {
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
-/** Base interface for entities with audit fields. */
 export type Auditable = {
-  /** Timestamp when the entity was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the entity. */
   id: Scalars['ID']['output'];
-  /** Timestamp when the entity was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
-/** Base interface for entities that can be created and updated. */
 export type Creatable = {
-  /** Timestamp when the entity was created. */
   createdAt: Scalars['String']['output'];
-  /** Timestamp when the entity was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
@@ -183,9 +123,7 @@ export type CreateGroupInput = {
   name: Scalars['String']['input'];
 };
 
-/** Input for creating a new organization. */
 export type CreateOrganizationInput = {
-  /** Name of the organization. */
   name: Scalars['String']['input'];
 };
 
@@ -195,290 +133,180 @@ export type CreatePermissionInput = {
   name: Scalars['String']['input'];
 };
 
-/** Input for creating a new project. */
 export type CreateProjectInput = {
-  /** Description of the project. */
   description?: InputMaybe<Scalars['String']['input']>;
-  /** Name of the project. */
   name: Scalars['String']['input'];
 };
 
 export type CreateRoleInput = {
   description?: InputMaybe<Scalars['String']['input']>;
-  groupIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   name: Scalars['String']['input'];
 };
 
-/** Input for creating a new tag. */
 export type CreateTagInput = {
-  /** Color identifier for the tag (e.g., 'purple', 'indigo', 'blue'). */
   color: Scalars['String']['input'];
-  /** Name of the tag. */
   name: Scalars['String']['input'];
 };
 
-/** Input type for creating a new user. */
 export type CreateUserInput = {
-  /** Email address of the user. */
   email: Scalars['String']['input'];
-  /** Full name of the user. */
   name: Scalars['String']['input'];
 };
 
-/** Represents a group in the system. */
 export type Group = Auditable & {
   __typename?: 'Group';
-  /** Timestamp when the group was created. */
   createdAt: Scalars['String']['output'];
-  /** Description of the group. */
   description?: Maybe<Scalars['String']['output']>;
-  /** Unique identifier for the group. */
   id: Scalars['ID']['output'];
-  /** Name of the group. */
   name: Scalars['String']['output'];
-  /** List of permissions associated with this group. */
   permissions?: Maybe<Array<Permission>>;
-  /** List of tags assigned to the group. */
   tags?: Maybe<Array<Tag>>;
-  /** Timestamp when the group was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a group in the system. */
 export type GroupPermissionsArgs = {
   scope: Scope;
 };
 
 
-/** Represents a group in the system. */
 export type GroupTagsArgs = {
   scope: Scope;
 };
 
-/** Represents a paginated list of groups. */
 export type GroupPage = PaginatedResults & {
   __typename?: 'GroupPage';
-  /** List of groups for the current page. */
   groups: Array<Group>;
-  /** Whether there are more groups available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** Total number of groups across all pages. */
   totalCount: Scalars['Int']['output'];
 };
 
-/** Represents a group-permission relationship in the system. */
 export type GroupPermission = Auditable & {
   __typename?: 'GroupPermission';
-  /** Timestamp when the group-permission relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** The group associated with this relationship. */
   group?: Maybe<Group>;
-  /** ID of the group. */
   groupId: Scalars['ID']['output'];
-  /** Unique identifier for the group-permission relationship. */
   id: Scalars['ID']['output'];
-  /** The permission associated with this relationship. */
   permission?: Maybe<Permission>;
-  /** ID of the permission. */
   permissionId: Scalars['ID']['output'];
-  /** Timestamp when the group-permission relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a group-permission relationship in the system. */
 export type GroupPermissionGroupArgs = {
   scope: Scope;
 };
 
 
-/** Represents a group-permission relationship in the system. */
 export type GroupPermissionPermissionArgs = {
   scope: Scope;
 };
 
-/** Input for sorting groups. */
 export type GroupSortInput = {
   field: GroupSortableField;
   order: GroupSortOrder;
 };
 
-/** Sort order for groups. */
 export enum GroupSortOrder {
   Asc = 'ASC',
   Desc = 'DESC'
 }
 
-/** Fields by which groups can be sorted. */
 export enum GroupSortableField {
   Name = 'name'
 }
 
-/** Represents a group-tag relationship in the system. */
 export type GroupTag = Auditable & {
   __typename?: 'GroupTag';
-  /** Timestamp when the group-tag relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** The group associated with this relationship. */
   group?: Maybe<Group>;
-  /** ID of the group. */
   groupId: Scalars['ID']['output'];
-  /** Unique identifier for the group-tag relationship. */
   id: Scalars['ID']['output'];
-  /** The tag associated with this relationship. */
   tag?: Maybe<Tag>;
-  /** ID of the tag. */
   tagId: Scalars['ID']['output'];
-  /** Timestamp when the group-tag relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a group-tag relationship in the system. */
 export type GroupTagGroupArgs = {
   scope: Scope;
 };
 
 
-/** Represents a group-tag relationship in the system. */
 export type GroupTagTagArgs = {
   scope: Scope;
 };
 
-/** Input type for user authentication. */
 export type LoginInput = {
-  /** Email address of the user. */
   email: Scalars['String']['input'];
-  /** Password of the user. */
   password: Scalars['String']['input'];
 };
 
-/** Response type for successful authentication. */
 export type LoginResponse = {
   __typename?: 'LoginResponse';
-  /** JWT token for authenticated requests. */
   token: Scalars['String']['output'];
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
-  /** Adds a group-permission relationship. */
   addGroupPermission: GroupPermission;
-  /** Adds a group-tag relationship. */
   addGroupTag: GroupTag;
-  /** Adds an organization-group relationship. */
   addOrganizationGroup: OrganizationGroup;
-  /** Adds an organization-permission relationship. */
   addOrganizationPermission: OrganizationPermission;
-  /** Adds an organization-project relationship. */
   addOrganizationProject: OrganizationProject;
-  /** Adds an organization-role relationship. */
   addOrganizationRole: OrganizationRole;
-  /** Adds an organization-tag relationship. */
   addOrganizationTag: OrganizationTag;
-  /** Adds an organization-user relationship. */
   addOrganizationUser: OrganizationUser;
-  /** Adds a permission-tag relationship. */
   addPermissionTag: PermissionTag;
-  /** Adds a project-group relationship. */
   addProjectGroup: ProjectGroup;
-  /** Adds a project-permission relationship. */
   addProjectPermission: ProjectPermission;
-  /** Adds a project-role relationship. */
   addProjectRole: ProjectRole;
-  /** Adds a project-tag relationship. */
   addProjectTag: ProjectTag;
-  /** Adds a project-user relationship. */
   addProjectUser: ProjectUser;
-  /** Adds a role-group relationship. */
   addRoleGroup: RoleGroup;
-  /** Adds a role-tag relationship. */
   addRoleTag: RoleTag;
-  /** Adds a user-role relationship. */
   addUserRole: UserRole;
-  /** Adds a user-tag relationship. */
   addUserTag: UserTag;
-  /** Creates a new group. */
   createGroup: Group;
-  /** Create a new organization. */
   createOrganization: Organization;
-  /** Creates a new permission. */
   createPermission: Permission;
-  /** Create a new project. */
   createProject: Project;
-  /** Creates a new role. */
   createRole: Role;
-  /** Create a new tag. */
   createTag: Tag;
-  /** Creates a new user. */
   createUser: User;
-  /** Deletes a group by ID. */
   deleteGroup: Group;
-  /** Delete an organization. */
   deleteOrganization: Organization;
-  /** Deletes a permission by ID. */
   deletePermission: Permission;
-  /** Delete a project. */
   deleteProject: Project;
-  /** Deletes a role by ID. */
   deleteRole: Role;
-  /** Delete a tag. */
   deleteTag: Tag;
-  /** Deletes a user. */
   deleteUser: User;
-  /** Authenticates a user and returns a JWT token. */
   login: LoginResponse;
-  /** Removes a group-permission relationship. */
   removeGroupPermission: GroupPermission;
-  /** Removes a group-tag relationship. */
   removeGroupTag: GroupTag;
-  /** Removes an organization-group relationship. */
   removeOrganizationGroup: OrganizationGroup;
-  /** Removes an organization-permission relationship. */
   removeOrganizationPermission: OrganizationPermission;
-  /** Removes an organization-project relationship. */
   removeOrganizationProject: OrganizationProject;
-  /** Removes an organization-role relationship. */
   removeOrganizationRole: OrganizationRole;
-  /** Removes an organization-tag relationship. */
   removeOrganizationTag: OrganizationTag;
-  /** Removes an organization-user relationship. */
   removeOrganizationUser: OrganizationUser;
-  /** Removes a permission-tag relationship. */
   removePermissionTag: PermissionTag;
-  /** Removes a project-group relationship. */
   removeProjectGroup: ProjectGroup;
-  /** Removes a project-permission relationship. */
   removeProjectPermission: ProjectPermission;
-  /** Removes a project-role relationship. */
   removeProjectRole: ProjectRole;
-  /** Removes a project-tag relationship. */
   removeProjectTag: ProjectTag;
-  /** Removes a project-user relationship. */
   removeProjectUser: ProjectUser;
-  /** Removes a role-group relationship. */
   removeRoleGroup: RoleGroup;
-  /** Removes a role-tag relationship. */
   removeRoleTag: RoleTag;
-  /** Removes a user-role relationship. */
   removeUserRole: UserRole;
-  /** Removes a user-tag relationship. */
   removeUserTag: UserTag;
-  /** Updates an existing group. */
   updateGroup: Group;
-  /** Update an existing organization. */
   updateOrganization: Organization;
-  /** Updates an existing permission. */
   updatePermission: Permission;
-  /** Update an existing project. */
   updateProject: Project;
-  /** Updates an existing role. */
   updateRole: Role;
-  /** Update an existing tag. */
   updateTag: Tag;
-  /** Updates an existing user. */
   updateUser: User;
 };
 
@@ -779,239 +607,148 @@ export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
 };
 
-/** Represents an organization in the system. */
 export type Organization = Auditable & {
   __typename?: 'Organization';
-  /** Timestamp when the organization was created. */
   createdAt: Scalars['String']['output'];
-  /** Organization groups. */
   groups?: Maybe<Array<Group>>;
-  /** Unique identifier for the organization. */
   id: Scalars['ID']['output'];
-  /** Name of the organization. */
   name: Scalars['String']['output'];
-  /** Organization permissions. */
   permissions?: Maybe<Array<Permission>>;
-  /** Organization projects. */
   projects?: Maybe<Array<Project>>;
-  /** Organization roles. */
   roles?: Maybe<Array<Role>>;
-  /** URL-friendly slug for the organization. */
   slug: Scalars['String']['output'];
-  /** Organization tags. */
   tags?: Maybe<Array<Tag>>;
-  /** Timestamp when the organization was last updated. */
   updatedAt: Scalars['String']['output'];
-  /** Organization users. */
   users?: Maybe<Array<User>>;
 };
 
-/** Represents an organization-group relationship in the system. */
 export type OrganizationGroup = Auditable & {
   __typename?: 'OrganizationGroup';
-  /** Timestamp when the organization-group relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** The group associated with this relationship. */
   group?: Maybe<Group>;
-  /** ID of the group. */
   groupId: Scalars['ID']['output'];
-  /** Unique identifier for the organization-group relationship. */
   id: Scalars['ID']['output'];
-  /** The organization associated with this relationship. */
   organization?: Maybe<Organization>;
-  /** ID of the organization. */
   organizationId: Scalars['ID']['output'];
-  /** Timestamp when the organization-group relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
-/** Represents a paginated list of organizations. */
 export type OrganizationPage = PaginatedResults & {
   __typename?: 'OrganizationPage';
-  /** Whether there are more organizations to load. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** List of organizations in the current page. */
   organizations: Array<Organization>;
-  /** Total number of organizations. */
   totalCount: Scalars['Int']['output'];
 };
 
-/** Represents an organization-permission relationship in the system. */
 export type OrganizationPermission = Auditable & {
   __typename?: 'OrganizationPermission';
-  /** Timestamp when the organization-permission relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the organization-permission relationship. */
   id: Scalars['ID']['output'];
-  /** The organization associated with this relationship. */
   organization?: Maybe<Organization>;
-  /** ID of the organization. */
   organizationId: Scalars['ID']['output'];
-  /** The permission associated with this relationship. */
   permission?: Maybe<Permission>;
-  /** ID of the permission. */
   permissionId: Scalars['ID']['output'];
-  /** Timestamp when the organization-permission relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
-/** Represents an organization-project relationship in the system. */
 export type OrganizationProject = Auditable & {
   __typename?: 'OrganizationProject';
-  /** Timestamp when the organization-project relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the organization-project relationship. */
   id: Scalars['ID']['output'];
-  /** The organization associated with this relationship. */
   organization?: Maybe<Organization>;
-  /** ID of the organization. */
   organizationId: Scalars['ID']['output'];
-  /** The project associated with this relationship. */
   project?: Maybe<Project>;
-  /** ID of the project. */
   projectId: Scalars['ID']['output'];
-  /** Timestamp when the organization-project relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
-/** Represents an organization-role relationship in the system. */
 export type OrganizationRole = Auditable & {
   __typename?: 'OrganizationRole';
-  /** Timestamp when the organization-role relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the organization-role relationship. */
   id: Scalars['ID']['output'];
-  /** The organization associated with this relationship. */
   organization?: Maybe<Organization>;
-  /** ID of the organization. */
   organizationId: Scalars['ID']['output'];
-  /** The role associated with this relationship. */
   role?: Maybe<Role>;
-  /** ID of the role. */
   roleId: Scalars['ID']['output'];
-  /** Timestamp when the organization-role relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
-/** Input for sorting organizations. */
 export type OrganizationSortInput = {
-  /** Field to sort by. */
   field: OrganizationSortableField;
-  /** Sort order. */
   order: OrganizationSortOrder;
 };
 
-/** Sort order for organizations. */
 export enum OrganizationSortOrder {
   Asc = 'ASC',
   Desc = 'DESC'
 }
 
-/** Fields that can be used to sort organizations. */
 export enum OrganizationSortableField {
-  /** Sort by creation date. */
   CreatedAt = 'createdAt',
-  /** Sort by organization name. */
   Name = 'name',
-  /** Sort by last update date. */
   UpdatedAt = 'updatedAt'
 }
 
-/** Represents an organization-tag relationship in the system. */
 export type OrganizationTag = Auditable & {
   __typename?: 'OrganizationTag';
-  /** Timestamp when the organization-tag relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the organization-tag relationship. */
   id: Scalars['ID']['output'];
-  /** The organization associated with this relationship. */
   organization?: Maybe<Organization>;
-  /** ID of the organization. */
   organizationId: Scalars['ID']['output'];
-  /** The tag associated with this relationship. */
   tag?: Maybe<Tag>;
-  /** ID of the tag. */
   tagId: Scalars['ID']['output'];
-  /** Timestamp when the organization-tag relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
-/** Represents an organization-user relationship in the system. */
 export type OrganizationUser = Auditable & {
   __typename?: 'OrganizationUser';
-  /** Timestamp when the organization-user relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the organization-user relationship. */
   id: Scalars['ID']['output'];
-  /** The organization associated with this relationship. */
   organization?: Maybe<Organization>;
-  /** ID of the organization. */
   organizationId: Scalars['ID']['output'];
-  /** Timestamp when the organization-user relationship was last updated. */
   updatedAt: Scalars['String']['output'];
-  /** The user associated with this relationship. */
   user?: Maybe<User>;
-  /** ID of the user. */
   userId: Scalars['ID']['output'];
 };
 
-/** Base interface for paginated results. */
 export type PaginatedResults = {
-  /** Whether there are more items available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** Total number of items across all pages. */
   totalCount: Scalars['Int']['output'];
 };
 
-/** Represents a permission in the system. */
 export type Permission = Auditable & {
   __typename?: 'Permission';
-  /** Action associated with the permission. */
   action: Scalars['String']['output'];
-  /** Timestamp when the permission was created. */
   createdAt: Scalars['String']['output'];
-  /** Description of the permission. */
   description?: Maybe<Scalars['String']['output']>;
-  /** Unique identifier for the permission. */
   id: Scalars['ID']['output'];
-  /** Name of the permission. */
   name: Scalars['String']['output'];
-  /** Tags associated with the permission. */
   tags?: Maybe<Array<Tag>>;
-  /** Timestamp when the permission was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a permission in the system. */
 export type PermissionTagsArgs = {
   scope: Scope;
 };
 
-/** Represents a paginated list of permissions. */
 export type PermissionPage = PaginatedResults & {
   __typename?: 'PermissionPage';
-  /** Whether there are more permissions available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** List of permissions for the current page. */
   permissions: Array<Permission>;
-  /** Total number of permissions across all pages. */
   totalCount: Scalars['Int']['output'];
 };
 
-/** Input for sorting permissions. */
 export type PermissionSortInput = {
   field: PermissionSortableField;
   order: PermissionSortOrder;
 };
 
-/** Sort order for permissions. */
 export enum PermissionSortOrder {
   Asc = 'ASC',
   Desc = 'DESC'
 }
 
-/** Fields by which permissions can be sorted. */
 export enum PermissionSortableField {
   Action = 'action',
   Name = 'name'
@@ -1019,19 +756,12 @@ export enum PermissionSortableField {
 
 export type PermissionTag = Auditable & {
   __typename?: 'PermissionTag';
-  /** Timestamp when the permission-tag relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the permission-tag relationship. */
   id: Scalars['ID']['output'];
-  /** The permission associated with this relationship. */
   permission?: Maybe<Permission>;
-  /** ID of the permission. */
   permissionId: Scalars['ID']['output'];
-  /** The tag associated with this relationship. */
   tag?: Maybe<Tag>;
-  /** ID of the tag. */
   tagId: Scalars['ID']['output'];
-  /** Timestamp when the permission-tag relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
@@ -1045,189 +775,120 @@ export type PermissionTagTagArgs = {
   scope: Scope;
 };
 
-/** Represents a project in the system. */
 export type Project = Auditable & {
   __typename?: 'Project';
-  /** Timestamp when the project was created. */
   createdAt: Scalars['String']['output'];
-  /** Description of the project. */
   description?: Maybe<Scalars['String']['output']>;
-  /** Project groups. */
   groups?: Maybe<Array<Group>>;
-  /** Unique identifier for the project. */
   id: Scalars['ID']['output'];
-  /** Name of the project. */
   name: Scalars['String']['output'];
-  /** Project permissions. */
   permissions?: Maybe<Array<Permission>>;
-  /** Project roles. */
   roles?: Maybe<Array<Role>>;
-  /** URL-friendly slug for the project. */
   slug: Scalars['String']['output'];
-  /** Project tags. */
   tags?: Maybe<Array<Tag>>;
-  /** Timestamp when the project was last updated. */
   updatedAt: Scalars['String']['output'];
-  /** Project users. */
   users?: Maybe<Array<User>>;
 };
 
-/** Represents a project-group relationship in the system. */
 export type ProjectGroup = Auditable & {
   __typename?: 'ProjectGroup';
-  /** Timestamp when the project-group relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** The group associated with this relationship. */
   group?: Maybe<Group>;
-  /** ID of the group. */
   groupId: Scalars['ID']['output'];
-  /** Unique identifier for the project-group relationship. */
   id: Scalars['ID']['output'];
-  /** The project associated with this relationship. */
   project?: Maybe<Project>;
-  /** ID of the project. */
   projectId: Scalars['ID']['output'];
-  /** Timestamp when the project-group relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a project-group relationship in the system. */
 export type ProjectGroupProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-/** Represents a paginated list of projects. */
 export type ProjectPage = PaginatedResults & {
   __typename?: 'ProjectPage';
-  /** Whether there are more projects to load. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** List of projects in the current page. */
   projects: Array<Project>;
-  /** Total number of projects. */
   totalCount: Scalars['Int']['output'];
 };
 
-/** Represents a project-permission relationship in the system. */
 export type ProjectPermission = Auditable & {
   __typename?: 'ProjectPermission';
-  /** Timestamp when the project-permission relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the project-permission relationship. */
   id: Scalars['ID']['output'];
-  /** The permission associated with this relationship. */
   permission?: Maybe<Permission>;
-  /** ID of the permission. */
   permissionId: Scalars['ID']['output'];
-  /** The project associated with this relationship. */
   project?: Maybe<Project>;
-  /** ID of the project. */
   projectId: Scalars['ID']['output'];
-  /** Timestamp when the project-permission relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a project-permission relationship in the system. */
 export type ProjectPermissionProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-/** Represents a project-role relationship in the system. */
 export type ProjectRole = Auditable & {
   __typename?: 'ProjectRole';
-  /** Timestamp when the project-role relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the project-role relationship. */
   id: Scalars['ID']['output'];
-  /** The project associated with this relationship. */
   project?: Maybe<Project>;
-  /** ID of the project. */
   projectId: Scalars['ID']['output'];
-  /** The role associated with this relationship. */
   role?: Maybe<Role>;
-  /** ID of the role. */
   roleId: Scalars['ID']['output'];
-  /** Timestamp when the project-role relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a project-role relationship in the system. */
 export type ProjectRoleProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-/** Input for sorting projects. */
 export type ProjectSortInput = {
-  /** Field to sort by. */
   field: ProjectSortableField;
-  /** Sort order. */
   order: ProjectSortOrder;
 };
 
-/** Sort order for projects. */
 export enum ProjectSortOrder {
   Asc = 'ASC',
   Desc = 'DESC'
 }
 
-/** Fields that can be used to sort projects. */
 export enum ProjectSortableField {
-  /** Sort by creation date. */
   CreatedAt = 'createdAt',
-  /** Sort by project name. */
   Name = 'name',
-  /** Sort by last update date. */
   UpdatedAt = 'updatedAt'
 }
 
-/** Represents a project-tag relationship in the system. */
 export type ProjectTag = Auditable & {
   __typename?: 'ProjectTag';
-  /** Timestamp when the project-tag relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the project-tag relationship. */
   id: Scalars['ID']['output'];
-  /** The project associated with this relationship. */
   project?: Maybe<Project>;
-  /** ID of the project. */
   projectId: Scalars['ID']['output'];
-  /** The tag associated with this relationship. */
   tag?: Maybe<Tag>;
-  /** ID of the tag. */
   tagId: Scalars['ID']['output'];
-  /** Timestamp when the project-tag relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a project-tag relationship in the system. */
 export type ProjectTagProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-/** Represents a project-user relationship in the system. */
 export type ProjectUser = Auditable & {
   __typename?: 'ProjectUser';
-  /** Timestamp when the project-user relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the project-user relationship. */
   id: Scalars['ID']['output'];
-  /** The project associated with this relationship. */
   project?: Maybe<Project>;
-  /** ID of the project. */
   projectId: Scalars['ID']['output'];
-  /** Timestamp when the project-user relationship was last updated. */
   updatedAt: Scalars['String']['output'];
-  /** The user associated with this relationship. */
   user?: Maybe<User>;
-  /** ID of the user. */
   userId: Scalars['ID']['output'];
 };
 
 
-/** Represents a project-user relationship in the system. */
 export type ProjectUserProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
@@ -1235,55 +896,30 @@ export type ProjectUserProjectArgs = {
 export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
-  /** Retrieves group-permission relationships. */
   groupPermissions: Array<GroupPermission>;
-  /** Retrieves group-tag relationships for a specific group. */
   groupTags: Array<GroupTag>;
-  /** Retrieves a paginated list of groups within the specified scope. */
   groups: GroupPage;
-  /** Retrieves organization-group relationships for a specific organization. */
   organizationGroups: Array<OrganizationGroup>;
-  /** Retrieves organization-permission relationships for a specific organization. */
   organizationPermissions: Array<OrganizationPermission>;
-  /** Retrieves organization-project relationships for a specific organization. */
   organizationProjects: Array<OrganizationProject>;
-  /** Retrieves organization-role relationships for a specific organization. */
   organizationRoles: Array<OrganizationRole>;
-  /** Retrieves organization-tag relationships for a specific organization. */
   organizationTags: Array<OrganizationTag>;
-  /** Retrieves organization-user relationships for a specific organization. */
   organizationUsers: Array<OrganizationUser>;
-  /** Get a paginated list of organizations. */
   organizations: OrganizationPage;
-  /** Retrieves permission-tag relationships for a specific permission. */
   permissionTags: Array<PermissionTag>;
-  /** Retrieves a paginated list of permissions within the specified scope. */
   permissions: PermissionPage;
-  /** Retrieves project-group relationships for a specific project. */
   projectGroups: Array<ProjectGroup>;
-  /** Retrieves project-permission relationships for a specific project. */
   projectPermissions: Array<ProjectPermission>;
-  /** Retrieves project-role relationships for a specific project. */
   projectRoles: Array<ProjectRole>;
-  /** Retrieves project-tag relationships for a specific project. */
   projectTags: Array<ProjectTag>;
-  /** Retrieves project-user relationships for a specific project. */
   projectUsers: Array<ProjectUser>;
-  /** Get a paginated list of projects within an organization. */
   projects: ProjectPage;
-  /** Retrieves role-group relationships for a specific role. */
   roleGroups: Array<RoleGroup>;
-  /** Retrieves role-tag relationships for a specific role. */
   roleTags: Array<RoleTag>;
-  /** Retrieves a paginated list of roles within the specified scope. */
   roles: RolePage;
-  /** Retrieves a paginated list of tags. */
   tags: TagPage;
-  /** Retrieves user-role relationships for a specific user. */
   userRoles: Array<UserRole>;
-  /** Retrieves user-tag relationships for a specific user. */
   userTags: Array<UserTag>;
-  /** Retrieves a paginated list of users within the specified scope. */
   users: UserPage;
 };
 
@@ -1457,337 +1093,220 @@ export type QueryUsersArgs = {
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
-/** Input type for removing a group-permission relationship. */
 export type RemoveGroupPermissionInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a group-tag relationship. */
 export type RemoveGroupTagInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for removing an organization-group relationship. */
 export type RemoveOrganizationGroupInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
 };
 
-/** Input type for removing an organization-permission relationship. */
 export type RemoveOrganizationPermissionInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
 };
 
-/** Input type for removing an organization-project relationship. */
 export type RemoveOrganizationProjectInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
 };
 
-/** Input type for removing an organization-role relationship. */
 export type RemoveOrganizationRoleInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
 };
 
-/** Input type for removing an organization-tag relationship. */
 export type RemoveOrganizationTagInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for removing an organization-user relationship. */
 export type RemoveOrganizationUserInput = {
-  /** ID of the organization. */
   organizationId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
 export type RemovePermissionTagInput = {
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a project-group relationship. */
 export type RemoveProjectGroupInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a project-permission relationship. */
 export type RemoveProjectPermissionInput = {
-  /** ID of the permission. */
   permissionId: Scalars['ID']['input'];
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a project-role relationship. */
 export type RemoveProjectRoleInput = {
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a project-tag relationship. */
 export type RemoveProjectTagInput = {
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a project-user relationship. */
 export type RemoveProjectUserInput = {
-  /** ID of the project. */
   projectId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a role-group relationship. */
 export type RemoveRoleGroupInput = {
-  /** ID of the group. */
   groupId: Scalars['ID']['input'];
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a role-tag relationship. */
 export type RemoveRoleTagInput = {
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a user-role relationship. */
 export type RemoveUserRoleInput = {
-  /** ID of the role. */
   roleId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
-/** Input type for removing a user-tag relationship. */
 export type RemoveUserTagInput = {
-  /** ID of the tag. */
   tagId: Scalars['ID']['input'];
-  /** ID of the user. */
   userId: Scalars['ID']['input'];
 };
 
-/** Represents a role in the system. */
 export type Role = Auditable & {
   __typename?: 'Role';
-  /** Timestamp when the role was created. */
   createdAt: Scalars['String']['output'];
-  /** Description of the role. */
   description?: Maybe<Scalars['String']['output']>;
-  /** List of groups associated with this role. */
   groups?: Maybe<Array<Group>>;
-  /** Unique identifier for the role. */
   id: Scalars['ID']['output'];
-  /** Name of the role. */
   name: Scalars['String']['output'];
-  /** List of tags assigned to the role. */
   tags?: Maybe<Array<Tag>>;
-  /** Timestamp when the role was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a role in the system. */
 export type RoleGroupsArgs = {
   scope: Scope;
 };
 
 
-/** Represents a role in the system. */
 export type RoleTagsArgs = {
   scope: Scope;
 };
 
-/** Represents a role-group relationship in the system. */
 export type RoleGroup = Auditable & {
   __typename?: 'RoleGroup';
-  /** Timestamp when the role-group relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** The group associated with this relationship. */
   group?: Maybe<Group>;
-  /** ID of the group. */
   groupId: Scalars['ID']['output'];
-  /** Unique identifier for the role-group relationship. */
   id: Scalars['ID']['output'];
-  /** The role associated with this relationship. */
   role?: Maybe<Role>;
-  /** ID of the role. */
   roleId: Scalars['ID']['output'];
-  /** Timestamp when the role-group relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a role-group relationship in the system. */
 export type RoleGroupGroupArgs = {
   scope: Scope;
 };
 
 
-/** Represents a role-group relationship in the system. */
 export type RoleGroupRoleArgs = {
   scope: Scope;
 };
 
-/** Represents a paginated list of roles. */
 export type RolePage = PaginatedResults & {
   __typename?: 'RolePage';
-  /** Whether there are more roles available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** List of roles for the current page. */
   roles: Array<Role>;
-  /** Total number of roles across all pages. */
   totalCount: Scalars['Int']['output'];
 };
 
-/** Input for sorting roles. */
 export type RoleSortInput = {
   field: RoleSortableField;
   order: RoleSortOrder;
 };
 
-/** Sort order for roles. */
 export enum RoleSortOrder {
   Asc = 'ASC',
   Desc = 'DESC'
 }
 
-/** Fields by which roles can be sorted. */
 export enum RoleSortableField {
   Name = 'name'
 }
 
-/** Represents a role-tag relationship in the system. */
 export type RoleTag = Auditable & {
   __typename?: 'RoleTag';
-  /** Timestamp when the role-tag relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the role-tag relationship. */
   id: Scalars['ID']['output'];
-  /** The role associated with this relationship. */
   role?: Maybe<Role>;
-  /** ID of the role. */
   roleId: Scalars['ID']['output'];
-  /** The tag associated with this relationship. */
   tag?: Maybe<Tag>;
-  /** ID of the tag. */
   tagId: Scalars['ID']['output'];
-  /** Timestamp when the role-tag relationship was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a role-tag relationship in the system. */
 export type RoleTagRoleArgs = {
   scope: Scope;
 };
 
 
-/** Represents a role-tag relationship in the system. */
 export type RoleTagTagArgs = {
   scope: Scope;
 };
 
-/** Input type for specifying the scope of a query. */
 export type Scope = {
-  /** The unique identifier of the tenant. */
   id: Scalars['ID']['input'];
-  /** The type of tenant (organization or project). */
   tenant: Tenant;
 };
 
-/** Sort direction. */
 export enum SortDirection {
-  /** Ascending order. */
   Asc = 'ASC',
-  /** Descending order. */
   Desc = 'DESC'
 }
 
-/** Represents a tag in the system. */
 export type Tag = Auditable & {
   __typename?: 'Tag';
-  /** Color identifier for the tag (e.g., 'purple', 'indigo', 'blue'). */
   color: Scalars['String']['output'];
-  /** Timestamp when the tag was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the tag. */
   id: Scalars['ID']['output'];
-  /** Name of the tag. */
   name: Scalars['String']['output'];
-  /** Timestamp when the tag was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
-/** Represents a paginated list of tags. */
 export type TagPage = PaginatedResults & {
   __typename?: 'TagPage';
-  /** Whether there are more tags available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** List of tags in the current page. */
   tags: Array<Tag>;
-  /** Total number of tags across all pages. */
   totalCount: Scalars['Int']['output'];
 };
 
-/** Available fields for sorting tags. */
 export enum TagSortField {
-  /** Sort by color. */
   Color = 'COLOR',
-  /** Sort by creation date. */
   CreatedAt = 'CREATED_AT',
-  /** Sort by name. */
   Name = 'NAME',
-  /** Sort by last update date. */
   UpdatedAt = 'UPDATED_AT'
 }
 
-/** Input for sorting tags. */
 export type TagSortInput = {
-  /** Sort direction. */
   direction: SortDirection;
-  /** Field to sort by. */
   field: TagSortField;
 };
 
-/** Enum for tenant types in the multi-tenant system. */
 export enum Tenant {
-  /** Organization-level tenant. */
   Organization = 'ORGANIZATION',
-  /** Project-level tenant. */
   Project = 'PROJECT'
 }
 
@@ -1796,9 +1315,7 @@ export type UpdateGroupInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Input for updating an existing organization. */
 export type UpdateOrganizationInput = {
-  /** Name of the organization. */
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1808,154 +1325,107 @@ export type UpdatePermissionInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Input for updating an existing project. */
 export type UpdateProjectInput = {
-  /** Description of the project. */
   description?: InputMaybe<Scalars['String']['input']>;
-  /** Name of the project. */
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateRoleInput = {
   description?: InputMaybe<Scalars['String']['input']>;
-  groupIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Input for updating an existing tag. */
 export type UpdateTagInput = {
-  /** Color identifier for the tag (e.g., 'purple', 'indigo', 'blue'). */
   color?: InputMaybe<Scalars['String']['input']>;
-  /** Name of the tag. */
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Input type for updating an existing user. */
 export type UpdateUserInput = {
-  /** Email address of the user. */
   email: Scalars['String']['input'];
-  /** Full name of the user. */
   name: Scalars['String']['input'];
 };
 
-/** Represents a user in the system. */
 export type User = Auditable & {
   __typename?: 'User';
-  /** Timestamp when the user was created. */
   createdAt: Scalars['String']['output'];
-  /** Email address of the user. */
   email: Scalars['String']['output'];
-  /** Unique identifier for the user. */
   id: Scalars['ID']['output'];
-  /** Full name of the user. */
   name: Scalars['String']['output'];
-  /** List of roles assigned to the user. */
   roles?: Maybe<Array<Role>>;
-  /** List of tags assigned to the user. */
   tags?: Maybe<Array<Tag>>;
-  /** Timestamp when the user was last updated. */
   updatedAt: Scalars['String']['output'];
 };
 
 
-/** Represents a user in the system. */
 export type UserRolesArgs = {
   scope: Scope;
 };
 
 
-/** Represents a user in the system. */
 export type UserTagsArgs = {
   scope: Scope;
 };
 
-/** Represents a paginated list of users. */
 export type UserPage = PaginatedResults & {
   __typename?: 'UserPage';
-  /** Whether there are more users available on the next page. */
   hasNextPage: Scalars['Boolean']['output'];
-  /** Total number of users across all pages. */
   totalCount: Scalars['Int']['output'];
-  /** List of users for the current page. */
   users: Array<User>;
 };
 
-/** Represents a user-role relationship in the system. */
 export type UserRole = Auditable & {
   __typename?: 'UserRole';
-  /** Timestamp when the user-role relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the user-role relationship. */
   id: Scalars['ID']['output'];
-  /** The role associated with this relationship. */
   role?: Maybe<Role>;
-  /** ID of the role. */
   roleId: Scalars['ID']['output'];
-  /** Timestamp when the user-role relationship was last updated. */
   updatedAt: Scalars['String']['output'];
-  /** The user associated with this relationship. */
   user?: Maybe<User>;
-  /** ID of the user. */
   userId: Scalars['ID']['output'];
 };
 
 
-/** Represents a user-role relationship in the system. */
 export type UserRoleRoleArgs = {
   scope: Scope;
 };
 
 
-/** Represents a user-role relationship in the system. */
 export type UserRoleUserArgs = {
   scope: Scope;
 };
 
-/** Input for sorting users. */
 export type UserSortInput = {
   field: UserSortableField;
   order: UserSortOrder;
 };
 
-/** Sort order for users. */
 export enum UserSortOrder {
   Asc = 'ASC',
   Desc = 'DESC'
 }
 
-/** Fields by which users can be sorted. */
 export enum UserSortableField {
   Email = 'email',
   Name = 'name'
 }
 
-/** Represents a user-tag relationship in the system. */
 export type UserTag = Auditable & {
   __typename?: 'UserTag';
-  /** Timestamp when the user-tag relationship was created. */
   createdAt: Scalars['String']['output'];
-  /** Unique identifier for the user-tag relationship. */
   id: Scalars['ID']['output'];
-  /** The tag associated with this relationship. */
   tag?: Maybe<Tag>;
-  /** ID of the tag. */
   tagId: Scalars['ID']['output'];
-  /** Timestamp when the user-tag relationship was last updated. */
   updatedAt: Scalars['String']['output'];
-  /** The user associated with this relationship. */
   user?: Maybe<User>;
-  /** ID of the user. */
   userId: Scalars['ID']['output'];
 };
 
 
-/** Represents a user-tag relationship in the system. */
 export type UserTagTagArgs = {
   scope: Scope;
 };
 
 
-/** Represents a user-tag relationship in the system. */
 export type UserTagUserArgs = {
   scope: Scope;
 };
