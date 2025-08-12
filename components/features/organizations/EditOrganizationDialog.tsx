@@ -8,6 +8,7 @@ import {
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { Organization, Tag } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useOrganizationTagMutations } from '@/hooks/organization-tags';
 import { useOrganizationMutations } from '@/hooks/organizations';
 import { useTags } from '@/hooks/tags';
 import { useOrganizationsStore } from '@/stores/organizations.store';
@@ -17,8 +18,8 @@ import { editOrganizationSchema, EditOrganizationFormValues } from './types';
 export function EditOrganizationDialog() {
   const scope = useScopeFromParams();
   const { tags, loading: tagsLoading } = useTags({ scope });
-  const { updateOrganization, addOrganizationTag, removeOrganizationTag } =
-    useOrganizationMutations();
+  const { updateOrganization } = useOrganizationMutations();
+  const { addOrganizationTag, removeOrganizationTag } = useOrganizationTagMutations();
 
   // Use selective subscriptions to prevent unnecessary re-renders
   const organizationToEdit = useOrganizationsStore((state) => state.organizationToEdit);

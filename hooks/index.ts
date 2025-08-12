@@ -11,6 +11,8 @@ export * from './organization-projects';
 export * from './organization-users';
 export * from './project-users';
 export * from './organization-groups';
+export * from './organization-roles';
+export * from './organization-tags';
 export * from './project-groups';
 
 // Export common utility hooks

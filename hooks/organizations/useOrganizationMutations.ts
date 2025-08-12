@@ -3,27 +3,13 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import {
-  AddOrganizationRoleInput,
-  AddOrganizationTagInput,
   CreateOrganizationInput,
   Organization,
-  OrganizationRole,
-  OrganizationTag,
-  RemoveOrganizationRoleInput,
-  RemoveOrganizationTagInput,
   UpdateOrganizationInput,
 } from '@/graphql/generated/types';
 
 import { evictOrganizationsCache } from './cache';
-import {
-  CREATE_ORGANIZATION,
-  UPDATE_ORGANIZATION,
-  DELETE_ORGANIZATION,
-  ADD_ORGANIZATION_ROLE,
-  REMOVE_ORGANIZATION_ROLE,
-  ADD_ORGANIZATION_TAG,
-  REMOVE_ORGANIZATION_TAG,
-} from './mutations';
+import { CREATE_ORGANIZATION, UPDATE_ORGANIZATION, DELETE_ORGANIZATION } from './mutations';
 
 export function useOrganizationMutations() {
   const t = useTranslations('organizations');
@@ -48,34 +34,6 @@ export function useOrganizationMutations() {
 
   const [deleteOrganization] = useMutation<{ deleteOrganization: Organization }>(
     DELETE_ORGANIZATION,
-    {
-      update,
-    }
-  );
-
-  const [addOrganizationRole] = useMutation<{ addOrganizationRole: OrganizationRole }>(
-    ADD_ORGANIZATION_ROLE,
-    {
-      update,
-    }
-  );
-
-  const [removeOrganizationRole] = useMutation<{ removeOrganizationRole: OrganizationRole }>(
-    REMOVE_ORGANIZATION_ROLE,
-    {
-      update,
-    }
-  );
-
-  const [addOrganizationTag] = useMutation<{ addOrganizationTag: OrganizationTag }>(
-    ADD_ORGANIZATION_TAG,
-    {
-      update,
-    }
-  );
-
-  const [removeOrganizationTag] = useMutation<{ removeOrganizationTag: OrganizationTag }>(
-    REMOVE_ORGANIZATION_TAG,
     {
       update,
     }
@@ -135,85 +93,9 @@ export function useOrganizationMutations() {
     }
   };
 
-  const handleAddOrganizationRole = async (input: AddOrganizationRoleInput) => {
-    try {
-      const result = await addOrganizationRole({
-        variables: { input },
-        refetchQueries: ['GetOrganizations'],
-      });
-
-      toast.success(t('notifications.roleAddedSuccess'));
-      return result.data?.addOrganizationRole;
-    } catch (error) {
-      console.error('Error adding organization role:', error);
-      toast.error(t('notifications.roleAddedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
-  const handleRemoveOrganizationRole = async (input: RemoveOrganizationRoleInput) => {
-    try {
-      const result = await removeOrganizationRole({
-        variables: { input },
-        refetchQueries: ['GetOrganizations'],
-      });
-
-      toast.success(t('notifications.roleRemovedSuccess'));
-      return result.data?.removeOrganizationRole;
-    } catch (error) {
-      console.error('Error removing organization role:', error);
-      toast.error(t('notifications.roleRemovedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
-  const handleAddOrganizationTag = async (input: AddOrganizationTagInput) => {
-    try {
-      const result = await addOrganizationTag({
-        variables: { input },
-        refetchQueries: ['GetOrganizations'],
-      });
-
-      toast.success(t('notifications.tagAddedSuccess'));
-      return result.data?.addOrganizationTag;
-    } catch (error) {
-      console.error('Error adding organization tag:', error);
-      toast.error(t('notifications.tagAddedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
-  const handleRemoveOrganizationTag = async (input: RemoveOrganizationTagInput) => {
-    try {
-      const result = await removeOrganizationTag({
-        variables: { input },
-        refetchQueries: ['GetOrganizations'],
-      });
-
-      toast.success(t('notifications.tagRemovedSuccess'));
-      return result.data?.removeOrganizationTag;
-    } catch (error) {
-      console.error('Error removing organization tag:', error);
-      toast.error(t('notifications.tagRemovedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
   return {
     createOrganization: handleCreateOrganization,
     updateOrganization: handleUpdateOrganization,
     deleteOrganization: handleDeleteOrganization,
-    addOrganizationRole: handleAddOrganizationRole,
-    removeOrganizationRole: handleRemoveOrganizationRole,
-    addOrganizationTag: handleAddOrganizationTag,
-    removeOrganizationTag: handleRemoveOrganizationTag,
   };
 }

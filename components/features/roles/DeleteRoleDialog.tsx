@@ -3,7 +3,7 @@
 import { DeleteDialog } from '@/components/common';
 import { Tenant } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
-import { useOrganizationMutations } from '@/hooks/organizations';
+import { useOrganizationRoleMutations } from '@/hooks/organization-roles';
 import { useProjectMutations } from '@/hooks/projects';
 import { useRoleMutations } from '@/hooks/roles';
 import { useRolesStore } from '@/stores/roles.store';
@@ -12,7 +12,7 @@ export function DeleteRoleDialog() {
   const scope = useScopeFromParams();
   const { deleteRole, removeRoleGroup, removeRoleTag } = useRoleMutations();
   const { removeProjectRole } = useProjectMutations();
-  const { removeOrganizationRole } = useOrganizationMutations();
+  const { removeOrganizationRole } = useOrganizationRoleMutations();
 
   const roleToDelete = useRolesStore((state) => state.roleToDelete);
   const setRoleToDelete = useRolesStore((state) => state.setRoleToDelete);
