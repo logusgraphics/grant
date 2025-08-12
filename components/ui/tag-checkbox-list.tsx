@@ -12,7 +12,8 @@ interface TagCheckboxListProps {
   control: Control<any>;
   name: string;
   label: string;
-  items: Tag[];
+  items: Array<Tag & { disabled?: boolean }>;
+  multiple?: boolean;
   loading?: boolean;
   loadingText?: string;
   emptyText?: string;
@@ -26,6 +27,7 @@ export function TagCheckboxList({
   name,
   label,
   items,
+  multiple = true,
   loading = false,
   loadingText = 'Loading...',
   emptyText = 'No tags available',
@@ -37,28 +39,35 @@ export function TagCheckboxList({
     (field: any) => (
       <div className="flex flex-wrap gap-2 pr-4">
         {items.map((tag) => {
-          const isSelected = field.value?.includes(tag.id);
+          const isSelected = multiple ? field.value?.includes(tag.id) : field.value === tag.id;
+          const isDisabled = tag.disabled || disabled;
+
           return (
             <button
               key={tag.id}
               type="button"
               onClick={() => {
-                if (disabled) return;
-                const currentValue = field.value || [];
-                if (isSelected) {
-                  field.onChange(currentValue.filter((value: string) => value !== tag.id));
+                if (isDisabled) return;
+
+                if (multiple) {
+                  const currentValue = field.value || [];
+                  if (isSelected) {
+                    field.onChange(currentValue.filter((value: string) => value !== tag.id));
+                  } else {
+                    field.onChange([...currentValue, tag.id]);
+                  }
                 } else {
-                  field.onChange([...currentValue, tag.id]);
+                  field.onChange(tag.id);
                 }
               }}
-              disabled={disabled}
+              disabled={isDisabled}
               className={cn(
                 'w-3 h-3 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none relative',
                 getTagBorderColorClasses(tag.color),
                 'bg-transparent',
-                disabled && 'opacity-50 cursor-not-allowed'
+                isDisabled && 'opacity-50 cursor-not-allowed'
               )}
-              title={tag.name}
+              title={`${tag.name}${tag.disabled ? ' (already used)' : ''}`}
             >
               {isSelected && (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -70,7 +79,7 @@ export function TagCheckboxList({
         })}
       </div>
     ),
-    [items, disabled]
+    [items, multiple, disabled]
   );
 
   return (

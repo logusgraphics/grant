@@ -65,6 +65,10 @@
       "select": "Projekt auswählen",
       "search": "Projekte suchen...",
       "notFound": "Keine Projekte gefunden"
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
     }
   },
   "dashboard": {
@@ -73,6 +77,7 @@
       "roles": "Rollen",
       "groups": "Gruppen",
       "permissions": "Berechtigungen",
+      "tags": "Tags",
       "account": "Konto",
       "settings": "Einstellungen"
     }
@@ -945,6 +950,90 @@
       "addError": "Benutzer konnte nicht zum Projekt hinzugefügt werden",
       "removeSuccess": "Benutzer aus dem Projekt entfernt",
       "removeError": "Benutzer konnte nicht aus dem Projekt entfernt werden"
+    }
+  },
+  "tags": {
+    "title": "Tags",
+    "description": "Verwalten Sie Ihre Tags",
+    "noTags": {
+      "title": "Keine Tags gefunden",
+      "description": "Erstellen Sie Ihren ersten Tag"
+    },
+    "noSearchResults": {
+      "title": "Keine Tags gefunden",
+      "description": "Versuchen Sie, Ihre Suchbegriffe anzupassen oder erstellen Sie einen neuen Tag"
+    },
+    "actions": {
+      "create": "Tag erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert..."
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "name": "Name",
+      "color": "Farbe",
+      "createdAt": "Erstellungsdatum",
+      "updatedAt": "Aktualisierungsdatum",
+      "default": "Standard"
+    },
+    "limit": "Elemente pro Seite",
+    "search": {
+      "placeholder": "Tags suchen..."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Tag-Namen eingeben",
+      "color": "Farbe",
+      "colorPlaceholder": "Tag-Farbe auswählen",
+      "validation": {
+        "nameRequired": "Tag-Name ist erforderlich"
+      }
+    },
+    "colorPicker": {
+      "loadingColors": "Farben werden geladen...",
+      "noColorsAvailable": "Keine Farben verfügbar"
+    },
+    "createDialog": {
+      "title": "Neuen Tag erstellen",
+      "description": "Fügen Sie einen neuen Tag zum System hinzu",
+      "trigger": "Tag erstellen",
+      "confirm": "Tag erstellen",
+      "cancel": "Abbrechen",
+      "submitting": "Wird erstellt..."
+    },
+    "editDialog": {
+      "title": "Tag bearbeiten",
+      "description": "Tag-Informationen aktualisieren",
+      "confirm": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert..."
+    },
+    "deleteDialog": {
+      "title": "Tag löschen",
+      "description": "Sind Sie sicher, dass Sie {name} löschen möchten?",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen",
+      "deleting": "Wird gelöscht..."
+    },
+    "notifications": {
+      "createSuccess": "Tag erstellt",
+      "createError": "Tag konnte nicht erstellt werden",
+      "updateSuccess": "Tag aktualisiert",
+      "updateError": "Tag konnte nicht aktualisiert werden",
+      "deleteSuccess": "Tag gelöscht",
+      "deleteError": "Tag konnte nicht gelöscht werden"
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
+    },
+    "table": {
+      "name": "Name",
+      "color": "Farbe",
+      "audit": "Prüfung",
+      "actions": "Aktionen"
     }
   },
   "settings": {

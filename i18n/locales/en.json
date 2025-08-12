@@ -65,6 +65,10 @@
       "select": "Select project",
       "search": "Search projects...",
       "notFound": "No projects found"
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
     }
   },
   "dashboard": {
@@ -73,6 +77,7 @@
       "roles": "Roles",
       "groups": "Groups",
       "permissions": "Permissions",
+      "tags": "Tags",
       "account": "Account",
       "settings": "Settings"
     }
@@ -951,6 +956,90 @@
       "addError": "Failed to add user to project",
       "removeSuccess": "User removed from project",
       "removeError": "Failed to remove user from project"
+    }
+  },
+  "tags": {
+    "title": "Tags",
+    "description": "Manage your tags",
+    "noTags": {
+      "title": "No tags found",
+      "description": "Get started by creating your first tag"
+    },
+    "noSearchResults": {
+      "title": "No tags found",
+      "description": "Try adjusting your search terms or create a new tag"
+    },
+    "actions": {
+      "create": "Create Tag",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "updating": "Updating..."
+    },
+    "sort": {
+      "label": "Sort by",
+      "name": "Name",
+      "color": "Color",
+      "createdAt": "Created Date",
+      "updatedAt": "Updated Date",
+      "default": "Default"
+    },
+    "limit": "Items per page",
+    "search": {
+      "placeholder": "Search tags..."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Enter tag name",
+      "color": "Color",
+      "colorPlaceholder": "Select tag color",
+      "validation": {
+        "nameRequired": "Tag name is required"
+      }
+    },
+    "colorPicker": {
+      "loadingColors": "Loading colors...",
+      "noColorsAvailable": "No colors available"
+    },
+    "createDialog": {
+      "title": "Create New Tag",
+      "description": "Add a new tag to the system",
+      "trigger": "Create Tag",
+      "confirm": "Create Tag",
+      "cancel": "Cancel",
+      "submitting": "Creating..."
+    },
+    "editDialog": {
+      "title": "Edit Tag",
+      "description": "Update tag information",
+      "confirm": "Save Changes",
+      "cancel": "Cancel",
+      "updating": "Updating..."
+    },
+    "deleteDialog": {
+      "title": "Delete Tag",
+      "description": "Are you sure you want to delete {name}?",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    },
+    "notifications": {
+      "createSuccess": "Tag created",
+      "createError": "Failed to create tag",
+      "updateSuccess": "Tag updated",
+      "updateError": "Failed to update tag",
+      "deleteSuccess": "Tag deleted",
+      "deleteError": "Failed to delete tag"
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
+    },
+    "table": {
+      "name": "Name",
+      "color": "Color",
+      "audit": "Audit",
+      "actions": "Actions"
     }
   },
   "settings": {

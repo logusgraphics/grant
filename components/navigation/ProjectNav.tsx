@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 
-import { Users, Shield, Group, Key } from 'lucide-react';
+import { Users, Shield, Group, Key, Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
@@ -75,6 +75,11 @@ export function ProjectNav() {
       icon: <Key className={iconClasses(`/dashboard/project/${projectId}/permissions`)} />,
       translationKey: 'permissions',
     },
+    {
+      path: `/dashboard/project/${projectId}/tags`,
+      icon: <Tag className={iconClasses(`/dashboard/project/${projectId}/tags`)} />,
+      translationKey: 'tags',
+    },
   ];
 
   const renderNavItems = (items: NavItem[]) => (
@@ -112,7 +117,7 @@ export function ProjectNav() {
       </div> */}
 
       {/* Mobile: All items in single row */}
-      <div className="grid grid-cols-4 md:hidden">{renderNavItems(projectNavItems)}</div>
+      <div className="grid grid-cols-5 md:hidden">{renderNavItems(projectNavItems)}</div>
 
       {/* Desktop: Vertical layout */}
       <div className="hidden md:flex md:flex-col md:space-y-1">

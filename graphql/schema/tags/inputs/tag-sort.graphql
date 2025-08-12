@@ -3,10 +3,10 @@ input TagSortInput {
   direction: SortDirection!
 }
 enum TagSortField {
-  NAME
-  COLOR
-  CREATED_AT
-  UPDATED_AT
+  name
+  color
+  createdAt
+  updatedAt
 }
 enum SortDirection {
   ASC

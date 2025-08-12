@@ -1294,10 +1294,10 @@ export type TagPage = PaginatedResults & {
 };
 
 export enum TagSortField {
-  Color = 'COLOR',
-  CreatedAt = 'CREATED_AT',
-  Name = 'NAME',
-  UpdatedAt = 'UPDATED_AT'
+  Color = 'color',
+  CreatedAt = 'createdAt',
+  Name = 'name',
+  UpdatedAt = 'updatedAt'
 }
 
 export type TagSortInput = {
