@@ -1,5 +1,4 @@
 import { MutationResolvers } from '@/graphql/generated/types';
-
 export const addPermissionTagResolver: MutationResolvers['addPermissionTag'] = async (
   _parent,
   { input },

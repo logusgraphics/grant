@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getOrganizationUsersResolver: QueryResolvers['organizationUsers'] = async (
   _parent,
   { organizationId },

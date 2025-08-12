@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getProjectPermissionsResolver: QueryResolvers['projectPermissions'] = async (
   _parent,
   { projectId },

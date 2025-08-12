@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getUserRolesResolver: QueryResolvers['userRoles'] = async (
   _parent,
   { userId, scope },

@@ -1,5 +1,4 @@
 import { MutationResolvers } from '@/graphql/generated/types';
-
 export const deleteUserResolver: MutationResolvers['deleteUser'] = async (
   _parent,
   { id },

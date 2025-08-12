@@ -1,5 +1,4 @@
 import { MutationResolvers } from '@/graphql/generated/types';
-
 export const addProjectPermissionResolver: MutationResolvers['addProjectPermission'] = async (
   _parent,
   { input },

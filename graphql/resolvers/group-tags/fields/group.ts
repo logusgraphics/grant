@@ -1,5 +1,4 @@
 import { GroupTagResolvers } from '@/graphql/generated/types';
-
 export const groupTagGroupResolver: GroupTagResolvers['group'] = async (
   parent,
   { scope },
@@ -9,12 +8,9 @@ export const groupTagGroupResolver: GroupTagResolvers['group'] = async (
     ids: [parent.groupId],
     scope,
   });
-
   const group = groupsResult.groups[0];
-
   if (!group) {
     throw new Error(`Group with ID ${parent.groupId} not found`);
   }
-
   return group;
 };

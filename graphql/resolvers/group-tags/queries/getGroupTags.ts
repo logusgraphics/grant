@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getGroupTagsResolver: QueryResolvers['groupTags'] = async (
   _parent,
   { groupId, scope },

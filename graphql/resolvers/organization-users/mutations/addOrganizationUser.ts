@@ -1,5 +1,4 @@
 import { MutationResolvers } from '@/graphql/generated/types';
-
 export const addOrganizationUserResolver: MutationResolvers['addOrganizationUser'] = async (
   _parent,
   { input },

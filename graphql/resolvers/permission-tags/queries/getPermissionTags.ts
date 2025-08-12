@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getPermissionTagsResolver: QueryResolvers['permissionTags'] = async (
   _parent,
   { permissionId, scope },

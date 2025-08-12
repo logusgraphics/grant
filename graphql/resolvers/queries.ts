@@ -23,7 +23,6 @@ import * as tagQueries from './tags/queries';
 import * as userRoleQueries from './user-roles/queries';
 import * as userTagQueries from './user-tags/queries';
 import * as userQueries from './users/queries';
-
 export const Query = {
   _empty: () => null,
   users: userQueries.getUsers,

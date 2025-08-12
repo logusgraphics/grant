@@ -1,5 +1,4 @@
 import { GroupPermissionResolvers } from '@/graphql/generated/types';
-
 export const groupPermissionPermissionResolver: GroupPermissionResolvers['permission'] = async (
   parent,
   { scope },
@@ -10,12 +9,9 @@ export const groupPermissionPermissionResolver: GroupPermissionResolvers['permis
     scope,
     limit: -1,
   });
-
   const permission = permissionsResult.permissions[0];
-
   if (!permission) {
     throw new Error(`Permission with ID ${parent.permissionId} not found`);
   }
-
   return permission;
 };

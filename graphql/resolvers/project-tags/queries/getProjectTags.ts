@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getProjectTagsResolver: QueryResolvers['projectTags'] = async (
   _parent,
   { projectId },

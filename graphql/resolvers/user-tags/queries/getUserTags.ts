@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getUserTagsResolver: QueryResolvers['userTags'] = async (
   _parent,
   { userId, scope },

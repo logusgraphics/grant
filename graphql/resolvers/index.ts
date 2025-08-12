@@ -28,14 +28,10 @@ import { Role } from '@/graphql/resolvers/roles/fields';
 import { UserRole } from '@/graphql/resolvers/user-roles/fields';
 import { UserTag } from '@/graphql/resolvers/user-tags/fields';
 import { User } from '@/graphql/resolvers/users/fields';
-
-// Load all schema files
 const typeDefs = loadFilesSync(join(process.cwd(), 'graphql/schema'), {
   extensions: ['graphql'],
   ignoreIndex: true,
 });
-
-// Create the schema
 export const schema = makeExecutableSchema({
   typeDefs,
   resolvers: {

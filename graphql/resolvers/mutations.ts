@@ -24,7 +24,6 @@ import * as tagMutations from './tags/mutations';
 import * as userRoleMutations from './user-roles/mutations';
 import * as userTagMutations from './user-tags/mutations';
 import * as userMutations from './users/mutations';
-
 export const Mutation = {
   login: authMutations.login,
   createUser: userMutations.createUser,

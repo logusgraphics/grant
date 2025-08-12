@@ -1,5 +1,4 @@
 import { QueryResolvers } from '@/graphql/generated/types';
-
 export const getTagsResolver: QueryResolvers['tags'] = async (
   _parent,
   { page, limit, search, sort, ids, scope },

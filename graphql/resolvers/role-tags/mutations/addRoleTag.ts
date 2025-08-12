@@ -1,5 +1,4 @@
 import { MutationResolvers } from '@/graphql/generated/types';
-
 export const addRoleTagResolver: MutationResolvers['addRoleTag'] = async (
   _parent,
   { input },
