@@ -5,12 +5,16 @@ import { Tenant } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { useOrganizationRoleMutations } from '@/hooks/organization-roles';
 import { useProjectRoleMutations } from '@/hooks/project-roles';
+import { useRoleGroupMutations } from '@/hooks/role-groups';
+import { useRoleTagMutations } from '@/hooks/role-tags';
 import { useRoleMutations } from '@/hooks/roles';
 import { useRolesStore } from '@/stores/roles.store';
 
 export function DeleteRoleDialog() {
   const scope = useScopeFromParams();
-  const { deleteRole, removeRoleGroup, removeRoleTag } = useRoleMutations();
+  const { deleteRole } = useRoleMutations();
+  const { removeRoleGroup } = useRoleGroupMutations();
+  const { removeRoleTag } = useRoleTagMutations();
   const { removeProjectRole } = useProjectRoleMutations();
   const { removeOrganizationRole } = useOrganizationRoleMutations();
 

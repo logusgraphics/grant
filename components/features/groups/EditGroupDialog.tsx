@@ -9,6 +9,8 @@ import { CheckboxList } from '@/components/ui/checkbox-list';
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { Group, Permission, Tag } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useGroupPermissionMutations } from '@/hooks/group-permissions';
+import { useGroupTagMutations } from '@/hooks/group-tags';
 import { useGroupMutations } from '@/hooks/groups';
 import { usePermissions } from '@/hooks/permissions';
 import { useTags } from '@/hooks/tags';
@@ -20,8 +22,9 @@ export function EditGroupDialog() {
   const scope = useScopeFromParams();
   const { permissions, loading: permissionsLoading } = usePermissions({ scope });
   const { tags, loading: tagsLoading } = useTags({ scope });
-  const { updateGroup, addGroupPermission, addGroupTag, removeGroupPermission, removeGroupTag } =
-    useGroupMutations();
+  const { updateGroup } = useGroupMutations();
+  const { addGroupPermission, removeGroupPermission } = useGroupPermissionMutations();
+  const { addGroupTag, removeGroupTag } = useGroupTagMutations();
 
   // Use selective subscriptions to prevent unnecessary re-renders
   const groupToEdit = useGroupsStore((state) => state.groupToEdit);

@@ -8,6 +8,7 @@ import {
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { Permission, Tag } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { usePermissionTagMutations } from '@/hooks/permission-tags';
 import { usePermissionMutations } from '@/hooks/permissions';
 import { useTags } from '@/hooks/tags';
 import { usePermissionsStore } from '@/stores/permissions.store';
@@ -17,7 +18,8 @@ import { EditPermissionFormValues, editPermissionSchema } from './types';
 export function EditPermissionDialog() {
   const scope = useScopeFromParams();
   const { tags, loading: tagsLoading } = useTags({ scope });
-  const { updatePermission, addPermissionTag, removePermissionTag } = usePermissionMutations();
+  const { updatePermission } = usePermissionMutations();
+  const { addPermissionTag, removePermissionTag } = usePermissionTagMutations();
 
   // Use selective subscriptions to prevent unnecessary re-renders
   const permissionToEdit = usePermissionsStore((state) => state.permissionToEdit);

@@ -1,1 +1,1 @@
-export { usePermissionTagMutations } from './usePermissionTagMutations';
+export * from './usePermissionTagMutations';

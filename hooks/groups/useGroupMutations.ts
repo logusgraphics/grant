@@ -2,27 +2,10 @@ import { ApolloCache, useMutation } from '@apollo/client';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import {
-  AddGroupPermissionInput,
-  AddGroupTagInput,
-  CreateGroupInput,
-  Group,
-  GroupPermission,
-  GroupTag,
-  RemoveGroupPermissionInput,
-  RemoveGroupTagInput,
-  UpdateGroupInput,
-} from '@/graphql/generated/types';
-import { ADD_GROUP_TAG, REMOVE_GROUP_TAG } from '@/hooks/tags/mutations';
+import { CreateGroupInput, Group, UpdateGroupInput } from '@/graphql/generated/types';
 
 import { evictGroupsCache } from './cache';
-import {
-  CREATE_GROUP,
-  UPDATE_GROUP,
-  DELETE_GROUP,
-  ADD_GROUP_PERMISSION,
-  REMOVE_GROUP_PERMISSION,
-} from './mutations';
+import { CREATE_GROUP, UPDATE_GROUP, DELETE_GROUP } from './mutations';
 
 export function useGroupMutations() {
   const t = useTranslations('groups');
@@ -40,28 +23,6 @@ export function useGroupMutations() {
   });
 
   const [deleteGroup] = useMutation<{ deleteGroup: Group }>(DELETE_GROUP, {
-    update,
-  });
-
-  const [addGroupPermission] = useMutation<{ addGroupPermission: GroupPermission }>(
-    ADD_GROUP_PERMISSION,
-    {
-      update,
-    }
-  );
-
-  const [removeGroupPermission] = useMutation<{ removeGroupPermission: GroupPermission }>(
-    REMOVE_GROUP_PERMISSION,
-    {
-      update,
-    }
-  );
-
-  const [addGroupTag] = useMutation<{ addGroupTag: GroupTag }>(ADD_GROUP_TAG, {
-    update,
-  });
-
-  const [removeGroupTag] = useMutation<{ removeGroupTag: GroupTag }>(REMOVE_GROUP_TAG, {
     update,
   });
 
@@ -118,81 +79,9 @@ export function useGroupMutations() {
     }
   };
 
-  const handleAddGroupPermission = async (input: AddGroupPermissionInput) => {
-    try {
-      const result = await addGroupPermission({
-        variables: { input },
-      });
-
-      toast.success(t('notifications.permissionAddedSuccess'));
-      return result.data?.addGroupPermission;
-    } catch (error) {
-      console.error('Error adding group permission:', error);
-      toast.error(t('notifications.permissionAddedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
-  const handleRemoveGroupPermission = async (input: RemoveGroupPermissionInput) => {
-    try {
-      const result = await removeGroupPermission({
-        variables: { input },
-      });
-
-      toast.success(t('notifications.permissionRemovedSuccess'));
-      return result.data?.removeGroupPermission;
-    } catch (error) {
-      console.error('Error removing group permission:', error);
-      toast.error(t('notifications.permissionRemovedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
-  const handleAddGroupTag = async (input: AddGroupTagInput) => {
-    try {
-      const result = await addGroupTag({
-        variables: { input },
-      });
-
-      toast.success(t('notifications.tagAddedSuccess'));
-      return result.data?.addGroupTag;
-    } catch (error) {
-      console.error('Error adding group tag:', error);
-      toast.error(t('notifications.tagAddedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
-  const handleRemoveGroupTag = async (input: RemoveGroupTagInput) => {
-    try {
-      const result = await removeGroupTag({
-        variables: { input },
-      });
-
-      toast.success(t('notifications.tagRemovedSuccess'));
-      return result.data?.removeGroupTag;
-    } catch (error) {
-      console.error('Error removing group tag:', error);
-      toast.error(t('notifications.tagRemovedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
   return {
     createGroup: handleCreateGroup,
     updateGroup: handleUpdateGroup,
     deleteGroup: handleDeleteGroup,
-    addGroupPermission: handleAddGroupPermission,
-    removeGroupPermission: handleRemoveGroupPermission,
-    addGroupTag: handleAddGroupTag,
-    removeGroupTag: handleRemoveGroupTag,
   };
 }

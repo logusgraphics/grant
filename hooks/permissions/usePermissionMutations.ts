@@ -3,14 +3,10 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import {
-  AddPermissionTagInput,
   CreatePermissionInput,
   Permission,
-  PermissionTag,
-  RemovePermissionTagInput,
   UpdatePermissionInput,
 } from '@/graphql/generated/types';
-import { ADD_PERMISSION_TAG, REMOVE_PERMISSION_TAG } from '@/hooks/tags/mutations';
 
 import { evictPermissionsCache } from './cache';
 import { CREATE_PERMISSION, UPDATE_PERMISSION, DELETE_PERMISSION } from './mutations';
@@ -32,17 +28,6 @@ export function usePermissionMutations() {
   const [deletePermission] = useMutation<{ deletePermission: Permission }>(DELETE_PERMISSION, {
     update,
   });
-
-  const [addPermissionTag] = useMutation<{ addPermissionTag: PermissionTag }>(ADD_PERMISSION_TAG, {
-    update,
-  });
-
-  const [removePermissionTag] = useMutation<{ removePermissionTag: PermissionTag }>(
-    REMOVE_PERMISSION_TAG,
-    {
-      update,
-    }
-  );
 
   const handleCreatePermission = async (input: CreatePermissionInput) => {
     try {
@@ -105,47 +90,9 @@ export function usePermissionMutations() {
     }
   };
 
-  const handleAddPermissionTag = async (input: AddPermissionTagInput) => {
-    try {
-      const result = await addPermissionTag({
-        variables: { input },
-        refetchQueries: ['GetPermissions'],
-      });
-
-      toast.success(t('notifications.tagAddedSuccess'));
-      return result.data?.addPermissionTag;
-    } catch (error) {
-      console.error('Error adding permission tag:', error);
-      toast.error(t('notifications.tagAddedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
-  const handleRemovePermissionTag = async (input: RemovePermissionTagInput) => {
-    try {
-      const result = await removePermissionTag({
-        variables: { input },
-        refetchQueries: ['GetPermissions'],
-      });
-
-      toast.success(t('notifications.tagRemovedSuccess'));
-      return result.data?.removePermissionTag;
-    } catch (error) {
-      console.error('Error removing permission tag:', error);
-      toast.error(t('notifications.tagRemovedError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
   return {
     createPermission: handleCreatePermission,
     updatePermission: handleUpdatePermission,
     deletePermission: handleDeletePermission,
-    addPermissionTag: handleAddPermissionTag,
-    removePermissionTag: handleRemovePermissionTag,
   };
 }

@@ -11,6 +11,8 @@ import { CheckboxList } from '@/components/ui/checkbox-list';
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { Permission, Tenant } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useGroupPermissionMutations } from '@/hooks/group-permissions';
+import { useGroupTagMutations } from '@/hooks/group-tags';
 import { useGroupMutations } from '@/hooks/groups/useGroupMutations';
 import { useOrganizationGroupMutations } from '@/hooks/organization-groups/useOrganizationGroupMutations';
 import { usePermissions } from '@/hooks/permissions';
@@ -24,7 +26,9 @@ export function CreateGroupDialog() {
   const scope = useScopeFromParams();
   const { permissions, loading: permissionsLoading } = usePermissions({ scope });
   const { tags, loading: tagsLoading } = useTags({ scope });
-  const { createGroup, addGroupPermission, addGroupTag } = useGroupMutations();
+  const { createGroup } = useGroupMutations();
+  const { addGroupPermission } = useGroupPermissionMutations();
+  const { addGroupTag } = useGroupTagMutations();
   const { addOrganizationGroup } = useOrganizationGroupMutations();
   const { addProjectGroup } = useProjectGroupMutations();
 

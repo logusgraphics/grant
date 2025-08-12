@@ -15,6 +15,8 @@ import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { useGroups } from '@/hooks/groups';
 import { useOrganizationRoleMutations } from '@/hooks/organization-roles';
 import { useProjectRoleMutations } from '@/hooks/project-roles';
+import { useRoleGroupMutations } from '@/hooks/role-groups';
+import { useRoleTagMutations } from '@/hooks/role-tags';
 import { useRoleMutations } from '@/hooks/roles';
 import { useTags } from '@/hooks/tags';
 import { useRolesStore } from '@/stores/roles.store';
@@ -25,7 +27,9 @@ export function CreateRoleDialog() {
   const scope = useScopeFromParams();
   const { groups, loading: groupsLoading } = useGroups({ scope });
   const { tags, loading: tagsLoading } = useTags({ scope });
-  const { createRole, addRoleGroup, addRoleTag } = useRoleMutations();
+  const { createRole } = useRoleMutations();
+  const { addRoleGroup } = useRoleGroupMutations();
+  const { addRoleTag } = useRoleTagMutations();
   const { addProjectRole } = useProjectRoleMutations();
   const { addOrganizationRole } = useOrganizationRoleMutations();
 

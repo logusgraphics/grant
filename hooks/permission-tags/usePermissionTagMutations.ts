@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { ApolloCache, useMutation } from '@apollo/client';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -14,18 +14,18 @@ import { ADD_PERMISSION_TAG, REMOVE_PERMISSION_TAG } from './mutations';
 export function usePermissionTagMutations() {
   const t = useTranslations('permissions');
 
+  const update = (cache: ApolloCache<any>) => {
+    evictPermissionTagsCache(cache);
+  };
+
   const [addPermissionTag] = useMutation<{ addPermissionTag: PermissionTag }>(ADD_PERMISSION_TAG, {
-    update(cache) {
-      evictPermissionTagsCache(cache);
-    },
+    update,
   });
 
   const [removePermissionTag] = useMutation<{ removePermissionTag: PermissionTag }>(
     REMOVE_PERMISSION_TAG,
     {
-      update(cache) {
-        evictPermissionTagsCache(cache);
-      },
+      update,
     }
   );
 

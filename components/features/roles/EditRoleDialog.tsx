@@ -13,6 +13,8 @@ import { Group, Role, Tag } from '@/graphql/generated/types';
 import { Tenant } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { useGroups } from '@/hooks/groups';
+import { useRoleGroupMutations } from '@/hooks/role-groups';
+import { useRoleTagMutations } from '@/hooks/role-tags';
 import { useRoleMutations } from '@/hooks/roles';
 import { evictRolesCache } from '@/hooks/roles/cache';
 import { useTags } from '@/hooks/tags';
@@ -24,8 +26,9 @@ export function EditRoleDialog() {
   const scope = useScopeFromParams();
   const { groups, loading: groupsLoading } = useGroups({ scope });
   const { tags, loading: tagsLoading } = useTags({ scope });
-  const { updateRole, addRoleGroup, removeRoleGroup, addRoleTag, removeRoleTag } =
-    useRoleMutations();
+  const { updateRole } = useRoleMutations();
+  const { addRoleGroup, removeRoleGroup } = useRoleGroupMutations();
+  const { addRoleTag, removeRoleTag } = useRoleTagMutations();
   const client = useApolloClient();
 
   // Use selective subscriptions to prevent unnecessary re-renders
