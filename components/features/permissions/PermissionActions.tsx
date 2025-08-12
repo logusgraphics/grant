@@ -23,7 +23,7 @@ export function PermissionActions({ permission }: PermissionActionsProps) {
   };
 
   const handleDeleteClick = () => {
-    setPermissionToDelete({ id: permission.id, name: permission.name });
+    setPermissionToDelete(permission);
   };
 
   const actions: ActionItem<Permission>[] = [

@@ -24,7 +24,7 @@ interface PermissionsState {
   loading: boolean;
 
   // Dialog state
-  permissionToDelete: { id: string; name: string } | null;
+  permissionToDelete: Permission | null;
   permissionToEdit: Permission | null;
   isCreateDialogOpen: boolean;
 
@@ -42,7 +42,7 @@ interface PermissionsState {
   initializeFromUrl: (params: URLSearchParams) => void;
 
   // Dialog actions
-  setPermissionToDelete: (permission: { id: string; name: string } | null) => void;
+  setPermissionToDelete: (permission: Permission | null) => void;
   setPermissionToEdit: (permission: Permission | null) => void;
   setCreateDialogOpen: (open: boolean) => void;
 }

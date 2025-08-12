@@ -8,13 +8,13 @@ import {
   ProjectGroup,
 } from '@/graphql/generated/types';
 
-import { evictProjectGroupCache } from './cache';
+import { evictProjectGroupsCache } from './cache';
 import { ADD_PROJECT_GROUP, REMOVE_PROJECT_GROUP } from './mutations';
 
 export function useProjectGroupMutations() {
   const t = useTranslations('projectGroups');
   const update = (cache: ApolloCache<any>) => {
-    evictProjectGroupCache(cache);
+    evictProjectGroupsCache(cache);
   };
 
   const [addProjectGroup] = useMutation<{ addProjectGroup: ProjectGroup }>(ADD_PROJECT_GROUP, {

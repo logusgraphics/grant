@@ -31,12 +31,10 @@ export function usePermissionMutations() {
 
   const handleCreatePermission = async (input: CreatePermissionInput) => {
     try {
-      console.log('Creating permission with input:', input);
       const result = await createPermission({
         variables: { input },
       });
 
-      console.log('Create permission result:', result);
       toast.success(t('notifications.createSuccess'));
       return result.data?.createPermission;
     } catch (error) {
@@ -71,17 +69,10 @@ export function usePermissionMutations() {
         variables: { id },
       });
 
-      console.log('Delete permission result:', result);
       toast.success(t('notifications.deleteSuccess'));
       return result.data?.deletePermission;
     } catch (error) {
       console.error('Error deleting permission:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        graphQLErrors: (error as any)?.graphQLErrors,
-        networkError: (error as any)?.networkError,
-      });
       toast.error(t('notifications.deleteError'), {
         description: error instanceof Error ? error.message : 'An unknown error occurred',
       });

@@ -127,6 +127,8 @@ export function EditPermissionDialog() {
       title="editDialog.title"
       description="editDialog.description"
       confirmText="editDialog.confirm"
+      cancelText="editDialog.cancel"
+      updatingText="editDialog.updating"
       schema={editPermissionSchema}
       defaultValues={{
         name: '',

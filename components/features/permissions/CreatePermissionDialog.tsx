@@ -8,9 +8,12 @@ import {
   CreateDialogRelationship,
 } from '@/components/common/CreateDialog';
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
+import { Tenant } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useOrganizationPermissionMutations } from '@/hooks/organization-permissions';
 import { usePermissionTagMutations } from '@/hooks/permission-tags';
 import { usePermissionMutations } from '@/hooks/permissions';
+import { useProjectPermissionMutations } from '@/hooks/project-permissions';
 import { useTags } from '@/hooks/tags';
 import { usePermissionsStore } from '@/stores/permissions.store';
 
@@ -21,6 +24,8 @@ export function CreatePermissionDialog() {
   const { tags, loading: tagsLoading } = useTags({ scope });
   const { createPermission } = usePermissionMutations();
   const { addPermissionTag } = usePermissionTagMutations();
+  const { addOrganizationPermission } = useOrganizationPermissionMutations();
+  const { addProjectPermission } = useProjectPermissionMutations();
 
   // Use selective subscriptions to prevent unnecessary re-renders
   const isCreateDialogOpen = usePermissionsStore((state) => state.isCreateDialogOpen);
@@ -73,6 +78,27 @@ export function CreatePermissionDialog() {
   ) => {
     const promises: Promise<any>[] = [];
 
+    // Add permission to tenant
+    if (scope.tenant === Tenant.Organization) {
+      promises.push(
+        addOrganizationPermission({
+          organizationId: scope.id,
+          permissionId,
+        }).catch((error: any) => {
+          console.error('Error adding organization permission:', error);
+        })
+      );
+    } else if (scope.tenant === Tenant.Project) {
+      promises.push(
+        addProjectPermission({
+          projectId: scope.id,
+          permissionId,
+        }).catch((error: any) => {
+          console.error('Error adding project permission:', error);
+        })
+      );
+    }
+
     // Add tags
     if (values.tagIds && values.tagIds.length > 0) {
       const addTagPromises = values.tagIds.map((tagId) =>
@@ -101,7 +127,7 @@ export function CreatePermissionDialog() {
       description="createDialog.description"
       triggerText="createDialog.trigger"
       confirmText="createDialog.confirm"
-      cancelText="deleteDialog.cancel"
+      cancelText="createDialog.cancel"
       icon={Key}
       schema={createPermissionSchema}
       defaultValues={{

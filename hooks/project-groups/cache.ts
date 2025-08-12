@@ -1,8 +1,6 @@
 import { ApolloCache } from '@apollo/client';
 
-export const evictProjectGroupCache = (cache: ApolloCache<any>) => {
-  cache.evict({
-    id: 'ProjectGroup',
-    fieldName: 'projectGroups',
-  });
-};
+export function evictProjectGroupsCache(cache: ApolloCache<any>) {
+  cache.evict({ fieldName: 'projectGroups' });
+  cache.gc();
+}

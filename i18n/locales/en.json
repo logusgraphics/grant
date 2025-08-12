@@ -422,12 +422,16 @@
       "title": "Create New Group",
       "description": "Add a new group to the system",
       "trigger": "Create Group",
-      "confirm": "Create Group"
+      "confirm": "Create Group",
+      "submitting": "Creating...",
+      "cancel": "Cancel"
     },
     "editDialog": {
       "title": "Edit Group",
       "description": "Update group information",
-      "confirm": "Save Changes"
+      "confirm": "Save Changes",
+      "cancel": "Cancel",
+      "updating": "Updating..."
     },
     "deleteDialog": {
       "title": "Delete Group",

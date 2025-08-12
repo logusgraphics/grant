@@ -148,7 +148,7 @@ export function CreateGroupDialog() {
       description="createDialog.description"
       triggerText="createDialog.trigger"
       confirmText="createDialog.confirm"
-      cancelText="deleteDialog.cancel"
+      cancelText="createDialog.cancel"
       icon={Users}
       schema={createGroupSchema}
       defaultValues={{

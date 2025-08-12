@@ -11,6 +11,8 @@ export * from './group-permissions';
 export * from './auth';
 export * from './permissions';
 export * from './permission-tags';
+export * from './organization-permissions';
+export * from './project-permissions';
 export * from './tags';
 export * from './projects';
 export * from './organizations';

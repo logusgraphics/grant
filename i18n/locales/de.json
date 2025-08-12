@@ -422,12 +422,16 @@
       "title": "Neue Gruppe erstellen",
       "description": "Fügen Sie eine neue Gruppe zum System hinzu",
       "trigger": "Gruppe erstellen",
-      "confirm": "Gruppe erstellen"
+      "confirm": "Gruppe erstellen",
+      "submitting": "Wird erstellt...",
+      "cancel": "Abbrechen"
     },
     "editDialog": {
       "title": "Gruppe bearbeiten",
       "description": "Aktualisieren Sie die Gruppeninformationen",
-      "confirm": "Änderungen speichern"
+      "confirm": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert..."
     },
     "deleteDialog": {
       "title": "Gruppe löschen",
