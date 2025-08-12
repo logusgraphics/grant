@@ -94,7 +94,7 @@ export function useProjectMutations() {
     }
   };
 
-  const handleDeleteProject = async (id: string, name: string) => {
+  const handleDeleteProject = async (id: string, _name: string) => {
     try {
       const result = await deleteProject({
         variables: { id },

@@ -1,6 +1,3 @@
 extend type Query {
-  userTags(
-    scope: Scope!
-    userId: ID!
-  ): [UserTag!]!
+  userTags(scope: Scope!, userId: ID!): [UserTag!]!
 }

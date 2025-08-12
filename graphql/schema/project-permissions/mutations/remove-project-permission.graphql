@@ -1,5 +1,3 @@
 extend type Mutation {
-  removeProjectPermission(
-    input: RemoveProjectPermissionInput!
-  ): ProjectPermission!
+  removeProjectPermission(input: RemoveProjectPermissionInput!): ProjectPermission!
 }

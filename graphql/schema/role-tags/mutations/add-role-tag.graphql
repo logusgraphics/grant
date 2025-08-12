@@ -1,5 +1,3 @@
 extend type Mutation {
-  addRoleTag(
-    input: AddRoleTagInput!
-  ): RoleTag!
+  addRoleTag(input: AddRoleTagInput!): RoleTag!
 }

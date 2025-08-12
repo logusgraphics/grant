@@ -1,5 +1,3 @@
 extend type Mutation {
-  deleteGroup(
-    id: ID!
-  ): Group!
+  deleteGroup(id: ID!): Group!
 }

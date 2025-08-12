@@ -1,5 +1,3 @@
 extend type Mutation {
-  removeOrganizationGroup(
-    input: RemoveOrganizationGroupInput!
-  ): OrganizationGroup!
+  removeOrganizationGroup(input: RemoveOrganizationGroupInput!): OrganizationGroup!
 }

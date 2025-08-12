@@ -1,5 +1,3 @@
 extend type Mutation {
-  deleteRole(
-    id: ID!
-  ): Role!
+  deleteRole(id: ID!): Role!
 }

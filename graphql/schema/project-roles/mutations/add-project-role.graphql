@@ -1,5 +1,3 @@
 extend type Mutation {
-  addProjectRole(
-    input: AddProjectRoleInput!
-  ): ProjectRole!
+  addProjectRole(input: AddProjectRoleInput!): ProjectRole!
 }

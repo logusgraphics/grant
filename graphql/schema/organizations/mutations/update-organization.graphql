@@ -1,6 +1,3 @@
 extend type Mutation {
-  updateOrganization(
-    id: ID!
-    input: UpdateOrganizationInput!
-  ): Organization!
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
 }

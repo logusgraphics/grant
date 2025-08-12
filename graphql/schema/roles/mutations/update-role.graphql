@@ -1,6 +1,3 @@
 extend type Mutation {
-  updateRole(
-    id: ID!
-    input: UpdateRoleInput!
-  ): Role!
+  updateRole(id: ID!, input: UpdateRoleInput!): Role!
 }

@@ -1,5 +1,3 @@
 extend type Mutation {
-  addGroupPermission(
-    input: AddGroupPermissionInput!
-  ): GroupPermission!
+  addGroupPermission(input: AddGroupPermissionInput!): GroupPermission!
 }

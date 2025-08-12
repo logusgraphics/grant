@@ -1,5 +1,3 @@
 extend type Mutation {
-  addGroupTag(
-    input: AddGroupTagInput!
-  ): GroupTag!
+  addGroupTag(input: AddGroupTagInput!): GroupTag!
 }

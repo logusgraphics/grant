@@ -1,5 +1,3 @@
 extend type Mutation {
-  deleteOrganization(
-    id: ID!
-  ): Organization!
+  deleteOrganization(id: ID!): Organization!
 }

@@ -1,6 +1,3 @@
 extend type Mutation {
-  updateUser(
-    id: ID!
-    input: UpdateUserInput!
-  ): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
 }

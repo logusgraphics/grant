@@ -254,20 +254,17 @@ components/features/users/user-card/
 When adding a new GraphQL feature, follow these steps:
 
 1. **Define Schema Types**:
-
    - Create a new directory in `graphql/schema/{feature}/`
    - Define types in `types/` directory
    - Define inputs in `inputs/` directory
    - Define queries/mutations in respective directories
 
 2. **Implement Resolvers**:
-
    - Create a new directory in `graphql/resolvers/{feature}/`
    - Implement resolvers in appropriate subdirectories
    - Create a provider if needed for data access
 
 3. **Register Resolvers**:
-
    - Add query resolvers to `graphql/resolvers/queries.ts`
    - Add mutation resolvers to `graphql/resolvers/mutations.ts`
 
@@ -325,13 +322,11 @@ export const Query = {
    ```
 
 2. **Create Component**:
-
    - Add to `components/ui/` for base components
    - Add to `components/features/{feature}/` for feature-specific components
    - Use the `cn` utility for class name merging
 
 3. **Add Internationalization**:
-
    - Add translations in `i18n/locales/`
    - Use the `useTranslations` hook
    - Update `i18n/routing.ts` if needed
@@ -375,19 +370,16 @@ export const Query = {
 #### GraphQL
 
 1. **Schema Organization**:
-
    - Keep schema files focused and modular
    - Use descriptive names for types and operations
    - Document complex types with descriptions
 
 2. **Resolver Implementation**:
-
    - Implement resolvers in separate files
    - Use providers for data access abstraction
    - Handle errors consistently using shared error types
 
 3. **Type Safety**:
-
    - Use TypeScript for all resolver implementations
    - Leverage generated types from GraphQL Code Generator
    - Maintain strict type checking
@@ -400,21 +392,18 @@ export const Query = {
 #### UI/UX
 
 1. **Component Design**:
-
    - Keep components small and focused
    - Use TypeScript for all new code
    - Follow the established folder structure
    - Use path aliases for imports
 
 2. **Styling**:
-
    - Use Tailwind CSS classes
    - Follow the design system
    - Maintain dark mode compatibility
    - Use CSS variables for theming
 
 3. **Performance**:
-
    - Use React.memo for expensive components
    - Implement proper loading states
    - Optimize images and assets

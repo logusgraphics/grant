@@ -1,6 +1,3 @@
 extend type Query {
-  groupTags(
-    scope: Scope!
-    groupId: ID!
-  ): [GroupTag!]!
+  groupTags(scope: Scope!, groupId: ID!): [GroupTag!]!
 }

@@ -1,5 +1,3 @@
 extend type Mutation {
-  addProjectPermission(
-    input: AddProjectPermissionInput!
-  ): ProjectPermission!
+  addProjectPermission(input: AddProjectPermissionInput!): ProjectPermission!
 }

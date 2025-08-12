@@ -1,5 +1,3 @@
 extend type Mutation {
-  addOrganizationProject(
-    input: AddOrganizationProjectInput!
-  ): OrganizationProject!
+  addOrganizationProject(input: AddOrganizationProjectInput!): OrganizationProject!
 }

@@ -1,5 +1,3 @@
 extend type Mutation {
-  createGroup(
-    input: CreateGroupInput!
-  ): Group!
+  createGroup(input: CreateGroupInput!): Group!
 }

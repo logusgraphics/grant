@@ -1,5 +1,3 @@
 extend type Mutation {
-  addOrganizationUser(
-    input: AddOrganizationUserInput!
-  ): OrganizationUser!
+  addOrganizationUser(input: AddOrganizationUserInput!): OrganizationUser!
 }

@@ -1,5 +1,3 @@
 extend type Mutation {
-  removeUserRole(
-    input: RemoveUserRoleInput!
-  ): UserRole!
+  removeUserRole(input: RemoveUserRoleInput!): UserRole!
 }

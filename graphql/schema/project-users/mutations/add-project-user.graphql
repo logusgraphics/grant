@@ -1,5 +1,3 @@
 extend type Mutation {
-  addProjectUser(
-    input: AddProjectUserInput!
-  ): ProjectUser!
+  addProjectUser(input: AddProjectUserInput!): ProjectUser!
 }

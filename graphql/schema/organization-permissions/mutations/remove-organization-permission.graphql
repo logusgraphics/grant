@@ -1,5 +1,3 @@
 extend type Mutation {
-  removeOrganizationPermission(
-    input: RemoveOrganizationPermissionInput!
-  ): OrganizationPermission!
+  removeOrganizationPermission(input: RemoveOrganizationPermissionInput!): OrganizationPermission!
 }

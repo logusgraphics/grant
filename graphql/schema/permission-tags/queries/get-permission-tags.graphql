@@ -1,6 +1,3 @@
 extend type Query {
-  permissionTags(
-    scope: Scope!
-    permissionId: ID!
-  ): [PermissionTag!]!
+  permissionTags(scope: Scope!, permissionId: ID!): [PermissionTag!]!
 }

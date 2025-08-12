@@ -1,5 +1,3 @@
 extend type Mutation {
-  createPermission(
-    input: CreatePermissionInput!
-  ): Permission!
+  createPermission(input: CreatePermissionInput!): Permission!
 }

@@ -1,5 +1,3 @@
 extend type Mutation {
-  removeProjectRole(
-    input: RemoveProjectRoleInput!
-  ): ProjectRole!
+  removeProjectRole(input: RemoveProjectRoleInput!): ProjectRole!
 }

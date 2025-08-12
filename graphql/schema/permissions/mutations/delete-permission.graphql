@@ -1,5 +1,3 @@
 extend type Mutation {
-  deletePermission(
-    id: ID!
-  ): Permission!
+  deletePermission(id: ID!): Permission!
 }

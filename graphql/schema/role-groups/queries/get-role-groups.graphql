@@ -1,6 +1,3 @@
 extend type Query {
-  roleGroups(
-    scope: Scope!
-    roleId: ID!
-  ): [RoleGroup!]!
+  roleGroups(scope: Scope!, roleId: ID!): [RoleGroup!]!
 }
