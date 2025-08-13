@@ -69,7 +69,7 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn('w-[220px] justify-between', className)}
+          className={cn('w-full justify-between', className)}
           disabled={loading}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -88,7 +88,7 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[220px] p-0">
+      <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder={t('organizations.search')} />
           <CommandList>
