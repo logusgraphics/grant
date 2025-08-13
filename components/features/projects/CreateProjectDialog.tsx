@@ -8,7 +8,6 @@ import { useProjectMutations, useOrganizationProjectMutations } from '@/hooks';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { useProjectTagMutations } from '@/hooks/project-tags';
 import { useTags } from '@/hooks/tags';
-import { useOrganizationsStore } from '@/stores/organizations.store';
 import { useProjectsStore } from '@/stores/projects.store';
 
 import { createProjectSchema, type CreateProjectFormValues } from './types';
@@ -16,7 +15,6 @@ import { createProjectSchema, type CreateProjectFormValues } from './types';
 export function CreateProjectDialog() {
   const scope = useScopeFromParams();
   const { tags, loading: tagsLoading } = useTags({ scope });
-  const selectedOrganizationId = useOrganizationsStore((state) => state.selectedOrganizationId);
   const isCreateDialogOpen = useProjectsStore((state) => state.isCreateDialogOpen);
   const setCreateDialogOpen = useProjectsStore((state) => state.setCreateDialogOpen);
 
@@ -31,14 +29,10 @@ export function CreateProjectDialog() {
   const handleAddRelationships = async (projectId: string, values: CreateProjectFormValues) => {
     const promises: Promise<any>[] = [];
 
-    if (!selectedOrganizationId) {
-      throw new Error('No organization selected');
-    }
-
     // Add organization-project relationship
     promises.push(
       addOrganizationProject({
-        organizationId: selectedOrganizationId,
+        organizationId: scope.id,
         projectId,
       })
     );

@@ -19,9 +19,6 @@ interface OrganizationsState {
   totalCount: number;
   isInitialized: boolean;
 
-  // Selected organization
-  selectedOrganizationId: string | null;
-
   // Data state
   organizations: Organization[];
   loading: boolean;
@@ -41,7 +38,6 @@ interface OrganizationsState {
   setTotalCount: (count: number) => void;
   setOrganizations: (organizations: Organization[]) => void;
   setLoading: (loading: boolean) => void;
-  setSelectedOrganizationId: (organizationId: string | null) => void;
   resetToDefaults: () => void;
   initializeFromUrl: (params: URLSearchParams) => void;
 
@@ -66,10 +62,6 @@ export const useOrganizationsStore = create<OrganizationsState>()(
       totalCount: 0,
       isInitialized: false,
 
-      // Selected organization - initialize from localStorage
-      selectedOrganizationId:
-        typeof window !== 'undefined' ? localStorage.getItem('selectedOrganizationId') : null,
-
       // Data state
       organizations: [],
       loading: false,
@@ -89,17 +81,6 @@ export const useOrganizationsStore = create<OrganizationsState>()(
       setTotalCount: (totalCount) => set({ totalCount }),
       setOrganizations: (organizations) => set({ organizations }),
       setLoading: (loading) => set({ loading }),
-      setSelectedOrganizationId: (organizationId) => {
-        set({ selectedOrganizationId: organizationId });
-        // Persist to localStorage
-        if (typeof window !== 'undefined') {
-          if (organizationId) {
-            localStorage.setItem('selectedOrganizationId', organizationId);
-          } else {
-            localStorage.removeItem('selectedOrganizationId');
-          }
-        }
-      },
       resetToDefaults: () =>
         set({
           page: 1,
@@ -110,7 +91,6 @@ export const useOrganizationsStore = create<OrganizationsState>()(
           selectedTagIds: [],
           totalCount: 0,
           isInitialized: false,
-          selectedOrganizationId: null,
           organizations: [],
           loading: false,
           organizationToDelete: null,

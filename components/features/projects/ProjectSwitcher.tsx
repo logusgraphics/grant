@@ -20,7 +20,6 @@ import { ProjectSortableField, ProjectSortOrder } from '@/graphql/generated/type
 import { useProjects } from '@/hooks/projects/useProjects';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
-import { useOrganizationsStore } from '@/stores/organizations.store';
 
 interface ProjectSwitcherProps {
   className?: string;
@@ -32,15 +31,11 @@ export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
   const pathname = usePathname();
   const params = useParams();
   const [open, setOpen] = React.useState(false);
-
-  const { selectedOrganizationId } = useOrganizationsStore();
-
-  // Get the current organization ID from the store
-  const currentOrganizationId = selectedOrganizationId;
+  const organizationId = params.organizationId as string;
 
   // Load all projects for the current organization with limit -1
   const { projects, loading, error } = useProjects({
-    organizationId: currentOrganizationId || '',
+    organizationId,
     limit: -1,
     sort: { field: ProjectSortableField.Name, order: ProjectSortOrder.Asc },
   });
@@ -58,8 +53,8 @@ export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
   const handleProjectSelect = (projectId: string) => {
     setOpen(false);
 
-    // Redirect to the project page
-    const newPath = `/dashboard/project/${projectId}`;
+    // Redirect to the project page using the new nested structure
+    const newPath = `/dashboard/org/${organizationId}/projects/${projectId}`;
     if (pathname !== newPath) {
       router.replace(newPath);
     }
@@ -73,7 +68,7 @@ export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
           role="combobox"
           aria-expanded={open}
           className={cn('w-full justify-between', className)}
-          disabled={loading || !currentOrganizationId}
+          disabled={loading || !organizationId}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />

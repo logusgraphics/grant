@@ -14,7 +14,11 @@ import { ProjectCardSkeleton } from './ProjectCardSkeleton';
 import { ProjectHeader } from './ProjectHeader';
 import { ProjectNavigationButton } from './ProjectNavigationButton';
 
-export function ProjectCards() {
+interface ProjectCardsProps {
+  organizationId: string;
+}
+
+export function ProjectCards({ organizationId }: ProjectCardsProps) {
   const t = useTranslations('projects');
 
   // Use selective subscriptions to prevent unnecessary re-renders
@@ -56,7 +60,12 @@ export function ProjectCards() {
       renderFooter={(project: Project) => (
         <div className="flex items-center justify-between w-full">
           <ProjectAudit project={project} />
-          <ProjectNavigationButton project={project} size="lg" round={true} />
+          <ProjectNavigationButton
+            project={project}
+            organizationId={organizationId}
+            size="lg"
+            round={true}
+          />
         </div>
       )}
     />

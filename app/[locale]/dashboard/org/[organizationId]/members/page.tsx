@@ -10,9 +10,9 @@ import { UserToolbar } from '@/components/features/users/UserToolbar';
 import { UserViewer } from '@/components/features/users/UserViewer';
 import { usePageTitle } from '@/hooks';
 
-export default function OrganizationUsersPage() {
-  const t = useTranslations('users');
-  usePageTitle('users');
+export default function OrganizationMembersPage() {
+  const t = useTranslations('members');
+  usePageTitle('members');
 
   return (
     <DashboardPageLayout title={t('title')} actions={<UserToolbar />} footer={<UserPagination />}>

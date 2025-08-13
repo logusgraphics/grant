@@ -53,10 +53,10 @@ export function ProjectViewer() {
   // Render the appropriate view based on the current view state
   switch (view) {
     case ProjectView.CARD:
-      return <ProjectCards />;
+      return <ProjectCards organizationId={scope.id} />;
     case ProjectView.TABLE:
-      return <ProjectTable />;
+      return <ProjectTable organizationId={scope.id} />;
     default:
-      return <ProjectCards />;
+      return <ProjectCards organizationId={scope.id} />;
   }
 }

@@ -2,10 +2,10 @@
 
 import { useCallback } from 'react';
 
-import { Users, Shield, Group, Key, Tag, FolderOpen } from 'lucide-react';
+import { Users, Tag, FolderOpen } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -22,12 +22,12 @@ interface NavItem {
 export function OrganizationNav() {
   const t = useTranslations('dashboard.navigation');
   const pathname = usePathname();
-  const scope = useScopeFromParams();
-  const { id: organizationId } = scope;
+  const params = useParams();
+  const organizationId = params.organizationId as string;
 
   const isActive = useCallback(
     (path: string) => {
-      return pathname.endsWith(path);
+      return pathname.includes(path);
     },
     [pathname]
   );
@@ -63,29 +63,14 @@ export function OrganizationNav() {
       translationKey: 'projects',
     },
     {
-      path: `/dashboard/org/${organizationId}/users`,
-      icon: <Users className={iconClasses(`/dashboard/org/${organizationId}/users`)} />,
-      translationKey: 'users',
-    },
-    {
-      path: `/dashboard/org/${organizationId}/roles`,
-      icon: <Shield className={iconClasses(`/dashboard/org/${organizationId}/roles`)} />,
-      translationKey: 'roles',
-    },
-    {
-      path: `/dashboard/org/${organizationId}/groups`,
-      icon: <Group className={iconClasses(`/dashboard/org/${organizationId}/groups`)} />,
-      translationKey: 'groups',
-    },
-    {
-      path: `/dashboard/org/${organizationId}/permissions`,
-      icon: <Key className={iconClasses(`/dashboard/org/${organizationId}/permissions`)} />,
-      translationKey: 'permissions',
+      path: `/dashboard/org/${organizationId}/members`,
+      icon: <Users className={iconClasses(`/dashboard/org/${organizationId}/members`)} />,
+      translationKey: 'members',
     },
     {
       path: `/dashboard/org/${organizationId}/tags`,
       icon: <Tag className={iconClasses(`/dashboard/org/${organizationId}/tags`)} />,
-      translationKey: 'tags',
+      translationKey: 'organizationTags',
     },
   ];
 
@@ -118,7 +103,7 @@ export function OrganizationNav() {
       </div>
 
       {/* Mobile: All items in single row */}
-      <div className="grid grid-cols-6 md:hidden gap-1">{renderNavItems(organizationNavItems)}</div>
+      <div className="grid grid-cols-3 md:hidden gap-1">{renderNavItems(organizationNavItems)}</div>
 
       {/* Desktop: Vertical layout */}
       <div className="hidden md:flex md:flex-col md:space-y-1">

@@ -39,7 +39,7 @@ export interface CardGridProps<TEntity extends BaseEntity> {
 
   // Render functions
   renderHeader: (entity: TEntity) => ReactNode;
-  renderBody: (entity: TEntity) => ReactNode;
+  renderBody?: (entity: TEntity) => ReactNode;
   renderFooter?: (entity: TEntity) => ReactNode;
 
   // Optional customizations
@@ -89,7 +89,7 @@ export function CardGrid<TEntity extends BaseEntity>({
                       {renderHeader(entity)}
                     </CardHeader>
 
-                    <CardContent className="pt-0">{renderBody(entity)}</CardContent>
+                    {renderBody && <CardContent className="pt-0">{renderBody(entity)}</CardContent>}
 
                     {renderFooter && (
                       <CardFooter className="px-6">{renderFooter(entity)}</CardFooter>

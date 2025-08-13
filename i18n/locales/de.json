@@ -78,6 +78,9 @@
       "groups": "Gruppen",
       "permissions": "Berechtigungen",
       "tags": "Tags",
+      "members": "Mitglieder",
+      "organizationTags": "Organisations-Tags",
+      "projectTags": "Projekt-Tags",
       "projects": "Projekte",
       "account": "Account",
       "settings": "Einstellungen",
@@ -154,6 +157,7 @@
   },
   "users": {
     "title": "Benutzerverwaltung",
+    "members": "Mitglieder",
     "noUsers": {
       "title": "Keine Benutzer gefunden",
       "description": "Erstellen Sie Ihren ersten Benutzer"
@@ -258,6 +262,114 @@
       "updated": "Aktualisiert",
       "actions": "Aktionen",
       "loading": "Benutzer werden geladen..."
+    }
+  },
+  "members": {
+    "title": "Organisationsmitglieder",
+    "noUsers": {
+      "title": "Keine Mitglieder gefunden",
+      "description": "Fügen Sie Ihr erstes Mitglied hinzu"
+    },
+    "noSearchResults": {
+      "title": "Keine Mitglieder gefunden",
+      "description": "Versuchen Sie, Ihre Suchbegriffe anzupassen oder fügen Sie ein neues Mitglied hinzu"
+    },
+    "actions": {
+      "create": "Mitglied hinzufügen",
+      "edit": "Bearbeiten",
+      "delete": "Entfernen",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert...",
+      "label": "Aktionen anzeigen/ausblenden"
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "name": "Name",
+      "email": "E-Mail",
+      "default": "Standard"
+    },
+    "limit": "Einträge pro Seite",
+    "search": {
+      "placeholder": "Mitglieder suchen..."
+    },
+    "form": {
+      "name": "Name",
+      "email": "E-Mail",
+      "roles": "Rollen",
+      "tags": "Tags",
+      "validation": {
+        "rolesRequired": "Mitglied muss mindestens eine Rolle haben"
+      },
+      "rolesLoading": "Rollen werden geladen...",
+      "noRolesAvailable": "Keine Rollen verfügbar",
+      "tagsLoading": "Tags werden geladen...",
+      "noTagsAvailable": "Keine Tags verfügbar"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "customer": "Kunde"
+    },
+    "createDialog": {
+      "title": "Neues Mitglied hinzufügen",
+      "description": "Fügen Sie ein neues Mitglied zur Organisation hinzu",
+      "trigger": "Mitglied hinzufügen",
+      "confirm": "Mitglied hinzufügen",
+      "submitting": "Wird hinzugefügt..."
+    },
+    "editDialog": {
+      "title": "Mitglied bearbeiten",
+      "description": "Aktualisieren Sie die Mitgliedsinformationen",
+      "confirm": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert..."
+    },
+    "deleteDialog": {
+      "title": "Mitglied entfernen",
+      "description": "Sind Sie sicher, dass Sie {name} aus der Organisation entfernen möchten?",
+      "cancel": "Abbrechen",
+      "confirm": "Entfernen",
+      "deleting": "Wird entfernt..."
+    },
+    "notifications": {
+      "createSuccess": "Mitglied hinzugefügt",
+      "createError": "Mitglied konnte nicht hinzugefügt werden",
+      "updateSuccess": "Mitglied aktualisiert",
+      "updateError": "Mitglied konnte nicht aktualisiert werden",
+      "deleteSuccess": "Mitglied entfernt",
+      "deleteError": "Mitglied konnte nicht entfernt werden",
+      "roleAddedSuccess": "Rolle zum Mitglied hinzugefügt",
+      "roleAddedError": "Rolle konnte nicht zum Mitglied hinzugefügt werden",
+      "roleRemovedSuccess": "Rolle vom Mitglied entfernt",
+      "roleRemovedError": "Rolle konnte nicht vom Mitglied entfernt werden",
+      "tagAddedSuccess": "Tag zum Mitglied hinzugefügt",
+      "tagAddedError": "Tag konnte nicht zum Mitglied hinzugefügt werden",
+      "tagRemovedSuccess": "Tag vom Mitglied entfernt",
+      "tagRemovedError": "Tag konnte nicht vom Mitglied entfernt werden"
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
+    },
+    "toolbar": {
+      "tags": {
+        "title": "Nach Tags filtern",
+        "placeholder": "Tags auswählen",
+        "selected": "{count} ausgewählt",
+        "clearAll": "Alle löschen",
+        "loading": "Tags werden geladen..."
+      }
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "email": "E-Mail",
+      "roles": "Rollen",
+      "tags": "Tags",
+      "audit": "Audit",
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
+      "actions": "Aktionen",
+      "loading": "Mitglieder werden geladen..."
     }
   },
   "roles": {

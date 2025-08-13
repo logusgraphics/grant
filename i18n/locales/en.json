@@ -78,6 +78,9 @@
       "groups": "Groups",
       "permissions": "Permissions",
       "tags": "Tags",
+      "members": "Members",
+      "organizationTags": "Organization Tags",
+      "projectTags": "Project Tags",
       "projects": "Projects",
       "account": "Account",
       "settings": "Settings",
@@ -154,6 +157,7 @@
   },
   "users": {
     "title": "User Management",
+    "members": "Members",
     "noUsers": {
       "title": "No users found",
       "description": "Get started by creating your first user"
@@ -258,6 +262,114 @@
       "updated": "Updated",
       "actions": "Actions",
       "loading": "Loading users..."
+    }
+  },
+  "members": {
+    "title": "Organization Members",
+    "noUsers": {
+      "title": "No members found",
+      "description": "Get started by adding your first member"
+    },
+    "noSearchResults": {
+      "title": "No members found",
+      "description": "Try adjusting your search terms or add a new member"
+    },
+    "actions": {
+      "create": "Add Member",
+      "edit": "Edit",
+      "delete": "Remove",
+      "cancel": "Cancel",
+      "updating": "Updating...",
+      "label": "Show/Hide Actions"
+    },
+    "sort": {
+      "label": "Sort by",
+      "name": "Name",
+      "email": "Email",
+      "default": "Default"
+    },
+    "limit": "Items per page",
+    "search": {
+      "placeholder": "Search members..."
+    },
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "tags": "Tags",
+      "validation": {
+        "rolesRequired": "Member must have at least one role"
+      },
+      "rolesLoading": "Loading roles...",
+      "noRolesAvailable": "No roles available",
+      "tagsLoading": "Loading tags...",
+      "noTagsAvailable": "No tags available"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "customer": "Customer"
+    },
+    "createDialog": {
+      "title": "Add New Member",
+      "description": "Add a new member to the organization",
+      "trigger": "Add Member",
+      "confirm": "Add Member",
+      "submitting": "Adding..."
+    },
+    "editDialog": {
+      "title": "Edit Member",
+      "description": "Update member information",
+      "confirm": "Save Changes",
+      "cancel": "Cancel",
+      "updating": "Updating..."
+    },
+    "deleteDialog": {
+      "title": "Remove Member",
+      "description": "Are you sure you want to remove {name} from the organization?",
+      "cancel": "Cancel",
+      "confirm": "Remove",
+      "deleting": "Removing..."
+    },
+    "notifications": {
+      "createSuccess": "Member added",
+      "createError": "Failed to add member",
+      "updateSuccess": "Member updated",
+      "updateError": "Failed to update member",
+      "deleteSuccess": "Member removed",
+      "deleteError": "Failed to remove member",
+      "roleAddedSuccess": "Role added to member",
+      "roleAddedError": "Failed to add role to member",
+      "roleRemovedSuccess": "Role removed from member",
+      "roleRemovedError": "Failed to remove role from member",
+      "tagAddedSuccess": "Tag added to member",
+      "tagAddedError": "Failed to add tag to member",
+      "tagRemovedSuccess": "Tag removed from member",
+      "tagRemovedError": "Failed to remove tag from member"
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
+    },
+    "toolbar": {
+      "tags": {
+        "title": "Filter by Tags",
+        "placeholder": "Select tags",
+        "selected": "{count} selected",
+        "clearAll": "Clear all",
+        "loading": "Loading tags..."
+      }
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "tags": "Tags",
+      "audit": "Audit",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "loading": "Loading members..."
     }
   },
   "roles": {

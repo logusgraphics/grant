@@ -18,7 +18,11 @@ import { ProjectActions } from './ProjectActions';
 import { ProjectAudit } from './ProjectAudit';
 import { ProjectNavigationButton } from './ProjectNavigationButton';
 
-export function ProjectTable() {
+interface ProjectTableProps {
+  organizationId: string;
+}
+
+export function ProjectTable({ organizationId }: ProjectTableProps) {
   const t = useTranslations('projects');
 
   // Use selective subscriptions to prevent unnecessary re-renders
@@ -110,7 +114,12 @@ export function ProjectTable() {
       header: '',
       width: '60px',
       render: (project: Project) => (
-        <ProjectNavigationButton project={project} size="sm" round={false} />
+        <ProjectNavigationButton
+          project={project}
+          organizationId={organizationId}
+          size="sm"
+          round={false}
+        />
       ),
     },
   ];

@@ -20,7 +20,6 @@ import { OrganizationSortableField, OrganizationSortOrder } from '@/graphql/gene
 import { useOrganizations } from '@/hooks/organizations/useOrganizations';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
-import { useOrganizationsStore } from '@/stores/organizations.store';
 
 interface OrganizationSwitcherProps {
   className?: string;
@@ -33,7 +32,7 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
   const params = useParams();
   const [open, setOpen] = React.useState(false);
 
-  const { selectedOrganizationId, setSelectedOrganizationId } = useOrganizationsStore();
+  const currentOrganizationId = params.organizationId as string;
 
   // Load all organizations with limit -1 (always call this hook)
   const { organizations, loading, error } = useOrganizations({
@@ -49,10 +48,9 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
     return null;
   }
 
-  const selectedOrganization = organizations.find((org) => org.id === selectedOrganizationId);
+  const selectedOrganization = organizations.find((org) => org.id === currentOrganizationId);
 
   const handleOrganizationSelect = (organizationId: string) => {
-    setSelectedOrganizationId(organizationId);
     setOpen(false);
 
     // Redirect to the organization's projects page
@@ -103,7 +101,7 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
                   <Check
                     className={cn(
                       'mr-2 h-4 w-4',
-                      selectedOrganizationId === organization.id ? 'opacity-100' : 'opacity-0'
+                      currentOrganizationId === organization.id ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {organization.name}

@@ -1,25 +1,14 @@
 'use client';
 
-import {
-  EditDialog,
-  EditDialogField,
-  EditDialogRelationship,
-} from '@/components/common/EditDialog';
-import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
+import { EditDialog, EditDialogField } from '@/components/common/EditDialog';
 import { Organization, Tag } from '@/graphql/generated/types';
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
-import { useOrganizationTagMutations } from '@/hooks/organization-tags';
 import { useOrganizationMutations } from '@/hooks/organizations';
-import { useTags } from '@/hooks/tags';
 import { useOrganizationsStore } from '@/stores/organizations.store';
 
 import { editOrganizationSchema, EditOrganizationFormValues } from './types';
 
 export function EditOrganizationDialog() {
-  const scope = useScopeFromParams();
-  const { tags, loading: tagsLoading } = useTags({ scope });
   const { updateOrganization } = useOrganizationMutations();
-  const { addOrganizationTag, removeOrganizationTag } = useOrganizationTagMutations();
 
   // Use selective subscriptions to prevent unnecessary re-renders
   const organizationToEdit = useOrganizationsStore((state) => state.organizationToEdit);
@@ -35,18 +24,6 @@ export function EditOrganizationDialog() {
     },
   ];
 
-  const relationships: EditDialogRelationship[] = [
-    {
-      name: 'tagIds',
-      label: 'form.tags',
-      renderComponent: (props: any) => <TagCheckboxList {...props} />,
-      items: tags,
-      loading: tagsLoading,
-      loadingText: 'form.tagsLoading',
-      emptyText: 'form.noTagsAvailable',
-    },
-  ];
-
   const mapOrganizationToFormValues = (organization: Organization): EditOrganizationFormValues => ({
     name: organization.name,
     tagIds: organization.tags?.map((tag: Tag) => tag.id),
@@ -56,44 +33,6 @@ export function EditOrganizationDialog() {
     await updateOrganization(organizationId, {
       name: values.name,
     });
-  };
-
-  const handleAddRelationships = async (
-    organizationId: string,
-    relationshipName: string,
-    itemIds: string[]
-  ) => {
-    if (relationshipName === 'tagIds') {
-      const addPromises = itemIds.map((tagId) =>
-        addOrganizationTag({
-          organizationId,
-          tagId,
-        }).catch((error: any) => {
-          console.error('Error adding organization tag:', error);
-          throw error;
-        })
-      );
-      await Promise.all(addPromises);
-    }
-  };
-
-  const handleRemoveRelationships = async (
-    organizationId: string,
-    relationshipName: string,
-    itemIds: string[]
-  ) => {
-    if (relationshipName === 'tagIds') {
-      const removePromises = itemIds.map((tagId) =>
-        removeOrganizationTag({
-          organizationId,
-          tagId,
-        }).catch((error: any) => {
-          console.error('Error removing organization tag:', error);
-          throw error;
-        })
-      );
-      await Promise.all(removePromises);
-    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -118,11 +57,8 @@ export function EditOrganizationDialog() {
         tagIds: [],
       }}
       fields={fields}
-      relationships={relationships}
       mapEntityToFormValues={mapOrganizationToFormValues}
       onUpdate={handleUpdate}
-      onAddRelationships={handleAddRelationships}
-      onRemoveRelationships={handleRemoveRelationships}
       translationNamespace="organizations"
     />
   );

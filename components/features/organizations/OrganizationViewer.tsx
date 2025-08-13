@@ -16,7 +16,6 @@ export function OrganizationViewer() {
   const limit = useOrganizationsStore((state) => state.limit);
   const search = useOrganizationsStore((state) => state.search);
   const sort = useOrganizationsStore((state) => state.sort);
-  const selectedTagIds = useOrganizationsStore((state) => state.selectedTagIds);
   const setTotalCount = useOrganizationsStore((state) => state.setTotalCount);
   const setOrganizations = useOrganizationsStore((state) => state.setOrganizations);
   const setLoading = useOrganizationsStore((state) => state.setLoading);
@@ -27,7 +26,6 @@ export function OrganizationViewer() {
     limit,
     search,
     sort,
-    tagIds: selectedTagIds,
   });
 
   // Update store with data when it changes

@@ -2,15 +2,13 @@
 
 import { useCallback } from 'react';
 
-import { Users, Shield, Group, Key, Tag, ArrowLeft } from 'lucide-react';
+import { Users, Shield, Group, Key, Tag } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
-import { useOrganizationsStore } from '@/stores/organizations.store';
 
-import { OrganizationSwitcher } from '../features/organizations/OrganizationSwitcher';
 import { ProjectSwitcher } from '../features/projects/ProjectSwitcher';
 
 import { NavLink } from './NavLink';
@@ -24,9 +22,9 @@ interface NavItem {
 export function ProjectNav() {
   const t = useTranslations('dashboard.navigation');
   const pathname = usePathname();
-  const scope = useScopeFromParams();
-  const { id: projectId } = scope;
-  const { selectedOrganizationId } = useOrganizationsStore();
+  const params = useParams();
+  const organizationId = params.organizationId as string;
+  const projectId = params.projectId as string;
 
   const isActive = useCallback(
     (path: string) => {
@@ -61,29 +59,51 @@ export function ProjectNav() {
 
   const projectNavItems: NavItem[] = [
     {
-      path: `/dashboard/project/${projectId}/users`,
-      icon: <Users className={iconClasses(`/dashboard/project/${projectId}/users`)} />,
+      path: `/dashboard/org/${organizationId}/projects/${projectId}/users`,
+      icon: (
+        <Users
+          className={iconClasses(`/dashboard/org/${organizationId}/projects/${projectId}/users`)}
+        />
+      ),
       translationKey: 'users',
     },
     {
-      path: `/dashboard/project/${projectId}/roles`,
-      icon: <Shield className={iconClasses(`/dashboard/project/${projectId}/roles`)} />,
+      path: `/dashboard/org/${organizationId}/projects/${projectId}/roles`,
+      icon: (
+        <Shield
+          className={iconClasses(`/dashboard/org/${organizationId}/projects/${projectId}/roles`)}
+        />
+      ),
       translationKey: 'roles',
     },
     {
-      path: `/dashboard/project/${projectId}/groups`,
-      icon: <Group className={iconClasses(`/dashboard/project/${projectId}/groups`)} />,
+      path: `/dashboard/org/${organizationId}/projects/${projectId}/groups`,
+      icon: (
+        <Group
+          className={iconClasses(`/dashboard/org/${organizationId}/projects/${projectId}/groups`)}
+        />
+      ),
       translationKey: 'groups',
     },
     {
-      path: `/dashboard/project/${projectId}/permissions`,
-      icon: <Key className={iconClasses(`/dashboard/project/${projectId}/permissions`)} />,
+      path: `/dashboard/org/${organizationId}/projects/${projectId}/permissions`,
+      icon: (
+        <Key
+          className={iconClasses(
+            `/dashboard/org/${organizationId}/projects/${projectId}/permissions`
+          )}
+        />
+      ),
       translationKey: 'permissions',
     },
     {
-      path: `/dashboard/project/${projectId}/tags`,
-      icon: <Tag className={iconClasses(`/dashboard/project/${projectId}/tags`)} />,
-      translationKey: 'tags',
+      path: `/dashboard/org/${organizationId}/projects/${projectId}/tags`,
+      icon: (
+        <Tag
+          className={iconClasses(`/dashboard/org/${organizationId}/projects/${projectId}/tags`)}
+        />
+      ),
+      translationKey: 'projectTags',
     },
   ];
 
@@ -111,18 +131,7 @@ export function ProjectNav() {
 
   return (
     <nav className="md:flex md:flex-col md:h-full">
-      {/* Back to Organization */}
-      <div className="mb-4 px-2">
-        <NavLink href={`/dashboard/org/${selectedOrganizationId}/projects`}>
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            <span>{t('backToOrganization')}</span>
-          </div>
-        </NavLink>
-      </div>
-
       <div className="flex flex-col mb-4 space-y-2">
-        <OrganizationSwitcher />
         <ProjectSwitcher />
       </div>
 
