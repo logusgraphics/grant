@@ -9,6 +9,8 @@ import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 
+import { OrganizationSwitcher } from '../features/organizations/OrganizationSwitcher';
+
 import { NavLink } from './NavLink';
 
 interface NavItem {
@@ -111,6 +113,10 @@ export function OrganizationNav() {
 
   return (
     <nav className="md:flex md:flex-col md:h-full">
+      <div className="mb-4">
+        <OrganizationSwitcher />
+      </div>
+
       {/* Mobile: All items in single row */}
       <div className="grid grid-cols-6 md:hidden gap-1">{renderNavItems(organizationNavItems)}</div>
 

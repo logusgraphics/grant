@@ -5,15 +5,10 @@ import { useParams } from 'next/navigation';
 import { Scope, Tenant } from '@/graphql/generated/types';
 import { useOrganizationsStore } from '@/stores/organizations.store';
 
-/**
- * Hook to extract scope from URL parameters.
- * Determines the tenant type and ID based on the current route.
- */
 export function useScopeFromParams(): Scope {
   const params = useParams();
   const selectedOrganizationId = useOrganizationsStore((state) => state.selectedOrganizationId);
 
-  // Check if we're in a project context
   if (params.projectId) {
     return {
       tenant: Tenant.Project,
@@ -21,7 +16,6 @@ export function useScopeFromParams(): Scope {
     };
   }
 
-  // Check if we're in an organization context
   if (params.organizationId) {
     return {
       tenant: Tenant.Organization,

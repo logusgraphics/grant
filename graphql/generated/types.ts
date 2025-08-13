@@ -983,6 +983,7 @@ export type QueryOrganizationsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<OrganizationSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 
@@ -1035,6 +1036,7 @@ export type QueryProjectsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<ProjectSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 

@@ -96,8 +96,6 @@ export function Header() {
           </nav>
 
           <div className="flex items-center space-x-3">
-            <OrganizationSwitcher />
-            <ProjectSwitcher />
             <ThemeToggle ref={themeToggleRef} trigger={desktopThemeTrigger} />
             <LanguageSwitcher ref={languageSwitcherRef} trigger={desktopLanguageTrigger} />
             {!isAuthenticated ? (

@@ -8,6 +8,7 @@ export const GET_PROJECTS = gql`
     $sort: ProjectSortInput
     $search: String
     $ids: [ID!]
+    $tagIds: [ID!]
   ) {
     projects(
       organizationId: $organizationId
@@ -16,6 +17,7 @@ export const GET_PROJECTS = gql`
       sort: $sort
       search: $search
       ids: $ids
+      tagIds: $tagIds
     ) {
       projects {
         id

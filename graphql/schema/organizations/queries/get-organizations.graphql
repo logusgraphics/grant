@@ -5,5 +5,6 @@ extend type Query {
     search: String
     sort: OrganizationSortInput
     ids: [ID!]
+    tagIds: [ID!]
   ): OrganizationPage!
 }

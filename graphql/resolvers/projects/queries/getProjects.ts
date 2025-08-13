@@ -1,7 +1,7 @@
 import { QueryResolvers } from '@/graphql/generated/types';
 export const getProjectsResolver: QueryResolvers['projects'] = async (
   _parent,
-  { organizationId, page, limit, sort, search, ids },
+  { organizationId, page, limit, sort, search, ids, tagIds },
   context
 ) => {
   const organizationProjects = await context.providers.organizationProjects.getOrganizationProjects(
@@ -27,6 +27,7 @@ export const getProjectsResolver: QueryResolvers['projects'] = async (
     sort,
     search,
     organizationId,
+    tagIds,
   });
   return projectsResult;
 };

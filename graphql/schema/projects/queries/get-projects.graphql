@@ -6,5 +6,6 @@ extend type Query {
     search: String
     sort: ProjectSortInput
     ids: [ID!]
+    tagIds: [ID!]
   ): ProjectPage!
 }

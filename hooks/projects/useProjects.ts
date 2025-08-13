@@ -28,6 +28,7 @@ export function useProjects(options: QueryProjectsArgs): UseProjectsResult {
     search = '',
     sort = { field: ProjectSortableField.Name, order: ProjectSortOrder.Asc },
     ids,
+    tagIds,
   } = options;
 
   // Memoize variables to prevent unnecessary re-renders
@@ -39,8 +40,9 @@ export function useProjects(options: QueryProjectsArgs): UseProjectsResult {
       search,
       sort,
       ids,
+      tagIds,
     }),
-    [organizationId, page, limit, search, sort, ids]
+    [organizationId, page, limit, search, sort, ids, tagIds]
   );
 
   const { data, loading, error, refetch } = useQuery<{ projects: ProjectPage }>(GET_PROJECTS, {

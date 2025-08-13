@@ -10,8 +10,6 @@ import {
   ScrollBadges,
 } from '@/components/common';
 import { Project } from '@/graphql/generated/types';
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
-import { useProjects } from '@/hooks/projects';
 import { transformTagsToBadges } from '@/lib/tag-utils';
 import { useProjectsStore } from '@/stores/projects.store';
 
@@ -22,17 +20,13 @@ import { ProjectNavigationButton } from './ProjectNavigationButton';
 
 export function ProjectTable() {
   const t = useTranslations('projects');
-  const scope = useScopeFromParams();
-  // Get store state
-  const { page, limit, search, sort, selectedTagIds } = useProjectsStore();
-  const { projects, loading } = useProjects({
-    organizationId: scope.id,
-    page,
-    limit,
-    search,
-    sort,
-    ids: undefined,
-  });
+
+  // Use selective subscriptions to prevent unnecessary re-renders
+  const limit = useProjectsStore((state) => state.limit);
+  const search = useProjectsStore((state) => state.search);
+  const projects = useProjectsStore((state) => state.projects);
+  const loading = useProjectsStore((state) => state.loading);
+  const selectedTagIds = useProjectsStore((state) => state.selectedTagIds);
 
   // Check if there are any active filters
   const hasActiveFilters = search.trim() !== '' || selectedTagIds.length > 0;

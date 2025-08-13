@@ -7,8 +7,16 @@ export const GET_ORGANIZATIONS = gql`
     $sort: OrganizationSortInput
     $search: String
     $ids: [ID!]
+    $tagIds: [ID!]
   ) {
-    organizations(page: $page, limit: $limit, sort: $sort, search: $search, ids: $ids) {
+    organizations(
+      page: $page
+      limit: $limit
+      sort: $sort
+      search: $search
+      ids: $ids
+      tagIds: $tagIds
+    ) {
       organizations {
         id
         name

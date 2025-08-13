@@ -15,7 +15,7 @@ interface UseOrganizationsResult {
 }
 
 export function useOrganizations(options: QueryOrganizationsArgs): UseOrganizationsResult {
-  const { page, limit, search, sort, ids } = options;
+  const { page, limit, search, sort, ids, tagIds } = options;
 
   const variables = useMemo(
     () => ({
@@ -24,8 +24,9 @@ export function useOrganizations(options: QueryOrganizationsArgs): UseOrganizati
       search,
       sort,
       ids,
+      tagIds,
     }),
-    [page, limit, search, sort, ids]
+    [page, limit, search, sort, ids, tagIds]
   );
 
   const { data, loading, error, refetch } = useQuery<{ organizations: OrganizationPage }>(

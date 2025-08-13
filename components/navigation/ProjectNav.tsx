@@ -10,6 +10,9 @@ import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useOrganizationsStore } from '@/stores/organizations.store';
 
+import { OrganizationSwitcher } from '../features/organizations/OrganizationSwitcher';
+import { ProjectSwitcher } from '../features/projects/ProjectSwitcher';
+
 import { NavLink } from './NavLink';
 
 interface NavItem {
@@ -109,13 +112,18 @@ export function ProjectNav() {
   return (
     <nav className="md:flex md:flex-col md:h-full">
       {/* Back to Organization */}
-      <div className="mb-4 p-2">
+      <div className="mb-4 px-2">
         <NavLink href={`/dashboard/org/${selectedOrganizationId}/projects`}>
           <div className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
             <span>{t('backToOrganization')}</span>
           </div>
         </NavLink>
+      </div>
+
+      <div className="flex flex-col mb-4 space-y-2">
+        <OrganizationSwitcher />
+        <ProjectSwitcher />
       </div>
 
       {/* Mobile: All items in single row */}
