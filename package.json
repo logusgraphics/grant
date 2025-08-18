@@ -1,7 +1,12 @@
 {
-  "name": "customer-portal",
+  "name": "identity-central",
   "version": "0.1.0",
   "private": true,
+  "author": {
+    "name": "Alejandro Heredia",
+    "email": "ale@logus.graphics",
+    "url": "https://logus.graphics"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
