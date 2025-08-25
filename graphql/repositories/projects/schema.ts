@@ -1,0 +1,49 @@
+import { pgTable, uuid, varchar, timestamp, index } from 'drizzle-orm/pg-core';
+
+export const projects = pgTable(
+  'projects',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 255 }).notNull(),
+    slug: varchar('slug', { length: 255 }).notNull(),
+    description: varchar('description', { length: 1000 }),
+    deletedAt: timestamp('deleted_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => [index('projects_deleted_at_idx').on(t.deletedAt)]
+);
+
+export const projectAuditLogs = pgTable(
+  'project_audit_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .references(() => projects.id)
+      .notNull(),
+    action: varchar('action', { length: 50 }).notNull(),
+    oldValues: varchar('old_values', { length: 1000 }),
+    newValues: varchar('new_values', { length: 1000 }),
+    metadata: varchar('metadata', { length: 1000 }),
+    performedBy: uuid('performed_by').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [
+    index('project_audit_logs_project_id_idx').on(t.projectId),
+    index('project_audit_logs_action_idx').on(t.action),
+  ]
+);
+
+export type ProjectModel = typeof projects.$inferSelect;
+export type NewProjectModel = typeof projects.$inferInsert;
+export type ProjectAuditLogModel = typeof projectAuditLogs.$inferSelect;
+export type NewProjectAuditLogModel = typeof projectAuditLogs.$inferInsert;
+
+export const ProjectAuditAction = {
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+  SOFT_DELETE: 'SOFT_DELETE',
+} as const;
+
+export type ProjectAuditActionType = (typeof ProjectAuditAction)[keyof typeof ProjectAuditAction];

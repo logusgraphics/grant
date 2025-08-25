@@ -8,6 +8,7 @@ type Organization implements Auditable {
   permissions: [Permission!]
   users: [User!]
   tags: [Tag!]
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

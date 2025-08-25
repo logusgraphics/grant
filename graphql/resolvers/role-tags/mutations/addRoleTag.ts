@@ -4,6 +4,6 @@ export const addRoleTagResolver: MutationResolvers['addRoleTag'] = async (
   { input },
   context
 ) => {
-  const addedRoleTag = await context.providers.roleTags.addRoleTag({ input });
+  const addedRoleTag = await context.services.roleTags.addRoleTag({ input });
   return addedRoleTag;
 };

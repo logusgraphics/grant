@@ -4,8 +4,8 @@ export const getOrganizationProjectsResolver: QueryResolvers['organizationProjec
   { organizationId },
   context
 ) => {
-  const organizationProjects = await context.providers.organizationProjects.getOrganizationProjects(
-    { organizationId }
-  );
+  const organizationProjects = await context.services.organizationProjects.getOrganizationProjects({
+    organizationId,
+  });
   return organizationProjects;
 };

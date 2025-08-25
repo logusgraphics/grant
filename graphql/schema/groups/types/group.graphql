@@ -4,6 +4,7 @@ type Group implements Auditable {
   description: String
   permissions(scope: Scope!): [Permission!]
   tags(scope: Scope!): [Tag!]
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

@@ -4,7 +4,7 @@ export const addProjectTagResolver: MutationResolvers['addProjectTag'] = async (
   { input },
   context
 ) => {
-  const projectTag = await context.providers.projectTags.addProjectTag({
+  const projectTag = await context.services.projectTags.addProjectTag({
     input,
   });
   return projectTag;

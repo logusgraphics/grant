@@ -4,7 +4,7 @@ export const getOrganizationGroupsResolver: QueryResolvers['organizationGroups']
   { organizationId },
   context
 ) => {
-  const organizationGroups = await context.providers.organizationGroups.getOrganizationGroups({
+  const organizationGroups = await context.services.organizationGroups.getOrganizationGroups({
     organizationId,
   });
   return organizationGroups;

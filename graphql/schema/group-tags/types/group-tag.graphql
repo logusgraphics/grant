@@ -4,6 +4,7 @@ type GroupTag implements Auditable {
   tagId: ID!
   group(scope: Scope!): Group
   tag(scope: Scope!): Tag
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

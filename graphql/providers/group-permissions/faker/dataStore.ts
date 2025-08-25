@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 
 import { AddGroupPermissionInput, GroupPermission, Scope, Tenant } from '@/graphql/generated/types';
-import { getGroups } from '@/graphql/providers/groups/faker/dataStore';
-import { getPermissions } from '@/graphql/providers/permissions/faker/dataStore';
 import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
+import { getGroups } from '@/graphql/providers/groups/faker/dataStore';
+import { getPermissions } from '@/graphql/providers/permissions/faker/dataStore';
 
 import { getOrganizationPermissionsByOrganizationId } from '../../organization-permissions/faker/dataStore';
 import { getProjectPermissionsByProjectId } from '../../project-permissions/faker/dataStore';

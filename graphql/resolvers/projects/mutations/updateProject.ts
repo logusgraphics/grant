@@ -4,7 +4,7 @@ export const updateProjectResolver: MutationResolvers['updateProject'] = async (
   { id, input },
   context
 ) => {
-  const updatedProject = await context.providers.projects.updateProject({
+  const updatedProject = await context.services.projects.updateProject({
     id,
     input,
   });

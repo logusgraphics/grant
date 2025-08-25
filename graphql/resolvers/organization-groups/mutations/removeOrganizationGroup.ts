@@ -5,7 +5,7 @@ export const removeOrganizationGroupResolver: MutationResolvers['removeOrganizat
   context
 ) => {
   const removedOrganizationGroup =
-    await context.providers.organizationGroups.removeOrganizationGroup({
+    await context.services.organizationGroups.removeOrganizationGroup({
       input,
     });
   return removedOrganizationGroup;

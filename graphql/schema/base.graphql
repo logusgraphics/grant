@@ -1,20 +1,27 @@
+scalar Date
+
 interface Auditable {
   id: ID!
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }
+
 interface Creatable {
   createdAt: String!
   updatedAt: String!
 }
+
 interface PaginatedResults {
   totalCount: Int!
   hasNextPage: Boolean!
 }
+
 enum Tenant {
   ORGANIZATION
   PROJECT
 }
+
 input Scope {
   tenant: Tenant!
   id: ID!

@@ -4,6 +4,6 @@ export const createOrganizationResolver: MutationResolvers['createOrganization']
   { input },
   context
 ) => {
-  const createdOrganization = await context.providers.organizations.createOrganization({ input });
+  const createdOrganization = await context.services.organizations.createOrganization({ input });
   return createdOrganization;
 };

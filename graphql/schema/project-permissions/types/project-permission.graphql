@@ -4,6 +4,7 @@ type ProjectPermission implements Auditable {
   permissionId: ID!
   project(organizationId: ID!): Project
   permission: Permission
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

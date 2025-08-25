@@ -1,19 +1,26 @@
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 
-import { graphqlConfig } from '@/graphql/config';
+import { providers } from '@/graphql/config/providers';
+import { createServices } from '@/graphql/config/services';
 import { schema } from '@/graphql/resolvers';
-import { Context } from '@/graphql/types';
+import { Context, AuthenticatedUser } from '@/graphql/types';
 
-// Create the Apollo Server instance
 const server = new ApolloServer<Context>({
   schema,
 });
 
-// Export the handler for the API route
 export const handler = startServerAndCreateNextHandler(server, {
-  context: async (req) => ({
-    req,
-    providers: graphqlConfig.providers,
-  }),
+  context: async (req) => {
+    let user: AuthenticatedUser | undefined;
+
+    const services = createServices({ user: user || null });
+
+    return {
+      req,
+      providers,
+      services,
+      user,
+    };
+  },
 });

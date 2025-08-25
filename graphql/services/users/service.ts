@@ -1,0 +1,155 @@
+import {
+  QueryUsersArgs,
+  MutationCreateUserArgs,
+  MutationUpdateUserArgs,
+  MutationDeleteUserArgs,
+  User,
+  UserPage,
+} from '@/graphql/generated/types';
+import { IUserRepository } from '@/graphql/repositories/users/interface';
+import { userAuditLogs } from '@/graphql/repositories/users/schema';
+import { AuthenticatedUser } from '@/graphql/types';
+
+import { AuditService, validateInput, validateOutput, paginatedResponseSchema } from '../common';
+
+import { IUserService } from './interface';
+import {
+  getUsersParamsSchema,
+  createUserParamsSchema,
+  updateUserParamsSchema,
+  deleteUserParamsSchema,
+  userSchema,
+} from './schemas';
+
+export class UserService extends AuditService implements IUserService {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    user: AuthenticatedUser | null
+  ) {
+    super(userAuditLogs, 'userId', user);
+  }
+
+  private async getUser(userId: string): Promise<User> {
+    const existingUsers = await this.userRepository.getUsers({
+      ids: [userId],
+      limit: 1,
+    });
+
+    if (existingUsers.users.length === 0) {
+      throw new Error('User not found');
+    }
+
+    return existingUsers.users[0];
+  }
+
+  public async getUsers(
+    params: Omit<QueryUsersArgs, 'scope'> & { requestedFields?: string[] }
+  ): Promise<UserPage> {
+    const validatedParams = validateInput(getUsersParamsSchema, params, 'getUsers method');
+    const result = await this.userRepository.getUsers(validatedParams as any);
+
+    const validatedResult = validateOutput(
+      paginatedResponseSchema(userSchema),
+      result,
+      'getUsers method'
+    ) as any;
+
+    return {
+      users: validatedResult.items,
+      hasNextPage: validatedResult.hasNextPage,
+      totalCount: validatedResult.totalCount,
+    };
+  }
+
+  public async createUser(params: MutationCreateUserArgs): Promise<User> {
+    const validatedParams = validateInput(createUserParamsSchema, params, 'createUser method');
+    const user = await this.userRepository.createUser(validatedParams);
+
+    const newValues = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    const metadata = {
+      source: 'create_user_mutation',
+    };
+
+    await this.logCreate(user.id, newValues, metadata);
+
+    return validateOutput(userSchema, user, 'createUser method');
+  }
+
+  public async updateUser(params: MutationUpdateUserArgs): Promise<User> {
+    const validatedParams = validateInput(updateUserParamsSchema, params, 'updateUser method');
+
+    const oldUser = await this.getUser(validatedParams.id);
+    const updatedUser = await this.userRepository.updateUser(validatedParams);
+
+    const oldValues = {
+      id: oldUser.id,
+      name: oldUser.name,
+      email: oldUser.email,
+      createdAt: oldUser.createdAt,
+      updatedAt: oldUser.updatedAt,
+    };
+
+    const newValues = {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+    };
+
+    const metadata = {
+      source: 'update_user_mutation',
+    };
+
+    await this.logUpdate(updatedUser.id, oldValues, newValues, metadata);
+
+    return validateOutput(userSchema, updatedUser, 'updateUser method');
+  }
+
+  public async deleteUser(
+    params: MutationDeleteUserArgs & { hardDelete?: boolean }
+  ): Promise<User> {
+    const validatedParams = validateInput(deleteUserParamsSchema, params, 'deleteUser method');
+
+    const oldUser = await this.getUser(validatedParams.id);
+    const isHardDelete = params.hardDelete === true;
+
+    const deletedUser = isHardDelete
+      ? await this.userRepository.hardDeleteUser(validatedParams)
+      : await this.userRepository.softDeleteUser(validatedParams);
+
+    const oldValues = {
+      id: oldUser.id,
+      name: oldUser.name,
+      email: oldUser.email,
+      createdAt: oldUser.createdAt,
+      updatedAt: oldUser.updatedAt,
+    };
+
+    if (isHardDelete) {
+      const metadata = {
+        source: 'hard_delete_user_mutation',
+      };
+      await this.logHardDelete(deletedUser.id, oldValues, metadata);
+    } else {
+      const newValues = {
+        ...oldValues,
+        deletedAt: deletedUser.deletedAt,
+      };
+
+      const metadata = {
+        source: 'soft_delete_user_mutation',
+      };
+      await this.logSoftDelete(deletedUser.id, oldValues, newValues, metadata);
+    }
+
+    return validateOutput(userSchema, deletedUser, 'deleteUser method');
+  }
+}

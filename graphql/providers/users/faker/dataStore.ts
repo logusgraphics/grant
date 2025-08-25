@@ -6,7 +6,7 @@ import {
   EntityConfig,
   generateAuditTimestamps,
   updateAuditTimestamp,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
 const generateFakeUsers = (count: number = 50): User[] => {
   return Array.from({ length: count }, () => {
     const auditTimestamps = generateAuditTimestamps();

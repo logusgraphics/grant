@@ -4,7 +4,7 @@ export const getProjectTagsResolver: QueryResolvers['projectTags'] = async (
   { projectId },
   context
 ) => {
-  const projectTags = await context.providers.projectTags.getProjectTags({
+  const projectTags = await context.services.projectTags.getProjectTags({
     projectId,
   });
   return projectTags;

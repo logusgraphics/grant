@@ -4,6 +4,6 @@ export const deleteRoleResolver: MutationResolvers['deleteRole'] = async (
   { id },
   context
 ) => {
-  const deletedRole = await context.providers.roles.deleteRole({ id });
+  const deletedRole = await context.services.roles.deleteRole({ id });
   return deletedRole;
 };

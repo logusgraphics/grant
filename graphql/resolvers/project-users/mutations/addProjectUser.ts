@@ -4,7 +4,7 @@ export const addProjectUserResolver: MutationResolvers['addProjectUser'] = async
   { input },
   context
 ) => {
-  const projectUser = await context.providers.projectUsers.addProjectUser({
+  const projectUser = await context.services.projectUsers.addProjectUser({
     input,
   });
   return projectUser;

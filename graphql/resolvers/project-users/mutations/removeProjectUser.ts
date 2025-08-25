@@ -4,7 +4,7 @@ export const removeProjectUserResolver: MutationResolvers['removeProjectUser'] =
   { input },
   context
 ) => {
-  const removedProjectUser = await context.providers.projectUsers.removeProjectUser({
+  const removedProjectUser = await context.services.projectUsers.removeProjectUser({
     input,
   });
   return removedProjectUser;

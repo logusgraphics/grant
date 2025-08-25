@@ -4,6 +4,7 @@ type RoleTag implements Auditable {
   tagId: ID!
   role(scope: Scope!): Role
   tag(scope: Scope!): Tag
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

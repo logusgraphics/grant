@@ -5,7 +5,7 @@ export const getOrganizationPermissionsResolver: QueryResolvers['organizationPer
   context
 ) => {
   const organizationPermissions =
-    await context.providers.organizationPermissions.getOrganizationPermissions({
+    await context.services.organizationPermissions.getOrganizationPermissions({
       organizationId,
     });
   return organizationPermissions;

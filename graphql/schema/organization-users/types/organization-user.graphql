@@ -4,6 +4,7 @@ type OrganizationUser implements Auditable {
   userId: ID!
   organization: Organization
   user: User
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

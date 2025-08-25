@@ -1,0 +1,170 @@
+import {
+  MutationAddGroupTagArgs,
+  MutationRemoveGroupTagArgs,
+  GroupTag,
+  QueryGroupTagsArgs,
+} from '@/graphql/generated/types';
+import { IGroupTagRepository, IGroupRepository, ITagRepository } from '@/graphql/repositories';
+import { groupTagsAuditLogs } from '@/graphql/repositories/group-tags/schema';
+import { AuthenticatedUser } from '@/graphql/types';
+
+import { AuditService, validateInput, validateOutput } from '../common';
+
+import { IGroupTagService } from './interface';
+import {
+  getGroupTagsParamsSchema,
+  addGroupTagParamsSchema,
+  removeGroupTagParamsSchema,
+  groupTagSchema,
+} from './schemas';
+
+export class GroupTagService extends AuditService implements IGroupTagService {
+  constructor(
+    private readonly groupTagRepository: IGroupTagRepository,
+    private readonly groupRepository: IGroupRepository,
+    private readonly tagRepository: ITagRepository,
+    user: AuthenticatedUser | null
+  ) {
+    super(groupTagsAuditLogs, 'groupTagId', user);
+  }
+
+  private async groupExists(groupId: string): Promise<void> {
+    const groups = await this.groupRepository.getGroups({
+      ids: [groupId],
+      limit: 1,
+    });
+
+    if (groups.groups.length === 0) {
+      throw new Error('Group not found');
+    }
+  }
+
+  private async tagExists(tagId: string): Promise<void> {
+    const tags = await this.tagRepository.getTags({
+      ids: [tagId],
+      limit: 1,
+    });
+
+    if (tags.tags.length === 0) {
+      throw new Error('Tag not found');
+    }
+  }
+
+  private async groupHasTag(groupId: string, tagId: string): Promise<boolean> {
+    await this.groupExists(groupId);
+    await this.tagExists(tagId);
+    const existingGroupTags = await this.groupTagRepository.getGroupTags({
+      groupId,
+    });
+
+    return existingGroupTags.some((gt) => gt.tagId === tagId);
+  }
+
+  public async getGroupTags(params: Omit<QueryGroupTagsArgs, 'scope'>): Promise<GroupTag[]> {
+    const validatedParams = validateInput(getGroupTagsParamsSchema, params, 'getGroupTags method');
+
+    if (!validatedParams.groupId) {
+      throw new Error('Group ID is required');
+    }
+    await this.groupExists(validatedParams.groupId);
+
+    const result = await this.groupTagRepository.getGroupTags(validatedParams);
+    return result.map((item) => validateOutput(groupTagSchema, item, 'getGroupTags method'));
+  }
+
+  public async addGroupTag(params: MutationAddGroupTagArgs): Promise<GroupTag> {
+    const validatedParams = validateInput(addGroupTagParamsSchema, params, 'addGroupTag method');
+
+    const hasTag = await this.groupHasTag(
+      validatedParams.input.groupId,
+      validatedParams.input.tagId
+    );
+
+    if (hasTag) {
+      throw new Error('Group already has this tag');
+    }
+
+    const result = await this.groupTagRepository.addGroupTag(
+      validatedParams.input.groupId,
+      validatedParams.input.tagId
+    );
+
+    const newValues = {
+      id: result.id,
+      groupId: result.groupId,
+      tagId: result.tagId,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
+
+    const metadata = {
+      source: 'add_group_tag_mutation',
+    };
+
+    await this.logCreate(result.id, newValues, metadata);
+
+    return validateOutput(groupTagSchema, result, 'addGroupTag method');
+  }
+
+  public async removeGroupTag(
+    params: MutationRemoveGroupTagArgs & { hardDelete?: boolean }
+  ): Promise<GroupTag> {
+    const validatedParams = validateInput(
+      removeGroupTagParamsSchema,
+      params,
+      'removeGroupTag method'
+    );
+
+    const hasTag = await this.groupHasTag(
+      validatedParams.input.groupId,
+      validatedParams.input.tagId
+    );
+
+    if (!hasTag) {
+      throw new Error('Group does not have this tag');
+    }
+
+    const isHardDelete = params.hardDelete === true;
+
+    const result = isHardDelete
+      ? await this.groupTagRepository.hardDeleteGroupTag(
+          validatedParams.input.groupId,
+          validatedParams.input.tagId
+        )
+      : await this.groupTagRepository.softDeleteGroupTag(
+          validatedParams.input.groupId,
+          validatedParams.input.tagId
+        );
+
+    if (!result) {
+      throw new Error('Failed to remove group tag');
+    }
+
+    const oldValues = {
+      id: result.id,
+      groupId: result.groupId,
+      tagId: result.tagId,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
+
+    const newValues = {
+      ...oldValues,
+      deletedAt: result.deletedAt,
+    };
+
+    if (isHardDelete) {
+      const metadata = {
+        source: 'hard_delete_group_tag_mutation',
+      };
+      await this.logHardDelete(result.id, oldValues, metadata);
+    } else {
+      const metadata = {
+        source: 'soft_delete_group_tag_mutation',
+      };
+      await this.logSoftDelete(result.id, oldValues, newValues, metadata);
+    }
+
+    return validateOutput(groupTagSchema, result, 'removeGroupTag method');
+  }
+}

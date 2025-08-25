@@ -1,15 +1,15 @@
 import { faker } from '@faker-js/faker';
 
 import { AddRoleTagInput, RoleTag, Scope, Tenant } from '@/graphql/generated/types';
-import { getOrganizationTagsByOrganizationId } from '@/graphql/providers/organization-tags/faker/dataStore';
-import { getProjectTagsByProjectId } from '@/graphql/providers/project-tags/faker/dataStore';
-import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
-import { getTags } from '@/graphql/providers/tags/faker/dataStore';
 import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
+import { getOrganizationTagsByOrganizationId } from '@/graphql/providers/organization-tags/faker/dataStore';
+import { getProjectTagsByProjectId } from '@/graphql/providers/project-tags/faker/dataStore';
+import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
+import { getTags } from '@/graphql/providers/tags/faker/dataStore';
 const generateFakeRoleTags = (count: number = 50): RoleTag[] => {
   const roles = getRoles();
   const tags = getTags();

@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 
 import { AddRoleGroupInput, RoleGroup, Scope, Tenant } from '@/graphql/generated/types';
-import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
 import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
+import { getRoles } from '@/graphql/providers/roles/faker/dataStore';
 
 import { getGroups } from '../../groups/faker/dataStore';
 import { getOrganizationGroupsByOrganizationId } from '../../organization-groups/faker/dataStore';

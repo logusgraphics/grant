@@ -8,6 +8,9 @@ const config: CodegenConfig = {
       config: {
         useIndexSignature: true,
         contextType: '@/graphql/types#Context',
+        scalars: {
+          Date: 'Date',
+        },
       },
     },
   },

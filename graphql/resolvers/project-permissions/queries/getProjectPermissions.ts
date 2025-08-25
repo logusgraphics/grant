@@ -4,7 +4,7 @@ export const getProjectPermissionsResolver: QueryResolvers['projectPermissions']
   { projectId },
   context
 ) => {
-  const projectPermissions = await context.providers.projectPermissions.getProjectPermissions({
+  const projectPermissions = await context.services.projectPermissions.getProjectPermissions({
     projectId,
   });
   return projectPermissions;

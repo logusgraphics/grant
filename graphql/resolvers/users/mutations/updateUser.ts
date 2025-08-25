@@ -4,6 +4,6 @@ export const updateUserResolver: MutationResolvers['updateUser'] = async (
   { id, input },
   context
 ) => {
-  const updatedUser = await context.providers.users.updateUser({ id, input });
+  const updatedUser = await context.services.users.updateUser({ id, input });
   return updatedUser;
 };

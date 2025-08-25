@@ -4,6 +4,7 @@ type OrganizationRole implements Auditable {
   roleId: ID!
   organization: Organization
   role: Role
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

@@ -4,6 +4,6 @@ export const addUserRoleResolver: MutationResolvers['addUserRole'] = async (
   { input },
   context
 ) => {
-  const addedUserRole = await context.providers.userRoles.addUserRole({ input });
+  const addedUserRole = await context.services.userRoles.addUserRole({ input });
   return addedUserRole;
 };

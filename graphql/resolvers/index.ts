@@ -25,16 +25,20 @@ import { Query } from '@/graphql/resolvers/queries';
 import { RoleGroup } from '@/graphql/resolvers/role-groups/fields';
 import { RoleTag } from '@/graphql/resolvers/role-tags/fields';
 import { Role } from '@/graphql/resolvers/roles/fields';
+import { DateScalar } from '@/graphql/resolvers/scalars';
 import { UserRole } from '@/graphql/resolvers/user-roles/fields';
 import { UserTag } from '@/graphql/resolvers/user-tags/fields';
 import { User } from '@/graphql/resolvers/users/fields';
+
 const typeDefs = loadFilesSync(join(process.cwd(), 'graphql/schema'), {
   extensions: ['graphql'],
   ignoreIndex: true,
 });
+
 export const schema = makeExecutableSchema({
   typeDefs,
   resolvers: {
+    Date: DateScalar,
     Query,
     Mutation,
     User,

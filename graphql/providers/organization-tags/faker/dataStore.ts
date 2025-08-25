@@ -5,7 +5,7 @@ import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
 const generateInitialOrganizationTags = (): OrganizationTag[] => {
   return [];
 };

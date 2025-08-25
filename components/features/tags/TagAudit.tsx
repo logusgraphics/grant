@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 
 import { Audit, AuditField } from '@/components/common';
 import { Tag } from '@/graphql/generated/types';
+import { formatTimestamp } from '@/lib/utils';
 
 interface TagAuditProps {
   tag: Tag;
@@ -24,13 +25,13 @@ export function TagAudit({ tag }: TagAuditProps) {
       key: 'created',
       icon: <Calendar className="h-3 w-3" />,
       label: t('audit.created'),
-      getValue: (item: Tag) => item.createdAt,
+      getValue: (item: Tag) => formatTimestamp(item.createdAt),
     },
     {
       key: 'updated',
       icon: <Clock className="h-3 w-3" />,
       label: t('audit.updated'),
-      getValue: (item: Tag) => item.updatedAt,
+      getValue: (item: Tag) => formatTimestamp(item.updatedAt),
     },
   ];
 

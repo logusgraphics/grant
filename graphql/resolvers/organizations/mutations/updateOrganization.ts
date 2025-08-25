@@ -4,7 +4,7 @@ export const updateOrganizationResolver: MutationResolvers['updateOrganization']
   { id, input },
   context
 ) => {
-  const updatedOrganization = await context.providers.organizations.updateOrganization({
+  const updatedOrganization = await context.services.organizations.updateOrganization({
     id,
     input,
   });

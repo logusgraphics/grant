@@ -1,0 +1,182 @@
+import { eq } from 'drizzle-orm';
+import { count } from 'drizzle-orm';
+
+import { db } from '@/graphql/lib/providers/database/connection';
+
+import { buildOrderBy, toEntity, buildSelectObject, buildWhereClause } from './utils';
+
+export interface BaseEntityModel {
+  id: string;
+  deletedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  [key: string]: unknown;
+}
+
+export interface BaseEntity extends BaseEntityModel {
+  [key: string]: unknown;
+}
+
+export interface BaseQueryArgs<TModel extends BaseEntityModel = BaseEntityModel> {
+  ids?: string[];
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: {
+    field: keyof TModel;
+    order: 'ASC' | 'DESC';
+  };
+  requestedFields?: Array<keyof TModel>;
+}
+
+export interface BasePageResult<T> {
+  items: T[];
+  totalCount: number;
+  hasNextPage: boolean;
+}
+
+export interface BaseCreateArgs {
+  [key: string]: unknown;
+}
+
+export interface BaseUpdateArgs {
+  id: string;
+  input: Record<string, unknown>;
+}
+
+export interface BaseDeleteArgs {
+  id: string;
+}
+
+export abstract class EntityRepository<TModel extends BaseEntityModel, TEntity extends BaseEntity> {
+  protected abstract table: any;
+  protected abstract searchFields: Array<keyof TModel>;
+  protected abstract defaultSortField: keyof TModel;
+
+  protected async query(params: BaseQueryArgs<TModel>): Promise<BasePageResult<TEntity>> {
+    const { ids, page = 1, limit = 50, search, sort, requestedFields } = params;
+
+    try {
+      const orderBy = buildOrderBy(
+        this.table,
+        sort as { field: string; order: 'ASC' | 'DESC' },
+        this.defaultSortField as string
+      );
+
+      const whereClause = buildWhereClause(this.table, this.searchFields as string[], ids, search);
+      const countResult = await db.select({ count: count() }).from(this.table).where(whereClause);
+      const totalCount = Number(countResult[0]?.count || 0);
+      const offset = (page - 1) * limit;
+
+      if (totalCount === 0) {
+        return { items: [], totalCount: 0, hasNextPage: false };
+      }
+
+      const selectObj = buildSelectObject(
+        this.table,
+        requestedFields as string[],
+        this.searchFields as string[],
+        search,
+        sort as { field: string; order: 'ASC' | 'DESC' }
+      );
+
+      const results = await db
+        .select(selectObj)
+        .from(this.table)
+        .where(whereClause)
+        .orderBy(...orderBy)
+        .limit(limit)
+        .offset(offset);
+
+      const items = results.map((item: TModel) =>
+        toEntity<TEntity>(item, requestedFields as string[])
+      );
+
+      return {
+        items,
+        totalCount,
+        hasNextPage: page * limit < totalCount,
+      };
+    } catch (error) {
+      console.error('Query error:', error);
+      return { items: [], totalCount: 0, hasNextPage: false };
+    }
+  }
+
+  protected async create(data: BaseCreateArgs): Promise<TEntity> {
+    try {
+      const result = await db
+        .insert(this.table)
+        .values({
+          ...data,
+          deletedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      const insertedItem = Array.isArray(result) ? result[0] : result;
+      return toEntity<TEntity>(insertedItem as TModel);
+    } catch (error) {
+      console.error('Create error:', error);
+      throw error;
+    }
+  }
+
+  protected async update(params: BaseUpdateArgs): Promise<TEntity> {
+    try {
+      const updateValues: Record<string, unknown> = {
+        updatedAt: new Date(),
+      };
+
+      Object.entries(params.input).forEach(([key, value]) => {
+        if (value !== undefined) {
+          updateValues[key] = value;
+        }
+      });
+
+      const result = await db
+        .update(this.table)
+        .set(updateValues)
+        .where(eq(this.table.id, params.id))
+        .returning();
+
+      const updatedItem = Array.isArray(result) ? result[0] : result;
+      return toEntity<TEntity>(updatedItem as TModel);
+    } catch (error) {
+      console.error('Update error:', error);
+      throw error;
+    }
+  }
+
+  protected async softDelete(params: BaseDeleteArgs): Promise<TEntity> {
+    try {
+      const result = await db
+        .update(this.table)
+        .set({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(this.table.id, params.id))
+        .returning();
+
+      const deletedItem = Array.isArray(result) ? result[0] : result;
+      return toEntity<TEntity>(deletedItem as TModel);
+    } catch (error) {
+      console.error('Soft delete error:', error);
+      throw error;
+    }
+  }
+
+  protected async hardDelete(params: BaseDeleteArgs): Promise<TEntity> {
+    try {
+      const result = await db.delete(this.table).where(eq(this.table.id, params.id)).returning();
+
+      const deletedItem = Array.isArray(result) ? result[0] : result;
+      return toEntity<TEntity>(deletedItem as TModel);
+    } catch (error) {
+      console.error('Hard delete error:', error);
+      throw error;
+    }
+  }
+}

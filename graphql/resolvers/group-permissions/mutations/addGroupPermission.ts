@@ -4,7 +4,7 @@ export const addGroupPermissionResolver: MutationResolvers['addGroupPermission']
   { input },
   context
 ) => {
-  const addedGroupPermission = await context.providers.groupPermissions.addGroupPermission({
+  const addedGroupPermission = await context.services.groupPermissions.addGroupPermission({
     input,
   });
   return addedGroupPermission;

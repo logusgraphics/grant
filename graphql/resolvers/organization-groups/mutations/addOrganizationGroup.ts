@@ -4,7 +4,7 @@ export const addOrganizationGroupResolver: MutationResolvers['addOrganizationGro
   { input },
   context
 ) => {
-  const organizationGroup = await context.providers.organizationGroups.addOrganizationGroup({
+  const organizationGroup = await context.services.organizationGroups.addOrganizationGroup({
     input,
   });
   return organizationGroup;

@@ -4,6 +4,6 @@ export const createTagResolver: MutationResolvers['createTag'] = async (
   { input },
   context
 ) => {
-  const createdTag = await context.providers.tags.createTag({ input });
+  const createdTag = await context.services.tags.createTag({ input });
   return createdTag;
 };

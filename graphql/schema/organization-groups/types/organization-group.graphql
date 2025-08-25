@@ -4,6 +4,7 @@ type OrganizationGroup implements Auditable {
   groupId: ID!
   organization: Organization
   group: Group
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

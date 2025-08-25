@@ -2,6 +2,7 @@ type Tag implements Auditable {
   id: ID!
   name: String!
   color: String!
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Data files
 data/
+
+# Drizzle migration artifacts
+graphql/providers/migrations/meta/

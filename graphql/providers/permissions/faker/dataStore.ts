@@ -6,14 +6,14 @@ import {
   PermissionSortInput,
   Permission,
 } from '@/graphql/generated/types';
-import { deleteGroupPermissionsByPermissionId } from '@/graphql/providers/group-permissions/faker/dataStore';
-import { deletePermissionTagsByPermissionId } from '@/graphql/providers/permission-tags/faker/dataStore';
 import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
   updateAuditTimestamp,
-} from '@/lib/providers/faker';
+} from '@/graphql/lib/providers/faker';
+import { deleteGroupPermissionsByPermissionId } from '@/graphql/providers/group-permissions/faker/dataStore';
+import { deletePermissionTagsByPermissionId } from '@/graphql/providers/permission-tags/faker/dataStore';
 const generateInitialPermissions = (): Permission[] => {
   const auditTimestamps = generateAuditTimestamps();
   return [

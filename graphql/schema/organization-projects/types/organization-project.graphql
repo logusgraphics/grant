@@ -4,6 +4,7 @@ type OrganizationProject implements Auditable {
   projectId: ID!
   organization: Organization
   project: Project
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

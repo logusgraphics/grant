@@ -4,6 +4,6 @@ export const deleteOrganizationResolver: MutationResolvers['deleteOrganization']
   { id },
   context
 ) => {
-  const deleted = await context.providers.organizations.deleteOrganization({ id });
+  const deleted = await context.services.organizations.deleteOrganization({ id });
   return deleted;
 };

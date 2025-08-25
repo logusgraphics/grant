@@ -1,12 +1,25 @@
 import { QueryResolvers } from '@/graphql/generated/types';
+import { getScopedTagIds, getScopedUserIds } from '@/graphql/lib/scopeFiltering';
+
 export const getUserTagsResolver: QueryResolvers['userTags'] = async (
   _parent,
   { userId, scope },
   context
 ) => {
-  const userTags = await context.providers.userTags.getUserTags({
+  const [scopedTagIds, scopedUserIds] = await Promise.all([
+    getScopedTagIds({ scope, context }),
+    getScopedUserIds({ scope, context }),
+  ]);
+
+  if (!scopedUserIds.includes(userId)) {
+    return [];
+  }
+
+  const userTags = await context.services.userTags.getUserTags({
     userId,
-    scope,
   });
-  return userTags;
+
+  const filteredUserTags = userTags.filter((ut) => scopedTagIds.includes(ut.tagId));
+
+  return filteredUserTags;
 };

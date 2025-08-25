@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: identity-central-postgres
+    environment:
+      POSTGRES_DB: identity_central
+      POSTGRES_USER: identity_user
+      POSTGRES_PASSWORD: identity_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data/postgres:/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_user -d identity_central"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - identity-central-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: identity-central-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin_password
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - identity-central-network
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  identity-central-network:
+    driver: bridge 

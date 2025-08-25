@@ -4,7 +4,7 @@ export const addOrganizationUserResolver: MutationResolvers['addOrganizationUser
   { input },
   context
 ) => {
-  const organizationUser = await context.providers.organizationUsers.addOrganizationUser({
+  const organizationUser = await context.services.organizationUsers.addOrganizationUser({
     input,
   });
   return organizationUser;

@@ -4,7 +4,7 @@ export const removeOrganizationRoleResolver: MutationResolvers['removeOrganizati
   { input },
   context
 ) => {
-  const removedOrganizationRole = await context.providers.organizationRoles.removeOrganizationRole({
+  const removedOrganizationRole = await context.services.organizationRoles.removeOrganizationRole({
     input,
   });
   return removedOrganizationRole;

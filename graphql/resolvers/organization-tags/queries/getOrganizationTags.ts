@@ -4,7 +4,7 @@ export const getOrganizationTagsResolver: QueryResolvers['organizationTags'] = a
   { organizationId },
   context
 ) => {
-  const organizationTags = await context.providers.organizationTags.getOrganizationTags({
+  const organizationTags = await context.services.organizationTags.getOrganizationTags({
     organizationId,
   });
   return organizationTags;

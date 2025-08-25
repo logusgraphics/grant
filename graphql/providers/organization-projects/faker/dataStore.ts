@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 
 import { AddOrganizationProjectInput, OrganizationProject } from '@/graphql/generated/types';
-import { getOrganizations } from '@/graphql/providers/organizations/faker/dataStore';
-import { getProjects } from '@/graphql/providers/projects/faker/dataStore';
 import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
+import { getOrganizations } from '@/graphql/providers/organizations/faker/dataStore';
+import { getProjects } from '@/graphql/providers/projects/faker/dataStore';
 const generateFakeOrganizationProjects = (count: number = 100): OrganizationProject[] => {
   const organizations = getOrganizations();
   const projects = getProjects();

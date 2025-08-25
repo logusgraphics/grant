@@ -4,6 +4,7 @@ type OrganizationPermission implements Auditable {
   permissionId: ID!
   organization: Organization
   permission: Permission
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

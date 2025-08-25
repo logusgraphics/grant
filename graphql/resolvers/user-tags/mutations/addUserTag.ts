@@ -4,6 +4,6 @@ export const addUserTagResolver: MutationResolvers['addUserTag'] = async (
   { input },
   context
 ) => {
-  const addedUserTag = await context.providers.userTags.addUserTag({ input });
+  const addedUserTag = await context.services.userTags.addUserTag({ input });
   return addedUserTag;
 };

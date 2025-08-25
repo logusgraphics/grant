@@ -4,6 +4,7 @@ type PermissionTag implements Auditable {
   tagId: ID!
   permission(scope: Scope!): Permission
   tag(scope: Scope!): Tag
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

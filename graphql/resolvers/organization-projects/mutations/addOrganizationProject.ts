@@ -5,6 +5,6 @@ export const addOrganizationProjectResolver: MutationResolvers['addOrganizationP
   context
 ) => {
   const addedOrganizationProject =
-    await context.providers.organizationProjects.addOrganizationProject({ input });
+    await context.services.organizationProjects.addOrganizationProject({ input });
   return addedOrganizationProject;
 };

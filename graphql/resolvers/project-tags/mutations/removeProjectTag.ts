@@ -4,7 +4,7 @@ export const removeProjectTagResolver: MutationResolvers['removeProjectTag'] = a
   { input },
   context
 ) => {
-  const removedProjectTag = await context.providers.projectTags.removeProjectTag({
+  const removedProjectTag = await context.services.projectTags.removeProjectTag({
     input,
   });
   return removedProjectTag;

@@ -4,6 +4,7 @@ type RoleGroup implements Auditable {
   roleId: ID!
   group(scope: Scope!): Group
   role(scope: Scope!): Role
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

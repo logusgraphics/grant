@@ -1,22 +1,34 @@
-import { ResolverFn } from '@/graphql/generated/types';
+import { ResolverFn, Scope } from '@/graphql/generated/types';
 import { Tenant } from '@/graphql/generated/types';
+import { getScopedUserIds } from '@/graphql/lib/scopeFiltering';
 import { Context } from '@/graphql/types';
+
 export const createUserFieldResolver =
   <T extends { userId: string }>(
-    scopeFactory: (parent: T) => { tenant: Tenant; id: string }
+    scopeFactory: (parent: T) => Scope
   ): ResolverFn<any, T, Context, any> =>
   async (parent, _args, context) => {
-    const usersResult = await context.providers.users.getUsers({
+    const scope = scopeFactory(parent);
+    const scopedUserIds = await getScopedUserIds({ scope, context });
+
+    if (!scopedUserIds.includes(parent.userId)) {
+      throw new Error(`User with ID ${parent.userId} is not accessible in the current scope`);
+    }
+
+    const usersResult = await context.services.users.getUsers({
       ids: [parent.userId],
-      scope: scopeFactory(parent),
       limit: -1,
     });
+
     const user = usersResult.users[0];
+
     if (!user) {
       throw new Error(`User with ID ${parent.userId} not found`);
     }
+
     return user;
   };
+
 export const createOrganizationUserFieldResolver = <
   T extends { userId: string; organizationId: string },
 >() =>
@@ -24,6 +36,7 @@ export const createOrganizationUserFieldResolver = <
     tenant: Tenant.Organization,
     id: parent.organizationId,
   }));
+
 export const createProjectUserFieldResolver = <T extends { userId: string; projectId: string }>() =>
   createUserFieldResolver<T>((parent) => ({
     tenant: Tenant.Project,

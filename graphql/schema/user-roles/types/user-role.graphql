@@ -4,6 +4,7 @@ type UserRole implements Auditable {
   roleId: ID!
   user(scope: Scope!): User
   role(scope: Scope!): Role
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

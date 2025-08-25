@@ -1,4 +1,4 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import { Context } from '@/graphql/types';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -15,6 +15,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Date: { input: Date; output: Date; }
 };
 
 export type AddGroupPermissionInput = {
@@ -108,9 +109,10 @@ export type AddUserTagInput = {
 };
 
 export type Auditable = {
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type Creatable = {
@@ -155,13 +157,14 @@ export type CreateUserInput = {
 
 export type Group = Auditable & {
   __typename?: 'Group';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   permissions?: Maybe<Array<Permission>>;
   tags?: Maybe<Array<Tag>>;
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -183,13 +186,14 @@ export type GroupPage = PaginatedResults & {
 
 export type GroupPermission = Auditable & {
   __typename?: 'GroupPermission';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   group?: Maybe<Group>;
   groupId: Scalars['ID']['output'];
   id: Scalars['ID']['output'];
   permission?: Maybe<Permission>;
   permissionId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -218,13 +222,14 @@ export enum GroupSortableField {
 
 export type GroupTag = Auditable & {
   __typename?: 'GroupTag';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   group?: Maybe<Group>;
   groupId: Scalars['ID']['output'];
   id: Scalars['ID']['output'];
   tag?: Maybe<Tag>;
   tagId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -609,7 +614,8 @@ export type MutationUpdateUserArgs = {
 
 export type Organization = Auditable & {
   __typename?: 'Organization';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   groups?: Maybe<Array<Group>>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
@@ -618,19 +624,20 @@ export type Organization = Auditable & {
   roles?: Maybe<Array<Role>>;
   slug: Scalars['String']['output'];
   tags?: Maybe<Array<Tag>>;
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
   users?: Maybe<Array<User>>;
 };
 
 export type OrganizationGroup = Auditable & {
   __typename?: 'OrganizationGroup';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   group?: Maybe<Group>;
   groupId: Scalars['ID']['output'];
   id: Scalars['ID']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type OrganizationPage = PaginatedResults & {
@@ -642,35 +649,38 @@ export type OrganizationPage = PaginatedResults & {
 
 export type OrganizationPermission = Auditable & {
   __typename?: 'OrganizationPermission';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['ID']['output'];
   permission?: Maybe<Permission>;
   permissionId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type OrganizationProject = Auditable & {
   __typename?: 'OrganizationProject';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['ID']['output'];
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type OrganizationRole = Auditable & {
   __typename?: 'OrganizationRole';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['ID']['output'];
   role?: Maybe<Role>;
   roleId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type OrganizationSortInput = {
@@ -691,22 +701,24 @@ export enum OrganizationSortableField {
 
 export type OrganizationTag = Auditable & {
   __typename?: 'OrganizationTag';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['ID']['output'];
   tag?: Maybe<Tag>;
   tagId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type OrganizationUser = Auditable & {
   __typename?: 'OrganizationUser';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
   user?: Maybe<User>;
   userId: Scalars['ID']['output'];
 };
@@ -719,12 +731,13 @@ export type PaginatedResults = {
 export type Permission = Auditable & {
   __typename?: 'Permission';
   action: Scalars['String']['output'];
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   tags?: Maybe<Array<Tag>>;
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -756,13 +769,14 @@ export enum PermissionSortableField {
 
 export type PermissionTag = Auditable & {
   __typename?: 'PermissionTag';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   permission?: Maybe<Permission>;
   permissionId: Scalars['ID']['output'];
   tag?: Maybe<Tag>;
   tagId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -777,7 +791,8 @@ export type PermissionTagTagArgs = {
 
 export type Project = Auditable & {
   __typename?: 'Project';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   groups?: Maybe<Array<Group>>;
   id: Scalars['ID']['output'];
@@ -786,19 +801,20 @@ export type Project = Auditable & {
   roles?: Maybe<Array<Role>>;
   slug: Scalars['String']['output'];
   tags?: Maybe<Array<Tag>>;
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
   users?: Maybe<Array<User>>;
 };
 
 export type ProjectGroup = Auditable & {
   __typename?: 'ProjectGroup';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   group?: Maybe<Group>;
   groupId: Scalars['ID']['output'];
   id: Scalars['ID']['output'];
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -815,13 +831,14 @@ export type ProjectPage = PaginatedResults & {
 
 export type ProjectPermission = Auditable & {
   __typename?: 'ProjectPermission';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   permission?: Maybe<Permission>;
   permissionId: Scalars['ID']['output'];
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -831,13 +848,14 @@ export type ProjectPermissionProjectArgs = {
 
 export type ProjectRole = Auditable & {
   __typename?: 'ProjectRole';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
   role?: Maybe<Role>;
   roleId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -863,13 +881,14 @@ export enum ProjectSortableField {
 
 export type ProjectTag = Auditable & {
   __typename?: 'ProjectTag';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
   tag?: Maybe<Tag>;
   tagId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -879,11 +898,12 @@ export type ProjectTagProjectArgs = {
 
 export type ProjectUser = Auditable & {
   __typename?: 'ProjectUser';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
   user?: Maybe<User>;
   userId: Scalars['ID']['output'];
 };
@@ -1187,13 +1207,14 @@ export type RemoveUserTagInput = {
 
 export type Role = Auditable & {
   __typename?: 'Role';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   groups?: Maybe<Array<Group>>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   tags?: Maybe<Array<Tag>>;
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -1208,13 +1229,14 @@ export type RoleTagsArgs = {
 
 export type RoleGroup = Auditable & {
   __typename?: 'RoleGroup';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   group?: Maybe<Group>;
   groupId: Scalars['ID']['output'];
   id: Scalars['ID']['output'];
   role?: Maybe<Role>;
   roleId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -1250,13 +1272,14 @@ export enum RoleSortableField {
 
 export type RoleTag = Auditable & {
   __typename?: 'RoleTag';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   role?: Maybe<Role>;
   roleId: Scalars['ID']['output'];
   tag?: Maybe<Tag>;
   tagId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -1282,10 +1305,11 @@ export enum SortDirection {
 export type Tag = Auditable & {
   __typename?: 'Tag';
   color: Scalars['String']['output'];
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 export type TagPage = PaginatedResults & {
@@ -1349,13 +1373,14 @@ export type UpdateUserInput = {
 
 export type User = Auditable & {
   __typename?: 'User';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   roles?: Maybe<Array<Role>>;
   tags?: Maybe<Array<Tag>>;
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
 };
 
 
@@ -1377,11 +1402,12 @@ export type UserPage = PaginatedResults & {
 
 export type UserRole = Auditable & {
   __typename?: 'UserRole';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   role?: Maybe<Role>;
   roleId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
   user?: Maybe<User>;
   userId: Scalars['ID']['output'];
 };
@@ -1413,11 +1439,12 @@ export enum UserSortableField {
 
 export type UserTag = Auditable & {
   __typename?: 'UserTag';
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   tag?: Maybe<Tag>;
   tagId: Scalars['ID']['output'];
-  updatedAt: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
   user?: Maybe<User>;
   userId: Scalars['ID']['output'];
 };
@@ -1538,6 +1565,7 @@ export type ResolversTypes = ResolversObject<{
   CreateRoleInput: CreateRoleInput;
   CreateTagInput: CreateTagInput;
   CreateUserInput: CreateUserInput;
+  Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Group: ResolverTypeWrapper<Group>;
   GroupPage: ResolverTypeWrapper<GroupPage>;
   GroupPermission: ResolverTypeWrapper<GroupPermission>;
@@ -1658,6 +1686,7 @@ export type ResolversParentTypes = ResolversObject<{
   CreateRoleInput: CreateRoleInput;
   CreateTagInput: CreateTagInput;
   CreateUserInput: CreateUserInput;
+  Date: Scalars['Date']['output'];
   Group: Group;
   GroupPage: GroupPage;
   GroupPermission: GroupPermission;
@@ -1735,9 +1764,10 @@ export type ResolversParentTypes = ResolversObject<{
 
 export type AuditableResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Auditable'] = ResolversParentTypes['Auditable']> = ResolversObject<{
   __resolveType: TypeResolveFn<'Group' | 'GroupPermission' | 'GroupTag' | 'Organization' | 'OrganizationGroup' | 'OrganizationPermission' | 'OrganizationProject' | 'OrganizationRole' | 'OrganizationTag' | 'OrganizationUser' | 'Permission' | 'PermissionTag' | 'Project' | 'ProjectGroup' | 'ProjectPermission' | 'ProjectRole' | 'ProjectTag' | 'ProjectUser' | 'Role' | 'RoleGroup' | 'RoleTag' | 'Tag' | 'User' | 'UserRole' | 'UserTag', ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
 }>;
 
 export type CreatableResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Creatable'] = ResolversParentTypes['Creatable']> = ResolversObject<{
@@ -1746,14 +1776,19 @@ export type CreatableResolvers<ContextType = Context, ParentType extends Resolve
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
+export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
+  name: 'Date';
+}
+
 export type GroupResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Group'] = ResolversParentTypes['Group']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   permissions?: Resolver<Maybe<Array<ResolversTypes['Permission']>>, ParentType, ContextType, RequireFields<GroupPermissionsArgs, 'scope'>>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType, RequireFields<GroupTagsArgs, 'scope'>>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1765,24 +1800,26 @@ export type GroupPageResolvers<ContextType = Context, ParentType extends Resolve
 }>;
 
 export type GroupPermissionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['GroupPermission'] = ResolversParentTypes['GroupPermission']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   group?: Resolver<Maybe<ResolversTypes['Group']>, ParentType, ContextType, RequireFields<GroupPermissionGroupArgs, 'scope'>>;
   groupId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   permission?: Resolver<Maybe<ResolversTypes['Permission']>, ParentType, ContextType, RequireFields<GroupPermissionPermissionArgs, 'scope'>>;
   permissionId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type GroupTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['GroupTag'] = ResolversParentTypes['GroupTag']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   group?: Resolver<Maybe<ResolversTypes['Group']>, ParentType, ContextType, RequireFields<GroupTagGroupArgs, 'scope'>>;
   groupId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   tag?: Resolver<Maybe<ResolversTypes['Tag']>, ParentType, ContextType, RequireFields<GroupTagTagArgs, 'scope'>>;
   tagId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1854,7 +1891,8 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type OrganizationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Organization'] = ResolversParentTypes['Organization']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   groups?: Resolver<Maybe<Array<ResolversTypes['Group']>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1863,19 +1901,20 @@ export type OrganizationResolvers<ContextType = Context, ParentType extends Reso
   roles?: Resolver<Maybe<Array<ResolversTypes['Role']>>, ParentType, ContextType>;
   slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   users?: Resolver<Maybe<Array<ResolversTypes['User']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type OrganizationGroupResolvers<ContextType = Context, ParentType extends ResolversParentTypes['OrganizationGroup'] = ResolversParentTypes['OrganizationGroup']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   group?: Resolver<Maybe<ResolversTypes['Group']>, ParentType, ContextType>;
   groupId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   organization?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
   organizationId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1887,55 +1926,60 @@ export type OrganizationPageResolvers<ContextType = Context, ParentType extends 
 }>;
 
 export type OrganizationPermissionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['OrganizationPermission'] = ResolversParentTypes['OrganizationPermission']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   organization?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
   organizationId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   permission?: Resolver<Maybe<ResolversTypes['Permission']>, ParentType, ContextType>;
   permissionId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type OrganizationProjectResolvers<ContextType = Context, ParentType extends ResolversParentTypes['OrganizationProject'] = ResolversParentTypes['OrganizationProject']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   organization?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
   organizationId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
   projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type OrganizationRoleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['OrganizationRole'] = ResolversParentTypes['OrganizationRole']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   organization?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
   organizationId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   role?: Resolver<Maybe<ResolversTypes['Role']>, ParentType, ContextType>;
   roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type OrganizationTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['OrganizationTag'] = ResolversParentTypes['OrganizationTag']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   organization?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
   organizationId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   tag?: Resolver<Maybe<ResolversTypes['Tag']>, ParentType, ContextType>;
   tagId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type OrganizationUserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['OrganizationUser'] = ResolversParentTypes['OrganizationUser']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   organization?: Resolver<Maybe<ResolversTypes['Organization']>, ParentType, ContextType>;
   organizationId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1949,12 +1993,13 @@ export type PaginatedResultsResolvers<ContextType = Context, ParentType extends 
 
 export type PermissionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Permission'] = ResolversParentTypes['Permission']> = ResolversObject<{
   action?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType, RequireFields<PermissionTagsArgs, 'scope'>>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1966,18 +2011,20 @@ export type PermissionPageResolvers<ContextType = Context, ParentType extends Re
 }>;
 
 export type PermissionTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PermissionTag'] = ResolversParentTypes['PermissionTag']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   permission?: Resolver<Maybe<ResolversTypes['Permission']>, ParentType, ContextType, RequireFields<PermissionTagPermissionArgs, 'scope'>>;
   permissionId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   tag?: Resolver<Maybe<ResolversTypes['Tag']>, ParentType, ContextType, RequireFields<PermissionTagTagArgs, 'scope'>>;
   tagId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type ProjectResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Project'] = ResolversParentTypes['Project']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   groups?: Resolver<Maybe<Array<ResolversTypes['Group']>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1986,19 +2033,20 @@ export type ProjectResolvers<ContextType = Context, ParentType extends Resolvers
   roles?: Resolver<Maybe<Array<ResolversTypes['Role']>>, ParentType, ContextType>;
   slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   users?: Resolver<Maybe<Array<ResolversTypes['User']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type ProjectGroupResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ProjectGroup'] = ResolversParentTypes['ProjectGroup']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   group?: Resolver<Maybe<ResolversTypes['Group']>, ParentType, ContextType>;
   groupId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType, RequireFields<ProjectGroupProjectArgs, 'organizationId'>>;
   projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -2010,44 +2058,48 @@ export type ProjectPageResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type ProjectPermissionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ProjectPermission'] = ResolversParentTypes['ProjectPermission']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   permission?: Resolver<Maybe<ResolversTypes['Permission']>, ParentType, ContextType>;
   permissionId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType, RequireFields<ProjectPermissionProjectArgs, 'organizationId'>>;
   projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type ProjectRoleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ProjectRole'] = ResolversParentTypes['ProjectRole']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType, RequireFields<ProjectRoleProjectArgs, 'organizationId'>>;
   projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   role?: Resolver<Maybe<ResolversTypes['Role']>, ParentType, ContextType>;
   roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type ProjectTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ProjectTag'] = ResolversParentTypes['ProjectTag']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType, RequireFields<ProjectTagProjectArgs, 'organizationId'>>;
   projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   tag?: Resolver<Maybe<ResolversTypes['Tag']>, ParentType, ContextType>;
   tagId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type ProjectUserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ProjectUser'] = ResolversParentTypes['ProjectUser']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType, RequireFields<ProjectUserProjectArgs, 'organizationId'>>;
   projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -2083,24 +2135,26 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 }>;
 
 export type RoleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Role'] = ResolversParentTypes['Role']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   groups?: Resolver<Maybe<Array<ResolversTypes['Group']>>, ParentType, ContextType, RequireFields<RoleGroupsArgs, 'scope'>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType, RequireFields<RoleTagsArgs, 'scope'>>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type RoleGroupResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RoleGroup'] = ResolversParentTypes['RoleGroup']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   group?: Resolver<Maybe<ResolversTypes['Group']>, ParentType, ContextType, RequireFields<RoleGroupGroupArgs, 'scope'>>;
   groupId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   role?: Resolver<Maybe<ResolversTypes['Role']>, ParentType, ContextType, RequireFields<RoleGroupRoleArgs, 'scope'>>;
   roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -2112,22 +2166,24 @@ export type RolePageResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type RoleTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RoleTag'] = ResolversParentTypes['RoleTag']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   role?: Resolver<Maybe<ResolversTypes['Role']>, ParentType, ContextType, RequireFields<RoleTagRoleArgs, 'scope'>>;
   roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   tag?: Resolver<Maybe<ResolversTypes['Tag']>, ParentType, ContextType, RequireFields<RoleTagTagArgs, 'scope'>>;
   tagId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type TagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Tag'] = ResolversParentTypes['Tag']> = ResolversObject<{
   color?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -2139,13 +2195,14 @@ export type TagPageResolvers<ContextType = Context, ParentType extends Resolvers
 }>;
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   roles?: Resolver<Maybe<Array<ResolversTypes['Role']>>, ParentType, ContextType, RequireFields<UserRolesArgs, 'scope'>>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType, RequireFields<UserTagsArgs, 'scope'>>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -2157,22 +2214,24 @@ export type UserPageResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type UserRoleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserRole'] = ResolversParentTypes['UserRole']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   role?: Resolver<Maybe<ResolversTypes['Role']>, ParentType, ContextType, RequireFields<UserRoleRoleArgs, 'scope'>>;
   roleId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<UserRoleUserArgs, 'scope'>>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type UserTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserTag'] = ResolversParentTypes['UserTag']> = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   tag?: Resolver<Maybe<ResolversTypes['Tag']>, ParentType, ContextType, RequireFields<UserTagTagArgs, 'scope'>>;
   tagId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<UserTagUserArgs, 'scope'>>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -2181,6 +2240,7 @@ export type UserTagResolvers<ContextType = Context, ParentType extends Resolvers
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Auditable?: AuditableResolvers<ContextType>;
   Creatable?: CreatableResolvers<ContextType>;
+  Date?: GraphQLScalarType;
   Group?: GroupResolvers<ContextType>;
   GroupPage?: GroupPageResolvers<ContextType>;
   GroupPermission?: GroupPermissionResolvers<ContextType>;

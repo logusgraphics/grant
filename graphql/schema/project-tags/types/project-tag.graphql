@@ -4,6 +4,7 @@ type ProjectTag implements Auditable {
   tagId: ID!
   project(organizationId: ID!): Project
   tag: Tag
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

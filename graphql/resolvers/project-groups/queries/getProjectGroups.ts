@@ -4,7 +4,7 @@ export const getProjectGroupsResolver: QueryResolvers['projectGroups'] = async (
   { projectId },
   context
 ) => {
-  const projectGroups = await context.providers.projectGroups.getProjectGroups({
+  const projectGroups = await context.services.projectGroups.getProjectGroups({
     projectId,
   });
   return projectGroups;

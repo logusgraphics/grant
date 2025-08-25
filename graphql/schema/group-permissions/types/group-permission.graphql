@@ -4,6 +4,7 @@ type GroupPermission implements Auditable {
   permissionId: ID!
   group(scope: Scope!): Group
   permission(scope: Scope!): Permission
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

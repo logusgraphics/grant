@@ -4,6 +4,6 @@ export const addGroupTagResolver: MutationResolvers['addGroupTag'] = async (
   { input },
   context
 ) => {
-  const addedGroupTag = await context.providers.groupTags.addGroupTag({ input });
+  const addedGroupTag = await context.services.groupTags.addGroupTag({ input });
   return addedGroupTag;
 };

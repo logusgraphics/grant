@@ -11,7 +11,7 @@ import {
   EntityConfig,
   generateAuditTimestamps,
   updateAuditTimestamp,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
 const generateInitialOrganizations = (): Organization[] => {
   const auditTimestamps = generateAuditTimestamps();
   return [

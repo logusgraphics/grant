@@ -1,25 +1,39 @@
 import { OrganizationResolvers, Tenant } from '@/graphql/generated/types';
+import { getScopedPermissionIds } from '@/graphql/lib/scopeFiltering';
+
 export const organizationPermissionsResolver: OrganizationResolvers['permissions'] = async (
   parent,
   _args,
   context
 ) => {
   const organizationId = parent.id;
+
   const organizationPermissions =
-    await context.providers.organizationPermissions.getOrganizationPermissions({
+    await context.services.organizationPermissions.getOrganizationPermissions({
       organizationId,
     });
+
   const permissionIds = organizationPermissions.map((op) => op.permissionId);
+
   if (permissionIds.length === 0) {
     return [];
   }
-  const permissionsResult = await context.providers.permissions.getPermissions({
-    ids: permissionIds,
-    scope: {
-      tenant: Tenant.Organization,
-      id: organizationId,
-    },
+
+  const scope = { tenant: Tenant.Organization, id: organizationId };
+  const scopedPermissionIds = await getScopedPermissionIds({ scope, context });
+
+  const filteredPermissionIds = permissionIds.filter((permissionId) =>
+    scopedPermissionIds.includes(permissionId)
+  );
+
+  if (filteredPermissionIds.length === 0) {
+    return [];
+  }
+
+  const permissionsResult = await context.services.permissions.getPermissions({
+    ids: filteredPermissionIds,
     limit: -1,
   });
+
   return permissionsResult.permissions;
 };

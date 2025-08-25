@@ -4,6 +4,7 @@ type ProjectGroup implements Auditable {
   groupId: ID!
   project(organizationId: ID!): Project
   group: Group
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

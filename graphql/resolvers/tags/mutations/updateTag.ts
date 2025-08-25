@@ -4,6 +4,6 @@ export const updateTagResolver: MutationResolvers['updateTag'] = async (
   { id, input },
   context
 ) => {
-  const updatedTag = await context.providers.tags.updateTag({ id, input });
+  const updatedTag = await context.services.tags.updateTag({ id, input });
   return updatedTag;
 };

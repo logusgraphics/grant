@@ -4,7 +4,7 @@ export const getProjectUsersResolver: QueryResolvers['projectUsers'] = async (
   { projectId },
   context
 ) => {
-  const projectUsers = await context.providers.projectUsers.getProjectUsers({
+  const projectUsers = await context.services.projectUsers.getProjectUsers({
     projectId,
   });
   return projectUsers;

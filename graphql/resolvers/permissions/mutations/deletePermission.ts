@@ -4,6 +4,6 @@ export const deletePermissionResolver: MutationResolvers['deletePermission'] = a
   { id },
   context
 ) => {
-  const deletedPermission = await context.providers.permissions.deletePermission({ id });
+  const deletedPermission = await context.services.permissions.deletePermission({ id });
   return deletedPermission;
 };

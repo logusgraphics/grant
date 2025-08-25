@@ -1,13 +1,19 @@
 import { UserRoleResolvers } from '@/graphql/generated/types';
+import { getScopedUserIds } from '@/graphql/lib/scopeFiltering';
+
 export const userRoleUserResolver: UserRoleResolvers['user'] = async (
   parent,
   { scope },
   context
 ) => {
-  const usersResult = await context.providers.users.getUsers({
+  const scopedUserIds = await getScopedUserIds({ scope, context });
+
+  if (!scopedUserIds.includes(parent.userId)) {
+    throw new Error(`User with ID ${parent.userId} is not accessible in the current scope`);
+  }
+
+  const usersResult = await context.services.users.getUsers({
     ids: [parent.userId],
-    scope,
-    limit: -1,
   });
   const user = usersResult.users[0];
   if (!user) {

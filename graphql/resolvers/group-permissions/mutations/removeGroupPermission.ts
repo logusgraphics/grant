@@ -4,6 +4,6 @@ export const removeGroupPermissionResolver: MutationResolvers['removeGroupPermis
   { input },
   context
 ) => {
-  const removed = await context.providers.groupPermissions.removeGroupPermission({ input });
+  const removed = await context.services.groupPermissions.removeGroupPermission({ input });
   return removed;
 };

@@ -4,6 +4,6 @@ export const deleteUserResolver: MutationResolvers['deleteUser'] = async (
   { id },
   context
 ) => {
-  const deletedUser = await context.providers.users.deleteUser({ id });
+  const deletedUser = await context.services.users.deleteUser({ id });
   return deletedUser;
 };

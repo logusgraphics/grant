@@ -4,6 +4,6 @@ export const createPermissionResolver: MutationResolvers['createPermission'] = a
   { input },
   context
 ) => {
-  const createdPermission = await context.providers.permissions.createPermission({ input });
+  const createdPermission = await context.services.permissions.createPermission({ input });
   return createdPermission;
 };

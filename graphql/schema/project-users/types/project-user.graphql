@@ -4,6 +4,7 @@ type ProjectUser implements Auditable {
   userId: ID!
   project(organizationId: ID!): Project
   user: User
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

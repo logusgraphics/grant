@@ -4,6 +4,7 @@ type UserTag implements Auditable {
   tagId: ID!
   user(scope: Scope!): User
   tag(scope: Scope!): Tag
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

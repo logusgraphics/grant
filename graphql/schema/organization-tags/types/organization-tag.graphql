@@ -4,6 +4,7 @@ type OrganizationTag implements Auditable {
   tagId: ID!
   organization: Organization
   tag: Tag
-  createdAt: String!
-  updatedAt: String!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
 }

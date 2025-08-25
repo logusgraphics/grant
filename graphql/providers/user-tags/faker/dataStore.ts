@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 
 import { AddUserTagInput, Scope, Tenant, UserTag } from '@/graphql/generated/types';
-import { getTags } from '@/graphql/providers/tags/faker/dataStore';
-import { getUsers } from '@/graphql/providers/users/faker/dataStore';
 import {
   createFakerDataStore,
   EntityConfig,
   generateAuditTimestamps,
-} from '@/lib/providers/faker/genericDataStore';
+} from '@/graphql/lib/providers/faker/genericDataStore';
+import { getTags } from '@/graphql/providers/tags/faker/dataStore';
+import { getUsers } from '@/graphql/providers/users/faker/dataStore';
 
 import { getOrganizationTagsByOrganizationId } from '../../organization-tags/faker/dataStore';
 import { getProjectTagsByProjectId } from '../../project-tags/faker/dataStore';

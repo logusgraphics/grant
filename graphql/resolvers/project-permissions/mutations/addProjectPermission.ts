@@ -4,7 +4,7 @@ export const addProjectPermissionResolver: MutationResolvers['addProjectPermissi
   { input },
   context
 ) => {
-  const projectPermission = await context.providers.projectPermissions.addProjectPermission({
+  const projectPermission = await context.services.projectPermissions.addProjectPermission({
     input,
   });
   return projectPermission;

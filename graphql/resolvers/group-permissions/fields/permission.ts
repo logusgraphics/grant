@@ -1,17 +1,29 @@
 import { GroupPermissionResolvers } from '@/graphql/generated/types';
+import { getScopedPermissionIds } from '@/graphql/lib/scopeFiltering';
+
 export const groupPermissionPermissionResolver: GroupPermissionResolvers['permission'] = async (
   parent,
   { scope },
   context
 ) => {
-  const permissionsResult = await context.providers.permissions.getPermissions({
+  const scopedPermissionIds = await getScopedPermissionIds({ scope, context });
+
+  if (!scopedPermissionIds.includes(parent.permissionId)) {
+    throw new Error(
+      `Permission with ID ${parent.permissionId} is not accessible in the current scope`
+    );
+  }
+
+  const permissionsResult = await context.services.permissions.getPermissions({
     ids: [parent.permissionId],
-    scope,
     limit: -1,
   });
+
   const permission = permissionsResult.permissions[0];
+
   if (!permission) {
     throw new Error(`Permission with ID ${parent.permissionId} not found`);
   }
+
   return permission;
 };

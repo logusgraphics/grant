@@ -4,7 +4,7 @@ export const addProjectRoleResolver: MutationResolvers['addProjectRole'] = async
   { input },
   context
 ) => {
-  const projectRole = await context.providers.projectRoles.addProjectRole({
+  const projectRole = await context.services.projectRoles.addProjectRole({
     input,
   });
   return projectRole;

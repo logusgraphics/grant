@@ -4,7 +4,7 @@ export const removeProjectGroupResolver: MutationResolvers['removeProjectGroup']
   { input },
   context
 ) => {
-  const removedProjectGroup = await context.providers.projectGroups.removeProjectGroup({
+  const removedProjectGroup = await context.services.projectGroups.removeProjectGroup({
     input,
   });
   return removedProjectGroup;

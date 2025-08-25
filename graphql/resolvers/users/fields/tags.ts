@@ -1,17 +1,29 @@
 import { UserResolvers } from '@/graphql/generated/types';
+import { getScopedTagIds } from '@/graphql/lib/scopeFiltering';
+
 export const userTagsResolver: UserResolvers['tags'] = async (parent, { scope }, context) => {
-  const userTags = await context.providers.userTags.getUserTags({
+  const userTags = await context.services.userTags.getUserTags({
     userId: parent.id,
-    scope,
   });
-  const tagIds = userTags.map((ut) => ut.tagId);
-  if (tagIds.length === 0) {
+
+  if (userTags.length === 0) {
     return [];
   }
-  const tagsResult = await context.providers.tags.getTags({
-    ids: tagIds,
-    scope,
+
+  const scopedTagIds = await getScopedTagIds({ scope, context });
+
+  const filteredUserTags = userTags.filter((ut) => scopedTagIds.includes(ut.tagId));
+
+  if (filteredUserTags.length === 0) {
+    return [];
+  }
+
+  const filteredTagIds = filteredUserTags.map((ut) => ut.tagId);
+
+  const tagsResult = await context.services.tags.getTags({
+    ids: filteredTagIds,
     limit: -1,
   });
+
   return tagsResult.tags;
 };

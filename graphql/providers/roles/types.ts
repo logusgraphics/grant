@@ -7,7 +7,9 @@ import {
   RolePage,
 } from '@/graphql/generated/types';
 export interface RoleDataProvider {
-  getRoles(params: QueryRolesArgs): Promise<RolePage>;
+  getRoles(
+    params: Omit<QueryRolesArgs, 'scope'> & { requestedFields?: string[] }
+  ): Promise<RolePage>;
   createRole(params: MutationCreateRoleArgs): Promise<Role>;
   updateRole(params: MutationUpdateRoleArgs): Promise<Role>;
   deleteRole(params: MutationDeleteRoleArgs): Promise<Role>;

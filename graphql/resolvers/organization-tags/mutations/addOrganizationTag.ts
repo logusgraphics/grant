@@ -4,7 +4,7 @@ export const addOrganizationTagResolver: MutationResolvers['addOrganizationTag']
   { input },
   context
 ) => {
-  const organizationTag = await context.providers.organizationTags.addOrganizationTag({
+  const organizationTag = await context.services.organizationTags.addOrganizationTag({
     input,
   });
   return organizationTag;

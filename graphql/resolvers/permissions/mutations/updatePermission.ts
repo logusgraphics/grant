@@ -4,6 +4,6 @@ export const updatePermissionResolver: MutationResolvers['updatePermission'] = a
   { id, input },
   context
 ) => {
-  const updatedPermission = await context.providers.permissions.updatePermission({ id, input });
+  const updatedPermission = await context.services.permissions.updatePermission({ id, input });
   return updatedPermission;
 };

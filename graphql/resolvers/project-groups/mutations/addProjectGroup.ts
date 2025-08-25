@@ -4,7 +4,7 @@ export const addProjectGroupResolver: MutationResolvers['addProjectGroup'] = asy
   { input },
   context
 ) => {
-  const projectGroup = await context.providers.projectGroups.addProjectGroup({
+  const projectGroup = await context.services.projectGroups.addProjectGroup({
     input,
   });
   return projectGroup;
