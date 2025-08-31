@@ -20,15 +20,16 @@ export interface BaseEntity extends BaseEntityModel {
 }
 
 export interface BaseQueryArgs<TModel extends BaseEntityModel = BaseEntityModel> {
-  ids?: string[];
-  page?: number;
-  limit?: number;
-  search?: string;
+  ids?: string[] | null;
+  page?: number | null;
+  limit?: number | null;
+  search?: string | null;
   sort?: {
     field: keyof TModel;
     order: SortOrder;
-  };
-  requestedFields?: Array<keyof TModel>;
+  } | null;
+  requestedFields?: Array<keyof TModel> | null;
+  tagIds?: string[] | null;
 }
 
 export interface BasePageResult<T> {
@@ -61,8 +62,10 @@ export abstract class EntityRepository<TModel extends BaseEntityModel, TEntity e
     params: BaseQueryArgs<TModel>,
     transaction?: Transaction
   ): Promise<BasePageResult<TEntity>> {
-    const { ids, page = 1, limit = 50, search, sort, requestedFields } = params;
+    const { ids, page, limit, search, sort, requestedFields } = params;
     const dbInstance = transaction || this.db;
+    const safePage = page || 1;
+    const safeLimit = limit || 50;
 
     try {
       const orderBy = buildOrderBy<TModel>(this.table, sort, this.defaultSortField);
@@ -73,11 +76,13 @@ export abstract class EntityRepository<TModel extends BaseEntityModel, TEntity e
         .from(this.table)
         .where(whereClause);
       const totalCount = Number(countResult[0]?.count || 0);
-      const offset = (page - 1) * limit;
+      const offset = (safePage - 1) * safeLimit;
 
       if (totalCount === 0) {
         return { items: [], totalCount: 0, hasNextPage: false };
       }
+
+      const hasNextPage = safePage * safeLimit < totalCount;
 
       const selectObj = buildSelectObject<TModel>(
         this.table,
@@ -92,7 +97,7 @@ export abstract class EntityRepository<TModel extends BaseEntityModel, TEntity e
         .from(this.table)
         .where(whereClause)
         .orderBy(...orderBy)
-        .limit(limit)
+        .limit(safeLimit)
         .offset(offset);
 
       const items = results.map((item: TModel) =>
@@ -102,7 +107,7 @@ export abstract class EntityRepository<TModel extends BaseEntityModel, TEntity e
       return {
         items,
         totalCount,
-        hasNextPage: page * limit < totalCount,
+        hasNextPage,
       };
     } catch (error) {
       console.error('Query error:', error);

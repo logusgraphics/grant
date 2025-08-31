@@ -2,31 +2,37 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryProjectGroupsArgs,
-  MutationAddProjectGroupArgs,
-  MutationRemoveProjectGroupArgs,
   ProjectGroup,
+  RemoveProjectGroupInput,
+  AddProjectGroupInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { projectGroupAuditLogs } from '@/graphql/repositories/project-groups/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
-import { IProjectGroupService } from './interface';
 import {
   getProjectGroupsParamsSchema,
-  addProjectGroupParamsSchema,
-  removeProjectGroupParamsSchema,
   projectGroupSchema,
+  addProjectGroupInputSchema,
+  removeProjectGroupInputSchema,
 } from './schemas';
 
-export class ProjectGroupService extends AuditService implements IProjectGroupService {
+export class ProjectGroupService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(projectGroupAuditLogs, 'projectGroupId', user);
+    super(projectGroupAuditLogs, 'projectGroupId', user, db);
   }
 
   private async projectExists(projectId: string): Promise<void> {
@@ -62,40 +68,34 @@ export class ProjectGroupService extends AuditService implements IProjectGroupSe
   }
 
   public async getProjectGroups(params: QueryProjectGroupsArgs): Promise<ProjectGroup[]> {
-    const validatedParams = validateInput(
-      getProjectGroupsParamsSchema,
-      params,
-      'getProjectGroups method'
-    );
+    const context = 'ProjectGroupService.getProjectGroups';
+    const validatedParams = validateInput(getProjectGroupsParamsSchema, params, context);
 
     await this.projectExists(validatedParams.projectId);
 
     const result = await this.repositories.projectGroupRepository.getProjectGroups(validatedParams);
-    return validateOutput(
-      createDynamicSingleSchema(projectGroupSchema).array(),
-      result,
-      'getProjectGroups method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectGroupSchema).array(), result, context);
   }
 
-  public async addProjectGroup(params: MutationAddProjectGroupArgs): Promise<ProjectGroup> {
-    const validatedParams = validateInput(
-      addProjectGroupParamsSchema,
-      params,
-      'addProjectGroup method'
-    );
+  public async addProjectGroup(
+    params: AddProjectGroupInput,
+    transaction?: Transaction
+  ): Promise<ProjectGroup> {
+    const context = 'ProjectGroupService.addProjectGroup';
+    const validatedParams = validateInput(addProjectGroupInputSchema, params, context);
 
-    const hasGroup = await this.projectHasGroup(
-      validatedParams.input.projectId,
-      validatedParams.input.groupId
-    );
+    const { projectId, groupId } = validatedParams;
+
+    const hasGroup = await this.projectHasGroup(projectId, groupId);
 
     if (hasGroup) {
       throw new Error('Project already has this group');
     }
 
-    const projectGroup =
-      await this.repositories.projectGroupRepository.addProjectGroup(validatedParams);
+    const projectGroup = await this.repositories.projectGroupRepository.addProjectGroup(
+      { projectId, groupId },
+      transaction
+    );
 
     const newValues = {
       id: projectGroup.id,
@@ -106,41 +106,40 @@ export class ProjectGroupService extends AuditService implements IProjectGroupSe
     };
 
     const metadata = {
-      source: 'add_project_group_mutation',
+      context,
     };
 
-    await this.logCreate(projectGroup.id, newValues, metadata);
+    await this.logCreate(projectGroup.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(projectGroupSchema),
-      projectGroup,
-      'addProjectGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectGroupSchema), projectGroup, context);
   }
 
   public async removeProjectGroup(
-    params: MutationRemoveProjectGroupArgs & { hardDelete?: boolean }
+    params: RemoveProjectGroupInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<ProjectGroup> {
-    const validatedParams = validateInput(
-      removeProjectGroupParamsSchema,
-      params,
-      'deleteProjectGroup method'
-    );
+    const context = 'ProjectGroupService.removeProjectGroup';
+    const validatedParams = validateInput(removeProjectGroupInputSchema, params, context);
 
-    const hasGroup = await this.projectHasGroup(
-      validatedParams.input.projectId,
-      validatedParams.input.groupId
-    );
+    const { projectId, groupId, hardDelete } = validatedParams;
+
+    const hasGroup = await this.projectHasGroup(projectId, groupId);
 
     if (!hasGroup) {
       throw new Error('Project does not have this group');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const projectGroup = isHardDelete
-      ? await this.repositories.projectGroupRepository.hardDeleteProjectGroup(validatedParams)
-      : await this.repositories.projectGroupRepository.softDeleteProjectGroup(validatedParams);
+      ? await this.repositories.projectGroupRepository.hardDeleteProjectGroup(
+          { projectId, groupId },
+          transaction
+        )
+      : await this.repositories.projectGroupRepository.softDeleteProjectGroup(
+          { projectId, groupId },
+          transaction
+        );
 
     const oldValues = {
       id: projectGroup.id,
@@ -155,22 +154,17 @@ export class ProjectGroupService extends AuditService implements IProjectGroupSe
       deletedAt: projectGroup.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_project_group_mutation',
-      };
-      await this.logHardDelete(projectGroup.id, oldValues, metadata);
+      await this.logHardDelete(projectGroup.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_project_group_mutation',
-      };
-      await this.logSoftDelete(projectGroup.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(projectGroup.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(projectGroupSchema),
-      projectGroup,
-      'deleteProjectGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectGroupSchema), projectGroup, context);
   }
 }

@@ -3,12 +3,10 @@ export * from './schemas';
 export * from './AuditService';
 export * from './dynamicSchemas';
 
-export interface UnifiedDeleteParams {
-  id: string;
+export type DeleteParams = {
   hardDelete?: boolean;
-}
+};
 
-export interface UnifiedDeleteResult<T> {
-  entity: T;
-  isHardDelete: boolean;
-}
+export type SelectedFields<T> = {
+  requestedFields?: Array<keyof T>;
+};

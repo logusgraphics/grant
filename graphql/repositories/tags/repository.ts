@@ -14,10 +14,9 @@ import {
   BaseDeleteArgs,
 } from '@/graphql/repositories/common';
 
-import { ITagRepository } from './interface';
 import { TagModel, tags } from './schema';
 
-export class TagRepository extends EntityRepository<TagModel, Tag> implements ITagRepository {
+export class TagRepository extends EntityRepository<TagModel, Tag> {
   protected table = tags;
   protected searchFields: Array<keyof TagModel> = ['name'];
   protected defaultSortField: keyof TagModel = 'createdAt';

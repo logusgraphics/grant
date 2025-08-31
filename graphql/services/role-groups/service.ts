@@ -12,7 +12,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IRoleGroupService } from './interface';
 import {
   getRoleGroupsParamsSchema,
   addRoleGroupParamsSchema,
@@ -20,13 +19,13 @@ import {
   roleGroupSchema,
 } from './schemas';
 
-export class RoleGroupService extends AuditService implements IRoleGroupService {
+export class RoleGroupService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(roleGroupsAuditLogs, 'roleGroupId', user);
+    super(roleGroupsAuditLogs, 'roleGroupId', user, db);
   }
 
   private async roleExists(roleId: string): Promise<void> {

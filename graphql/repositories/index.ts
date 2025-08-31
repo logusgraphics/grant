@@ -57,32 +57,3 @@ export function createRepositories(db: PostgresJsDatabase) {
     permissionTagRepository: createPermissionTagRepository(db),
   };
 }
-
-export type { IUserRepository } from './users/interface';
-export type { IRoleRepository } from './roles/interface';
-export type { IUserRoleRepository } from './user-roles/interface';
-export type { IUserTagRepository } from './user-tags/interface';
-export type { ITagRepository } from './tags/interface';
-export type { IGroupRepository } from './groups/interface';
-export type { IPermissionRepository } from './permissions/interface';
-export type { IProjectRepository } from './projects/interface';
-export type { IOrganizationRepository } from './organizations/interface';
-export type { IGroupPermissionRepository } from './group-permissions/interface';
-export type { IOrganizationUserRepository } from './organization-users/interface';
-export type { IProjectUserRepository } from './project-users/interface';
-export type { IProjectGroupRepository } from './project-groups/interface';
-export type { IProjectRoleRepository } from './project-roles/interface';
-export type { IProjectPermissionRepository } from './project-permissions/interface';
-export type { IProjectTagRepository } from './project-tags/interface';
-export type { IOrganizationProjectRepository } from './organization-projects/interface';
-export type { IOrganizationRoleRepository } from './organization-roles/interface';
-export type { IOrganizationTagRepository } from './organization-tags/interface';
-export type { IRoleGroupRepository } from './role-groups/interface';
-export type { IRoleTagRepository } from './role-tags/interface';
-export type { IOrganizationPermissionRepository } from './organization-permissions/interface';
-export type { IOrganizationGroupRepository } from './organization-groups/interface';
-export type { IGroupTagRepository } from './group-tags/interface';
-export type { IPermissionTagRepository } from './permission-tags/interface';
-
-export { EntityRepository } from './common/EntityRepository';
-export { PivotRepository } from './common/PivotRepository';

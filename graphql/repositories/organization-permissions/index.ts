@@ -1,15 +1,7 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import { IOrganizationPermissionRepository } from './interface';
 import { OrganizationPermissionRepository } from './repository';
 
-// Factory function for creating instances with database connections
-export function createOrganizationPermissionRepository(
-  db: PostgresJsDatabase
-): IOrganizationPermissionRepository {
+export function createOrganizationPermissionRepository(db: PostgresJsDatabase) {
   return new OrganizationPermissionRepository(db);
 }
-
-export * from './repository';
-export * from './interface';
-export * from './schema';

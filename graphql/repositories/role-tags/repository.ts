@@ -24,7 +24,7 @@ export class RoleTagRepository extends PivotRepository<RoleTagModel, RoleTag> {
     };
   }
 
-  public async getRoleTags(params: QueryRoleTagsArgs): Promise<RoleTag[]> {
+  public async getRoleTags(params: Omit<QueryRoleTagsArgs, 'scope'>): Promise<RoleTag[]> {
     return this.query({ parentId: params.roleId });
   }
 

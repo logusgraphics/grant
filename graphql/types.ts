@@ -1,8 +1,9 @@
 import { GraphQLResolveInfo } from 'graphql';
 
 import { ModuleProviders } from './config/providers/interface';
-import { ModuleServices } from './config/services/interface';
+import { Controllers } from './controllers';
 import { EntityCache } from './lib/scopeFiltering';
+import { Services } from './services';
 
 export interface AuthenticatedUser {
   id: string;
@@ -11,8 +12,9 @@ export interface AuthenticatedUser {
 
 export interface Context {
   providers: ModuleProviders;
-  services: ModuleServices;
-  scopeCache?: EntityCache;
+  services: Services;
+  controllers: Controllers;
+  scopeCache: EntityCache;
   info?: GraphQLResolveInfo;
   user: AuthenticatedUser | null;
 }

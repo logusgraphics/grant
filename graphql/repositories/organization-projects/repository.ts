@@ -1,4 +1,5 @@
-import { OrganizationProject } from '@/graphql/generated/types';
+import { AddOrganizationProjectInput, OrganizationProject } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -6,13 +7,12 @@ import {
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
 
-import { IOrganizationProjectRepository } from './interface';
 import { organizationProjects, OrganizationProjectModel } from './schema';
 
-export class OrganizationProjectRepository
-  extends PivotRepository<OrganizationProjectModel, OrganizationProject>
-  implements IOrganizationProjectRepository
-{
+export class OrganizationProjectRepository extends PivotRepository<
+  OrganizationProjectModel,
+  OrganizationProject
+> {
   protected table = organizationProjects;
   protected parentIdField: keyof OrganizationProjectModel = 'organizationId';
   protected relatedIdField: keyof OrganizationProjectModel = 'projectId';
@@ -39,15 +39,15 @@ export class OrganizationProjectRepository
   }
 
   public async addOrganizationProject(
-    organizationId: string,
-    projectId: string
+    params: AddOrganizationProjectInput,
+    transaction?: Transaction
   ): Promise<OrganizationProject> {
     const baseParams: BasePivotAddArgs = {
-      parentId: organizationId,
-      relatedId: projectId,
+      parentId: params.organizationId,
+      relatedId: params.projectId,
     };
 
-    const organizationProject = await this.add(baseParams);
+    const organizationProject = await this.add(baseParams, transaction);
 
     return organizationProject;
   }

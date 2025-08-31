@@ -23,9 +23,7 @@ export const removeOrganizationProjectInputSchema = z.object({
   projectId: idSchema.refine((projectId) => projectId.trim().length > 0, 'Project ID is required'),
 });
 
-export const addOrganizationProjectArgsSchema = z.object({
-  input: addOrganizationProjectInputSchema,
-});
+export const addOrganizationProjectArgsSchema = addOrganizationProjectInputSchema;
 
 export const removeOrganizationProjectArgsSchema = z.object({
   input: removeOrganizationProjectInputSchema,

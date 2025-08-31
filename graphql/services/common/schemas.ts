@@ -6,11 +6,12 @@ import { TAG_COLORS, TagColor } from '@/lib/constants/colors';
 export const idSchema = z.string().min(1, 'ID is required');
 export const emailSchema = z.string().email('Invalid email format').min(1, 'Email is required');
 export const nameSchema = z.string().min(1, 'Name is required').max(255, 'Name too long');
-export const descriptionSchema = z.string().max(1000, 'Description too long').optional();
+export const descriptionSchema = z.string().max(1000, 'Description too long').nullable().optional();
 export const limitSchema = z.number().int().min(-1).max(100, 'Limit must be between -1 and 100');
-export const pageSchema = z.number().int().min(1, 'Page must be at least 1').optional();
+export const pageSchema = z.number().int().min(1, 'Page must be at least 1').nullable().optional();
 export const searchSchema = z
   .string()
+  .nullable()
   .optional()
   .refine(
     (value) => !value || value.trim().length === 0 || value.trim().length >= 2,
@@ -26,7 +27,7 @@ export const scopeSchema = z.object({
   tenant: tenantSchema,
 });
 
-export const sortOrderSchema = z.enum(Object.values(SortOrder) as [string, ...string[]]);
+export const sortOrderSchema = z.enum(Object.values(SortOrder) as [SortOrder, ...SortOrder[]]);
 
 export const colorSchema = z
   .string()
@@ -89,6 +90,10 @@ export const namedEntitySchema = baseEntitySchema.extend({
   description: descriptionSchema,
 });
 
+export const deleteSchema = z.object({
+  hardDelete: z.boolean().optional(),
+});
+
 export const paginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
   z.object({
     items: z.array(itemSchema),
@@ -96,15 +101,15 @@ export const paginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =
     hasNextPage: z.boolean(),
   });
 
-export const crudParamsSchema = z.object({
-  ids: z.array(idSchema).optional(),
-  limit: limitSchema.optional(),
+export const queryParamsSchema = z.object({
+  ids: z.array(idSchema).nullable().optional(),
+  limit: limitSchema.nullable().optional(),
   page: pageSchema,
   search: searchSchema,
-  requestedFields: z.array(z.string()).optional(),
+  tagIds: z.array(idSchema).nullable().optional(),
 });
 
-export const sortableParamsSchema = crudParamsSchema.extend({
+export const sortableParamsSchema = queryParamsSchema.extend({
   sort: sortSchema.optional(),
 });
 

@@ -7,13 +7,9 @@ import {
   BasePivotRemoveArgs,
 } from '../common/PivotRepository';
 
-import { IGroupTagRepository } from './interface';
 import { GroupTag, groupTags } from './schema';
 
-export class GroupTagRepository
-  extends PivotRepository<GroupTag, GroupTag>
-  implements IGroupTagRepository
-{
+export class GroupTagRepository extends PivotRepository<GroupTag, GroupTag> {
   protected table = groupTags;
   protected parentIdField: keyof GroupTag = 'groupId';
   protected relatedIdField: keyof GroupTag = 'tagId';

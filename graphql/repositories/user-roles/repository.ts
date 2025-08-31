@@ -10,13 +10,9 @@ import {
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
 
-import { IUserRoleRepository } from './interface';
 import { userRoles, UserRoleModel } from './schema';
 
-export class UserRoleRepository
-  extends PivotRepository<UserRoleModel, UserRole>
-  implements IUserRoleRepository
-{
+export class UserRoleRepository extends PivotRepository<UserRoleModel, UserRole> {
   protected table = userRoles;
   protected parentIdField: keyof UserRoleModel = 'userId';
   protected relatedIdField: keyof UserRoleModel = 'roleId';

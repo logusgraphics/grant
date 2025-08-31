@@ -17,7 +17,7 @@ export abstract class AuditService {
     protected readonly auditLogsTable: any,
     protected readonly entityIdField: string,
     protected readonly user: AuthenticatedUser | null = null,
-    readonly db: PostgresJsDatabase
+    protected readonly db: PostgresJsDatabase
   ) {}
 
   protected getPerformedBy(): string {

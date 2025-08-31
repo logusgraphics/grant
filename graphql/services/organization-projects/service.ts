@@ -1,18 +1,18 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  MutationAddOrganizationProjectArgs,
+  AddOrganizationProjectInput,
   MutationRemoveOrganizationProjectArgs,
   OrganizationProject,
   QueryOrganizationProjectsArgs,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
-import { organizationProjectsAuditLogs } from '@/graphql/repositories/organization-projects';
+import { organizationProjectsAuditLogs } from '@/graphql/repositories/organization-projects/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IOrganizationProjectService } from './interface';
 import {
   getOrganizationProjectsParamsSchema,
   addOrganizationProjectParamsSchema,
@@ -20,16 +20,13 @@ import {
   organizationProjectSchema,
 } from './schemas';
 
-export class OrganizationProjectService
-  extends AuditService
-  implements IOrganizationProjectService
-{
+export class OrganizationProjectService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(organizationProjectsAuditLogs, 'organizationProjectId', user);
+    super(organizationProjectsAuditLogs, 'organizationProjectId', user, db);
   }
 
   private async organizationExists(organizationId: string): Promise<void> {
@@ -71,27 +68,29 @@ export class OrganizationProjectService
   public async getOrganizationProjects(
     params: Omit<QueryOrganizationProjectsArgs, 'scope'>
   ): Promise<OrganizationProject[]> {
+    const validationContext = 'OrganizationProjectService.getOrganizationProjects';
     const validatedParams = validateInput(
       getOrganizationProjectsParamsSchema,
       params,
-      'getOrganizationProjects method'
+      validationContext
     );
 
     await this.organizationExists(validatedParams.organizationId);
 
-    const result =
-      await this.repositories.organizationProjectRepository.getOrganizationProjects(
-        validatedParams
-      );
+    const result = await this.repositories.organizationProjectRepository.getOrganizationProjects({
+      organizationId: validatedParams.organizationId,
+    });
+
     return validateOutput(
       createDynamicSingleSchema(organizationProjectSchema).array(),
       result,
-      'getOrganizationProjects method'
+      validationContext
     );
   }
 
   public async addOrganizationProject(
-    params: MutationAddOrganizationProjectArgs
+    params: AddOrganizationProjectInput,
+    transaction?: Transaction
   ): Promise<OrganizationProject> {
     const validatedParams = validateInput(
       addOrganizationProjectParamsSchema,
@@ -99,10 +98,9 @@ export class OrganizationProjectService
       'addOrganizationProject method'
     );
 
-    const hasProject = await this.organizationHasProject(
-      validatedParams.input.organizationId,
-      validatedParams.input.projectId
-    );
+    const { organizationId, projectId } = validatedParams;
+
+    const hasProject = await this.organizationHasProject(organizationId, projectId);
 
     if (hasProject) {
       throw new Error('Organization already has this project');
@@ -110,8 +108,8 @@ export class OrganizationProjectService
 
     const organizationProject =
       await this.repositories.organizationProjectRepository.addOrganizationProject(
-        validatedParams.input.organizationId,
-        validatedParams.input.projectId
+        { organizationId, projectId },
+        transaction
       );
 
     const newValues = {
@@ -126,7 +124,7 @@ export class OrganizationProjectService
       source: 'add_organization_project_mutation',
     };
 
-    await this.logCreate(organizationProject.id, newValues, metadata);
+    await this.logCreate(organizationProject.id, newValues, metadata, transaction);
 
     return validateOutput(
       createDynamicSingleSchema(organizationProjectSchema),

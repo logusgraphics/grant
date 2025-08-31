@@ -5,10 +5,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { GroupService } from './service';
 
-export * from './interface';
-export * from './service';
-export * from './schemas';
-
 export function createGroupService(
   repositories: Repositories,
   user: AuthenticatedUser | null,

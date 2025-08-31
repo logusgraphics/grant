@@ -14,16 +14,15 @@ import {
   BaseDeleteArgs,
 } from '@/graphql/repositories/common';
 
-import { IRoleRepository } from './interface';
 import { RoleModel, roles } from './schema';
 
-export class RoleRepository extends EntityRepository<RoleModel, Role> implements IRoleRepository {
+export class RoleRepository extends EntityRepository<RoleModel, Role> {
   protected table = roles;
   protected searchFields: Array<keyof RoleModel> = ['name', 'description'];
   protected defaultSortField: keyof RoleModel = 'createdAt';
 
   public async getRoles(
-    params: QueryRolesArgs & { requestedFields?: Array<keyof RoleModel> }
+    params: Omit<QueryRolesArgs, 'scope'> & { requestedFields?: Array<keyof RoleModel> }
   ): Promise<RolePage> {
     const baseParams: BaseQueryArgs<RoleModel> = {
       ids: params.ids || undefined,

@@ -1,18 +1,24 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js/driver';
 
 import {
-  MutationAddProjectUserArgs,
-  MutationRemoveProjectUserArgs,
+  AddProjectUserInput,
   ProjectUser,
   QueryProjectUsersArgs,
+  RemoveProjectUserInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { projectUserAuditLogs } from '@/graphql/repositories/project-users/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
-import { IProjectUserService } from './interface';
 import {
   getProjectUsersParamsSchema,
   addProjectUserParamsSchema,
@@ -20,13 +26,13 @@ import {
   projectUserSchema,
 } from './schemas';
 
-export class ProjectUserService extends AuditService implements IProjectUserService {
+export class ProjectUserService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(projectUserAuditLogs, 'projectUserId', user);
+    super(projectUserAuditLogs, 'projectUserId', user, db);
   }
 
   private async projectExists(projectId: string): Promise<void> {
@@ -62,40 +68,36 @@ export class ProjectUserService extends AuditService implements IProjectUserServ
   }
 
   public async getProjectUsers(params: QueryProjectUsersArgs): Promise<ProjectUser[]> {
-    const validatedParams = validateInput(
-      getProjectUsersParamsSchema,
-      params,
-      'getProjectUsers method'
-    );
+    const context = 'ProjectUserService.getProjectUsers';
+    const validatedParams = validateInput(getProjectUsersParamsSchema, params, context);
 
     await this.projectExists(validatedParams.projectId);
 
     const result = await this.repositories.projectUserRepository.getProjectUsers(validatedParams);
-    return validateOutput(
-      createDynamicSingleSchema(projectUserSchema).array(),
-      result,
-      'getProjectUsers method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectUserSchema).array(), result, context);
   }
 
-  public async addProjectUser(params: MutationAddProjectUserArgs): Promise<ProjectUser> {
-    const validatedParams = validateInput(
-      addProjectUserParamsSchema,
-      params,
-      'addProjectUser method'
-    );
+  public async addProjectUser(
+    params: AddProjectUserInput,
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
+    const context = 'ProjectUserService.addProjectUser';
+    const validatedParams = validateInput(addProjectUserParamsSchema, params, context);
+    const { projectId, userId } = validatedParams;
 
-    const hasUser = await this.projectHasUser(
-      validatedParams.input.projectId,
-      validatedParams.input.userId
-    );
+    const hasUser = await this.projectHasUser(projectId, userId);
 
     if (hasUser) {
       throw new Error('Project already has this user');
     }
 
-    const projectUser =
-      await this.repositories.projectUserRepository.addProjectUser(validatedParams);
+    const projectUser = await this.repositories.projectUserRepository.addProjectUser(
+      {
+        projectId,
+        userId,
+      },
+      transaction
+    );
 
     const newValues = {
       id: projectUser.id,
@@ -106,41 +108,40 @@ export class ProjectUserService extends AuditService implements IProjectUserServ
     };
 
     const metadata = {
-      source: 'add_project_user_mutation',
+      context,
     };
 
-    await this.logCreate(projectUser.id, newValues, metadata);
+    await this.logCreate(projectUser.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(projectUserSchema),
-      projectUser,
-      'addProjectUser method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
   }
 
   public async removeProjectUser(
-    params: MutationRemoveProjectUserArgs & { hardDelete?: boolean }
+    params: RemoveProjectUserInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<ProjectUser> {
-    const validatedParams = validateInput(
-      removeProjectUserParamsSchema,
-      params,
-      'deleteProjectUser method'
-    );
+    const context = 'ProjectUserService.removeProjectUser';
+    const validatedParams = validateInput(removeProjectUserParamsSchema, params, context);
 
-    const hasUser = await this.projectHasUser(
-      validatedParams.input.projectId,
-      validatedParams.input.userId
-    );
+    const { projectId, userId, hardDelete } = validatedParams;
+
+    const hasUser = await this.projectHasUser(projectId, userId);
 
     if (!hasUser) {
       throw new Error('Project does not have this user');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const projectUser = isHardDelete
-      ? await this.repositories.projectUserRepository.hardDeleteProjectUser(validatedParams)
-      : await this.repositories.projectUserRepository.softDeleteProjectUser(validatedParams);
+      ? await this.repositories.projectUserRepository.hardDeleteProjectUser(
+          { projectId, userId },
+          transaction
+        )
+      : await this.repositories.projectUserRepository.softDeleteProjectUser(
+          { projectId, userId },
+          transaction
+        );
 
     const oldValues = {
       id: projectUser.id,
@@ -155,22 +156,17 @@ export class ProjectUserService extends AuditService implements IProjectUserServ
       deletedAt: projectUser.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_project_user_mutation',
-      };
-      await this.logHardDelete(projectUser.id, oldValues, metadata);
+      await this.logHardDelete(projectUser.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_project_user_mutation',
-      };
-      await this.logSoftDelete(projectUser.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(projectUser.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(projectUserSchema),
-      projectUser,
-      'deleteProjectUser method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
   }
 }

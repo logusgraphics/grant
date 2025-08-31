@@ -10,13 +10,12 @@ import {
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
 
-import { IGroupPermissionRepository } from './interface';
 import { groupPermissions, GroupPermissionModel } from './schema';
 
-export class GroupPermissionRepository
-  extends PivotRepository<GroupPermissionModel, GroupPermission>
-  implements IGroupPermissionRepository
-{
+export class GroupPermissionRepository extends PivotRepository<
+  GroupPermissionModel,
+  GroupPermission
+> {
   protected table = groupPermissions;
   protected parentIdField: keyof GroupPermissionModel = 'groupId';
   protected relatedIdField: keyof GroupPermissionModel = 'permissionId';

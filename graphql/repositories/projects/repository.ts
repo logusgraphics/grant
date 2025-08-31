@@ -1,19 +1,19 @@
 import {
   QueryProjectsArgs,
-  MutationCreateProjectArgs,
   MutationUpdateProjectArgs,
   MutationDeleteProjectArgs,
   Project,
   ProjectPage,
+  CreateProjectInput,
 } from '@/graphql/generated/types';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   EntityRepository,
-  BaseQueryArgs,
   BaseCreateArgs,
   BaseUpdateArgs,
   BaseDeleteArgs,
 } from '@/graphql/repositories/common';
+import { SelectedFields } from '@/graphql/services/common';
 
 import { ProjectModel, projects } from './schema';
 
@@ -30,23 +30,10 @@ export class ProjectRepository extends EntityRepository<ProjectModel, Project> {
   }
 
   public async getProjects(
-    params: Omit<QueryProjectsArgs, 'scope'> & { requestedFields?: Array<keyof ProjectModel> }
+    params: Omit<QueryProjectsArgs, 'organizationId'> & SelectedFields<ProjectModel>,
+    transaction?: Transaction
   ): Promise<ProjectPage> {
-    const baseParams: BaseQueryArgs<ProjectModel> = {
-      ids: params.ids || undefined,
-      page: params.page || undefined,
-      limit: params.limit || undefined,
-      search: params.search || undefined,
-      sort: params.sort
-        ? {
-            field: params.sort.field as keyof ProjectModel,
-            order: params.sort.order,
-          }
-        : undefined,
-      requestedFields: params.requestedFields as Array<keyof ProjectModel> | undefined,
-    };
-
-    const result = await this.query(baseParams);
+    const result = await this.query(params, transaction);
 
     return {
       projects: result.items,
@@ -70,13 +57,13 @@ export class ProjectRepository extends EntityRepository<ProjectModel, Project> {
   }
 
   public async createProject(
-    params: MutationCreateProjectArgs,
+    params: Omit<CreateProjectInput, 'organizationId' | 'tagIds'>,
     transaction?: Transaction
   ): Promise<Project> {
     const baseParams: BaseCreateArgs = {
-      name: params.input.name,
-      slug: this.generateSlug(params.input.name),
-      description: params.input.description,
+      name: params.name,
+      slug: this.generateSlug(params.name),
+      description: params.description,
     };
 
     return this.create(baseParams, transaction);

@@ -1,9 +1,10 @@
 import {
   QueryProjectPermissionsArgs,
-  MutationAddProjectPermissionArgs,
-  MutationRemoveProjectPermissionArgs,
   ProjectPermission,
+  RemoveProjectPermissionInput,
+  AddProjectPermissionInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { ProjectPermissionModel, projectPermissions } from './schema';
@@ -34,29 +35,41 @@ export class ProjectPermissionRepository extends PivotRepository<
   }
 
   public async addProjectPermission(
-    params: MutationAddProjectPermissionArgs
+    params: AddProjectPermissionInput,
+    transaction?: Transaction
   ): Promise<ProjectPermission> {
-    return this.add({
-      parentId: params.input.projectId,
-      relatedId: params.input.permissionId,
-    });
+    return this.add(
+      {
+        parentId: params.projectId,
+        relatedId: params.permissionId,
+      },
+      transaction
+    );
   }
 
   public async softDeleteProjectPermission(
-    params: MutationRemoveProjectPermissionArgs
+    params: RemoveProjectPermissionInput,
+    transaction?: Transaction
   ): Promise<ProjectPermission> {
-    return this.softDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.permissionId,
-    });
+    return this.softDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.permissionId,
+      },
+      transaction
+    );
   }
 
   public async hardDeleteProjectPermission(
-    params: MutationRemoveProjectPermissionArgs
+    params: RemoveProjectPermissionInput,
+    transaction?: Transaction
   ): Promise<ProjectPermission> {
-    return this.hardDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.permissionId,
-    });
+    return this.hardDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.permissionId,
+      },
+      transaction
+    );
   }
 }

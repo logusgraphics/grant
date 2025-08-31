@@ -10,13 +10,12 @@ import {
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
 
-import { IOrganizationUserRepository } from './interface';
 import { organizationUsers, OrganizationUserModel } from './schema';
 
-export class OrganizationUserRepository
-  extends PivotRepository<OrganizationUserModel, OrganizationUser>
-  implements IOrganizationUserRepository
-{
+export class OrganizationUserRepository extends PivotRepository<
+  OrganizationUserModel,
+  OrganizationUser
+> {
   protected table = organizationUsers;
   protected parentIdField: keyof OrganizationUserModel = 'organizationId';
   protected relatedIdField: keyof OrganizationUserModel = 'userId';

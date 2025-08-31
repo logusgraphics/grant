@@ -12,7 +12,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IUserTagService } from './interface';
 import {
   getUserTagsParamsSchema,
   addUserTagParamsSchema,
@@ -20,13 +19,13 @@ import {
   userTagSchema,
 } from './schemas';
 
-export class UserTagService extends AuditService implements IUserTagService {
+export class UserTagService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(userTagsAuditLogs, 'userTagId', user);
+    super(userTagsAuditLogs, 'userTagId', user, db);
   }
 
   private async userExists(userId: string): Promise<void> {

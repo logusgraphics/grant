@@ -7,9 +7,9 @@ import { BasePivotModel } from './PivotRepository';
 
 export const buildWhereClause = <TModel extends BaseEntityModel>(
   table: any,
-  searchFields: Array<keyof TModel>,
-  ids?: string[],
-  search?: string
+  searchFields: Array<keyof TModel> | null,
+  ids?: string[] | null,
+  search?: string | null
 ): any => {
   const conditions = [isNull(table.deletedAt)];
 
@@ -19,7 +19,7 @@ export const buildWhereClause = <TModel extends BaseEntityModel>(
 
   if (search && search.trim()) {
     const searchTerm = `%${search.trim()}%`;
-    const orConditions = searchFields.map((field) => like(table[field], searchTerm));
+    const orConditions = searchFields?.map((field) => like(table[field], searchTerm)) || [];
     const searchCondition = or(...orConditions);
     if (searchCondition) {
       conditions.push(searchCondition);
@@ -31,7 +31,7 @@ export const buildWhereClause = <TModel extends BaseEntityModel>(
 
 export const buildOrderBy = <TModel extends BaseEntityModel>(
   table: any,
-  sort?: { field: keyof TModel; order: SortOrder },
+  sort?: { field: keyof TModel; order: SortOrder } | null,
   defaultField: keyof TModel = 'createdAt'
 ): any[] => {
   if (sort) {
@@ -57,10 +57,10 @@ export const toEntity = <T>(dbModel: any, requestedFields?: string[]): T => {
 
 export const buildSelectObject = <TModel extends BaseEntityModel>(
   table: any,
-  requestedFields: Array<keyof TModel> | undefined,
-  searchFields: Array<keyof TModel>,
-  search?: string,
-  sort?: { field: keyof TModel; order: SortOrder }
+  requestedFields: Array<keyof TModel> | undefined | null,
+  searchFields: Array<keyof TModel> | null,
+  search?: string | null,
+  sort?: { field: keyof TModel; order: SortOrder } | null
 ): any => {
   const selectObj: any = { id: table.id };
 
@@ -75,7 +75,7 @@ export const buildSelectObject = <TModel extends BaseEntityModel>(
   });
 
   if (search && search.trim()) {
-    searchFields.forEach((searchField) => {
+    searchFields?.forEach((searchField) => {
       if (!selectObj[searchField]) {
         selectObj[searchField] = searchField;
       }

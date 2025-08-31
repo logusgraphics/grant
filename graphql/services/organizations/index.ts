@@ -5,10 +5,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { OrganizationService } from './service';
 
-export * from './interface';
-export * from './service';
-export * from './schemas';
-
 export function createOrganizationService(
   repositories: Repositories,
   user: AuthenticatedUser | null,

@@ -10,15 +10,19 @@ export class ValidationError extends Error {
   }
 }
 
-export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown, context?: string): T {
+function validateWithSchema<T extends z.ZodSchema<any>>(
+  schema: T,
+  data: unknown,
+  errorPrefix: string,
+  context?: string
+): z.infer<T> {
   try {
     return schema.parse(data);
   } catch (error) {
-    console.log('VALIDATE INPUT ERROR', error);
     if (error instanceof z.ZodError) {
       const contextMsg = context ? ` in ${context}` : '';
       throw new ValidationError(
-        `Validation failed${contextMsg}: ${error.errors.map((e) => e.message).join(', ')}`,
+        `${errorPrefix}${contextMsg}: ${error.errors.map((e) => e.message).join(', ')}`,
         error.errors
       );
     }
@@ -26,19 +30,20 @@ export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown, context?
   }
 }
 
-export function validateOutput<T>(schema: z.ZodSchema<T>, data: unknown, context?: string): T {
-  try {
-    return schema.parse(data);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const contextMsg = context ? ` in ${context}` : '';
-      throw new ValidationError(
-        `Output validation failed${contextMsg}: ${error.errors.map((e) => e.message).join(', ')}`,
-        error.errors
-      );
-    }
-    throw error;
-  }
+export function validateInput<T extends z.ZodSchema<any>>(
+  schema: T,
+  data: z.input<T>,
+  context?: string
+): z.infer<T> {
+  return validateWithSchema(schema, data, 'Input validation failed', context);
+}
+
+export function validateOutput<T extends z.ZodSchema<any>>(
+  schema: T,
+  data: unknown,
+  context?: string
+): z.infer<T> {
+  return validateWithSchema(schema, data, 'Output validation failed', context);
 }
 
 export function safeValidateInput<T>(

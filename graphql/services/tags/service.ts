@@ -20,7 +20,6 @@ import {
   createDynamicSingleSchema,
 } from '../common';
 
-import { ITagService } from './interface';
 import {
   getTagsParamsSchema,
   createTagParamsSchema,
@@ -29,13 +28,13 @@ import {
   tagSchema,
 } from './schemas';
 
-export class TagService extends AuditService implements ITagService {
+export class TagService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(tagAuditLogs, 'tagId', user);
+    super(tagAuditLogs, 'tagId', user, db);
   }
 
   private async getTag(tagId: string): Promise<Tag> {

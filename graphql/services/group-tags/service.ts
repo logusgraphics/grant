@@ -12,7 +12,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IGroupTagService } from './interface';
 import {
   getGroupTagsParamsSchema,
   addGroupTagParamsSchema,
@@ -20,13 +19,13 @@ import {
   groupTagSchema,
 } from './schemas';
 
-export class GroupTagService extends AuditService implements IGroupTagService {
+export class GroupTagService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(groupTagsAuditLogs, 'groupTagId', user);
+    super(groupTagsAuditLogs, 'groupTagId', user, db);
   }
 
   private async groupExists(groupId: string): Promise<void> {

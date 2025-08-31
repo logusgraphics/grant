@@ -7,12 +7,11 @@ import {
   GroupPermission,
 } from '@/graphql/generated/types';
 import { Repositories } from '@/graphql/repositories';
-import { groupPermissionsAuditLogs } from '@/graphql/repositories/group-permissions';
+import { groupPermissionsAuditLogs } from '@/graphql/repositories/group-permissions/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IGroupPermissionService } from './interface';
 import {
   getGroupPermissionsParamsSchema,
   addGroupPermissionParamsSchema,
@@ -20,13 +19,13 @@ import {
   groupPermissionSchema,
 } from './schemas';
 
-export class GroupPermissionService extends AuditService implements IGroupPermissionService {
+export class GroupPermissionService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(groupPermissionsAuditLogs, 'groupPermissionId', user);
+    super(groupPermissionsAuditLogs, 'groupPermissionId', user, db);
   }
 
   private async groupExists(groupId: string): Promise<void> {

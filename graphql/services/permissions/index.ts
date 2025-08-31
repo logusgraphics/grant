@@ -5,10 +5,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { PermissionService } from './service';
 
-export * from './interface';
-export * from './service';
-export * from './schemas';
-
 export function createPermissionService(
   repositories: Repositories,
   user: AuthenticatedUser | null,

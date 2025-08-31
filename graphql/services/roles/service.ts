@@ -20,7 +20,6 @@ import {
   createDynamicSingleSchema,
 } from '../common';
 
-import { IRoleService } from './interface';
 import {
   getRolesParamsSchema,
   createRoleParamsSchema,
@@ -29,13 +28,13 @@ import {
   roleSchema,
 } from './schemas';
 
-export class RoleService extends AuditService implements IRoleService {
+export class RoleService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(roleAuditLogs, 'roleId', user);
+    super(roleAuditLogs, 'roleId', user, db);
   }
 
   private async getRole(roleId: string): Promise<Role> {

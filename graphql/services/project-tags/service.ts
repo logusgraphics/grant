@@ -2,31 +2,37 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryProjectTagsArgs,
-  MutationAddProjectTagArgs,
-  MutationRemoveProjectTagArgs,
   ProjectTag,
+  AddProjectTagInput,
+  RemoveProjectTagInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { projectTagAuditLogs } from '@/graphql/repositories/project-tags/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
-import { IProjectTagService } from './interface';
 import {
   getProjectTagsParamsSchema,
-  addProjectTagParamsSchema,
-  removeProjectTagParamsSchema,
   projectTagSchema,
+  addProjectTagInputSchema,
+  removeProjectTagInputSchema,
 } from './schemas';
 
-export class ProjectTagService extends AuditService implements IProjectTagService {
+export class ProjectTagService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
-    user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    readonly user: AuthenticatedUser | null,
+    readonly db: PostgresJsDatabase
   ) {
-    super(projectTagAuditLogs, 'projectTagId', user);
+    super(projectTagAuditLogs, 'projectTagId', user, db);
   }
 
   private async projectExists(projectId: string): Promise<void> {
@@ -62,39 +68,33 @@ export class ProjectTagService extends AuditService implements IProjectTagServic
   }
 
   public async getProjectTags(params: QueryProjectTagsArgs): Promise<ProjectTag[]> {
-    const validatedParams = validateInput(
-      getProjectTagsParamsSchema,
-      params,
-      'getProjectTags method'
-    );
+    const context = 'ProjectTagService.getProjectTags';
+    const validatedParams = validateInput(getProjectTagsParamsSchema, params, context);
 
     await this.projectExists(validatedParams.projectId);
 
     const result = await this.repositories.projectTagRepository.getProjectTags(validatedParams);
-    return validateOutput(
-      createDynamicSingleSchema(projectTagSchema).array(),
-      result,
-      'getProjectTags method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectTagSchema).array(), result, context);
   }
 
-  public async addProjectTag(params: MutationAddProjectTagArgs): Promise<ProjectTag> {
-    const validatedParams = validateInput(
-      addProjectTagParamsSchema,
-      params,
-      'addProjectTag method'
-    );
+  public async addProjectTag(
+    params: AddProjectTagInput,
+    transaction?: Transaction
+  ): Promise<ProjectTag> {
+    const context = 'ProjectTagService.addProjectTag';
+    const validatedParams = validateInput(addProjectTagInputSchema, params, context);
+    const { projectId, tagId } = validatedParams;
 
-    const hasTag = await this.projectHasTag(
-      validatedParams.input.projectId,
-      validatedParams.input.tagId
-    );
+    const hasTag = await this.projectHasTag(projectId, tagId);
 
     if (hasTag) {
       throw new Error('Project already has this tag');
     }
 
-    const projectTag = await this.repositories.projectTagRepository.addProjectTag(validatedParams);
+    const projectTag = await this.repositories.projectTagRepository.addProjectTag(
+      { projectId, tagId },
+      transaction
+    );
 
     const newValues = {
       id: projectTag.id,
@@ -105,41 +105,40 @@ export class ProjectTagService extends AuditService implements IProjectTagServic
     };
 
     const metadata = {
-      source: 'add_project_tag_mutation',
+      context,
     };
 
-    await this.logCreate(projectTag.id, newValues, metadata);
+    await this.logCreate(projectTag.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(projectTagSchema),
-      projectTag,
-      'addProjectTag method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectTagSchema), projectTag, context);
   }
 
   public async removeProjectTag(
-    params: MutationRemoveProjectTagArgs & { hardDelete?: boolean }
+    params: RemoveProjectTagInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<ProjectTag> {
-    const validatedParams = validateInput(
-      removeProjectTagParamsSchema,
-      params,
-      'removeProjectTag method'
-    );
+    const context = 'ProjectTagService.removeProjectTag';
+    const validatedParams = validateInput(removeProjectTagInputSchema, params, context);
 
-    const hasTag = await this.projectHasTag(
-      validatedParams.input.projectId,
-      validatedParams.input.tagId
-    );
+    const { projectId, tagId, hardDelete } = validatedParams;
+
+    const hasTag = await this.projectHasTag(projectId, tagId);
 
     if (!hasTag) {
       throw new Error('Project does not have this tag');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const projectTag = isHardDelete
-      ? await this.repositories.projectTagRepository.hardDeleteProjectTag(validatedParams)
-      : await this.repositories.projectTagRepository.softDeleteProjectTag(validatedParams);
+      ? await this.repositories.projectTagRepository.hardDeleteProjectTag(
+          { projectId, tagId },
+          transaction
+        )
+      : await this.repositories.projectTagRepository.softDeleteProjectTag(
+          { projectId, tagId },
+          transaction
+        );
 
     const oldValues = {
       id: projectTag.id,
@@ -154,22 +153,17 @@ export class ProjectTagService extends AuditService implements IProjectTagServic
       deletedAt: projectTag.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_project_tag_mutation',
-      };
-      await this.logHardDelete(projectTag.id, oldValues, metadata);
+      await this.logHardDelete(projectTag.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_project_tag_mutation',
-      };
-      await this.logSoftDelete(projectTag.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(projectTag.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(projectTagSchema),
-      projectTag,
-      'removeProjectTag method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectTagSchema), projectTag, context);
   }
 }

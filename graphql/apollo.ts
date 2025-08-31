@@ -3,12 +3,14 @@ import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { verify } from 'jsonwebtoken';
 
 import { providers } from '@/graphql/config/providers';
-import { createServices } from '@/graphql/config/services';
 import { schema } from '@/graphql/resolvers';
 import { Context, AuthenticatedUser } from '@/graphql/types';
 
+import { createControllers } from './controllers';
 import { db } from './lib/providers/database/connection';
+import { createRepositories } from './repositories';
 import { JWT_SECRET } from './resolvers/auth/constants';
+import { createServices } from './services';
 
 const server = new ApolloServer<Context>({
   schema,
@@ -21,21 +23,37 @@ export const handler = startServerAndCreateNextHandler(server, {
     if (token) {
       try {
         const decoded = verify(token, JWT_SECRET);
-        user = {
-          id: decoded.sub as string,
-          sub: decoded.sub as string,
-        };
+        const sub = decoded.sub;
+        if (typeof sub === 'string' && sub !== '') {
+          user = {
+            id: sub,
+            sub: sub,
+          };
+        }
       } catch (error) {
         console.error(error);
       }
     }
 
-    const services = createServices({ user, db });
+    const scopeCache = {
+      roles: new Map(),
+      users: new Map(),
+      groups: new Map(),
+      permissions: new Map(),
+      tags: new Map(),
+      projects: new Map(),
+    };
+
+    const repositories = createRepositories(db);
+    const services = createServices(repositories, user, db);
+    const controllers = createControllers(scopeCache, services, db);
 
     return {
       req,
       providers,
       services,
+      controllers,
+      scopeCache,
       user,
     };
   },

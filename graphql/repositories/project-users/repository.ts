@@ -1,8 +1,9 @@
 import {
-  MutationAddProjectUserArgs,
-  MutationRemoveProjectUserArgs,
+  AddProjectUserInput,
   ProjectUser,
+  RemoveProjectUserInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -10,13 +11,9 @@ import {
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
 
-import { IProjectUserRepository } from './interface';
 import { projectUsers, ProjectUserModel } from './schema';
 
-export class ProjectUserRepository
-  extends PivotRepository<ProjectUserModel, ProjectUser>
-  implements IProjectUserRepository
-{
+export class ProjectUserRepository extends PivotRepository<ProjectUserModel, ProjectUser> {
   protected table = projectUsers;
   protected parentIdField: keyof ProjectUserModel = 'projectId';
   protected relatedIdField: keyof ProjectUserModel = 'userId';
@@ -40,35 +37,44 @@ export class ProjectUserRepository
     return this.query(baseParams);
   }
 
-  public async addProjectUser(params: MutationAddProjectUserArgs): Promise<ProjectUser> {
+  public async addProjectUser(
+    params: AddProjectUserInput,
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
     const baseParams: BasePivotAddArgs = {
-      parentId: params.input.projectId,
-      relatedId: params.input.userId,
+      parentId: params.projectId,
+      relatedId: params.userId,
     };
 
-    const projectUser = await this.add(baseParams);
+    const projectUser = await this.add(baseParams, transaction);
 
     return projectUser;
   }
 
-  public async softDeleteProjectUser(params: MutationRemoveProjectUserArgs): Promise<ProjectUser> {
+  public async softDeleteProjectUser(
+    params: RemoveProjectUserInput,
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.projectId,
-      relatedId: params.input.userId,
+      parentId: params.projectId,
+      relatedId: params.userId,
     };
 
-    const projectUser = await this.softDelete(baseParams);
+    const projectUser = await this.softDelete(baseParams, transaction);
 
     return projectUser;
   }
 
-  public async hardDeleteProjectUser(params: MutationRemoveProjectUserArgs): Promise<ProjectUser> {
+  public async hardDeleteProjectUser(
+    params: RemoveProjectUserInput,
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.projectId,
-      relatedId: params.input.userId,
+      parentId: params.projectId,
+      relatedId: params.userId,
     };
 
-    const projectUser = await this.hardDelete(baseParams);
+    const projectUser = await this.hardDelete(baseParams, transaction);
 
     return projectUser;
   }

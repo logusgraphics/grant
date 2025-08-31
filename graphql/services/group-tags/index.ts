@@ -5,10 +5,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { GroupTagService } from './service';
 
-export * from './interface';
-export * from './service';
-export * from './schemas';
-
 export function createGroupTagService(
   repositories: Repositories,
   user: AuthenticatedUser | null,

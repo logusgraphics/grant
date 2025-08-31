@@ -20,7 +20,6 @@ import {
   createDynamicSingleSchema,
 } from '../common';
 
-import { IGroupService } from './interface';
 import {
   getGroupsParamsSchema,
   createGroupParamsSchema,
@@ -29,13 +28,13 @@ import {
   groupSchema,
 } from './schemas';
 
-export class GroupService extends AuditService implements IGroupService {
+export class GroupService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(groupAuditLogs, 'groupId', user);
+    super(groupAuditLogs, 'groupId', user, db);
   }
 
   private async getGroup(groupId: string): Promise<Group> {

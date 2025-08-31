@@ -10,13 +10,9 @@ import {
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
 
-import { IUserTagRepository } from './interface';
 import { userTags, UserTagModel } from './schema';
 
-export class UserTagRepository
-  extends PivotRepository<UserTagModel, UserTag>
-  implements IUserTagRepository
-{
+export class UserTagRepository extends PivotRepository<UserTagModel, UserTag> {
   protected table = userTags;
   protected parentIdField: keyof UserTagModel = 'userId';
   protected relatedIdField: keyof UserTagModel = 'tagId';

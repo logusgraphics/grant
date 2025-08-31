@@ -12,7 +12,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IOrganizationRoleService } from './interface';
 import {
   getOrganizationRolesParamsSchema,
   addOrganizationRoleParamsSchema,
@@ -20,13 +19,13 @@ import {
   organizationRoleSchema,
 } from './schemas';
 
-export class OrganizationRoleService extends AuditService implements IOrganizationRoleService {
+export class OrganizationRoleService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(organizationRolesAuditLogs, 'organizationRoleId', user);
+    super(organizationRolesAuditLogs, 'organizationRoleId', user, db);
   }
 
   private async organizationExists(organizationId: string): Promise<void> {

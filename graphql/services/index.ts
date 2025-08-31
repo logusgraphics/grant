@@ -1,7 +1,8 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import { createRepositories } from '@/graphql/repositories';
 import { AuthenticatedUser } from '@/graphql/types';
+
+import { Repositories } from '../repositories';
 
 import { createGroupPermissionService } from './group-permissions';
 import { createGroupTagService } from './group-tags';
@@ -31,9 +32,11 @@ import { createUserService } from './users';
 
 export type Services = ReturnType<typeof createServices>;
 
-export function createServices(db: PostgresJsDatabase, user: AuthenticatedUser | null) {
-  const repositories = createRepositories(db);
-
+export function createServices(
+  repositories: Repositories,
+  user: AuthenticatedUser | null,
+  db: PostgresJsDatabase
+) {
   return {
     users: createUserService(repositories, user, db),
     roles: createRoleService(repositories, user, db),

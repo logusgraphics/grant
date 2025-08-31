@@ -5,13 +5,12 @@ import {
   BasePivotRemoveArgs,
 } from '../common/PivotRepository';
 
-import { IOrganizationPermissionRepository } from './interface';
 import { OrganizationPermissionModel, organizationPermissions } from './schema';
 
-export class OrganizationPermissionRepository
-  extends PivotRepository<OrganizationPermissionModel, OrganizationPermissionModel>
-  implements IOrganizationPermissionRepository
-{
+export class OrganizationPermissionRepository extends PivotRepository<
+  OrganizationPermissionModel,
+  OrganizationPermissionModel
+> {
   protected table = organizationPermissions;
   protected parentIdField: keyof OrganizationPermissionModel = 'organizationId';
   protected relatedIdField: keyof OrganizationPermissionModel = 'permissionId';

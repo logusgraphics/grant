@@ -20,7 +20,6 @@ import {
   createDynamicSingleSchema,
 } from '../common';
 
-import { IOrganizationService } from './interface';
 import {
   getOrganizationsParamsSchema,
   createOrganizationParamsSchema,
@@ -29,13 +28,13 @@ import {
   organizationSchema,
 } from './schemas';
 
-export class OrganizationService extends AuditService implements IOrganizationService {
+export class OrganizationService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(organizationAuditLogs, 'organizationId', user);
+    super(organizationAuditLogs, 'organizationId', user, db);
   }
 
   private async getOrganization(organizationId: string): Promise<Organization> {

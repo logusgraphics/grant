@@ -2,31 +2,37 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryProjectPermissionsArgs,
-  MutationAddProjectPermissionArgs,
-  MutationRemoveProjectPermissionArgs,
   ProjectPermission,
+  RemoveProjectPermissionInput,
+  AddProjectPermissionInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { projectPermissionsAuditLogs } from '@/graphql/repositories/project-permissions/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
-import { IProjectPermissionService } from './interface';
 import {
   getProjectPermissionsParamsSchema,
-  addProjectPermissionParamsSchema,
-  removeProjectPermissionParamsSchema,
   projectPermissionSchema,
+  addProjectPermissionInputSchema,
+  removeProjectPermissionInputSchema,
 } from './schemas';
 
-export class ProjectPermissionService extends AuditService implements IProjectPermissionService {
+export class ProjectPermissionService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(projectPermissionsAuditLogs, 'projectPermissionId', user);
+    super(projectPermissionsAuditLogs, 'projectPermissionId', user, db);
   }
 
   private async projectExists(projectId: string): Promise<void> {
@@ -65,11 +71,8 @@ export class ProjectPermissionService extends AuditService implements IProjectPe
   public async getProjectPermissions(
     params: QueryProjectPermissionsArgs
   ): Promise<ProjectPermission[]> {
-    const validatedParams = validateInput(
-      getProjectPermissionsParamsSchema,
-      params,
-      'getProjectPermissions method'
-    );
+    const context = 'ProjectPermissionService.getProjectPermissions';
+    const validatedParams = validateInput(getProjectPermissionsParamsSchema, params, context);
 
     await this.projectExists(validatedParams.projectId);
 
@@ -78,30 +81,29 @@ export class ProjectPermissionService extends AuditService implements IProjectPe
     return validateOutput(
       createDynamicSingleSchema(projectPermissionSchema).array(),
       result,
-      'getProjectPermissions method'
+      context
     );
   }
 
   public async addProjectPermission(
-    params: MutationAddProjectPermissionArgs
+    params: AddProjectPermissionInput,
+    transaction?: Transaction
   ): Promise<ProjectPermission> {
-    const validatedParams = validateInput(
-      addProjectPermissionParamsSchema,
-      params,
-      'addProjectPermission method'
-    );
+    const context = 'ProjectPermissionService.addProjectPermission';
+    const validatedParams = validateInput(addProjectPermissionInputSchema, params, context);
+    const { projectId, permissionId } = validatedParams;
 
-    const hasPermission = await this.projectHasPermission(
-      validatedParams.input.projectId,
-      validatedParams.input.permissionId
-    );
+    const hasPermission = await this.projectHasPermission(projectId, permissionId);
 
     if (hasPermission) {
       throw new Error('Project already has this permission');
     }
 
     const projectPermission =
-      await this.repositories.projectPermissionRepository.addProjectPermission(validatedParams);
+      await this.repositories.projectPermissionRepository.addProjectPermission(
+        { projectId, permissionId },
+        transaction
+      );
 
     const newValues = {
       id: projectPermission.id,
@@ -112,44 +114,46 @@ export class ProjectPermissionService extends AuditService implements IProjectPe
     };
 
     const metadata = {
-      source: 'add_project_permission_mutation',
+      context,
     };
 
-    await this.logCreate(projectPermission.id, newValues, metadata);
+    await this.logCreate(projectPermission.id, newValues, metadata, transaction);
 
     return validateOutput(
       createDynamicSingleSchema(projectPermissionSchema),
       projectPermission,
-      'addProjectPermission method'
+      context
     );
   }
 
   public async removeProjectPermission(
-    params: MutationRemoveProjectPermissionArgs & { hardDelete?: boolean }
+    params: RemoveProjectPermissionInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<ProjectPermission> {
-    const validatedParams = validateInput(
-      removeProjectPermissionParamsSchema,
-      params,
-      'deleteProjectPermission method'
-    );
+    const context = 'ProjectPermissionService.removeProjectPermission';
+    const validatedParams = validateInput(removeProjectPermissionInputSchema, params, context);
 
-    const hasPermission = await this.projectHasPermission(
-      validatedParams.input.projectId,
-      validatedParams.input.permissionId
-    );
+    const { projectId, permissionId, hardDelete } = validatedParams;
+
+    const hasPermission = await this.projectHasPermission(projectId, permissionId);
 
     if (!hasPermission) {
       throw new Error('Project does not have this permission');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const projectPermission = isHardDelete
       ? await this.repositories.projectPermissionRepository.hardDeleteProjectPermission(
-          validatedParams
+          {
+            projectId,
+            permissionId,
+          },
+          transaction
         )
       : await this.repositories.projectPermissionRepository.softDeleteProjectPermission(
-          validatedParams
+          { projectId, permissionId },
+          transaction
         );
 
     const oldValues = {
@@ -165,22 +169,21 @@ export class ProjectPermissionService extends AuditService implements IProjectPe
       deletedAt: projectPermission.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_project_permission_mutation',
-      };
-      await this.logHardDelete(projectPermission.id, oldValues, metadata);
+      await this.logHardDelete(projectPermission.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_project_permission_mutation',
-      };
-      await this.logSoftDelete(projectPermission.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(projectPermission.id, oldValues, newValues, metadata, transaction);
     }
 
     return validateOutput(
       createDynamicSingleSchema(projectPermissionSchema),
       projectPermission,
-      'deleteProjectPermission method'
+      context
     );
   }
 }

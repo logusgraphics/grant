@@ -1,9 +1,10 @@
 import {
   QueryProjectRolesArgs,
-  MutationAddProjectRoleArgs,
-  MutationRemoveProjectRoleArgs,
   ProjectRole,
+  RemoveProjectRoleInput,
+  AddProjectRoleInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { ProjectRoleModel, projectRoles } from './schema';
@@ -28,24 +29,42 @@ export class ProjectRoleRepository extends PivotRepository<ProjectRoleModel, Pro
     return this.query({ parentId: params.projectId });
   }
 
-  public async addProjectRole(params: MutationAddProjectRoleArgs): Promise<ProjectRole> {
-    return this.add({
-      parentId: params.input.projectId,
-      relatedId: params.input.roleId,
-    });
+  public async addProjectRole(
+    params: AddProjectRoleInput,
+    transaction?: Transaction
+  ): Promise<ProjectRole> {
+    return this.add(
+      {
+        parentId: params.projectId,
+        relatedId: params.roleId,
+      },
+      transaction
+    );
   }
 
-  public async softDeleteProjectRole(params: MutationRemoveProjectRoleArgs): Promise<ProjectRole> {
-    return this.softDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.roleId,
-    });
+  public async softDeleteProjectRole(
+    params: RemoveProjectRoleInput,
+    transaction?: Transaction
+  ): Promise<ProjectRole> {
+    return this.softDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.roleId,
+      },
+      transaction
+    );
   }
 
-  public async hardDeleteProjectRole(params: MutationRemoveProjectRoleArgs): Promise<ProjectRole> {
-    return this.hardDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.roleId,
-    });
+  public async hardDeleteProjectRole(
+    params: RemoveProjectRoleInput,
+    transaction?: Transaction
+  ): Promise<ProjectRole> {
+    return this.hardDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.roleId,
+      },
+      transaction
+    );
   }
 }

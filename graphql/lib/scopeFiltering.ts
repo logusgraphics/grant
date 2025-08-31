@@ -1,13 +1,14 @@
 import { Scope, Tenant } from '@/graphql/generated/types';
 
-import { Context } from '../types';
+import { Services } from '../services';
 
-interface TenantScopeParams {
+export interface TenantScopeParams {
   scope: Scope;
-  context: Context;
+  scopeCache: EntityCache;
+  services: Services;
 }
 
-type CacheKey = `${Tenant}:${string}`;
+export type CacheKey = `${Tenant}:${string}`;
 
 export type EntityCache = {
   roles: Map<CacheKey, string[]>;
@@ -18,9 +19,9 @@ export type EntityCache = {
   projects: Map<CacheKey, string[]>;
 };
 
-function getScopeCache(context: Context): EntityCache {
-  if (!context.scopeCache) {
-    context.scopeCache = {
+export function getScopeCache(scopeCache: EntityCache): EntityCache {
+  if (!scopeCache) {
+    scopeCache = {
       roles: new Map(),
       users: new Map(),
       groups: new Map(),
@@ -29,15 +30,19 @@ function getScopeCache(context: Context): EntityCache {
       projects: new Map(),
     };
   }
-  return context.scopeCache;
+  return scopeCache;
 }
 
-function createCacheKey(scope: Scope): CacheKey {
+export function createCacheKey(scope: Scope): CacheKey {
   return `${scope.tenant}:${scope.id}`;
 }
 
-export async function getScopedRoleIds({ scope, context }: TenantScopeParams): Promise<string[]> {
-  const cache = getScopeCache(context);
+export async function getScopedRoleIds({
+  scope,
+  scopeCache,
+  services,
+}: TenantScopeParams): Promise<string[]> {
+  const cache = getScopeCache(scopeCache);
   const cacheKey = createCacheKey(scope);
 
   if (cache.roles.has(cacheKey)) {
@@ -47,7 +52,7 @@ export async function getScopedRoleIds({ scope, context }: TenantScopeParams): P
   let roleIds: string[];
   switch (scope.tenant) {
     case Tenant.Organization: {
-      const organizationRoles = await context.services.organizationRoles.getOrganizationRoles({
+      const organizationRoles = await services.organizationRoles.getOrganizationRoles({
         organizationId: scope.id,
       });
       roleIds = organizationRoles.map((or) => or.roleId);
@@ -55,7 +60,7 @@ export async function getScopedRoleIds({ scope, context }: TenantScopeParams): P
     }
 
     case Tenant.Project: {
-      const projectRoles = await context.services.projectRoles.getProjectRoles({
+      const projectRoles = await services.projectRoles.getProjectRoles({
         projectId: scope.id,
       });
       roleIds = projectRoles.map((pr) => pr.roleId);
@@ -70,8 +75,12 @@ export async function getScopedRoleIds({ scope, context }: TenantScopeParams): P
   return roleIds;
 }
 
-export async function getScopedUserIds({ scope, context }: TenantScopeParams): Promise<string[]> {
-  const cache = getScopeCache(context);
+export async function getScopedUserIds({
+  scope,
+  scopeCache,
+  services,
+}: TenantScopeParams): Promise<string[]> {
+  const cache = getScopeCache(scopeCache);
   const cacheKey = createCacheKey(scope);
 
   if (cache.users.has(cacheKey)) {
@@ -81,7 +90,7 @@ export async function getScopedUserIds({ scope, context }: TenantScopeParams): P
   let userIds: string[];
   switch (scope.tenant) {
     case Tenant.Organization: {
-      const organizationUsers = await context.services.organizationUsers.getOrganizationUsers({
+      const organizationUsers = await services.organizationUsers.getOrganizationUsers({
         organizationId: scope.id,
       });
       userIds = organizationUsers.map((ou) => ou.userId);
@@ -89,7 +98,7 @@ export async function getScopedUserIds({ scope, context }: TenantScopeParams): P
     }
 
     case Tenant.Project: {
-      const projectUsers = await context.services.projectUsers.getProjectUsers({
+      const projectUsers = await services.projectUsers.getProjectUsers({
         projectId: scope.id,
       });
       userIds = projectUsers.map((pu) => pu.userId);
@@ -104,8 +113,12 @@ export async function getScopedUserIds({ scope, context }: TenantScopeParams): P
   return userIds;
 }
 
-export async function getScopedGroupIds({ scope, context }: TenantScopeParams): Promise<string[]> {
-  const cache = getScopeCache(context);
+export async function getScopedGroupIds({
+  scope,
+  scopeCache,
+  services,
+}: TenantScopeParams): Promise<string[]> {
+  const cache = getScopeCache(scopeCache);
   const cacheKey = createCacheKey(scope);
 
   if (cache.groups.has(cacheKey)) {
@@ -115,7 +128,7 @@ export async function getScopedGroupIds({ scope, context }: TenantScopeParams): 
   let groupIds: string[];
   switch (scope.tenant) {
     case Tenant.Organization: {
-      const organizationGroups = await context.services.organizationGroups.getOrganizationGroups({
+      const organizationGroups = await services.organizationGroups.getOrganizationGroups({
         organizationId: scope.id,
       });
       groupIds = organizationGroups.map((og) => og.groupId);
@@ -123,7 +136,7 @@ export async function getScopedGroupIds({ scope, context }: TenantScopeParams): 
     }
 
     case Tenant.Project: {
-      const projectGroups = await context.services.projectGroups.getProjectGroups({
+      const projectGroups = await services.projectGroups.getProjectGroups({
         projectId: scope.id,
       });
       groupIds = projectGroups.map((pg) => pg.groupId);
@@ -140,9 +153,10 @@ export async function getScopedGroupIds({ scope, context }: TenantScopeParams): 
 
 export async function getScopedPermissionIds({
   scope,
-  context,
+  scopeCache,
+  services,
 }: TenantScopeParams): Promise<string[]> {
-  const cache = getScopeCache(context);
+  const cache = getScopeCache(scopeCache);
   const cacheKey = createCacheKey(scope);
 
   if (cache.permissions.has(cacheKey)) {
@@ -153,7 +167,7 @@ export async function getScopedPermissionIds({
   switch (scope.tenant) {
     case Tenant.Organization: {
       const organizationPermissions =
-        await context.services.organizationPermissions.getOrganizationPermissions({
+        await services.organizationPermissions.getOrganizationPermissions({
           organizationId: scope.id,
         });
       permissionIds = organizationPermissions.map((op) => op.permissionId);
@@ -161,7 +175,7 @@ export async function getScopedPermissionIds({
     }
 
     case Tenant.Project: {
-      const projectPermissions = await context.services.projectPermissions.getProjectPermissions({
+      const projectPermissions = await services.projectPermissions.getProjectPermissions({
         projectId: scope.id,
       });
       permissionIds = projectPermissions.map((pp) => pp.permissionId);
@@ -176,8 +190,12 @@ export async function getScopedPermissionIds({
   return permissionIds;
 }
 
-export async function getScopedTagIds({ scope, context }: TenantScopeParams): Promise<string[]> {
-  const cache = getScopeCache(context);
+export async function getScopedTagIds({
+  scope,
+  scopeCache,
+  services,
+}: TenantScopeParams): Promise<string[]> {
+  const cache = getScopeCache(scopeCache);
   const cacheKey = createCacheKey(scope);
 
   if (cache.tags.has(cacheKey)) {
@@ -188,7 +206,7 @@ export async function getScopedTagIds({ scope, context }: TenantScopeParams): Pr
   let tagIds: string[];
   switch (scope.tenant) {
     case Tenant.Organization: {
-      const organizationTags = await context.services.organizationTags.getOrganizationTags({
+      const organizationTags = await services.organizationTags.getOrganizationTags({
         organizationId: scope.id,
       });
       tagIds = organizationTags.map((ot) => ot.tagId);
@@ -196,7 +214,7 @@ export async function getScopedTagIds({ scope, context }: TenantScopeParams): Pr
     }
 
     case Tenant.Project: {
-      const projectTags = await context.services.projectTags.getProjectTags({
+      const projectTags = await services.projectTags.getProjectTags({
         projectId: scope.id,
       });
       tagIds = projectTags.map((pt) => pt.tagId);
@@ -209,32 +227,4 @@ export async function getScopedTagIds({ scope, context }: TenantScopeParams): Pr
 
   cache.tags.set(cacheKey, tagIds);
   return tagIds;
-}
-
-export async function getScopedProjectIds({
-  scope,
-  context,
-}: TenantScopeParams): Promise<string[]> {
-  const cache = getScopeCache(context);
-  const cacheKey = createCacheKey(scope);
-
-  if (cache.projects.has(cacheKey)) {
-    return cache.projects.get(cacheKey)!;
-  }
-
-  let projectIds: string[];
-  switch (scope.tenant) {
-    case Tenant.Organization: {
-      const organizationProjects =
-        await context.services.organizationProjects.getOrganizationProjects({
-          organizationId: scope.id,
-        });
-      projectIds = organizationProjects.map((op) => op.projectId);
-      break;
-    }
-    default:
-      throw new Error(`Unsupported tenant type: ${scope.tenant}`);
-  }
-  cache.projects.set(cacheKey, projectIds);
-  return projectIds;
 }

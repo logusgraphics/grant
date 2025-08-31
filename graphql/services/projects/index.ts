@@ -5,10 +5,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { ProjectService } from './service';
 
-export * from './interface';
-export * from './service';
-export * from './schemas';
-
 export function createProjectService(
   repositories: Repositories,
   user: AuthenticatedUser | null,

@@ -12,7 +12,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IPermissionTagService } from './interface';
 import {
   getPermissionTagsParamsSchema,
   addPermissionTagParamsSchema,
@@ -20,13 +19,13 @@ import {
   permissionTagSchema,
 } from './schemas';
 
-export class PermissionTagService extends AuditService implements IPermissionTagService {
+export class PermissionTagService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(permissionTagAuditLogs, 'permissionTagId', user);
+    super(permissionTagAuditLogs, 'permissionTagId', user, db);
   }
 
   private async permissionExists(permissionId: string): Promise<void> {

@@ -8,11 +8,11 @@ import {
 } from '@/graphql/generated/types';
 import {
   EntityRepository,
-  BaseQueryArgs,
   BaseCreateArgs,
   BaseUpdateArgs,
   BaseDeleteArgs,
 } from '@/graphql/repositories/common';
+import { SelectedFields } from '@/graphql/services/common';
 
 import { UserModel, users } from './schema';
 
@@ -22,23 +22,9 @@ export class UserRepository extends EntityRepository<UserModel, User> {
   protected defaultSortField: keyof UserModel = 'createdAt';
 
   public async getUsers(
-    params: Omit<QueryUsersArgs, 'scope'> & { requestedFields?: Array<keyof UserModel> }
+    params: Omit<QueryUsersArgs, 'scope' | 'tagIds'> & SelectedFields<UserModel>
   ): Promise<UserPage> {
-    const baseParams: BaseQueryArgs<UserModel> = {
-      ids: params.ids || undefined,
-      page: params.page || undefined,
-      limit: params.limit || undefined,
-      search: params.search || undefined,
-      sort: params.sort
-        ? {
-            field: params.sort.field as keyof UserModel,
-            order: params.sort.order,
-          }
-        : undefined,
-      requestedFields: params.requestedFields as Array<keyof UserModel> | undefined,
-    };
-
-    const result = await this.query(baseParams);
+    const result = await this.query(params);
 
     return {
       users: result.items,

@@ -6,13 +6,9 @@ import {
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
 
-import { IRoleGroupRepository } from './interface';
 import { roleGroups, RoleGroupModel } from './schema';
 
-export class RoleGroupRepository
-  extends PivotRepository<RoleGroupModel, RoleGroup>
-  implements IRoleGroupRepository
-{
+export class RoleGroupRepository extends PivotRepository<RoleGroupModel, RoleGroup> {
   protected table = roleGroups;
   protected parentIdField: keyof RoleGroupModel = 'roleId';
   protected relatedIdField: keyof RoleGroupModel = 'groupId';

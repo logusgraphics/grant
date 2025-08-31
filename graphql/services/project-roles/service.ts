@@ -2,31 +2,37 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryProjectRolesArgs,
-  MutationAddProjectRoleArgs,
-  MutationRemoveProjectRoleArgs,
   ProjectRole,
+  RemoveProjectRoleInput,
+  AddProjectRoleInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { projectRoleAuditLogs } from '@/graphql/repositories/project-roles/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
-import { IProjectRoleService } from './interface';
 import {
   getProjectRolesParamsSchema,
-  addProjectRoleParamsSchema,
-  removeProjectRoleParamsSchema,
   projectRoleSchema,
+  addProjectRoleInputSchema,
+  removeProjectRoleInputSchema,
 } from './schemas';
 
-export class ProjectRoleService extends AuditService implements IProjectRoleService {
+export class ProjectRoleService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(projectRoleAuditLogs, 'projectRoleId', user);
+    super(projectRoleAuditLogs, 'projectRoleId', user, db);
   }
 
   private async projectExists(projectId: string): Promise<void> {
@@ -62,40 +68,33 @@ export class ProjectRoleService extends AuditService implements IProjectRoleServ
   }
 
   public async getProjectRoles(params: QueryProjectRolesArgs): Promise<ProjectRole[]> {
-    const validatedParams = validateInput(
-      getProjectRolesParamsSchema,
-      params,
-      'getProjectRoles method'
-    );
+    const context = 'ProjectRoleService.getProjectRoles';
+    const validatedParams = validateInput(getProjectRolesParamsSchema, params, context);
 
     await this.projectExists(validatedParams.projectId);
 
     const result = await this.repositories.projectRoleRepository.getProjectRoles(validatedParams);
-    return validateOutput(
-      createDynamicSingleSchema(projectRoleSchema).array(),
-      result,
-      'getProjectRoles method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectRoleSchema).array(), result, context);
   }
 
-  public async addProjectRole(params: MutationAddProjectRoleArgs): Promise<ProjectRole> {
-    const validatedParams = validateInput(
-      addProjectRoleParamsSchema,
-      params,
-      'addProjectRole method'
-    );
+  public async addProjectRole(
+    params: AddProjectRoleInput,
+    transaction?: Transaction
+  ): Promise<ProjectRole> {
+    const context = 'ProjectRoleService.addProjectRole';
+    const validatedParams = validateInput(addProjectRoleInputSchema, params, context);
+    const { projectId, roleId } = validatedParams;
 
-    const hasRole = await this.projectHasRole(
-      validatedParams.input.projectId,
-      validatedParams.input.roleId
-    );
+    const hasRole = await this.projectHasRole(projectId, roleId);
 
     if (hasRole) {
       throw new Error('Project already has this role');
     }
 
-    const projectRole =
-      await this.repositories.projectRoleRepository.addProjectRole(validatedParams);
+    const projectRole = await this.repositories.projectRoleRepository.addProjectRole(
+      { projectId, roleId },
+      transaction
+    );
 
     const newValues = {
       id: projectRole.id,
@@ -106,41 +105,40 @@ export class ProjectRoleService extends AuditService implements IProjectRoleServ
     };
 
     const metadata = {
-      source: 'add_project_role_mutation',
+      context,
     };
 
-    await this.logCreate(projectRole.id, newValues, metadata);
+    await this.logCreate(projectRole.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(projectRoleSchema),
-      projectRole,
-      'addProjectRole method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectRoleSchema), projectRole, context);
   }
 
   public async removeProjectRole(
-    params: MutationRemoveProjectRoleArgs & { hardDelete?: boolean }
+    params: RemoveProjectRoleInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<ProjectRole> {
-    const validatedParams = validateInput(
-      removeProjectRoleParamsSchema,
-      params,
-      'deleteProjectRole method'
-    );
+    const context = 'ProjectRoleService.removeProjectRole';
+    const validatedParams = validateInput(removeProjectRoleInputSchema, params, context);
 
-    const hasRole = await this.projectHasRole(
-      validatedParams.input.projectId,
-      validatedParams.input.roleId
-    );
+    const { projectId, roleId, hardDelete } = validatedParams;
+
+    const hasRole = await this.projectHasRole(projectId, roleId);
 
     if (!hasRole) {
       throw new Error('Project does not have this role');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const projectRole = isHardDelete
-      ? await this.repositories.projectRoleRepository.hardDeleteProjectRole(validatedParams)
-      : await this.repositories.projectRoleRepository.softDeleteProjectRole(validatedParams);
+      ? await this.repositories.projectRoleRepository.hardDeleteProjectRole(
+          { projectId, roleId },
+          transaction
+        )
+      : await this.repositories.projectRoleRepository.softDeleteProjectRole(
+          { projectId, roleId },
+          transaction
+        );
 
     const oldValues = {
       id: projectRole.id,
@@ -155,22 +153,17 @@ export class ProjectRoleService extends AuditService implements IProjectRoleServ
       deletedAt: projectRole.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_project_role_mutation',
-      };
-      await this.logHardDelete(projectRole.id, oldValues, metadata);
+      await this.logHardDelete(projectRole.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_project_role_mutation',
-      };
-      await this.logSoftDelete(projectRole.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(projectRole.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(projectRoleSchema),
-      projectRole,
-      'deleteProjectRole method'
-    );
+    return validateOutput(createDynamicSingleSchema(projectRoleSchema), projectRole, context);
   }
 }

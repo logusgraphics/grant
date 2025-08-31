@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { UserSortableField } from '@/graphql/generated/types';
+
 import {
   idSchema,
   emailSchema,
@@ -7,12 +9,14 @@ import {
   sortOrderSchema,
   baseEntitySchema,
   paginatedResponseSchema,
-  sortableParamsSchema,
   nonEmptyNameSchema,
   nonEmptyEmailSchema,
+  queryParamsSchema,
 } from '../common/schemas';
 
-export const userSortableFieldSchema = z.enum(['email', 'name']);
+export const userSortableFieldSchema = z.enum(
+  Object.values(UserSortableField) as [UserSortableField, ...UserSortableField[]]
+);
 export const userSortInputSchema = z.object({
   field: userSortableFieldSchema,
   order: sortOrderSchema,
@@ -41,10 +45,8 @@ export const deleteUserArgsSchema = z.object({
   id: idSchema,
 });
 
-export const queryUsersArgsSchema = sortableParamsSchema.extend({
-  ids: z.array(idSchema).optional(),
-  tagIds: z.array(idSchema).optional(),
-  sort: userSortInputSchema.optional(),
+export const queryUsersArgsSchema = queryParamsSchema.extend({
+  sort: userSortInputSchema.nullable().optional(),
 });
 
 export const userSchema = baseEntitySchema.extend({
@@ -59,10 +61,6 @@ export const userPageSchema = paginatedResponseSchema(userSchema).transform((dat
   hasNextPage: data.hasNextPage,
   totalCount: data.totalCount,
 }));
-
-export const getUsersParamsSchema = queryUsersArgsSchema.extend({
-  requestedFields: z.array(z.string()).optional(),
-});
 
 export const createUserParamsSchema = createUserArgsSchema;
 export const updateUserParamsSchema = updateUserArgsSchema;

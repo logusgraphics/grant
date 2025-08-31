@@ -20,7 +20,6 @@ import {
   createDynamicSingleSchema,
 } from '../common';
 
-import { IPermissionService } from './interface';
 import {
   getPermissionsParamsSchema,
   createPermissionParamsSchema,
@@ -29,13 +28,13 @@ import {
   permissionSchema,
 } from './schemas';
 
-export class PermissionService extends AuditService implements IPermissionService {
+export class PermissionService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(permissionAuditLogs, 'permissionId', user);
+    super(permissionAuditLogs, 'permissionId', user, db);
   }
 
   private async getPermission(permissionId: string): Promise<Permission> {

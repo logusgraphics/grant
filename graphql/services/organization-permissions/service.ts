@@ -12,7 +12,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IOrganizationPermissionService } from './interface';
 import {
   getOrganizationPermissionsParamsSchema,
   addOrganizationPermissionParamsSchema,
@@ -20,16 +19,13 @@ import {
   organizationPermissionSchema,
 } from './schemas';
 
-export class OrganizationPermissionService
-  extends AuditService
-  implements IOrganizationPermissionService
-{
+export class OrganizationPermissionService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(organizationPermissionsAuditLogs, 'organizationPermissionId', user);
+    super(organizationPermissionsAuditLogs, 'organizationPermissionId', user, db);
   }
 
   private async organizationExists(organizationId: string): Promise<void> {

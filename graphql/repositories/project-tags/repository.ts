@@ -1,9 +1,10 @@
 import {
   QueryProjectTagsArgs,
-  MutationAddProjectTagArgs,
-  MutationRemoveProjectTagArgs,
   ProjectTag,
+  AddProjectTagInput,
+  RemoveProjectTagInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { ProjectTagModel, projectTags } from './schema';
@@ -28,24 +29,42 @@ export class ProjectTagRepository extends PivotRepository<ProjectTagModel, Proje
     return this.query({ parentId: params.projectId });
   }
 
-  public async addProjectTag(params: MutationAddProjectTagArgs): Promise<ProjectTag> {
-    return this.add({
-      parentId: params.input.projectId,
-      relatedId: params.input.tagId,
-    });
+  public async addProjectTag(
+    params: AddProjectTagInput,
+    transaction?: Transaction
+  ): Promise<ProjectTag> {
+    return this.add(
+      {
+        parentId: params.projectId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 
-  public async softDeleteProjectTag(params: MutationRemoveProjectTagArgs): Promise<ProjectTag> {
-    return this.softDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.tagId,
-    });
+  public async softDeleteProjectTag(
+    params: RemoveProjectTagInput,
+    transaction?: Transaction
+  ): Promise<ProjectTag> {
+    return this.softDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 
-  public async hardDeleteProjectTag(params: MutationRemoveProjectTagArgs): Promise<ProjectTag> {
-    return this.hardDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.tagId,
-    });
+  public async hardDeleteProjectTag(
+    params: RemoveProjectTagInput,
+    transaction?: Transaction
+  ): Promise<ProjectTag> {
+    return this.hardDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 }

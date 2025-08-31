@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { idSchema } from '../common/schemas';
+import { deleteSchema, idSchema } from '../common/schemas';
 
 export const projectGroupSchema = z.object({
   id: idSchema,
@@ -20,15 +20,7 @@ export const addProjectGroupInputSchema = z.object({
   groupId: idSchema,
 });
 
-export const addProjectGroupParamsSchema = z.object({
-  input: addProjectGroupInputSchema,
-});
-
-export const removeProjectGroupInputSchema = z.object({
+export const removeProjectGroupInputSchema = deleteSchema.extend({
   projectId: idSchema,
   groupId: idSchema,
-});
-
-export const removeProjectGroupParamsSchema = z.object({
-  input: removeProjectGroupInputSchema,
 });

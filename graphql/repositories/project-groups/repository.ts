@@ -1,9 +1,10 @@
 import {
   QueryProjectGroupsArgs,
-  MutationAddProjectGroupArgs,
-  MutationRemoveProjectGroupArgs,
   ProjectGroup,
+  RemoveProjectGroupInput,
+  AddProjectGroupInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { ProjectGroupModel, projectGroups } from './schema';
@@ -28,28 +29,42 @@ export class ProjectGroupRepository extends PivotRepository<ProjectGroupModel, P
     return this.query({ parentId: params.projectId });
   }
 
-  public async addProjectGroup(params: MutationAddProjectGroupArgs): Promise<ProjectGroup> {
-    return this.add({
-      parentId: params.input.projectId,
-      relatedId: params.input.groupId,
-    });
+  public async addProjectGroup(
+    params: AddProjectGroupInput,
+    transaction?: Transaction
+  ): Promise<ProjectGroup> {
+    return this.add(
+      {
+        parentId: params.projectId,
+        relatedId: params.groupId,
+      },
+      transaction
+    );
   }
 
   public async softDeleteProjectGroup(
-    params: MutationRemoveProjectGroupArgs
+    params: RemoveProjectGroupInput,
+    transaction?: Transaction
   ): Promise<ProjectGroup> {
-    return this.softDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.groupId,
-    });
+    return this.softDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.groupId,
+      },
+      transaction
+    );
   }
 
   public async hardDeleteProjectGroup(
-    params: MutationRemoveProjectGroupArgs
+    params: RemoveProjectGroupInput,
+    transaction?: Transaction
   ): Promise<ProjectGroup> {
-    return this.hardDelete({
-      parentId: params.input.projectId,
-      relatedId: params.input.groupId,
-    });
+    return this.hardDelete(
+      {
+        parentId: params.projectId,
+        relatedId: params.groupId,
+      },
+      transaction
+    );
   }
 }

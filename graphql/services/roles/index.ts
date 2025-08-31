@@ -5,10 +5,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { RoleService } from './service';
 
-export * from './interface';
-export * from './service';
-export * from './schemas';
-
 export function createRoleService(
   repositories: Repositories,
   user: AuthenticatedUser | null,

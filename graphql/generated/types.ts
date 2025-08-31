@@ -1331,6 +1331,7 @@ export type UpdatePermissionInput = {
 export type UpdateProjectInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 export type UpdateRoleInput = {

@@ -24,7 +24,9 @@ export class PermissionTagRepository extends PivotRepository<PermissionTagModel,
     };
   }
 
-  public async getPermissionTags(params: QueryPermissionTagsArgs): Promise<PermissionTag[]> {
+  public async getPermissionTags(
+    params: Omit<QueryPermissionTagsArgs, 'scope'>
+  ): Promise<PermissionTag[]> {
     return this.query({ parentId: params.permissionId });
   }
 

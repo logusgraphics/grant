@@ -9,7 +9,7 @@ import {
   UserPage,
 } from '@/graphql/generated/types';
 import { Repositories } from '@/graphql/repositories';
-import { userAuditLogs } from '@/graphql/repositories/users/schema';
+import { userAuditLogs, UserModel } from '@/graphql/repositories/users/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
 import {
@@ -18,24 +18,24 @@ import {
   validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  SelectedFields,
 } from '../common';
 
-import { IUserService } from './interface';
 import {
-  getUsersParamsSchema,
   createUserParamsSchema,
   updateUserParamsSchema,
   deleteUserParamsSchema,
   userSchema,
+  queryUsersArgsSchema,
 } from './schemas';
 
-export class UserService extends AuditService implements IUserService {
+export class UserService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(userAuditLogs, 'userId', user);
+    super(userAuditLogs, 'userId', user, db);
   }
 
   private async getUser(userId: string): Promise<User> {
@@ -52,12 +52,12 @@ export class UserService extends AuditService implements IUserService {
   }
 
   public async getUsers(
-    params: Omit<QueryUsersArgs, 'scope'> & { requestedFields?: string[] }
+    params: Omit<QueryUsersArgs, 'scope' | 'tagIds'> & SelectedFields<UserModel>
   ): Promise<UserPage> {
-    const validatedParams = validateInput(getUsersParamsSchema, params, 'getUsers method');
-    const result = await this.repositories.userRepository.getUsers(validatedParams as any);
+    const context = 'UserService.getUsers';
+    const validatedParams = validateInput(queryUsersArgsSchema, params, context);
+    const result = await this.repositories.userRepository.getUsers(validatedParams);
 
-    // Transform repository result to standard format for validation
     const transformedResult = {
       items: result.users,
       totalCount: result.totalCount,
@@ -67,8 +67,8 @@ export class UserService extends AuditService implements IUserService {
     const validatedResult = validateOutput(
       createDynamicPaginatedSchema(userSchema, params.requestedFields),
       transformedResult,
-      'getUsers method'
-    ) as any;
+      context
+    );
 
     return {
       users: validatedResult.items,

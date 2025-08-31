@@ -5,13 +5,12 @@ import {
   BasePivotRemoveArgs,
 } from '../common/PivotRepository';
 
-import { IOrganizationGroupRepository } from './interface';
 import { OrganizationGroup, organizationGroups } from './schema';
 
-export class OrganizationGroupRepository
-  extends PivotRepository<OrganizationGroup, OrganizationGroup>
-  implements IOrganizationGroupRepository
-{
+export class OrganizationGroupRepository extends PivotRepository<
+  OrganizationGroup,
+  OrganizationGroup
+> {
   protected table = organizationGroups;
   protected parentIdField: keyof OrganizationGroup = 'organizationId';
   protected relatedIdField: keyof OrganizationGroup = 'groupId';

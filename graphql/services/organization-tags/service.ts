@@ -12,7 +12,6 @@ import { AuthenticatedUser } from '@/graphql/types';
 
 import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
 
-import { IOrganizationTagService } from './interface';
 import {
   getOrganizationTagsParamsSchema,
   addOrganizationTagParamsSchema,
@@ -20,13 +19,13 @@ import {
   organizationTagSchema,
 } from './schemas';
 
-export class OrganizationTagService extends AuditService implements IOrganizationTagService {
+export class OrganizationTagService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     user: AuthenticatedUser | null,
-    private readonly db: PostgresJsDatabase
+    db: PostgresJsDatabase
   ) {
-    super(organizationTagAuditLogs, 'organizationTagId', user);
+    super(organizationTagAuditLogs, 'organizationTagId', user, db);
   }
 
   private async organizationExists(organizationId: string): Promise<void> {
