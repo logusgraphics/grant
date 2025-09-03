@@ -1,3 +1,0 @@
-extend type Query {
-  projectGroups(projectId: ID!): [ProjectGroup!]!
-}

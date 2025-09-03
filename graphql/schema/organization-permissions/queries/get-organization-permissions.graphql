@@ -1,3 +1,0 @@
-extend type Query {
-  organizationPermissions(organizationId: ID!): [OrganizationPermission!]!
-}

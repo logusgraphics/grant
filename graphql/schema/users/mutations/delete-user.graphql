@@ -1,3 +1,3 @@
 extend type Mutation {
-  deleteUser(id: ID!): User!
+  deleteUser(id: ID!, scope: Scope!): User!
 }

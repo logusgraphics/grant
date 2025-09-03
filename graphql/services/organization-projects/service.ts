@@ -3,7 +3,6 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
   AddOrganizationProjectInput,
   OrganizationProject,
-  QueryOrganizationProjectsArgs,
   RemoveOrganizationProjectInput,
 } from '@/graphql/generated/types';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
@@ -20,10 +19,10 @@ import {
 } from '../common';
 
 import {
-  getOrganizationProjectsParamsSchema,
-  addOrganizationProjectParamsSchema,
   organizationProjectSchema,
   removeOrganizationProjectInputSchema,
+  queryOrganizationProjectsArgsSchema,
+  addOrganizationProjectInputSchema,
 } from './schemas';
 
 export class OrganizationProjectService extends AuditService {
@@ -71,20 +70,22 @@ export class OrganizationProjectService extends AuditService {
     return existingOrganizationProjects.some((op) => op.projectId === projectId);
   }
 
-  public async getOrganizationProjects(
-    params: Omit<QueryOrganizationProjectsArgs, 'scope'>
-  ): Promise<OrganizationProject[]> {
+  public async getOrganizationProjects(params: {
+    organizationId: string;
+  }): Promise<OrganizationProject[]> {
     const validationContext = 'OrganizationProjectService.getOrganizationProjects';
     const validatedParams = validateInput(
-      getOrganizationProjectsParamsSchema,
+      queryOrganizationProjectsArgsSchema,
       params,
       validationContext
     );
 
-    await this.organizationExists(validatedParams.organizationId);
+    const { organizationId } = validatedParams;
+
+    await this.organizationExists(organizationId);
 
     const result = await this.repositories.organizationProjectRepository.getOrganizationProjects({
-      organizationId: validatedParams.organizationId,
+      organizationId,
     });
 
     return validateOutput(
@@ -98,11 +99,8 @@ export class OrganizationProjectService extends AuditService {
     params: AddOrganizationProjectInput,
     transaction?: Transaction
   ): Promise<OrganizationProject> {
-    const validatedParams = validateInput(
-      addOrganizationProjectParamsSchema,
-      params,
-      'addOrganizationProject method'
-    );
+    const context = 'OrganizationProjectService.addOrganizationProject';
+    const validatedParams = validateInput(addOrganizationProjectInputSchema, params, context);
 
     const { organizationId, projectId } = validatedParams;
 
@@ -127,7 +125,7 @@ export class OrganizationProjectService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_organization_project_mutation',
+      context,
     };
 
     await this.logCreate(organizationProject.id, newValues, metadata, transaction);
@@ -135,7 +133,7 @@ export class OrganizationProjectService extends AuditService {
     return validateOutput(
       createDynamicSingleSchema(organizationProjectSchema),
       organizationProject,
-      'addOrganizationProject method'
+      context
     );
   }
 
@@ -146,7 +144,7 @@ export class OrganizationProjectService extends AuditService {
     const context = 'OrganizationProjectService.removeOrganizationProject';
     const validatedParams = validateInput(removeOrganizationProjectInputSchema, params, context);
 
-    const { organizationId, projectId } = validatedParams;
+    const { organizationId, projectId, hardDelete } = validatedParams;
 
     const hasProject = await this.organizationHasProject(organizationId, projectId);
 
@@ -154,7 +152,7 @@ export class OrganizationProjectService extends AuditService {
       throw new Error('Organization does not have this project');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const organizationProject = isHardDelete
       ? await this.repositories.organizationProjectRepository.hardDeleteOrganizationProject(
@@ -183,7 +181,7 @@ export class OrganizationProjectService extends AuditService {
 
     const metadata = {
       context,
-      isHardDelete,
+      hardDelete,
     };
 
     if (isHardDelete) {
@@ -195,7 +193,7 @@ export class OrganizationProjectService extends AuditService {
     return validateOutput(
       createDynamicSingleSchema(organizationProjectSchema),
       organizationProject,
-      'removeOrganizationProject method'
+      context
     );
   }
 }

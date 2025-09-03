@@ -1,8 +1,5 @@
-import {
-  MutationAddUserTagArgs,
-  MutationRemoveUserTagArgs,
-  UserTag,
-} from '@/graphql/generated/types';
+import { AddUserTagInput, RemoveUserTagInput, UserTag } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -36,35 +33,48 @@ export class UserTagRepository extends PivotRepository<UserTagModel, UserTag> {
     return this.query(baseParams);
   }
 
-  public async addUserTag(params: MutationAddUserTagArgs): Promise<UserTag> {
+  public async getUserTagIntersection(params: {
+    userIds: string[];
+    tagIds: string[];
+  }): Promise<UserTag[]> {
+    return this.queryIntersection({ parentIds: params.userIds, relatedIds: params.tagIds });
+  }
+
+  public async addUserTag(params: AddUserTagInput, transaction?: Transaction): Promise<UserTag> {
     const baseParams: BasePivotAddArgs = {
-      parentId: params.input.userId,
-      relatedId: params.input.tagId,
+      parentId: params.userId,
+      relatedId: params.tagId,
     };
 
-    const userTag = await this.add(baseParams);
+    const userTag = await this.add(baseParams, transaction);
 
     return userTag;
   }
 
-  public async softDeleteUserTag(params: MutationRemoveUserTagArgs): Promise<UserTag> {
+  public async softDeleteUserTag(
+    params: RemoveUserTagInput,
+    transaction?: Transaction
+  ): Promise<UserTag> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.userId,
-      relatedId: params.input.tagId,
+      parentId: params.userId,
+      relatedId: params.tagId,
     };
 
-    const userTag = await this.softDelete(baseParams);
+    const userTag = await this.softDelete(baseParams, transaction);
 
     return userTag;
   }
 
-  public async hardDeleteUserTag(params: MutationRemoveUserTagArgs): Promise<UserTag> {
+  public async hardDeleteUserTag(
+    params: RemoveUserTagInput,
+    transaction?: Transaction
+  ): Promise<UserTag> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.userId,
-      relatedId: params.input.tagId,
+      parentId: params.userId,
+      relatedId: params.tagId,
     };
 
-    const userTag = await this.hardDelete(baseParams);
+    const userTag = await this.hardDelete(baseParams, transaction);
 
     return userTag;
   }

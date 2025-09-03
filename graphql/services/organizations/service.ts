@@ -2,14 +2,18 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryOrganizationsArgs,
-  MutationCreateOrganizationArgs,
   MutationUpdateOrganizationArgs,
   MutationDeleteOrganizationArgs,
   Organization,
   OrganizationPage,
+  CreateOrganizationInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
-import { organizationAuditLogs } from '@/graphql/repositories/organizations/schema';
+import {
+  organizationAuditLogs,
+  OrganizationModel,
+} from '@/graphql/repositories/organizations/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
 import {
@@ -18,14 +22,16 @@ import {
   validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  SelectedFields,
+  DeleteParams,
 } from '../common';
 
 import {
   getOrganizationsParamsSchema,
-  createOrganizationParamsSchema,
   updateOrganizationParamsSchema,
   deleteOrganizationParamsSchema,
   organizationSchema,
+  createOrganizationInputSchema,
 } from './schemas';
 
 export class OrganizationService extends AuditService {
@@ -51,45 +57,39 @@ export class OrganizationService extends AuditService {
   }
 
   public async getOrganizations(
-    params: Omit<QueryOrganizationsArgs, 'scope'> & { requestedFields?: string[] }
+    params: Omit<QueryOrganizationsArgs, 'scope'> & SelectedFields<OrganizationModel>
   ): Promise<OrganizationPage> {
-    const validatedParams = validateInput(
-      getOrganizationsParamsSchema,
-      params,
-      'getOrganizations method'
-    );
-    const result = await this.repositories.organizationRepository.getOrganizations(
-      validatedParams as any
-    );
+    const context = 'OrganizationService.getOrganizations';
+    validateInput(getOrganizationsParamsSchema, params, context);
+    const result = await this.repositories.organizationRepository.getOrganizations(params);
 
-    // Transform repository result to standard format for validation
     const transformedResult = {
       items: result.organizations,
       totalCount: result.totalCount,
       hasNextPage: result.hasNextPage,
     };
 
-    const validatedResult = validateOutput(
+    validateOutput(
       createDynamicPaginatedSchema(organizationSchema, params.requestedFields),
       transformedResult,
-      'getOrganizations method'
-    ) as any;
+      context
+    );
 
-    return {
-      organizations: validatedResult.items,
-      hasNextPage: validatedResult.hasNextPage,
-      totalCount: validatedResult.totalCount,
-    };
+    return result;
   }
 
-  public async createOrganization(params: MutationCreateOrganizationArgs): Promise<Organization> {
-    const validatedParams = validateInput(
-      createOrganizationParamsSchema,
-      params,
-      'createOrganization method'
+  public async createOrganization(
+    params: Omit<CreateOrganizationInput, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Organization> {
+    const context = 'OrganizationService.createOrganization';
+    const validatedParams = validateInput(createOrganizationInputSchema, params, context);
+    const { name } = validatedParams;
+
+    const organization = await this.repositories.organizationRepository.createOrganization(
+      { name },
+      transaction
     );
-    const organization =
-      await this.repositories.organizationRepository.createOrganization(validatedParams);
 
     const newValues = {
       id: organization.id,
@@ -100,28 +100,28 @@ export class OrganizationService extends AuditService {
     };
 
     const metadata = {
-      source: 'create_organization_mutation',
+      context,
     };
 
-    await this.logCreate(organization.id, newValues, metadata);
+    await this.logCreate(organization.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(organizationSchema),
-      organization,
-      'createOrganization method'
-    );
+    return validateOutput(createDynamicSingleSchema(organizationSchema), organization, context);
   }
 
-  public async updateOrganization(params: MutationUpdateOrganizationArgs): Promise<Organization> {
-    const validatedParams = validateInput(
-      updateOrganizationParamsSchema,
-      params,
-      'updateOrganization method'
-    );
+  public async updateOrganization(
+    params: MutationUpdateOrganizationArgs,
+    transaction?: Transaction
+  ): Promise<Organization> {
+    const context = 'OrganizationService.updateOrganization';
+    const validatedParams = validateInput(updateOrganizationParamsSchema, params, context);
 
-    const oldOrganization = await this.getOrganization(validatedParams.id);
-    const updatedOrganization =
-      await this.repositories.organizationRepository.updateOrganization(validatedParams);
+    const { id, input } = validatedParams;
+
+    const oldOrganization = await this.getOrganization(id);
+    const updatedOrganization = await this.repositories.organizationRepository.updateOrganization(
+      { id, input },
+      transaction
+    );
 
     const oldValues = {
       id: oldOrganization.id,
@@ -140,33 +140,39 @@ export class OrganizationService extends AuditService {
     };
 
     const metadata = {
-      source: 'update_organization_mutation',
+      context,
     };
 
-    await this.logUpdate(updatedOrganization.id, oldValues, newValues, metadata);
+    await this.logUpdate(updatedOrganization.id, oldValues, newValues, metadata, transaction);
 
     return validateOutput(
       createDynamicSingleSchema(organizationSchema),
       updatedOrganization,
-      'updateOrganization method'
+      context
     );
   }
 
   public async deleteOrganization(
-    params: MutationDeleteOrganizationArgs & { hardDelete?: boolean }
+    params: MutationDeleteOrganizationArgs & DeleteParams,
+    transaction?: Transaction
   ): Promise<Organization> {
-    const validatedParams = validateInput(
-      deleteOrganizationParamsSchema,
-      params,
-      'deleteOrganization method'
-    );
+    const context = 'OrganizationService.deleteOrganization';
+    const validatedParams = validateInput(deleteOrganizationParamsSchema, params, context);
 
-    const oldOrganization = await this.getOrganization(validatedParams.id);
-    const isHardDelete = params.hardDelete === true;
+    const { id, hardDelete } = validatedParams;
+
+    const oldOrganization = await this.getOrganization(id);
+    const isHardDelete = hardDelete === true;
 
     const deletedOrganization = isHardDelete
-      ? await this.repositories.organizationRepository.hardDeleteOrganization(validatedParams)
-      : await this.repositories.organizationRepository.softDeleteOrganization(validatedParams);
+      ? await this.repositories.organizationRepository.hardDeleteOrganization(
+          validatedParams,
+          transaction
+        )
+      : await this.repositories.organizationRepository.softDeleteOrganization(
+          validatedParams,
+          transaction
+        );
 
     const oldValues = {
       id: oldOrganization.id,
@@ -176,27 +182,25 @@ export class OrganizationService extends AuditService {
       updatedAt: oldOrganization.updatedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_organization_mutation',
-      };
-      await this.logHardDelete(deletedOrganization.id, oldValues, metadata);
+      await this.logHardDelete(deletedOrganization.id, oldValues, metadata, transaction);
     } else {
       const newValues = {
         ...oldValues,
         deletedAt: deletedOrganization.deletedAt,
       };
-
-      const metadata = {
-        source: 'soft_delete_organization_mutation',
-      };
-      await this.logSoftDelete(deletedOrganization.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(deletedOrganization.id, oldValues, newValues, metadata, transaction);
     }
 
     return validateOutput(
       createDynamicSingleSchema(organizationSchema),
       deletedOrganization,
-      'deleteOrganization method'
+      context
     );
   }
 }

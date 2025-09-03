@@ -5,6 +5,6 @@ export const deleteGroupResolver: MutationResolvers['deleteGroup'] = async (
   { id },
   context
 ) => {
-  const deletedGroup = await context.services.groups.deleteGroup({ id });
+  const deletedGroup = await context.controllers.groups.deleteGroup({ id });
   return deletedGroup;
 };

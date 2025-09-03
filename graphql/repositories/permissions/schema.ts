@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import { pgTable, uuid, varchar, timestamp, index } from 'drizzle-orm/pg-core';
 
 export const permissions = pgTable(
@@ -13,6 +14,10 @@ export const permissions = pgTable(
   },
   (t) => [index('permissions_deleted_at_idx').on(t.deletedAt)]
 );
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  tags: many(permissionTags),
+}));
 
 export const permissionAuditLogs = pgTable(
   'permission_audit_logs',
@@ -48,3 +53,5 @@ export const PermissionAuditAction = {
 
 export type PermissionAuditActionType =
   (typeof PermissionAuditAction)[keyof typeof PermissionAuditAction];
+
+import { permissionTags } from '../permission-tags/schema';

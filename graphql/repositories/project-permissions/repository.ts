@@ -1,5 +1,4 @@
 import {
-  QueryProjectPermissionsArgs,
   ProjectPermission,
   RemoveProjectPermissionInput,
   AddProjectPermissionInput,
@@ -28,9 +27,7 @@ export class ProjectPermissionRepository extends PivotRepository<
     };
   }
 
-  public async getProjectPermissions(
-    params: QueryProjectPermissionsArgs
-  ): Promise<ProjectPermission[]> {
+  public async getProjectPermissions(params: { projectId: string }): Promise<ProjectPermission[]> {
     return this.query({ parentId: params.projectId });
   }
 

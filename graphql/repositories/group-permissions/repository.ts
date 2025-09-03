@@ -1,14 +1,16 @@
 import {
-  MutationAddGroupPermissionArgs,
-  MutationRemoveGroupPermissionArgs,
   GroupPermission,
+  AddGroupPermissionInput,
+  RemoveGroupPermissionInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   PivotRepository,
   BasePivotQueryArgs,
   BasePivotAddArgs,
   BasePivotRemoveArgs,
 } from '@/graphql/repositories/common';
+import { DeleteParams } from '@/graphql/services/common';
 
 import { groupPermissions, GroupPermissionModel } from './schema';
 
@@ -40,40 +42,43 @@ export class GroupPermissionRepository extends PivotRepository<
   }
 
   public async addGroupPermission(
-    params: MutationAddGroupPermissionArgs
+    params: AddGroupPermissionInput,
+    transaction?: Transaction
   ): Promise<GroupPermission> {
     const baseParams: BasePivotAddArgs = {
-      parentId: params.input.groupId,
-      relatedId: params.input.permissionId,
+      parentId: params.groupId,
+      relatedId: params.permissionId,
     };
 
-    const groupPermission = await this.add(baseParams);
+    const groupPermission = await this.add(baseParams, transaction);
 
     return groupPermission;
   }
 
   public async softDeleteGroupPermission(
-    params: MutationRemoveGroupPermissionArgs
+    params: RemoveGroupPermissionInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<GroupPermission> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.groupId,
-      relatedId: params.input.permissionId,
+      parentId: params.groupId,
+      relatedId: params.permissionId,
     };
 
-    const groupPermission = await this.softDelete(baseParams);
+    const groupPermission = await this.softDelete(baseParams, transaction);
 
     return groupPermission;
   }
 
   public async hardDeleteGroupPermission(
-    params: MutationRemoveGroupPermissionArgs
+    params: RemoveGroupPermissionInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<GroupPermission> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.groupId,
-      relatedId: params.input.permissionId,
+      parentId: params.groupId,
+      relatedId: params.permissionId,
     };
 
-    const groupPermission = await this.hardDelete(baseParams);
+    const groupPermission = await this.hardDelete(baseParams, transaction);
 
     return groupPermission;
   }

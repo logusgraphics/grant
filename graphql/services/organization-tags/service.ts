@@ -1,22 +1,28 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  QueryOrganizationTagsArgs,
-  MutationAddOrganizationTagArgs,
-  MutationRemoveOrganizationTagArgs,
   OrganizationTag,
+  AddOrganizationTagInput,
+  RemoveOrganizationTagInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { organizationTagAuditLogs } from '@/graphql/repositories/organization-tags/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
   getOrganizationTagsParamsSchema,
-  addOrganizationTagParamsSchema,
-  removeOrganizationTagParamsSchema,
   organizationTagSchema,
+  addOrganizationTagInputSchema,
+  removeOrganizationTagInputSchema,
 } from './schemas';
 
 export class OrganizationTagService extends AuditService {
@@ -61,12 +67,9 @@ export class OrganizationTagService extends AuditService {
     return existingOrganizationTags.some((ot) => ot.tagId === tagId);
   }
 
-  public async getOrganizationTags(params: QueryOrganizationTagsArgs): Promise<OrganizationTag[]> {
-    const validatedParams = validateInput(
-      getOrganizationTagsParamsSchema,
-      params,
-      'getOrganizationTags method'
-    );
+  public async getOrganizationTags(params: { organizationId: string }): Promise<OrganizationTag[]> {
+    const context = 'OrganizationTagService.getOrganizationTags';
+    const validatedParams = validateInput(getOrganizationTagsParamsSchema, params, context);
 
     await this.organizationExists(validatedParams.organizationId);
 
@@ -75,30 +78,28 @@ export class OrganizationTagService extends AuditService {
     return validateOutput(
       createDynamicSingleSchema(organizationTagSchema).array(),
       result,
-      'getOrganizationTags method'
+      context
     );
   }
 
   public async addOrganizationTag(
-    params: MutationAddOrganizationTagArgs
+    params: AddOrganizationTagInput,
+    transaction?: Transaction
   ): Promise<OrganizationTag> {
-    const validatedParams = validateInput(
-      addOrganizationTagParamsSchema,
-      params,
-      'addOrganizationTag method'
-    );
+    const context = 'OrganizationTagService.addOrganizationTag';
+    const validatedParams = validateInput(addOrganizationTagInputSchema, params, context);
+    const { organizationId, tagId } = validatedParams;
 
-    const hasTag = await this.organizationHasTag(
-      validatedParams.input.organizationId,
-      validatedParams.input.tagId
-    );
+    const hasTag = await this.organizationHasTag(organizationId, tagId);
 
     if (hasTag) {
       throw new Error('Organization already has this tag');
     }
 
-    const organizationTag =
-      await this.repositories.organizationTagRepository.addOrganizationTag(validatedParams);
+    const organizationTag = await this.repositories.organizationTagRepository.addOrganizationTag(
+      { organizationId, tagId },
+      transaction
+    );
 
     const newValues = {
       id: organizationTag.id,
@@ -109,42 +110,43 @@ export class OrganizationTagService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_organization_tag_mutation',
+      context,
     };
 
-    await this.logCreate(organizationTag.id, newValues, metadata);
+    await this.logCreate(organizationTag.id, newValues, metadata, transaction);
 
     return validateOutput(
       createDynamicSingleSchema(organizationTagSchema),
       organizationTag,
-      'addOrganizationTag method'
+      context
     );
   }
 
   public async removeOrganizationTag(
-    params: MutationRemoveOrganizationTagArgs & { hardDelete?: boolean }
+    params: RemoveOrganizationTagInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<OrganizationTag> {
-    const validatedParams = validateInput(
-      removeOrganizationTagParamsSchema,
-      params,
-      'removeOrganizationTag method'
-    );
+    const context = 'OrganizationTagService.removeOrganizationTag';
+    const validatedParams = validateInput(removeOrganizationTagInputSchema, params, context);
 
-    const hasTag = await this.organizationHasTag(
-      validatedParams.input.organizationId,
-      validatedParams.input.tagId
-    );
+    const { organizationId, tagId, hardDelete } = validatedParams;
+
+    const hasTag = await this.organizationHasTag(organizationId, tagId);
 
     if (!hasTag) {
       throw new Error('Organization does not have this tag');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const organizationTag = isHardDelete
-      ? await this.repositories.organizationTagRepository.hardDeleteOrganizationTag(validatedParams)
+      ? await this.repositories.organizationTagRepository.hardDeleteOrganizationTag(
+          { organizationId, tagId },
+          transaction
+        )
       : await this.repositories.organizationTagRepository.softDeleteOrganizationTag(
-          validatedParams
+          { organizationId, tagId },
+          transaction
         );
 
     const oldValues = {
@@ -155,27 +157,25 @@ export class OrganizationTagService extends AuditService {
       updatedAt: organizationTag.updatedAt,
     };
 
-    const newValues = {
-      ...oldValues,
-      deletedAt: organizationTag.deletedAt,
+    const metadata = {
+      context,
+      hardDelete,
     };
 
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_organization_tag_mutation',
-      };
-      await this.logHardDelete(organizationTag.id, oldValues, metadata);
+      await this.logHardDelete(organizationTag.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_organization_tag_mutation',
+      const newValues = {
+        ...oldValues,
+        deletedAt: organizationTag.deletedAt,
       };
-      await this.logSoftDelete(organizationTag.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(organizationTag.id, oldValues, newValues, metadata, transaction);
     }
 
     return validateOutput(
       createDynamicSingleSchema(organizationTagSchema),
       organizationTag,
-      'removeOrganizationTag method'
+      context
     );
   }
 }

@@ -1,3 +1,0 @@
-extend type Mutation {
-  addPermissionTag(input: AddPermissionTagInput!): PermissionTag!
-}

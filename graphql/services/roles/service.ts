@@ -2,14 +2,15 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryRolesArgs,
-  MutationCreateRoleArgs,
   MutationUpdateRoleArgs,
   MutationDeleteRoleArgs,
   Role,
   RolePage,
+  CreateRoleInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
-import { roleAuditLogs } from '@/graphql/repositories/roles/schema';
+import { roleAuditLogs, RoleModel } from '@/graphql/repositories/roles/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
 import {
@@ -18,14 +19,16 @@ import {
   validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  SelectedFields,
+  DeleteParams,
 } from '../common';
 
 import {
   getRolesParamsSchema,
-  createRoleParamsSchema,
-  updateRoleParamsSchema,
-  deleteRoleParamsSchema,
   roleSchema,
+  createRoleInputSchema,
+  updateRoleArgsSchema,
+  deleteRoleArgsSchema,
 } from './schemas';
 
 export class RoleService extends AuditService {
@@ -51,34 +54,34 @@ export class RoleService extends AuditService {
   }
 
   public async getRoles(
-    params: Omit<QueryRolesArgs, 'scope'> & { requestedFields?: string[] }
+    params: Omit<QueryRolesArgs, 'scope' | 'tagIds'> & SelectedFields<RoleModel>
   ): Promise<RolePage> {
-    const validatedParams = validateInput(getRolesParamsSchema, params, 'getRoles method');
-    const result = await this.repositories.roleRepository.getRoles(validatedParams as any);
+    const context = 'RoleService.getRoles';
+    validateInput(getRolesParamsSchema, params, context);
+    const result = await this.repositories.roleRepository.getRoles(params);
 
-    // Transform repository result to standard format for validation
     const transformedResult = {
       items: result.roles,
       totalCount: result.totalCount,
       hasNextPage: result.hasNextPage,
     };
 
-    const validatedResult = validateOutput(
+    validateOutput(
       createDynamicPaginatedSchema(roleSchema, params.requestedFields),
       transformedResult,
-      'getRoles method'
-    ) as any;
+      context
+    );
 
-    return {
-      roles: validatedResult.items,
-      hasNextPage: validatedResult.hasNextPage,
-      totalCount: validatedResult.totalCount,
-    };
+    return result;
   }
 
-  public async createRole(params: MutationCreateRoleArgs): Promise<Role> {
-    const validatedParams = validateInput(createRoleParamsSchema, params, 'createRole method');
-    const role = await this.repositories.roleRepository.createRole(validatedParams);
+  public async createRole(
+    params: Omit<CreateRoleInput, 'scope' | 'tagIds' | 'groupIds'>,
+    transaction?: Transaction
+  ): Promise<Role> {
+    const context = 'RoleService.createRole';
+    const validatedParams = validateInput(createRoleInputSchema, params, context);
+    const role = await this.repositories.roleRepository.createRole(validatedParams, transaction);
 
     const newValues = {
       id: role.id,
@@ -89,19 +92,26 @@ export class RoleService extends AuditService {
     };
 
     const metadata = {
-      source: 'create_role_mutation',
+      context,
     };
 
-    await this.logCreate(role.id, newValues, metadata);
+    await this.logCreate(role.id, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(roleSchema), role, 'createRole method');
+    return validateOutput(createDynamicSingleSchema(roleSchema), role, context);
   }
 
-  public async updateRole(params: MutationUpdateRoleArgs): Promise<Role> {
-    const validatedParams = validateInput(updateRoleParamsSchema, params, 'updateRole method');
+  public async updateRole(
+    params: MutationUpdateRoleArgs,
+    transaction?: Transaction
+  ): Promise<Role> {
+    const context = 'RoleService.updateRole';
+    const validatedParams = validateInput(updateRoleArgsSchema, params, context);
 
     const oldRole = await this.getRole(validatedParams.id);
-    const updatedRole = await this.repositories.roleRepository.updateRole(validatedParams);
+    const updatedRole = await this.repositories.roleRepository.updateRole(
+      validatedParams,
+      transaction
+    );
 
     const oldValues = {
       id: oldRole.id,
@@ -120,25 +130,28 @@ export class RoleService extends AuditService {
     };
 
     const metadata = {
-      source: 'update_role_mutation',
+      context,
     };
 
-    await this.logUpdate(updatedRole.id, oldValues, newValues, metadata);
+    await this.logUpdate(updatedRole.id, oldValues, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(roleSchema), updatedRole, 'updateRole method');
+    return validateOutput(createDynamicSingleSchema(roleSchema), updatedRole, context);
   }
 
   public async deleteRole(
-    params: MutationDeleteRoleArgs & { hardDelete?: boolean }
+    params: Omit<MutationDeleteRoleArgs, 'scope'> & DeleteParams,
+    transaction?: Transaction
   ): Promise<Role> {
-    const validatedParams = validateInput(deleteRoleParamsSchema, params, 'deleteRole method');
+    const context = 'RoleService.deleteRole';
+    const validatedParams = validateInput(deleteRoleArgsSchema, params, context);
+    const { id, hardDelete } = validatedParams;
 
-    const oldRole = await this.getRole(validatedParams.id);
-    const isHardDelete = params.hardDelete === true;
+    const oldRole = await this.getRole(id);
+    const isHardDelete = hardDelete === true;
 
     const deletedRole = isHardDelete
-      ? await this.repositories.roleRepository.hardDeleteRole(validatedParams)
-      : await this.repositories.roleRepository.softDeleteRole(validatedParams);
+      ? await this.repositories.roleRepository.hardDeleteRole({ id }, transaction)
+      : await this.repositories.roleRepository.softDeleteRole({ id }, transaction);
 
     const oldValues = {
       id: oldRole.id,
@@ -148,23 +161,22 @@ export class RoleService extends AuditService {
       updatedAt: oldRole.updatedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_role_mutation',
-      };
-      await this.logHardDelete(deletedRole.id, oldValues, metadata);
+      await this.logHardDelete(deletedRole.id, oldValues, metadata, transaction);
     } else {
       const newValues = {
         ...oldValues,
         deletedAt: deletedRole.deletedAt,
       };
 
-      const metadata = {
-        source: 'soft_delete_role_mutation',
-      };
-      await this.logSoftDelete(deletedRole.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(deletedRole.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(createDynamicSingleSchema(roleSchema), deletedRole, 'deleteRole method');
+    return validateOutput(createDynamicSingleSchema(roleSchema), deletedRole, context);
   }
 }

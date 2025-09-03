@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { pgTable, uuid, timestamp, uniqueIndex, varchar, index } from 'drizzle-orm/pg-core';
 
 import { organizations } from '../organizations/schema';
@@ -25,6 +25,17 @@ export const organizationRoles = pgTable(
     uniqueIndex('organization_roles_deleted_at_idx').on(table.deletedAt),
   ]
 );
+
+export const organizationRolesRelations = relations(organizationRoles, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [organizationRoles.organizationId],
+    references: [organizations.id],
+  }),
+  role: one(roles, {
+    fields: [organizationRoles.roleId],
+    references: [roles.id],
+  }),
+}));
 
 export const organizationRolesAuditLogs = pgTable(
   'organization_role_audit_logs',

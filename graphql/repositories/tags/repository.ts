@@ -1,18 +1,20 @@
 import {
   QueryTagsArgs,
-  MutationCreateTagArgs,
-  MutationUpdateTagArgs,
   MutationDeleteTagArgs,
   Tag,
   TagPage,
+  CreateTagInput,
+  MutationUpdateTagArgs,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   EntityRepository,
-  BaseQueryArgs,
   BaseCreateArgs,
   BaseUpdateArgs,
   BaseDeleteArgs,
+  RelationsConfig,
 } from '@/graphql/repositories/common';
+import { SelectedFields } from '@/graphql/services/common';
 
 import { TagModel, tags } from './schema';
 
@@ -21,25 +23,12 @@ export class TagRepository extends EntityRepository<TagModel, Tag> {
   protected schemaName = 'tags' as const;
   protected searchFields: Array<keyof TagModel> = ['name'];
   protected defaultSortField: keyof TagModel = 'createdAt';
+  protected relations: RelationsConfig<Tag> = {};
 
   public async getTags(
-    params: Omit<QueryTagsArgs, 'scope'> & { requestedFields?: Array<keyof TagModel> }
+    params: Omit<QueryTagsArgs, 'scope'> & SelectedFields<Tag>
   ): Promise<TagPage> {
-    const baseParams: BaseQueryArgs<TagModel> = {
-      ids: params.ids || undefined,
-      page: params.page || undefined,
-      limit: params.limit || undefined,
-      search: params.search || undefined,
-      sort: params.sort
-        ? {
-            field: params.sort.field as keyof TagModel,
-            order: params.sort.order,
-          }
-        : undefined,
-      requestedFields: params.requestedFields as Array<keyof TagModel> | undefined,
-    };
-
-    const result = await this.query(baseParams);
+    const result = await this.query(params);
 
     return {
       tags: result.items,
@@ -48,16 +37,22 @@ export class TagRepository extends EntityRepository<TagModel, Tag> {
     };
   }
 
-  public async createTag(params: MutationCreateTagArgs): Promise<Tag> {
+  public async createTag(
+    params: Omit<CreateTagInput, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Tag> {
     const baseParams: BaseCreateArgs = {
-      name: params.input.name,
-      color: params.input.color,
+      name: params.name,
+      color: params.color,
     };
 
-    return this.create(baseParams);
+    return this.create(baseParams, transaction);
   }
 
-  public async updateTag(params: MutationUpdateTagArgs): Promise<Tag> {
+  public async updateTag(
+    params: Omit<MutationUpdateTagArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Tag> {
     const baseParams: BaseUpdateArgs = {
       id: params.id,
       input: {
@@ -66,22 +61,28 @@ export class TagRepository extends EntityRepository<TagModel, Tag> {
       },
     };
 
-    return this.update(baseParams);
+    return this.update(baseParams, transaction);
   }
 
-  public async softDeleteTag(params: MutationDeleteTagArgs): Promise<Tag> {
+  public async softDeleteTag(
+    params: Omit<MutationDeleteTagArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Tag> {
     const baseParams: BaseDeleteArgs = {
       id: params.id,
     };
 
-    return this.softDelete(baseParams);
+    return this.softDelete(baseParams, transaction);
   }
 
-  public async hardDeleteTag(params: MutationDeleteTagArgs): Promise<Tag> {
+  public async hardDeleteTag(
+    params: Omit<MutationDeleteTagArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Tag> {
     const baseParams: BaseDeleteArgs = {
       id: params.id,
     };
 
-    return this.hardDelete(baseParams);
+    return this.hardDelete(baseParams, transaction);
   }
 }

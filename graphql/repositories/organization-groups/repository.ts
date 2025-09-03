@@ -1,3 +1,5 @@
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
+
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -20,57 +22,50 @@ export class OrganizationGroupRepository extends PivotRepository<
   }
 
   public async getOrganizationGroups(params: {
-    organizationId?: string;
-    groupId?: string;
+    organizationId: string;
   }): Promise<OrganizationGroup[]> {
-    if (params.organizationId) {
-      const baseParams: BasePivotQueryArgs = {
-        parentId: params.organizationId,
-      };
-      return this.query(baseParams);
-    }
-
-    // For groupId queries or general queries, we'll need to implement custom logic
-    // For now, return empty array - this can be enhanced later if needed
-    return [];
+    const baseParams: BasePivotQueryArgs = {
+      parentId: params.organizationId,
+    };
+    return this.query(baseParams);
   }
 
   public async addOrganizationGroup(
     organizationId: string,
-    groupId: string
+    groupId: string,
+    transaction?: Transaction
   ): Promise<OrganizationGroup> {
     const baseParams: BasePivotAddArgs = {
       parentId: organizationId,
       relatedId: groupId,
     };
-
-    const organizationGroup = await this.add(baseParams);
+    const organizationGroup = await this.add(baseParams, transaction);
     return organizationGroup;
   }
 
   public async softDeleteOrganizationGroup(
     organizationId: string,
-    groupId: string
+    groupId: string,
+    transaction?: Transaction
   ): Promise<OrganizationGroup | null> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: organizationId,
       relatedId: groupId,
     };
-
-    const organizationGroup = await this.softDelete(baseParams);
+    const organizationGroup = await this.softDelete(baseParams, transaction);
     return organizationGroup;
   }
 
   public async hardDeleteOrganizationGroup(
     organizationId: string,
-    groupId: string
+    groupId: string,
+    transaction?: Transaction
   ): Promise<OrganizationGroup | null> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: organizationId,
       relatedId: groupId,
     };
-
-    const organizationGroup = await this.hardDelete(baseParams);
+    const organizationGroup = await this.hardDelete(baseParams, transaction);
     return organizationGroup;
   }
 }

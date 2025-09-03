@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { pgTable, uuid, timestamp, uniqueIndex, varchar, index } from 'drizzle-orm/pg-core';
 
 import { permissions } from '../permissions/schema';
@@ -25,6 +25,17 @@ export const permissionTags = pgTable(
     uniqueIndex('permission_tags_deleted_at_idx').on(table.deletedAt),
   ]
 );
+
+export const permissionTagsRelations = relations(permissionTags, ({ one }) => ({
+  permission: one(permissions, {
+    fields: [permissionTags.permissionId],
+    references: [permissions.id],
+  }),
+  tag: one(tags, {
+    fields: [permissionTags.tagId],
+    references: [tags.id],
+  }),
+}));
 
 export const permissionTagAuditLogs = pgTable(
   'permission_tag_audit_logs',

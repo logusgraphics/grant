@@ -1,21 +1,23 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import {
-  MutationAddRoleGroupArgs,
-  MutationRemoveRoleGroupArgs,
-  RoleGroup,
-  QueryRoleGroupsArgs,
-} from '@/graphql/generated/types';
+import { RoleGroup, AddRoleGroupInput, RemoveRoleGroupInput } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { roleGroupsAuditLogs } from '@/graphql/repositories/role-groups/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
-  getRoleGroupsParamsSchema,
-  addRoleGroupParamsSchema,
-  removeRoleGroupParamsSchema,
+  addRoleGroupInputSchema,
+  queryRoleGroupsArgsSchema,
+  removeRoleGroupInputSchema,
   roleGroupSchema,
 } from './schemas';
 
@@ -60,38 +62,37 @@ export class RoleGroupService extends AuditService {
     return existingRoleGroups.some((rg) => rg.groupId === groupId);
   }
 
-  public async getRoleGroups(params: Omit<QueryRoleGroupsArgs, 'scope'>): Promise<RoleGroup[]> {
-    const validatedParams = validateInput(
-      getRoleGroupsParamsSchema,
-      params,
-      'getRoleGroups method'
-    );
+  public async getRoleGroups(params: { roleId: string }): Promise<RoleGroup[]> {
+    const context = 'RoleGroupService.getRoleGroups';
+    const validatedParams = validateInput(queryRoleGroupsArgsSchema, params, context);
 
-    await this.roleExists(validatedParams.roleId);
+    const { roleId } = validatedParams;
 
-    const result = await this.repositories.roleGroupRepository.getRoleGroups(validatedParams);
-    return validateOutput(
-      createDynamicSingleSchema(roleGroupSchema).array(),
-      result,
-      'getRoleGroups method'
-    );
+    await this.roleExists(roleId);
+
+    const result = await this.repositories.roleGroupRepository.getRoleGroups({ roleId });
+    return validateOutput(createDynamicSingleSchema(roleGroupSchema).array(), result, context);
   }
 
-  public async addRoleGroup(params: MutationAddRoleGroupArgs): Promise<RoleGroup> {
-    const validatedParams = validateInput(addRoleGroupParamsSchema, params, 'addRoleGroup method');
+  public async addRoleGroup(
+    params: AddRoleGroupInput,
+    transaction?: Transaction
+  ): Promise<RoleGroup> {
+    const context = 'RoleGroupService.addRoleGroup';
+    const validatedParams = validateInput(addRoleGroupInputSchema, params, context);
 
-    const hasGroup = await this.roleHasGroup(
-      validatedParams.input.roleId,
-      validatedParams.input.groupId
-    );
+    const { roleId, groupId } = validatedParams;
+
+    const hasGroup = await this.roleHasGroup(roleId, groupId);
 
     if (hasGroup) {
       throw new Error('Role already has this group');
     }
 
     const roleGroup = await this.repositories.roleGroupRepository.addRoleGroup(
-      validatedParams.input.roleId,
-      validatedParams.input.groupId
+      roleId,
+      groupId,
+      transaction
     );
 
     const newValues = {
@@ -103,46 +104,41 @@ export class RoleGroupService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_role_group_mutation',
+      context,
     };
 
-    await this.logCreate(roleGroup.id, newValues, metadata);
+    await this.logCreate(roleGroup.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(roleGroupSchema),
-      roleGroup,
-      'addRoleGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(roleGroupSchema), roleGroup, context);
   }
 
   public async removeRoleGroup(
-    params: MutationRemoveRoleGroupArgs & { hardDelete?: boolean }
+    params: RemoveRoleGroupInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<RoleGroup> {
-    const validatedParams = validateInput(
-      removeRoleGroupParamsSchema,
-      params,
-      'removeRoleGroup method'
-    );
+    const context = 'RoleGroupService.removeRoleGroup';
+    const validatedParams = validateInput(removeRoleGroupInputSchema, params, context);
 
-    const hasGroup = await this.roleHasGroup(
-      validatedParams.input.roleId,
-      validatedParams.input.groupId
-    );
+    const { roleId, groupId, hardDelete } = validatedParams;
+
+    const hasGroup = await this.roleHasGroup(roleId, groupId);
 
     if (!hasGroup) {
       throw new Error('Role does not have this group');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const roleGroup = isHardDelete
       ? await this.repositories.roleGroupRepository.hardDeleteRoleGroup(
-          validatedParams.input.roleId,
-          validatedParams.input.groupId
+          roleId,
+          groupId,
+          transaction
         )
       : await this.repositories.roleGroupRepository.softDeleteRoleGroup(
-          validatedParams.input.roleId,
-          validatedParams.input.groupId
+          roleId,
+          groupId,
+          transaction
         );
 
     const oldValues = {
@@ -158,22 +154,17 @@ export class RoleGroupService extends AuditService {
       deletedAt: roleGroup.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_role_group_mutation',
-      };
-      await this.logHardDelete(roleGroup.id, oldValues, metadata);
+      await this.logHardDelete(roleGroup.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'remove_role_group_mutation',
-      };
-      await this.logSoftDelete(roleGroup.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(roleGroup.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(roleGroupSchema),
-      roleGroup,
-      'removeRoleGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(roleGroupSchema), roleGroup, context);
   }
 }

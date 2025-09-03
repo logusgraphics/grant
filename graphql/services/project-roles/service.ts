@@ -1,7 +1,6 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  QueryProjectRolesArgs,
   ProjectRole,
   RemoveProjectRoleInput,
   AddProjectRoleInput,
@@ -67,7 +66,7 @@ export class ProjectRoleService extends AuditService {
     return existingProjectRoles.some((pr) => pr.roleId === roleId);
   }
 
-  public async getProjectRoles(params: QueryProjectRolesArgs): Promise<ProjectRole[]> {
+  public async getProjectRoles(params: { projectId: string }): Promise<ProjectRole[]> {
     const context = 'ProjectRoleService.getProjectRoles';
     const validatedParams = validateInput(getProjectRolesParamsSchema, params, context);
 

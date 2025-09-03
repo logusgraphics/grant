@@ -4,10 +4,11 @@ import {
   Tag,
   TagPage,
   QueryTagsArgs,
-  MutationCreateTagArgs,
   MutationUpdateTagArgs,
   MutationDeleteTagArgs,
+  CreateTagInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { tagAuditLogs } from '@/graphql/repositories/tags/schema';
 import { AuthenticatedUser } from '@/graphql/types';
@@ -18,14 +19,16 @@ import {
   validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  SelectedFields,
+  DeleteParams,
 } from '../common';
 
 import {
-  getTagsParamsSchema,
-  createTagParamsSchema,
-  updateTagParamsSchema,
-  deleteTagParamsSchema,
+  createTagInputSchema,
+  deleteTagArgsSchema,
+  queryTagsArgsSchema,
   tagSchema,
+  updateTagArgsSchema,
 } from './schemas';
 
 export class TagService extends AuditService {
@@ -51,34 +54,38 @@ export class TagService extends AuditService {
   }
 
   public async getTags(
-    params: Omit<QueryTagsArgs, 'scope'> & { requestedFields?: string[] }
+    params: Omit<QueryTagsArgs, 'scope'> & SelectedFields<Tag>
   ): Promise<TagPage> {
-    const validatedParams = validateInput(getTagsParamsSchema, params, 'getTags method');
-    const result = await this.repositories.tagRepository.getTags(validatedParams as any);
+    const context = 'TagService.getTags';
+    validateInput(queryTagsArgsSchema, params, context);
 
-    // Transform repository result to standard format for validation
+    const result = await this.repositories.tagRepository.getTags(params);
+
     const transformedResult = {
       items: result.tags,
       totalCount: result.totalCount,
       hasNextPage: result.hasNextPage,
     };
 
-    const validatedResult = validateOutput(
+    validateOutput(
       createDynamicPaginatedSchema(tagSchema, params.requestedFields),
       transformedResult,
-      'getTags method'
-    ) as any;
+      context
+    );
 
-    return {
-      tags: validatedResult.items,
-      hasNextPage: validatedResult.hasNextPage,
-      totalCount: validatedResult.totalCount,
-    };
+    return result;
   }
 
-  public async createTag(params: MutationCreateTagArgs): Promise<Tag> {
-    const validatedParams = validateInput(createTagParamsSchema, params, 'createTag method');
-    const tag = await this.repositories.tagRepository.createTag(validatedParams);
+  public async createTag(
+    params: Omit<CreateTagInput, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Tag> {
+    const context = 'TagService.createTag';
+    const validatedParams = validateInput(createTagInputSchema, params, context);
+
+    const { name, color } = validatedParams;
+
+    const tag = await this.repositories.tagRepository.createTag({ name, color }, transaction);
 
     const newValues = {
       id: tag.id,
@@ -89,19 +96,22 @@ export class TagService extends AuditService {
     };
 
     const metadata = {
-      source: 'create_tag_mutation',
+      context,
     };
 
-    await this.logCreate(tag.id, newValues, metadata);
+    await this.logCreate(tag.id, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(tagSchema), tag, 'createTag method');
+    return validateOutput(createDynamicSingleSchema(tagSchema), tag, context);
   }
 
-  public async updateTag(params: MutationUpdateTagArgs): Promise<Tag> {
-    const validatedParams = validateInput(updateTagParamsSchema, params, 'updateTag method');
+  public async updateTag(params: MutationUpdateTagArgs, transaction?: Transaction): Promise<Tag> {
+    const context = 'TagService.updateTag';
+    const validatedParams = validateInput(updateTagArgsSchema, params, context);
 
-    const oldTag = await this.getTag(validatedParams.id);
-    const updatedTag = await this.repositories.tagRepository.updateTag(validatedParams);
+    const { id, input } = validatedParams;
+
+    const oldTag = await this.getTag(id);
+    const updatedTag = await this.repositories.tagRepository.updateTag({ id, input }, transaction);
 
     const oldValues = {
       id: oldTag.id,
@@ -120,23 +130,29 @@ export class TagService extends AuditService {
     };
 
     const metadata = {
-      source: 'update_tag_mutation',
+      context,
     };
 
-    await this.logUpdate(updatedTag.id, oldValues, newValues, metadata);
+    await this.logUpdate(updatedTag.id, oldValues, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(tagSchema), updatedTag, 'updateTag method');
+    return validateOutput(createDynamicSingleSchema(tagSchema), updatedTag, context);
   }
 
-  public async deleteTag(params: MutationDeleteTagArgs & { hardDelete?: boolean }): Promise<Tag> {
-    const validatedParams = validateInput(deleteTagParamsSchema, params, 'deleteTag method');
+  public async deleteTag(
+    params: Omit<MutationDeleteTagArgs, 'scope'> & DeleteParams,
+    transaction?: Transaction
+  ): Promise<Tag> {
+    const context = 'TagService.deleteTag';
+    const validatedParams = validateInput(deleteTagArgsSchema, params, context);
 
-    const oldTag = await this.getTag(validatedParams.id);
-    const isHardDelete = params.hardDelete === true;
+    const { id, hardDelete } = validatedParams;
+
+    const oldTag = await this.getTag(id);
+    const isHardDelete = hardDelete === true;
 
     const deletedTag = isHardDelete
-      ? await this.repositories.tagRepository.hardDeleteTag(validatedParams)
-      : await this.repositories.tagRepository.softDeleteTag(validatedParams);
+      ? await this.repositories.tagRepository.hardDeleteTag({ id }, transaction)
+      : await this.repositories.tagRepository.softDeleteTag({ id }, transaction);
 
     const oldValues = {
       id: oldTag.id,
@@ -146,23 +162,21 @@ export class TagService extends AuditService {
       updatedAt: oldTag.updatedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_tag_mutation',
-      };
-      await this.logHardDelete(deletedTag.id, oldValues, metadata);
+      await this.logHardDelete(deletedTag.id, oldValues, metadata, transaction);
     } else {
       const newValues = {
         ...oldValues,
         deletedAt: deletedTag.deletedAt,
       };
-
-      const metadata = {
-        source: 'soft_delete_tag_mutation',
-      };
-      await this.logSoftDelete(deletedTag.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(deletedTag.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(createDynamicSingleSchema(tagSchema), deletedTag, 'deleteTag method');
+    return validateOutput(createDynamicSingleSchema(tagSchema), deletedTag, context);
   }
 }

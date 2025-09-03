@@ -1,3 +1,0 @@
-extend type Mutation {
-  removeProjectTag(input: RemoveProjectTagInput!): ProjectTag!
-}

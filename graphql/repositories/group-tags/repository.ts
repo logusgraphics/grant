@@ -1,11 +1,6 @@
-import { QueryGroupTagsArgs } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 
-import {
-  PivotRepository,
-  BasePivotQueryArgs,
-  BasePivotAddArgs,
-  BasePivotRemoveArgs,
-} from '../common/PivotRepository';
+import { PivotRepository, BasePivotAddArgs, BasePivotRemoveArgs } from '../common/PivotRepository';
 
 import { GroupTag, groupTags } from './schema';
 
@@ -18,40 +13,53 @@ export class GroupTagRepository extends PivotRepository<GroupTag, GroupTag> {
     return dbGroupTag;
   }
 
-  public async getGroupTags(params: Omit<QueryGroupTagsArgs, 'scope'>): Promise<GroupTag[]> {
-    const baseParams: BasePivotQueryArgs = {
-      parentId: params.groupId,
-    };
-    return this.query(baseParams);
+  public async getGroupTags(params: { groupId: string }): Promise<GroupTag[]> {
+    return this.query({ parentId: params.groupId });
   }
 
-  public async addGroupTag(groupId: string, tagId: string): Promise<GroupTag> {
+  public async getGroupTagIntersection(groupIds: string[], tagIds: string[]): Promise<GroupTag[]> {
+    return this.queryIntersection({ parentIds: groupIds, relatedIds: tagIds });
+  }
+
+  public async addGroupTag(
+    groupId: string,
+    tagId: string,
+    transaction?: Transaction
+  ): Promise<GroupTag> {
     const baseParams: BasePivotAddArgs = {
       parentId: groupId,
       relatedId: tagId,
     };
 
-    const groupTag = await this.add(baseParams);
+    const groupTag = await this.add(baseParams, transaction);
     return groupTag;
   }
 
-  public async softDeleteGroupTag(groupId: string, tagId: string): Promise<GroupTag | null> {
+  public async softDeleteGroupTag(
+    groupId: string,
+    tagId: string,
+    transaction?: Transaction
+  ): Promise<GroupTag | null> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: groupId,
       relatedId: tagId,
     };
 
-    const groupTag = await this.softDelete(baseParams);
+    const groupTag = await this.softDelete(baseParams, transaction);
     return groupTag;
   }
 
-  public async hardDeleteGroupTag(groupId: string, tagId: string): Promise<GroupTag | null> {
+  public async hardDeleteGroupTag(
+    groupId: string,
+    tagId: string,
+    transaction?: Transaction
+  ): Promise<GroupTag | null> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: groupId,
       relatedId: tagId,
     };
 
-    const groupTag = await this.hardDelete(baseParams);
+    const groupTag = await this.hardDelete(baseParams, transaction);
     return groupTag;
   }
 }

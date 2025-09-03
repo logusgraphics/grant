@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { pgTable, uuid, timestamp, varchar, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
 import { tags } from '../tags/schema';
@@ -25,6 +25,17 @@ export const userTags = pgTable(
     uniqueIndex('user_tags_deleted_at_idx').on(table.deletedAt),
   ]
 );
+
+export const userTagsRelations = relations(userTags, ({ one }) => ({
+  user: one(users, {
+    fields: [userTags.userId],
+    references: [users.id],
+  }),
+  tag: one(tags, {
+    fields: [userTags.tagId],
+    references: [tags.id],
+  }),
+}));
 
 export const userTagsAuditLogs = pgTable(
   'user_tags_audit_logs',

@@ -1,3 +1,0 @@
-extend type Query {
-  roleTags(scope: Scope!, roleId: ID!): [RoleTag!]!
-}

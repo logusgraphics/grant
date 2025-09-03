@@ -1,8 +1,9 @@
 import {
-  MutationAddOrganizationUserArgs,
-  MutationRemoveOrganizationUserArgs,
+  AddOrganizationUserInput,
   OrganizationUser,
+  RemoveOrganizationUserInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -42,40 +43,43 @@ export class OrganizationUserRepository extends PivotRepository<
   }
 
   public async addOrganizationUser(
-    params: MutationAddOrganizationUserArgs
+    params: AddOrganizationUserInput,
+    transaction?: Transaction
   ): Promise<OrganizationUser> {
     const baseParams: BasePivotAddArgs = {
-      parentId: params.input.organizationId,
-      relatedId: params.input.userId,
+      parentId: params.organizationId,
+      relatedId: params.userId,
     };
 
-    const organizationUser = await this.add(baseParams);
+    const organizationUser = await this.add(baseParams, transaction);
 
     return organizationUser;
   }
 
   public async softDeleteOrganizationUser(
-    params: MutationRemoveOrganizationUserArgs
+    params: RemoveOrganizationUserInput,
+    transaction?: Transaction
   ): Promise<OrganizationUser> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.organizationId,
-      relatedId: params.input.userId,
+      parentId: params.organizationId,
+      relatedId: params.userId,
     };
 
-    const organizationUser = await this.softDelete(baseParams);
+    const organizationUser = await this.softDelete(baseParams, transaction);
 
     return organizationUser;
   }
 
   public async hardDeleteOrganizationUser(
-    params: MutationRemoveOrganizationUserArgs
+    params: RemoveOrganizationUserInput,
+    transaction?: Transaction
   ): Promise<OrganizationUser> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.organizationId,
-      relatedId: params.input.userId,
+      parentId: params.organizationId,
+      relatedId: params.userId,
     };
 
-    const organizationUser = await this.hardDelete(baseParams);
+    const organizationUser = await this.hardDelete(baseParams, transaction);
 
     return organizationUser;
   }

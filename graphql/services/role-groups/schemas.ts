@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
-import { idSchema, scopeSchema } from '../common/schemas';
+import { deleteSchema, idSchema } from '../common/schemas';
 
 export const queryRoleGroupsArgsSchema = z.object({
-  scope: scopeSchema,
   roleId: idSchema,
 });
 
@@ -12,7 +11,7 @@ export const addRoleGroupInputSchema = z.object({
   groupId: idSchema.refine((groupId) => groupId.trim().length > 0, 'Group ID is required'),
 });
 
-export const removeRoleGroupInputSchema = z.object({
+export const removeRoleGroupInputSchema = deleteSchema.extend({
   roleId: idSchema.refine((roleId) => roleId.trim().length > 0, 'Role ID is required'),
   groupId: idSchema.refine((groupId) => groupId.trim().length > 0, 'Group ID is required'),
 });
@@ -35,7 +34,3 @@ export const roleGroupSchema = z.object({
   role: z.any().nullable().optional(),
   group: z.any().nullable().optional(),
 });
-
-export const getRoleGroupsParamsSchema = queryRoleGroupsArgsSchema.omit({ scope: true });
-export const addRoleGroupParamsSchema = addRoleGroupArgsSchema;
-export const removeRoleGroupParamsSchema = removeRoleGroupArgsSchema;

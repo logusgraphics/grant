@@ -1,9 +1,4 @@
-import {
-  QueryProjectTagsArgs,
-  ProjectTag,
-  AddProjectTagInput,
-  RemoveProjectTagInput,
-} from '@/graphql/generated/types';
+import { ProjectTag, AddProjectTagInput, RemoveProjectTagInput } from '@/graphql/generated/types';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
@@ -25,7 +20,7 @@ export class ProjectTagRepository extends PivotRepository<ProjectTagModel, Proje
     };
   }
 
-  public async getProjectTags(params: QueryProjectTagsArgs): Promise<ProjectTag[]> {
+  public async getProjectTags(params: { projectId: string }): Promise<ProjectTag[]> {
     return this.query({ parentId: params.projectId });
   }
 

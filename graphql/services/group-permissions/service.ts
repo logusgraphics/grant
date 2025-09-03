@@ -1,16 +1,22 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  QueryGroupPermissionsArgs,
-  MutationAddGroupPermissionArgs,
-  MutationRemoveGroupPermissionArgs,
+  AddGroupPermissionInput,
   GroupPermission,
+  RemoveGroupPermissionInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { groupPermissionsAuditLogs } from '@/graphql/repositories/group-permissions/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
   getGroupPermissionsParamsSchema,
@@ -61,48 +67,45 @@ export class GroupPermissionService extends AuditService {
     return existingGroupPermissions.some((gp) => gp.permissionId === permissionId);
   }
 
-  public async getGroupPermissions(
-    params: Omit<QueryGroupPermissionsArgs, 'scope'>
-  ): Promise<GroupPermission[]> {
-    const validatedParams = validateInput(
-      getGroupPermissionsParamsSchema,
-      params,
-      'getGroupPermissions method'
-    );
+  public async getGroupPermissions(params: { groupId: string }): Promise<GroupPermission[]> {
+    const context = 'GroupPermissionService.getGroupPermissions';
+    const validatedParams = validateInput(getGroupPermissionsParamsSchema, params, context);
+    const { groupId } = validatedParams;
 
-    if (!validatedParams.groupId) {
+    if (!groupId) {
       throw new Error('Group ID is required');
     }
-    await this.groupExists(validatedParams.groupId);
+    await this.groupExists(groupId);
 
-    const result =
-      await this.repositories.groupPermissionRepository.getGroupPermissions(validatedParams);
+    const result = await this.repositories.groupPermissionRepository.getGroupPermissions({
+      groupId,
+    });
+
     return validateOutput(
       createDynamicSingleSchema(groupPermissionSchema).array(),
       result,
-      'getGroupPermissions method'
+      context
     );
   }
 
   public async addGroupPermission(
-    params: MutationAddGroupPermissionArgs
+    params: AddGroupPermissionInput,
+    transaction?: Transaction
   ): Promise<GroupPermission> {
-    const validatedParams = validateInput(
-      addGroupPermissionParamsSchema,
-      params,
-      'addGroupPermission method'
-    );
+    const context = 'GroupPermissionService.addGroupPermission';
+    const validatedParams = validateInput(addGroupPermissionParamsSchema, params, context);
+    const { groupId, permissionId } = validatedParams;
 
-    const hasPermission = await this.groupHasPermission(
-      validatedParams.input.groupId,
-      validatedParams.input.permissionId
-    );
+    const hasPermission = await this.groupHasPermission(groupId, permissionId);
+
     if (hasPermission) {
       throw new Error('Group already has this permission');
     }
 
-    const groupPermission =
-      await this.repositories.groupPermissionRepository.addGroupPermission(validatedParams);
+    const groupPermission = await this.repositories.groupPermissionRepository.addGroupPermission(
+      { groupId, permissionId },
+      transaction
+    );
 
     const newValues = {
       id: groupPermission.id,
@@ -113,41 +116,42 @@ export class GroupPermissionService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_group_permission_mutation',
+      context,
     };
 
-    await this.logCreate(groupPermission.id, newValues, metadata);
+    await this.logCreate(groupPermission.id, newValues, metadata, transaction);
 
     return validateOutput(
       createDynamicSingleSchema(groupPermissionSchema),
       groupPermission,
-      'addGroupPermission method'
+      context
     );
   }
 
   public async removeGroupPermission(
-    params: MutationRemoveGroupPermissionArgs & { hardDelete?: boolean }
+    params: RemoveGroupPermissionInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<GroupPermission> {
-    const validatedParams = validateInput(
-      removeGroupPermissionParamsSchema,
-      params,
-      'removeGroupPermission method'
-    );
+    const context = 'GroupPermissionService.removeGroupPermission';
+    const validatedParams = validateInput(removeGroupPermissionParamsSchema, params, context);
+    const { groupId, permissionId, hardDelete } = validatedParams;
 
-    const hasPermission = await this.groupHasPermission(
-      validatedParams.input.groupId,
-      validatedParams.input.permissionId
-    );
+    const hasPermission = await this.groupHasPermission(groupId, permissionId);
+
     if (!hasPermission) {
       throw new Error('Group does not have this permission');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const groupPermission = isHardDelete
-      ? await this.repositories.groupPermissionRepository.hardDeleteGroupPermission(validatedParams)
+      ? await this.repositories.groupPermissionRepository.hardDeleteGroupPermission(
+          validatedParams,
+          transaction
+        )
       : await this.repositories.groupPermissionRepository.softDeleteGroupPermission(
-          validatedParams
+          validatedParams,
+          transaction
         );
 
     const oldValues = {
@@ -163,22 +167,21 @@ export class GroupPermissionService extends AuditService {
       deletedAt: groupPermission.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_group_permission_mutation',
-      };
-      await this.logHardDelete(groupPermission.id, oldValues, metadata);
+      await this.logHardDelete(groupPermission.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_group_permission_mutation',
-      };
-      await this.logSoftDelete(groupPermission.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(groupPermission.id, oldValues, newValues, metadata, transaction);
     }
 
     return validateOutput(
       createDynamicSingleSchema(groupPermissionSchema),
       groupPermission,
-      'removeGroupPermission method'
+      context
     );
   }
 }

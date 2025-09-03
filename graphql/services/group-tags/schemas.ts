@@ -1,10 +1,9 @@
 import { z } from 'zod';
 
-import { idSchema } from '../common/schemas';
+import { deleteSchema, idSchema } from '../common/schemas';
 
 export const queryGroupTagsArgsSchema = z.object({
   groupId: idSchema,
-  tagId: idSchema.optional(),
 });
 
 export const addGroupTagInputSchema = z.object({
@@ -12,9 +11,14 @@ export const addGroupTagInputSchema = z.object({
   tagId: idSchema.refine((tagId) => tagId.trim().length > 0, 'Tag ID is required'),
 });
 
-export const removeGroupTagInputSchema = z.object({
+export const removeGroupTagInputSchema = deleteSchema.extend({
   groupId: idSchema.refine((groupId) => groupId.trim().length > 0, 'Group ID is required'),
   tagId: idSchema.refine((tagId) => tagId.trim().length > 0, 'Tag ID is required'),
+});
+
+export const getGroupTagIntersectionInputSchema = z.object({
+  groupIds: z.array(idSchema).refine((groupIds) => groupIds.length > 0, 'Group IDs are required'),
+  tagIds: z.array(idSchema).refine((tagIds) => tagIds.length > 0, 'Tag IDs are required'),
 });
 
 export const addGroupTagArgsSchema = z.object({
@@ -35,12 +39,3 @@ export const groupTagSchema = z.object({
   group: z.any().nullable().optional(),
   tag: z.any().nullable().optional(),
 });
-
-export const getGroupTagsParamsSchema = queryGroupTagsArgsSchema;
-export const addGroupTagParamsSchema = addGroupTagArgsSchema;
-export const removeGroupTagParamsSchema = removeGroupTagArgsSchema;
-
-export type GetGroupTagsParams = z.infer<typeof getGroupTagsParamsSchema>;
-export type AddGroupTagParams = z.infer<typeof addGroupTagParamsSchema>;
-export type RemoveGroupTagParams = z.infer<typeof removeGroupTagParamsSchema>;
-export type GroupTagSchema = z.infer<typeof groupTagSchema>;

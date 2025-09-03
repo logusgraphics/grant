@@ -1,6 +1,6 @@
 import { QueryResolvers } from '@/graphql/generated/types';
 import { getDirectFieldSelection } from '@/graphql/lib/fieldSelection';
-import { getScopedGroupIds } from '@/graphql/lib/scopeFiltering';
+import { GroupModel } from '@/graphql/repositories/groups/schema';
 
 export const getGroupsResolver: QueryResolvers['groups'] = async (
   _parent,
@@ -8,31 +8,18 @@ export const getGroupsResolver: QueryResolvers['groups'] = async (
   context,
   info
 ) => {
-  const requestedFields = info ? getDirectFieldSelection(info, ['groups']) : undefined;
+  const requestedFields = getDirectFieldSelection<keyof GroupModel>(info, ['groups']);
 
-  let groupIds = await getScopedGroupIds({ scope, context });
-
-  if (ids && ids.length > 0) {
-    groupIds = groupIds.filter((groupId) => ids.includes(groupId));
-  }
-
-  if (groupIds.length === 0) {
-    return {
-      groups: [],
-      totalCount: 0,
-      hasNextPage: false,
-    };
-  }
-
-  const groupsResult = await context.services.groups.getGroups({
-    ids: groupIds,
+  const groups = await context.controllers.groups.getGroups({
+    scope,
     page,
     limit,
     sort,
     search,
+    ids,
     tagIds,
     requestedFields,
   });
 
-  return groupsResult;
+  return groups;
 };

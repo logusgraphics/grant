@@ -1,8 +1,5 @@
-import {
-  MutationAddUserRoleArgs,
-  MutationRemoveUserRoleArgs,
-  UserRole,
-} from '@/graphql/generated/types';
+import { AddUserRoleInput, RemoveUserRoleInput, UserRole } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -36,35 +33,41 @@ export class UserRoleRepository extends PivotRepository<UserRoleModel, UserRole>
     return this.query(baseParams);
   }
 
-  public async addUserRole(params: MutationAddUserRoleArgs): Promise<UserRole> {
+  public async addUserRole(params: AddUserRoleInput, transaction?: Transaction): Promise<UserRole> {
     const baseParams: BasePivotAddArgs = {
-      parentId: params.input.userId,
-      relatedId: params.input.roleId,
+      parentId: params.userId,
+      relatedId: params.roleId,
     };
 
-    const userRole = await this.add(baseParams);
+    const userRole = await this.add(baseParams, transaction);
 
     return userRole;
   }
 
-  public async softDeleteUserRole(params: MutationRemoveUserRoleArgs): Promise<UserRole> {
+  public async softDeleteUserRole(
+    params: RemoveUserRoleInput,
+    transaction?: Transaction
+  ): Promise<UserRole> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.userId,
-      relatedId: params.input.roleId,
+      parentId: params.userId,
+      relatedId: params.roleId,
     };
 
-    const userRole = await this.softDelete(baseParams);
+    const userRole = await this.softDelete(baseParams, transaction);
 
     return userRole;
   }
 
-  public async hardDeleteUserRole(params: MutationRemoveUserRoleArgs): Promise<UserRole> {
+  public async hardDeleteUserRole(
+    params: RemoveUserRoleInput,
+    transaction?: Transaction
+  ): Promise<UserRole> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: params.input.userId,
-      relatedId: params.input.roleId,
+      parentId: params.userId,
+      relatedId: params.roleId,
     };
 
-    const userRole = await this.hardDelete(baseParams);
+    const userRole = await this.hardDelete(baseParams, transaction);
 
     return userRole;
   }

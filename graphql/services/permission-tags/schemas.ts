@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { idSchema } from '../common/schemas';
+import { deleteSchema, idSchema } from '../common/schemas';
 
 export const permissionTagSchema = z.object({
   id: idSchema,
@@ -24,11 +24,16 @@ export const addPermissionTagParamsSchema = z.object({
   input: addPermissionTagInputSchema,
 });
 
-export const removePermissionTagInputSchema = z.object({
+export const removePermissionTagInputSchema = deleteSchema.extend({
   permissionId: idSchema,
   tagId: idSchema,
 });
 
 export const removePermissionTagParamsSchema = z.object({
   input: removePermissionTagInputSchema,
+});
+
+export const getPermissionTagIntersectionParamsSchema = z.object({
+  permissionIds: idSchema.array(),
+  tagIds: idSchema.array(),
 });

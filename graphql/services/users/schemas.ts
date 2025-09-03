@@ -12,6 +12,7 @@ import {
   nonEmptyNameSchema,
   nonEmptyEmailSchema,
   queryParamsSchema,
+  deleteSchema,
 } from '../common/schemas';
 
 export const userSortableFieldSchema = z.enum(
@@ -41,7 +42,7 @@ export const updateUserArgsSchema = z.object({
   input: updateUserInputSchema,
 });
 
-export const deleteUserArgsSchema = z.object({
+export const deleteUserArgsSchema = deleteSchema.extend({
   id: idSchema,
 });
 
@@ -61,7 +62,3 @@ export const userPageSchema = paginatedResponseSchema(userSchema).transform((dat
   hasNextPage: data.hasNextPage,
   totalCount: data.totalCount,
 }));
-
-export const createUserParamsSchema = createUserArgsSchema;
-export const updateUserParamsSchema = updateUserArgsSchema;
-export const deleteUserParamsSchema = deleteUserArgsSchema;

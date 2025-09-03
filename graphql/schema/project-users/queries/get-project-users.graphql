@@ -1,3 +1,0 @@
-extend type Query {
-  projectUsers(projectId: ID!): [ProjectUser!]!
-}

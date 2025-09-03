@@ -1,18 +1,19 @@
 import {
   QueryUsersArgs,
-  MutationCreateUserArgs,
   MutationUpdateUserArgs,
   MutationDeleteUserArgs,
   User,
   UserPage,
+  UserTag,
+  UserRole,
+  CreateUserInput,
 } from '@/graphql/generated/types';
-import {
-  EntityRepository,
-  BaseCreateArgs,
-  BaseUpdateArgs,
-  BaseDeleteArgs,
-} from '@/graphql/repositories/common';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
+import { EntityRepository, RelationsConfig } from '@/graphql/repositories/common';
 import { SelectedFields } from '@/graphql/services/common';
+
+import { roles } from '../roles/schema';
+import { tags } from '../tags/schema';
 
 import { UserModel, users } from './schema';
 
@@ -21,9 +22,21 @@ export class UserRepository extends EntityRepository<UserModel, User> {
   protected schemaName = 'users' as const;
   protected searchFields: Array<keyof UserModel> = ['name', 'email'];
   protected defaultSortField: keyof UserModel = 'createdAt';
+  protected relations: RelationsConfig<User> = {
+    tags: {
+      field: 'tagIds',
+      table: tags,
+      extract: (v: Array<UserTag>) => v.map(({ tag }: UserTag) => tag),
+    },
+    roles: {
+      field: 'roleIds',
+      table: roles,
+      extract: (v: Array<UserRole>) => v.map(({ role }: UserRole) => role),
+    },
+  };
 
   public async getUsers(
-    params: Omit<QueryUsersArgs, 'scope' | 'tagIds'> & SelectedFields<UserModel>
+    params: Omit<QueryUsersArgs, 'scope'> & SelectedFields<UserModel>
   ): Promise<UserPage> {
     const result = await this.query(params);
 
@@ -34,40 +47,31 @@ export class UserRepository extends EntityRepository<UserModel, User> {
     };
   }
 
-  public async createUser(params: MutationCreateUserArgs): Promise<User> {
-    const baseParams: BaseCreateArgs = {
-      name: params.input.name,
-      email: params.input.email,
-    };
-
-    return this.create(baseParams);
+  public async createUser(
+    params: Omit<CreateUserInput, 'scope' | 'roleIds' | 'tagIds'>,
+    transaction?: Transaction
+  ): Promise<User> {
+    return this.create(params, transaction);
   }
 
-  public async updateUser(params: MutationUpdateUserArgs): Promise<User> {
-    const baseParams: BaseUpdateArgs = {
-      id: params.id,
-      input: {
-        name: params.input.name,
-        email: params.input.email,
-      },
-    };
-
-    return this.update(baseParams);
+  public async updateUser(
+    params: MutationUpdateUserArgs,
+    transaction?: Transaction
+  ): Promise<User> {
+    return this.update(params, transaction);
   }
 
-  public async softDeleteUser(params: MutationDeleteUserArgs): Promise<User> {
-    const baseParams: BaseDeleteArgs = {
-      id: params.id,
-    };
-
-    return this.softDelete(baseParams);
+  public async softDeleteUser(
+    params: Omit<MutationDeleteUserArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<User> {
+    return this.softDelete(params, transaction);
   }
 
-  public async hardDeleteUser(params: MutationDeleteUserArgs): Promise<User> {
-    const baseParams: BaseDeleteArgs = {
-      id: params.id,
-    };
-
-    return this.hardDelete(baseParams);
+  public async hardDeleteUser(
+    params: Omit<MutationDeleteUserArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<User> {
+    return this.hardDelete(params, transaction);
   }
 }

@@ -1,23 +1,19 @@
 import { z } from 'zod';
 
-import { idSchema, baseEntitySchema } from '../common/schemas';
+import { idSchema, baseEntitySchema, deleteSchema } from '../common/schemas';
 
 export const getOrganizationUsersParamsSchema = z.object({
   organizationId: idSchema,
 });
 
 export const addOrganizationUserParamsSchema = z.object({
-  input: z.object({
-    organizationId: idSchema,
-    userId: idSchema,
-  }),
+  organizationId: idSchema,
+  userId: idSchema,
 });
 
-export const removeOrganizationUserParamsSchema = z.object({
-  input: z.object({
-    organizationId: idSchema,
-    userId: idSchema,
-  }),
+export const removeOrganizationUserParamsSchema = deleteSchema.extend({
+  organizationId: idSchema,
+  userId: idSchema,
 });
 
 export const organizationUserSchema = baseEntitySchema.extend({

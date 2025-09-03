@@ -1,18 +1,25 @@
 import {
   QueryGroupsArgs,
-  MutationCreateGroupArgs,
   MutationUpdateGroupArgs,
   MutationDeleteGroupArgs,
   Group,
   GroupPage,
+  GroupTag,
+  GroupPermission,
+  CreateGroupInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   EntityRepository,
-  BaseQueryArgs,
+  RelationsConfig,
   BaseCreateArgs,
   BaseUpdateArgs,
   BaseDeleteArgs,
 } from '@/graphql/repositories/common';
+import { SelectedFields } from '@/graphql/services/common';
+
+import { groupPermissions } from '../group-permissions/schema';
+import { groupTags } from '../group-tags/schema';
 
 import { GroupModel, groups } from './schema';
 
@@ -21,25 +28,23 @@ export class GroupRepository extends EntityRepository<GroupModel, Group> {
   protected schemaName = 'groups' as const;
   protected searchFields: Array<keyof GroupModel> = ['name', 'description'];
   protected defaultSortField: keyof GroupModel = 'createdAt';
+  protected relations: RelationsConfig<Group> = {
+    tags: {
+      field: 'tag',
+      table: groupTags,
+      extract: (v: GroupTag[]) => v.map(({ tag }) => tag),
+    },
+    permissions: {
+      field: 'permission',
+      table: groupPermissions,
+      extract: (v: GroupPermission[]) => v.map(({ permission }) => permission),
+    },
+  };
 
   public async getGroups(
-    params: Omit<QueryGroupsArgs, 'scope'> & { requestedFields?: Array<keyof GroupModel> }
+    params: Omit<QueryGroupsArgs, 'scope'> & SelectedFields<GroupModel>
   ): Promise<GroupPage> {
-    const baseParams: BaseQueryArgs<GroupModel> = {
-      ids: params.ids || undefined,
-      page: params.page || undefined,
-      limit: params.limit || undefined,
-      search: params.search || undefined,
-      sort: params.sort
-        ? {
-            field: params.sort.field as keyof GroupModel,
-            order: params.sort.order,
-          }
-        : undefined,
-      requestedFields: params.requestedFields as Array<keyof GroupModel> | undefined,
-    };
-
-    const result = await this.query(baseParams);
+    const result = await this.query(params);
 
     return {
       groups: result.items,
@@ -48,16 +53,22 @@ export class GroupRepository extends EntityRepository<GroupModel, Group> {
     };
   }
 
-  public async createGroup(params: MutationCreateGroupArgs): Promise<Group> {
+  public async createGroup(
+    params: Omit<CreateGroupInput, 'scope' | 'tagIds' | 'permissionIds'>,
+    transaction?: Transaction
+  ): Promise<Group> {
     const baseParams: BaseCreateArgs = {
-      name: params.input.name,
-      description: params.input.description,
+      name: params.name,
+      description: params.description,
     };
 
-    return this.create(baseParams);
+    return this.create(baseParams, transaction);
   }
 
-  public async updateGroup(params: MutationUpdateGroupArgs): Promise<Group> {
+  public async updateGroup(
+    params: MutationUpdateGroupArgs,
+    transaction?: Transaction
+  ): Promise<Group> {
     const baseParams: BaseUpdateArgs = {
       id: params.id,
       input: {
@@ -66,22 +77,28 @@ export class GroupRepository extends EntityRepository<GroupModel, Group> {
       },
     };
 
-    return this.update(baseParams);
+    return this.update(baseParams, transaction);
   }
 
-  public async softDeleteGroup(params: MutationDeleteGroupArgs): Promise<Group> {
+  public async softDeleteGroup(
+    params: Omit<MutationDeleteGroupArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Group> {
     const baseParams: BaseDeleteArgs = {
       id: params.id,
     };
 
-    return this.softDelete(baseParams);
+    return this.softDelete(baseParams, transaction);
   }
 
-  public async hardDeleteGroup(params: MutationDeleteGroupArgs): Promise<Group> {
+  public async hardDeleteGroup(
+    params: Omit<MutationDeleteGroupArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Group> {
     const baseParams: BaseDeleteArgs = {
       id: params.id,
     };
 
-    return this.hardDelete(baseParams);
+    return this.hardDelete(baseParams, transaction);
   }
 }

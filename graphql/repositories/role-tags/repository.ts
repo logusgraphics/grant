@@ -1,9 +1,5 @@
-import {
-  QueryRoleTagsArgs,
-  MutationAddRoleTagArgs,
-  MutationRemoveRoleTagArgs,
-  RoleTag,
-} from '@/graphql/generated/types';
+import { AddRoleTagInput, RoleTag } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { RoleTagModel, roleTags } from './schema';
@@ -24,28 +20,50 @@ export class RoleTagRepository extends PivotRepository<RoleTagModel, RoleTag> {
     };
   }
 
-  public async getRoleTags(params: Omit<QueryRoleTagsArgs, 'scope'>): Promise<RoleTag[]> {
+  public async getRoleTags(params: { roleId: string }): Promise<RoleTag[]> {
     return this.query({ parentId: params.roleId });
   }
 
-  public async addRoleTag(params: MutationAddRoleTagArgs): Promise<RoleTag> {
-    return this.add({
-      parentId: params.input.roleId,
-      relatedId: params.input.tagId,
-    });
+  public async getRoleTagIntersection(params: {
+    roleIds: string[];
+    tagIds: string[];
+  }): Promise<RoleTag[]> {
+    return this.queryIntersection({ parentIds: params.roleIds, relatedIds: params.tagIds });
   }
 
-  public async softDeleteRoleTag(params: MutationRemoveRoleTagArgs): Promise<RoleTag> {
-    return this.softDelete({
-      parentId: params.input.roleId,
-      relatedId: params.input.tagId,
-    });
+  public async addRoleTag(params: AddRoleTagInput, transaction?: Transaction): Promise<RoleTag> {
+    return this.add(
+      {
+        parentId: params.roleId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 
-  public async hardDeleteRoleTag(params: MutationRemoveRoleTagArgs): Promise<RoleTag> {
-    return this.hardDelete({
-      parentId: params.input.roleId,
-      relatedId: params.input.tagId,
-    });
+  public async softDeleteRoleTag(
+    params: { roleId: string; tagId: string },
+    transaction?: Transaction
+  ): Promise<RoleTag> {
+    return this.softDelete(
+      {
+        parentId: params.roleId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
+  }
+
+  public async hardDeleteRoleTag(
+    params: { roleId: string; tagId: string },
+    transaction?: Transaction
+  ): Promise<RoleTag> {
+    return this.hardDelete(
+      {
+        parentId: params.roleId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 }

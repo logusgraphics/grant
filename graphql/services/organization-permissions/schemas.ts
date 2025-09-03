@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
-import { idSchema, scopeSchema } from '../common/schemas';
+import { deleteSchema, idSchema } from '../common/schemas';
 
 export const queryOrganizationPermissionsArgsSchema = z.object({
-  scope: scopeSchema,
   organizationId: idSchema,
 });
 
@@ -18,7 +17,7 @@ export const addOrganizationPermissionInputSchema = z.object({
   ),
 });
 
-export const removeOrganizationPermissionInputSchema = z.object({
+export const removeOrganizationPermissionInputSchema = deleteSchema.extend({
   organizationId: idSchema.refine(
     (organizationId) => organizationId.trim().length > 0,
     'Organization ID is required'
@@ -47,18 +46,3 @@ export const organizationPermissionSchema = z.object({
   organization: z.any().nullable().optional(),
   permission: z.any().nullable().optional(),
 });
-
-export const getOrganizationPermissionsParamsSchema = queryOrganizationPermissionsArgsSchema.omit({
-  scope: true,
-});
-export const addOrganizationPermissionParamsSchema = addOrganizationPermissionArgsSchema;
-export const removeOrganizationPermissionParamsSchema = removeOrganizationPermissionArgsSchema;
-
-export type GetOrganizationPermissionsParams = z.infer<
-  typeof getOrganizationPermissionsParamsSchema
->;
-export type AddOrganizationPermissionParams = z.infer<typeof addOrganizationPermissionParamsSchema>;
-export type RemoveOrganizationPermissionParams = z.infer<
-  typeof removeOrganizationPermissionParamsSchema
->;
-export type OrganizationPermissionSchema = z.infer<typeof organizationPermissionSchema>;

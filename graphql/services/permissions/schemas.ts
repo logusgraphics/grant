@@ -8,9 +8,10 @@ import {
   actionSchema,
   baseEntitySchema,
   paginatedResponseSchema,
-  sortableParamsSchema,
   nonEmptyNameSchema,
   nonEmptyActionSchema,
+  queryParamsSchema,
+  deleteSchema,
 } from '../common/schemas';
 
 export const permissionSortableFieldSchema = z.enum([
@@ -25,28 +26,26 @@ export const permissionSortInputSchema = z.object({
   order: sortOrderSchema,
 });
 
-export const getPermissionsParamsSchema = sortableParamsSchema.extend({
-  sort: permissionSortInputSchema.optional(),
+export const getPermissionsParamsSchema = queryParamsSchema.extend({
+  sort: permissionSortInputSchema.nullable().optional(),
 });
 
 export const createPermissionParamsSchema = z.object({
-  input: z.object({
-    name: nonEmptyNameSchema,
-    description: descriptionSchema,
-    action: nonEmptyActionSchema,
-  }),
+  name: nonEmptyNameSchema,
+  description: descriptionSchema,
+  action: nonEmptyActionSchema,
 });
 
 export const updatePermissionParamsSchema = z.object({
   id: idSchema,
   input: z.object({
-    name: nonEmptyNameSchema.optional(),
+    name: nonEmptyNameSchema.nullable().optional(),
     description: descriptionSchema,
-    action: nonEmptyActionSchema.optional(),
+    action: nonEmptyActionSchema.nullable().optional(),
   }),
 });
 
-export const deletePermissionParamsSchema = z.object({
+export const deletePermissionParamsSchema = deleteSchema.extend({
   id: idSchema,
 });
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { idSchema } from '../common/schemas';
+import { idSchema, deleteSchema } from '../common/schemas';
 
 export const organizationTagSchema = z.object({
   id: idSchema,
@@ -24,7 +24,7 @@ export const addOrganizationTagParamsSchema = z.object({
   input: addOrganizationTagInputSchema,
 });
 
-export const removeOrganizationTagInputSchema = z.object({
+export const removeOrganizationTagInputSchema = deleteSchema.extend({
   organizationId: idSchema,
   tagId: idSchema,
 });

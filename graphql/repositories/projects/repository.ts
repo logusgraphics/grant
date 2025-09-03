@@ -82,20 +82,6 @@ export class ProjectRepository extends EntityRepository<ProjectModel, Project> {
     };
   }
 
-  public async getProjectById(id: string): Promise<Project | null> {
-    try {
-      const result = await this.query({
-        ids: [id],
-        limit: 1,
-      });
-
-      return result.items.length > 0 ? result.items[0] : null;
-    } catch (error) {
-      console.error('Get project by ID error:', error);
-      return null;
-    }
-  }
-
   public async createProject(
     params: Omit<CreateProjectInput, 'organizationId' | 'tagIds'>,
     transaction?: Transaction

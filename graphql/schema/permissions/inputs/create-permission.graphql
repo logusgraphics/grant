@@ -2,4 +2,6 @@ input CreatePermissionInput {
   name: String!
   description: String
   action: String!
+  tagIds: [ID!]
+  scope: Scope!
 }

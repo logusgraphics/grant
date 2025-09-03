@@ -6,9 +6,10 @@ import {
   slugSchema,
   baseEntitySchema,
   paginatedResponseSchema,
-  sortableParamsSchema,
   nonEmptyNameSchema,
   sortOrderSchema,
+  queryParamsSchema,
+  deleteSchema,
 } from '../common/schemas';
 
 export const organizationSortableFieldSchema = z.enum(['name', 'slug', 'createdAt', 'updatedAt']);
@@ -17,24 +18,22 @@ export const organizationSortInputSchema = z.object({
   order: sortOrderSchema,
 });
 
-export const getOrganizationsParamsSchema = sortableParamsSchema.extend({
-  sort: organizationSortInputSchema.optional(),
+export const getOrganizationsParamsSchema = queryParamsSchema.extend({
+  sort: organizationSortInputSchema.nullable().optional(),
 });
 
-export const createOrganizationParamsSchema = z.object({
-  input: z.object({
-    name: nonEmptyNameSchema,
-  }),
+export const createOrganizationInputSchema = z.object({
+  name: nonEmptyNameSchema,
 });
 
 export const updateOrganizationParamsSchema = z.object({
   id: idSchema,
   input: z.object({
-    name: nonEmptyNameSchema.optional(),
+    name: nonEmptyNameSchema.nullable().optional(),
   }),
 });
 
-export const deleteOrganizationParamsSchema = z.object({
+export const deleteOrganizationParamsSchema = deleteSchema.extend({
   id: idSchema,
 });
 

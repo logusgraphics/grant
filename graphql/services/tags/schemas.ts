@@ -9,6 +9,8 @@ import {
   paginatedResponseSchema,
   sortableParamsSchema,
   nonEmptyNameSchema,
+  queryParamsSchema,
+  deleteSchema,
 } from '../common/schemas';
 
 export const createTagSchema = z.object({
@@ -43,12 +45,8 @@ export const createTagInputSchema = z.object({
 });
 
 export const updateTagInputSchema = z.object({
-  name: nonEmptyNameSchema.optional(),
-  color: colorSchema,
-});
-
-export const createTagArgsSchema = z.object({
-  input: createTagInputSchema,
+  name: nonEmptyNameSchema.nullable().optional(),
+  color: colorSchema.nullable().optional(),
 });
 
 export const updateTagArgsSchema = z.object({
@@ -56,12 +54,12 @@ export const updateTagArgsSchema = z.object({
   input: updateTagInputSchema,
 });
 
-export const deleteTagArgsSchema = z.object({
+export const deleteTagArgsSchema = deleteSchema.extend({
   id: idSchema,
 });
 
-export const queryTagsArgsSchema = sortableParamsSchema.extend({
-  sort: tagSortInputSchema.optional(),
+export const queryTagsArgsSchema = queryParamsSchema.extend({
+  sort: tagSortInputSchema.nullable().optional(),
 });
 
 export const tagSchema = baseEntitySchema.extend({
@@ -74,8 +72,3 @@ export const tagPageSchema = paginatedResponseSchema(tagSchema).transform((data)
   hasNextPage: data.hasNextPage,
   totalCount: data.totalCount,
 }));
-
-export const getTagsParamsSchema = queryTagsArgsSchema;
-export const createTagParamsSchema = createTagArgsSchema;
-export const updateTagParamsSchema = updateTagArgsSchema;
-export const deleteTagParamsSchema = deleteTagArgsSchema;

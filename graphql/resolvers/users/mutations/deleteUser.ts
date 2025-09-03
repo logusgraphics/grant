@@ -1,9 +1,9 @@
 import { MutationResolvers } from '@/graphql/generated/types';
 export const deleteUserResolver: MutationResolvers['deleteUser'] = async (
   _parent,
-  { id },
+  { id, scope },
   context
 ) => {
-  const deletedUser = await context.services.users.deleteUser({ id });
+  const deletedUser = await context.controllers.users.deleteUser({ id, scope });
   return deletedUser;
 };

@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
-import { idSchema, scopeSchema } from '../common/schemas';
+import { deleteSchema, idSchema } from '../common/schemas';
 
 export const queryOrganizationProjectsArgsSchema = z.object({
-  scope: scopeSchema,
   organizationId: idSchema,
 });
 
@@ -15,7 +14,7 @@ export const addOrganizationProjectInputSchema = z.object({
   projectId: idSchema.refine((projectId) => projectId.trim().length > 0, 'Project ID is required'),
 });
 
-export const removeOrganizationProjectInputSchema = z.object({
+export const removeOrganizationProjectInputSchema = deleteSchema.extend({
   organizationId: idSchema.refine(
     (organizationId) => organizationId.trim().length > 0,
     'Organization ID is required'
@@ -39,9 +38,3 @@ export const organizationProjectSchema = z.object({
   organization: z.any().nullable().optional(),
   project: z.any().nullable().optional(),
 });
-
-export const getOrganizationProjectsParamsSchema = queryOrganizationProjectsArgsSchema.omit({
-  scope: true,
-});
-export const addOrganizationProjectParamsSchema = addOrganizationProjectArgsSchema;
-export const removeOrganizationProjectParamsSchema = removeOrganizationProjectArgsSchema;

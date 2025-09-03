@@ -1,3 +1,0 @@
-extend type Mutation {
-  removeRoleTag(input: RemoveRoleTagInput!): RoleTag!
-}

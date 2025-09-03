@@ -2,12 +2,13 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryUsersArgs,
-  MutationCreateUserArgs,
   MutationUpdateUserArgs,
   MutationDeleteUserArgs,
   User,
   UserPage,
+  CreateUserInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { userAuditLogs, UserModel } from '@/graphql/repositories/users/schema';
 import { AuthenticatedUser } from '@/graphql/types';
@@ -19,14 +20,15 @@ import {
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
   SelectedFields,
+  DeleteParams,
 } from '../common';
 
 import {
-  createUserParamsSchema,
-  updateUserParamsSchema,
-  deleteUserParamsSchema,
   userSchema,
   queryUsersArgsSchema,
+  createUserInputSchema,
+  updateUserArgsSchema,
+  deleteUserArgsSchema,
 } from './schemas';
 
 export class UserService extends AuditService {
@@ -52,11 +54,11 @@ export class UserService extends AuditService {
   }
 
   public async getUsers(
-    params: Omit<QueryUsersArgs, 'scope' | 'tagIds'> & SelectedFields<UserModel>
+    params: Omit<QueryUsersArgs, 'scope'> & SelectedFields<UserModel>
   ): Promise<UserPage> {
     const context = 'UserService.getUsers';
-    const validatedParams = validateInput(queryUsersArgsSchema, params, context);
-    const result = await this.repositories.userRepository.getUsers(validatedParams);
+    validateInput(queryUsersArgsSchema, params, context);
+    const result = await this.repositories.userRepository.getUsers(params);
 
     const transformedResult = {
       items: result.users,
@@ -64,22 +66,22 @@ export class UserService extends AuditService {
       hasNextPage: result.hasNextPage,
     };
 
-    const validatedResult = validateOutput(
+    validateOutput(
       createDynamicPaginatedSchema(userSchema, params.requestedFields),
       transformedResult,
       context
     );
 
-    return {
-      users: validatedResult.items,
-      hasNextPage: validatedResult.hasNextPage,
-      totalCount: validatedResult.totalCount,
-    };
+    return result;
   }
 
-  public async createUser(params: MutationCreateUserArgs): Promise<User> {
-    const validatedParams = validateInput(createUserParamsSchema, params, 'createUser method');
-    const user = await this.repositories.userRepository.createUser(validatedParams);
+  public async createUser(
+    params: Omit<CreateUserInput, 'scope' | 'roleIds' | 'tagIds'>,
+    transaction?: Transaction
+  ): Promise<User> {
+    const context = 'UserService.createUser';
+    validateInput(createUserInputSchema, params, context);
+    const user = await this.repositories.userRepository.createUser(params, transaction);
 
     const newValues = {
       id: user.id,
@@ -90,19 +92,26 @@ export class UserService extends AuditService {
     };
 
     const metadata = {
-      source: 'create_user_mutation',
+      context,
     };
 
-    await this.logCreate(user.id, newValues, metadata);
+    await this.logCreate(user.id, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(userSchema), user, 'createUser method');
+    return validateOutput(createDynamicSingleSchema(userSchema), user, context);
   }
 
-  public async updateUser(params: MutationUpdateUserArgs): Promise<User> {
-    const validatedParams = validateInput(updateUserParamsSchema, params, 'updateUser method');
+  public async updateUser(
+    params: MutationUpdateUserArgs,
+    transaction?: Transaction
+  ): Promise<User> {
+    const context = 'UserService.updateUser';
+    const validatedParams = validateInput(updateUserArgsSchema, params, context);
 
     const oldUser = await this.getUser(validatedParams.id);
-    const updatedUser = await this.repositories.userRepository.updateUser(validatedParams);
+    const updatedUser = await this.repositories.userRepository.updateUser(
+      validatedParams,
+      transaction
+    );
 
     const oldValues = {
       id: oldUser.id,
@@ -121,25 +130,28 @@ export class UserService extends AuditService {
     };
 
     const metadata = {
-      source: 'update_user_mutation',
+      context,
     };
 
-    await this.logUpdate(updatedUser.id, oldValues, newValues, metadata);
+    await this.logUpdate(updatedUser.id, oldValues, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(userSchema), updatedUser, 'updateUser method');
+    return validateOutput(createDynamicSingleSchema(userSchema), updatedUser, context);
   }
 
   public async deleteUser(
-    params: MutationDeleteUserArgs & { hardDelete?: boolean }
+    params: Omit<MutationDeleteUserArgs, 'scope'> & DeleteParams,
+    transaction?: Transaction
   ): Promise<User> {
-    const validatedParams = validateInput(deleteUserParamsSchema, params, 'deleteUser method');
+    const context = 'UserService.deleteUser';
+    const validatedParams = validateInput(deleteUserArgsSchema, params, context);
+    const { id, hardDelete } = validatedParams;
 
-    const oldUser = await this.getUser(validatedParams.id);
-    const isHardDelete = params.hardDelete === true;
+    const oldUser = await this.getUser(id);
+    const isHardDelete = hardDelete === true;
 
     const deletedUser = isHardDelete
-      ? await this.repositories.userRepository.hardDeleteUser(validatedParams)
-      : await this.repositories.userRepository.softDeleteUser(validatedParams);
+      ? await this.repositories.userRepository.hardDeleteUser(validatedParams, transaction)
+      : await this.repositories.userRepository.softDeleteUser(validatedParams, transaction);
 
     const oldValues = {
       id: oldUser.id,
@@ -149,23 +161,21 @@ export class UserService extends AuditService {
       updatedAt: oldUser.updatedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_user_mutation',
-      };
-      await this.logHardDelete(deletedUser.id, oldValues, metadata);
+      await this.logHardDelete(deletedUser.id, oldValues, metadata, transaction);
     } else {
       const newValues = {
         ...oldValues,
         deletedAt: deletedUser.deletedAt,
       };
-
-      const metadata = {
-        source: 'soft_delete_user_mutation',
-      };
-      await this.logSoftDelete(deletedUser.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(deletedUser.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(createDynamicSingleSchema(userSchema), deletedUser, 'deleteUser method');
+    return validateOutput(createDynamicSingleSchema(userSchema), deletedUser, context);
   }
 }

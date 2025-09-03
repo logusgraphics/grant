@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import { pgTable, uuid, varchar, timestamp, index } from 'drizzle-orm/pg-core';
 
 export const users = pgTable(
@@ -12,6 +13,11 @@ export const users = pgTable(
   },
   (t) => [index('users_deleted_at_idx').on(t.deletedAt)]
 );
+
+export const usersRelations = relations(users, ({ many }) => ({
+  tags: many(userTags),
+  roles: many(userRoles),
+}));
 
 export const userAuditLogs = pgTable(
   'user_audit_logs',
@@ -46,3 +52,6 @@ export const UserAuditAction = {
 } as const;
 
 export type UserAuditActionType = (typeof UserAuditAction)[keyof typeof UserAuditAction];
+
+import { userRoles } from '../user-roles/schema';
+import { userTags } from '../user-tags/schema';

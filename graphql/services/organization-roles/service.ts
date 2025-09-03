@@ -1,22 +1,28 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  QueryOrganizationRolesArgs,
-  MutationAddOrganizationRoleArgs,
-  MutationRemoveOrganizationRoleArgs,
+  AddOrganizationRoleInput,
   OrganizationRole,
+  RemoveOrganizationRoleInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { organizationRolesAuditLogs } from '@/graphql/repositories/organization-roles/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
   getOrganizationRolesParamsSchema,
-  addOrganizationRoleParamsSchema,
-  removeOrganizationRoleParamsSchema,
   organizationRoleSchema,
+  addOrganizationRoleInputSchema,
+  removeOrganizationRoleInputSchema,
 } from './schemas';
 
 export class OrganizationRoleService extends AuditService {
@@ -61,46 +67,41 @@ export class OrganizationRoleService extends AuditService {
     return existingOrganizationRoles.some((or) => or.roleId === roleId);
   }
 
-  public async getOrganizationRoles(
-    params: QueryOrganizationRolesArgs
-  ): Promise<OrganizationRole[]> {
-    const validatedParams = validateInput(
-      getOrganizationRolesParamsSchema,
-      params,
-      'getOrganizationRoles method'
-    );
+  public async getOrganizationRoles(params: {
+    organizationId: string;
+  }): Promise<OrganizationRole[]> {
+    const context = 'OrganizationRoleService.getOrganizationRoles';
+    const validatedParams = validateInput(getOrganizationRolesParamsSchema, params, context);
+    const { organizationId } = validatedParams;
 
-    await this.organizationExists(validatedParams.organizationId);
+    await this.organizationExists(organizationId);
 
-    const result =
-      await this.repositories.organizationRoleRepository.getOrganizationRoles(validatedParams);
+    const result = await this.repositories.organizationRoleRepository.getOrganizationRoles(params);
     return validateOutput(
       createDynamicSingleSchema(organizationRoleSchema).array(),
       result,
-      'getOrganizationRoles method'
+      context
     );
   }
 
   public async addOrganizationRole(
-    params: MutationAddOrganizationRoleArgs
+    params: AddOrganizationRoleInput,
+    transaction?: Transaction
   ): Promise<OrganizationRole> {
-    const validatedParams = validateInput(
-      addOrganizationRoleParamsSchema,
-      params,
-      'addOrganizationRole method'
-    );
+    const context = 'OrganizationRoleService.addOrganizationRole';
+    const validatedParams = validateInput(addOrganizationRoleInputSchema, params, context);
+    const { organizationId, roleId } = validatedParams;
 
-    const hasRole = await this.organizationHasRole(
-      validatedParams.input.organizationId,
-      validatedParams.input.roleId
-    );
+    const hasRole = await this.organizationHasRole(organizationId, roleId);
 
     if (hasRole) {
       throw new Error('Organization already has this role');
     }
 
-    const organizationRole =
-      await this.repositories.organizationRoleRepository.addOrganizationRole(validatedParams);
+    const organizationRole = await this.repositories.organizationRoleRepository.addOrganizationRole(
+      { organizationId, roleId },
+      transaction
+    );
 
     const newValues = {
       id: organizationRole.id,
@@ -111,44 +112,42 @@ export class OrganizationRoleService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_organization_role_mutation',
+      context,
     };
 
-    await this.logCreate(organizationRole.id, newValues, metadata);
+    await this.logCreate(organizationRole.id, newValues, metadata, transaction);
 
     return validateOutput(
       createDynamicSingleSchema(organizationRoleSchema),
       organizationRole,
-      'addOrganizationRole method'
+      context
     );
   }
 
   public async removeOrganizationRole(
-    params: MutationRemoveOrganizationRoleArgs & { hardDelete?: boolean }
+    params: RemoveOrganizationRoleInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<OrganizationRole> {
-    const validatedParams = validateInput(
-      removeOrganizationRoleParamsSchema,
-      params,
-      'removeOrganizationRole method'
-    );
+    const context = 'OrganizationRoleService.removeOrganizationRole';
+    const validatedParams = validateInput(removeOrganizationRoleInputSchema, params, context);
+    const { organizationId, roleId, hardDelete } = validatedParams;
 
-    const hasRole = await this.organizationHasRole(
-      validatedParams.input.organizationId,
-      validatedParams.input.roleId
-    );
+    const hasRole = await this.organizationHasRole(organizationId, roleId);
 
     if (!hasRole) {
       throw new Error('Organization does not have this role');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const organizationRole = isHardDelete
       ? await this.repositories.organizationRoleRepository.hardDeleteOrganizationRole(
-          validatedParams
+          { organizationId, roleId },
+          transaction
         )
       : await this.repositories.organizationRoleRepository.softDeleteOrganizationRole(
-          validatedParams
+          { organizationId, roleId },
+          transaction
         );
 
     const oldValues = {
@@ -164,22 +163,21 @@ export class OrganizationRoleService extends AuditService {
       deletedAt: organizationRole.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_organization_role_mutation',
-      };
-      await this.logHardDelete(organizationRole.id, oldValues, metadata);
+      await this.logHardDelete(organizationRole.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_organization_role_mutation',
-      };
-      await this.logSoftDelete(organizationRole.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(organizationRole.id, oldValues, newValues, metadata, transaction);
     }
 
     return validateOutput(
       createDynamicSingleSchema(organizationRoleSchema),
       organizationRole,
-      'removeOrganizationRole method'
+      context
     );
   }
 }

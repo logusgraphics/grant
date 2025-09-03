@@ -1,10 +1,11 @@
 import { MutationResolvers } from '@/graphql/generated/types';
+
 export const updateOrganizationResolver: MutationResolvers['updateOrganization'] = async (
   _parent,
   { id, input },
   context
 ) => {
-  const updatedOrganization = await context.services.organizations.updateOrganization({
+  const updatedOrganization = await context.controllers.organizations.updateOrganization({
     id,
     input,
   });

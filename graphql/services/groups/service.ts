@@ -2,14 +2,15 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryGroupsArgs,
-  MutationCreateGroupArgs,
   MutationUpdateGroupArgs,
   MutationDeleteGroupArgs,
   Group,
   GroupPage,
+  CreateGroupInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
-import { groupAuditLogs } from '@/graphql/repositories/groups/schema';
+import { groupAuditLogs, GroupModel } from '@/graphql/repositories/groups/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
 import {
@@ -18,6 +19,8 @@ import {
   validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  SelectedFields,
+  DeleteParams,
 } from '../common';
 
 import {
@@ -51,34 +54,39 @@ export class GroupService extends AuditService {
   }
 
   public async getGroups(
-    params: Omit<QueryGroupsArgs, 'scope'> & { requestedFields?: string[] }
+    params: Omit<QueryGroupsArgs, 'scope'> & SelectedFields<GroupModel>
   ): Promise<GroupPage> {
-    const validatedParams = validateInput(getGroupsParamsSchema, params, 'getGroups method');
-    const result = await this.repositories.groupRepository.getGroups(validatedParams as any);
+    const context = 'GroupService.getGroups';
+    validateInput(getGroupsParamsSchema, params, context);
+    const result = await this.repositories.groupRepository.getGroups(params);
 
-    // Transform repository result to standard format for validation
     const transformedResult = {
       items: result.groups,
       totalCount: result.totalCount,
       hasNextPage: result.hasNextPage,
     };
 
-    const validatedResult = validateOutput(
+    validateOutput(
       createDynamicPaginatedSchema(groupSchema, params.requestedFields),
       transformedResult,
-      'getGroups method'
-    ) as any;
+      context
+    );
 
-    return {
-      groups: validatedResult.items,
-      hasNextPage: validatedResult.hasNextPage,
-      totalCount: validatedResult.totalCount,
-    };
+    return result;
   }
 
-  public async createGroup(params: MutationCreateGroupArgs): Promise<Group> {
-    const validatedParams = validateInput(createGroupParamsSchema, params, 'createGroup method');
-    const group = await this.repositories.groupRepository.createGroup(validatedParams);
+  public async createGroup(
+    params: Omit<CreateGroupInput, 'scope' | 'tagIds' | 'permissionIds'>,
+    transaction?: Transaction
+  ): Promise<Group> {
+    const context = 'GroupService.createGroup';
+    const validatedParams = validateInput(createGroupParamsSchema, params, context);
+    const { name, description } = validatedParams;
+
+    const group = await this.repositories.groupRepository.createGroup(
+      { name, description },
+      transaction
+    );
 
     const newValues = {
       id: group.id,
@@ -89,19 +97,28 @@ export class GroupService extends AuditService {
     };
 
     const metadata = {
-      source: 'create_group_mutation',
+      context,
     };
 
-    await this.logCreate(group.id, newValues, metadata);
+    await this.logCreate(group.id, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(groupSchema), group, 'createGroup method');
+    return validateOutput(createDynamicSingleSchema(groupSchema), group, context);
   }
 
-  public async updateGroup(params: MutationUpdateGroupArgs): Promise<Group> {
-    const validatedParams = validateInput(updateGroupParamsSchema, params, 'updateGroup method');
+  public async updateGroup(
+    params: MutationUpdateGroupArgs,
+    transaction?: Transaction
+  ): Promise<Group> {
+    const context = 'GroupService.updateGroup';
+    const validatedParams = validateInput(updateGroupParamsSchema, params, context);
 
-    const oldGroup = await this.getGroup(validatedParams.id);
-    const updatedGroup = await this.repositories.groupRepository.updateGroup(validatedParams);
+    const { id, input } = validatedParams;
+
+    const oldGroup = await this.getGroup(id);
+    const updatedGroup = await this.repositories.groupRepository.updateGroup(
+      { id, input },
+      transaction
+    );
 
     const oldValues = {
       id: oldGroup.id,
@@ -120,29 +137,29 @@ export class GroupService extends AuditService {
     };
 
     const metadata = {
-      source: 'update_group_mutation',
+      context,
     };
 
-    await this.logUpdate(updatedGroup.id, oldValues, newValues, metadata);
+    await this.logUpdate(updatedGroup.id, oldValues, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(groupSchema),
-      updatedGroup,
-      'updateGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(groupSchema), updatedGroup, context);
   }
 
   public async deleteGroup(
-    params: MutationDeleteGroupArgs & { hardDelete?: boolean }
+    params: Omit<MutationDeleteGroupArgs, 'scope'> & DeleteParams,
+    transaction?: Transaction
   ): Promise<Group> {
-    const validatedParams = validateInput(deleteGroupParamsSchema, params, 'deleteGroup method');
+    const context = 'GroupService.deleteGroup';
+    const validatedParams = validateInput(deleteGroupParamsSchema, params, context);
 
-    const oldGroup = await this.getGroup(validatedParams.id);
-    const isHardDelete = params.hardDelete === true;
+    const { id, hardDelete } = validatedParams;
+
+    const oldGroup = await this.getGroup(id);
+    const isHardDelete = hardDelete === true;
 
     const deletedGroup = isHardDelete
-      ? await this.repositories.groupRepository.hardDeleteGroup(validatedParams)
-      : await this.repositories.groupRepository.softDeleteGroup(validatedParams);
+      ? await this.repositories.groupRepository.hardDeleteGroup(validatedParams, transaction)
+      : await this.repositories.groupRepository.softDeleteGroup(validatedParams, transaction);
 
     const oldValues = {
       id: oldGroup.id,
@@ -152,27 +169,21 @@ export class GroupService extends AuditService {
       updatedAt: oldGroup.updatedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_group_mutation',
-      };
-      await this.logHardDelete(deletedGroup.id, oldValues, metadata);
+      await this.logHardDelete(deletedGroup.id, oldValues, metadata, transaction);
     } else {
       const newValues = {
         ...oldValues,
         deletedAt: deletedGroup.deletedAt,
       };
-
-      const metadata = {
-        source: 'soft_delete_group_mutation',
-      };
-      await this.logSoftDelete(deletedGroup.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(deletedGroup.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(groupSchema),
-      deletedGroup,
-      'deleteGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(groupSchema), deletedGroup, context);
   }
 }

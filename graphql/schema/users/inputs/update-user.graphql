@@ -1,4 +1,6 @@
 input UpdateUserInput {
   name: String!
   email: String!
+  tagIds: [ID!]
+  roleIds: [ID!]
 }

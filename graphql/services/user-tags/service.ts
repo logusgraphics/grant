@@ -1,22 +1,25 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import {
-  QueryUserTagsArgs,
-  MutationAddUserTagArgs,
-  MutationRemoveUserTagArgs,
-  UserTag,
-} from '@/graphql/generated/types';
+import { AddUserTagInput, RemoveUserTagInput, UserTag } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { userTagsAuditLogs } from '@/graphql/repositories/user-tags/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
-  getUserTagsParamsSchema,
-  addUserTagParamsSchema,
-  removeUserTagParamsSchema,
   userTagSchema,
+  queryUserTagsArgsSchema,
+  addUserTagInputSchema,
+  removeUserTagInputSchema,
+  getUserTagIntersectionInputSchema,
 } from './schemas';
 
 export class UserTagService extends AuditService {
@@ -59,31 +62,45 @@ export class UserTagService extends AuditService {
     return existingUserTags.some((ut) => ut.tagId === tagId);
   }
 
-  public async getUserTags(params: Omit<QueryUserTagsArgs, 'scope'>): Promise<UserTag[]> {
-    const validatedParams = validateInput(getUserTagsParamsSchema, params, 'getUserTags method');
+  public async getUserTags(params: { userId: string }): Promise<UserTag[]> {
+    const context = 'UserTagService.getUserTags';
+    const validatedParams = validateInput(queryUserTagsArgsSchema, params, context);
 
     await this.userExists(validatedParams.userId);
 
     const result = await this.repositories.userTagRepository.getUserTags({
       userId: validatedParams.userId,
     });
-    return validateOutput(
-      createDynamicSingleSchema(userTagSchema).array(),
-      result,
-      'getUserTags method'
-    );
+    return validateOutput(createDynamicSingleSchema(userTagSchema).array(), result, context);
   }
 
-  public async addUserTag(params: MutationAddUserTagArgs): Promise<UserTag> {
-    const validatedParams = validateInput(addUserTagParamsSchema, params, 'addUserTag method');
+  public async getUserTagIntersection(userIds: string[], tagIds: string[]): Promise<UserTag[]> {
+    const context = 'UserTagService.getUserTagIntersection';
+    validateInput(getUserTagIntersectionInputSchema, { userIds, tagIds }, context);
 
-    const hasTag = await this.userHasTag(validatedParams.input.userId, validatedParams.input.tagId);
+    const result = await this.repositories.userTagRepository.getUserTagIntersection({
+      userIds,
+      tagIds,
+    });
+
+    return validateOutput(createDynamicSingleSchema(userTagSchema).array(), result, context);
+  }
+
+  public async addUserTag(params: AddUserTagInput, transaction?: Transaction): Promise<UserTag> {
+    const context = 'UserTagService.addUserTag';
+    const validatedParams = validateInput(addUserTagInputSchema, params, context);
+    const { userId, tagId } = validatedParams;
+
+    const hasTag = await this.userHasTag(userId, tagId);
 
     if (hasTag) {
       throw new Error('User already has this tag');
     }
 
-    const userTag = await this.repositories.userTagRepository.addUserTag(validatedParams);
+    const userTag = await this.repositories.userTagRepository.addUserTag(
+      validatedParams,
+      transaction
+    );
 
     const newValues = {
       id: userTag.id,
@@ -94,24 +111,23 @@ export class UserTagService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_user_tag_mutation',
+      context,
     };
 
-    await this.logCreate(userTag.id, newValues, metadata);
+    await this.logCreate(userTag.id, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(userTagSchema), userTag, 'addUserTag method');
+    return validateOutput(createDynamicSingleSchema(userTagSchema), userTag, context);
   }
 
   public async removeUserTag(
-    params: MutationRemoveUserTagArgs & { hardDelete?: boolean }
+    params: RemoveUserTagInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<UserTag> {
-    const validatedParams = validateInput(
-      removeUserTagParamsSchema,
-      params,
-      'removeUserTag method'
-    );
+    const context = 'UserTagService.removeUserTag';
+    const validatedParams = validateInput(removeUserTagInputSchema, params, context);
+    const { userId, tagId, hardDelete } = validatedParams;
 
-    const hasTag = await this.userHasTag(validatedParams.input.userId, validatedParams.input.tagId);
+    const hasTag = await this.userHasTag(userId, tagId);
 
     if (!hasTag) {
       throw new Error('User does not have this tag');
@@ -120,8 +136,8 @@ export class UserTagService extends AuditService {
     const isHardDelete = params.hardDelete === true;
 
     const userTag = isHardDelete
-      ? await this.repositories.userTagRepository.hardDeleteUserTag(validatedParams)
-      : await this.repositories.userTagRepository.softDeleteUserTag(validatedParams);
+      ? await this.repositories.userTagRepository.hardDeleteUserTag(validatedParams, transaction)
+      : await this.repositories.userTagRepository.softDeleteUserTag(validatedParams, transaction);
 
     const oldValues = {
       id: userTag.id,
@@ -136,22 +152,17 @@ export class UserTagService extends AuditService {
       deletedAt: userTag.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_user_tag_mutation',
-      };
-      await this.logHardDelete(userTag.id, oldValues, metadata);
+      await this.logHardDelete(userTag.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_user_tag_mutation',
-      };
-      await this.logSoftDelete(userTag.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(userTag.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(userTagSchema),
-      userTag,
-      'deleteUserTag method'
-    );
+    return validateOutput(createDynamicSingleSchema(userTagSchema), userTag, context);
   }
 }

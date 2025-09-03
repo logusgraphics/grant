@@ -1,22 +1,29 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  QueryPermissionTagsArgs,
-  MutationAddPermissionTagArgs,
-  MutationRemovePermissionTagArgs,
+  AddPermissionTagInput,
   PermissionTag,
+  RemovePermissionTagInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { permissionTagAuditLogs } from '@/graphql/repositories/permission-tags/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
   getPermissionTagsParamsSchema,
-  addPermissionTagParamsSchema,
-  removePermissionTagParamsSchema,
   permissionTagSchema,
+  addPermissionTagInputSchema,
+  removePermissionTagInputSchema,
+  getPermissionTagIntersectionParamsSchema,
 } from './schemas';
 
 export class PermissionTagService extends AuditService {
@@ -61,44 +68,61 @@ export class PermissionTagService extends AuditService {
     return existingPermissionTags.some((pt) => pt.tagId === tagId);
   }
 
-  public async getPermissionTags(
-    params: Omit<QueryPermissionTagsArgs, 'scope'>
-  ): Promise<PermissionTag[]> {
-    const validatedParams = validateInput(
-      getPermissionTagsParamsSchema,
-      params,
-      'getPermissionTags method'
-    );
+  public async getPermissionTags(params: { permissionId: string }): Promise<PermissionTag[]> {
+    const context = 'PermissionTagService.getPermissionTags';
+    const validatedParams = validateInput(getPermissionTagsParamsSchema, params, context);
 
-    await this.permissionExists(validatedParams.permissionId);
+    const { permissionId } = validatedParams;
 
-    const result =
-      await this.repositories.permissionTagRepository.getPermissionTags(validatedParams);
-    return validateOutput(
-      createDynamicSingleSchema(permissionTagSchema).array(),
-      result,
-      'getPermissionTags method'
-    );
+    await this.permissionExists(permissionId);
+
+    const result = await this.repositories.permissionTagRepository.getPermissionTags({
+      permissionId,
+    });
+
+    return validateOutput(createDynamicSingleSchema(permissionTagSchema).array(), result, context);
   }
 
-  public async addPermissionTag(params: MutationAddPermissionTagArgs): Promise<PermissionTag> {
+  public async getPermissionTagIntersection(params: {
+    permissionIds: string[];
+    tagIds: string[];
+  }): Promise<PermissionTag[]> {
+    const context = 'PermissionTagService.getPermissionTagIntersection';
     const validatedParams = validateInput(
-      addPermissionTagParamsSchema,
+      getPermissionTagIntersectionParamsSchema,
       params,
-      'addPermissionTag method'
+      context
     );
 
-    const hasTag = await this.permissionHasTag(
-      validatedParams.input.permissionId,
-      validatedParams.input.tagId
-    );
+    const { permissionIds, tagIds } = validatedParams;
+
+    const result = await this.repositories.permissionTagRepository.getPermissionTagIntersection({
+      permissionIds,
+      tagIds,
+    });
+
+    return validateOutput(createDynamicSingleSchema(permissionTagSchema).array(), result, context);
+  }
+
+  public async addPermissionTag(
+    params: Omit<AddPermissionTagInput, 'scope'>,
+    transaction?: Transaction
+  ): Promise<PermissionTag> {
+    const context = 'PermissionTagService.addPermissionTag';
+    const validatedParams = validateInput(addPermissionTagInputSchema, params, context);
+
+    const { permissionId, tagId } = validatedParams;
+
+    const hasTag = await this.permissionHasTag(permissionId, tagId);
 
     if (hasTag) {
       throw new Error('Permission already has this tag');
     }
 
-    const permissionTag =
-      await this.repositories.permissionTagRepository.addPermissionTag(validatedParams);
+    const permissionTag = await this.repositories.permissionTagRepository.addPermissionTag(
+      { permissionId, tagId },
+      transaction
+    );
 
     const newValues = {
       id: permissionTag.id,
@@ -109,41 +133,40 @@ export class PermissionTagService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_permission_tag_mutation',
+      context,
     };
 
-    await this.logCreate(permissionTag.id, newValues, metadata);
+    await this.logCreate(permissionTag.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(permissionTagSchema),
-      permissionTag,
-      'addPermissionTag method'
-    );
+    return validateOutput(createDynamicSingleSchema(permissionTagSchema), permissionTag, context);
   }
 
   public async removePermissionTag(
-    params: MutationRemovePermissionTagArgs & { hardDelete?: boolean }
+    params: Omit<RemovePermissionTagInput, 'scope'> & DeleteParams,
+    transaction?: Transaction
   ): Promise<PermissionTag> {
-    const validatedParams = validateInput(
-      removePermissionTagParamsSchema,
-      params,
-      'removePermissionTag method'
-    );
+    const context = 'PermissionTagService.removePermissionTag';
+    const validatedParams = validateInput(removePermissionTagInputSchema, params, context);
 
-    const hasTag = await this.permissionHasTag(
-      validatedParams.input.permissionId,
-      validatedParams.input.tagId
-    );
+    const { permissionId, tagId, hardDelete } = validatedParams;
+
+    const hasTag = await this.permissionHasTag(permissionId, tagId);
 
     if (!hasTag) {
       throw new Error('Permission does not have this tag');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const permissionTag = isHardDelete
-      ? await this.repositories.permissionTagRepository.hardDeletePermissionTag(validatedParams)
-      : await this.repositories.permissionTagRepository.softDeletePermissionTag(validatedParams);
+      ? await this.repositories.permissionTagRepository.hardDeletePermissionTag(
+          validatedParams,
+          transaction
+        )
+      : await this.repositories.permissionTagRepository.softDeletePermissionTag(
+          validatedParams,
+          transaction
+        );
 
     const oldValues = {
       id: permissionTag.id,
@@ -158,22 +181,17 @@ export class PermissionTagService extends AuditService {
       deletedAt: permissionTag.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_permission_tag_mutation',
-      };
-      await this.logHardDelete(permissionTag.id, oldValues, metadata);
+      await this.logHardDelete(permissionTag.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_permission_tag_mutation',
-      };
-      await this.logSoftDelete(permissionTag.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(permissionTag.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(permissionTagSchema),
-      permissionTag,
-      'removePermissionTag method'
-    );
+    return validateOutput(createDynamicSingleSchema(permissionTagSchema), permissionTag, context);
   }
 }

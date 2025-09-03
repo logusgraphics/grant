@@ -1,22 +1,28 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  MutationAddOrganizationPermissionArgs,
-  MutationRemoveOrganizationPermissionArgs,
+  AddOrganizationPermissionInput,
   OrganizationPermission,
-  QueryOrganizationPermissionsArgs,
+  RemoveOrganizationPermissionInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { organizationPermissionsAuditLogs } from '@/graphql/repositories/organization-permissions/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
-  getOrganizationPermissionsParamsSchema,
-  addOrganizationPermissionParamsSchema,
-  removeOrganizationPermissionParamsSchema,
   organizationPermissionSchema,
+  addOrganizationPermissionInputSchema,
+  queryOrganizationPermissionsArgsSchema,
+  removeOrganizationPermissionInputSchema,
 } from './schemas';
 
 export class OrganizationPermissionService extends AuditService {
@@ -64,41 +70,41 @@ export class OrganizationPermissionService extends AuditService {
     return existingOrganizationPermissions.some((op) => op.permissionId === permissionId);
   }
 
-  public async getOrganizationPermissions(
-    params: Omit<QueryOrganizationPermissionsArgs, 'scope'>
-  ): Promise<OrganizationPermission[]> {
-    const validatedParams = validateInput(
-      getOrganizationPermissionsParamsSchema,
-      params,
-      'getOrganizationPermissions method'
-    );
+  public async getOrganizationPermissions(params: {
+    organizationId: string;
+  }): Promise<OrganizationPermission[]> {
+    const context = 'OrganizationPermissionService.getOrganizationPermissions';
+    const validatedParams = validateInput(queryOrganizationPermissionsArgsSchema, params, context);
 
-    await this.organizationExists(validatedParams.organizationId);
+    const { organizationId } = validatedParams;
+
+    await this.organizationExists(organizationId);
 
     const result =
-      await this.repositories.organizationPermissionRepository.getOrganizationPermissions(
-        validatedParams
-      );
+      await this.repositories.organizationPermissionRepository.getOrganizationPermissions({
+        organizationId,
+      });
+
     return validateOutput(
       createDynamicSingleSchema(organizationPermissionSchema).array(),
       result,
-      'getOrganizationPermissions method'
+      context
     );
   }
 
   public async addOrganizationPermission(
-    params: MutationAddOrganizationPermissionArgs
+    params: AddOrganizationPermissionInput,
+    transaction?: Transaction
   ): Promise<OrganizationPermission> {
-    const validatedParams = validateInput(
-      addOrganizationPermissionParamsSchema,
-      params,
-      'addOrganizationPermission method'
-    );
+    const context = 'OrganizationPermissionService.addOrganizationPermission';
+    const validatedParams = validateInput(addOrganizationPermissionInputSchema, params, context);
 
-    const hasPermission = await this.organizationHasPermission(
-      validatedParams.input.organizationId,
-      validatedParams.input.permissionId
-    );
+    const { organizationId, permissionId } = validatedParams;
+
+    await this.organizationExists(organizationId);
+    await this.permissionExists(permissionId);
+
+    const hasPermission = await this.organizationHasPermission(organizationId, permissionId);
 
     if (hasPermission) {
       throw new Error('Organization already has this permission');
@@ -106,8 +112,9 @@ export class OrganizationPermissionService extends AuditService {
 
     const result =
       await this.repositories.organizationPermissionRepository.addOrganizationPermission(
-        validatedParams.input.organizationId,
-        validatedParams.input.permissionId
+        organizationId,
+        permissionId,
+        transaction
       );
 
     const newValues = {
@@ -119,46 +126,41 @@ export class OrganizationPermissionService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_organization_permission_mutation',
+      context,
     };
 
-    await this.logCreate(result.id, newValues, metadata);
+    await this.logCreate(result.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(organizationPermissionSchema),
-      result,
-      'addOrganizationPermission method'
-    );
+    return validateOutput(createDynamicSingleSchema(organizationPermissionSchema), result, context);
   }
 
   public async removeOrganizationPermission(
-    params: MutationRemoveOrganizationPermissionArgs & { hardDelete?: boolean }
+    params: RemoveOrganizationPermissionInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<OrganizationPermission> {
-    const validatedParams = validateInput(
-      removeOrganizationPermissionParamsSchema,
-      params,
-      'removeOrganizationPermission method'
-    );
+    const context = 'OrganizationPermissionService.removeOrganizationPermission';
+    const validatedParams = validateInput(removeOrganizationPermissionInputSchema, params, context);
 
-    const hasPermission = await this.organizationHasPermission(
-      validatedParams.input.organizationId,
-      validatedParams.input.permissionId
-    );
+    const { organizationId, permissionId, hardDelete } = validatedParams;
+
+    const hasPermission = await this.organizationHasPermission(organizationId, permissionId);
 
     if (!hasPermission) {
       throw new Error('Organization does not have this permission');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const result = isHardDelete
       ? await this.repositories.organizationPermissionRepository.hardDeleteOrganizationPermission(
-          validatedParams.input.organizationId,
-          validatedParams.input.permissionId
+          organizationId,
+          permissionId,
+          transaction
         )
       : await this.repositories.organizationPermissionRepository.softDeleteOrganizationPermission(
-          validatedParams.input.organizationId,
-          validatedParams.input.permissionId
+          organizationId,
+          permissionId,
+          transaction
         );
 
     if (!result) {
@@ -178,22 +180,17 @@ export class OrganizationPermissionService extends AuditService {
       deletedAt: result.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_organization_permission_mutation',
-      };
-      await this.logHardDelete(result.id, oldValues, metadata);
+      await this.logHardDelete(result.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_organization_permission_mutation',
-      };
-      await this.logSoftDelete(result.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(result.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(organizationPermissionSchema),
-      result,
-      'removeOrganizationPermission method'
-    );
+    return validateOutput(createDynamicSingleSchema(organizationPermissionSchema), result, context);
   }
 }

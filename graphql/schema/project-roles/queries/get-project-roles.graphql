@@ -1,3 +1,0 @@
-extend type Query {
-  projectRoles(projectId: ID!): [ProjectRole!]!
-}

@@ -5,6 +5,6 @@ export const updateGroupResolver: MutationResolvers['updateGroup'] = async (
   { id, input },
   context
 ) => {
-  const updatedGroup = await context.services.groups.updateGroup({ id, input });
+  const updatedGroup = await context.controllers.groups.updateGroup({ id, input });
   return updatedGroup;
 };

@@ -2,17 +2,18 @@ import {
   Role,
   QueryRolesArgs,
   RolePage,
-  MutationCreateRoleArgs,
   MutationUpdateRoleArgs,
   MutationDeleteRoleArgs,
+  RoleTag,
+  RoleGroup,
+  CreateRoleInput,
 } from '@/graphql/generated/types';
-import {
-  EntityRepository,
-  BaseQueryArgs,
-  BaseCreateArgs,
-  BaseUpdateArgs,
-  BaseDeleteArgs,
-} from '@/graphql/repositories/common';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
+import { EntityRepository, RelationsConfig } from '@/graphql/repositories/common';
+import { SelectedFields } from '@/graphql/services/common';
+
+import { groups } from '../groups/schema';
+import { tags } from '../tags/schema';
 
 import { RoleModel, roles } from './schema';
 
@@ -21,25 +22,23 @@ export class RoleRepository extends EntityRepository<RoleModel, Role> {
   protected schemaName = 'roles' as const;
   protected searchFields: Array<keyof RoleModel> = ['name', 'description'];
   protected defaultSortField: keyof RoleModel = 'createdAt';
+  protected relations: RelationsConfig<Role> = {
+    tags: {
+      field: 'tagIds',
+      table: tags,
+      extract: (v: Array<RoleTag>) => v.map(({ tag }: RoleTag) => tag),
+    },
+    groups: {
+      field: 'groupIds',
+      table: groups,
+      extract: (v: Array<RoleGroup>) => v.map(({ group }: RoleGroup) => group),
+    },
+  };
 
   public async getRoles(
-    params: Omit<QueryRolesArgs, 'scope'> & { requestedFields?: Array<keyof RoleModel> }
+    params: Omit<QueryRolesArgs, 'scope' | 'tagIds'> & SelectedFields<RoleModel>
   ): Promise<RolePage> {
-    const baseParams: BaseQueryArgs<RoleModel> = {
-      ids: params.ids || undefined,
-      page: params.page || undefined,
-      limit: params.limit || undefined,
-      search: params.search || undefined,
-      sort: params.sort
-        ? {
-            field: params.sort.field as keyof RoleModel,
-            order: params.sort.order,
-          }
-        : undefined,
-      requestedFields: params.requestedFields as Array<keyof RoleModel> | undefined,
-    };
-
-    const result = await this.query(baseParams);
+    const result = await this.query(params);
 
     return {
       roles: result.items,
@@ -48,40 +47,31 @@ export class RoleRepository extends EntityRepository<RoleModel, Role> {
     };
   }
 
-  public async createRole(params: MutationCreateRoleArgs): Promise<Role> {
-    const baseParams: BaseCreateArgs = {
-      name: params.input.name,
-      description: params.input.description,
-    };
-
-    return this.create(baseParams);
+  public async createRole(
+    params: Omit<CreateRoleInput, 'scope' | 'tagIds' | 'groupIds'>,
+    transaction?: Transaction
+  ): Promise<Role> {
+    return this.create(params, transaction);
   }
 
-  public async updateRole(params: MutationUpdateRoleArgs): Promise<Role> {
-    const baseParams: BaseUpdateArgs = {
-      id: params.id,
-      input: {
-        name: params.input.name,
-        description: params.input.description,
-      },
-    };
-
-    return this.update(baseParams);
+  public async updateRole(
+    params: MutationUpdateRoleArgs,
+    transaction?: Transaction
+  ): Promise<Role> {
+    return this.update(params, transaction);
   }
 
-  public async softDeleteRole(params: MutationDeleteRoleArgs): Promise<Role> {
-    const baseParams: BaseDeleteArgs = {
-      id: params.id,
-    };
-
-    return this.softDelete(baseParams);
+  public async softDeleteRole(
+    params: Omit<MutationDeleteRoleArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Role> {
+    return this.softDelete(params, transaction);
   }
 
-  public async hardDeleteRole(params: MutationDeleteRoleArgs): Promise<Role> {
-    const baseParams: BaseDeleteArgs = {
-      id: params.id,
-    };
-
-    return this.hardDelete(baseParams);
+  public async hardDeleteRole(
+    params: Omit<MutationDeleteRoleArgs, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Role> {
+    return this.hardDelete(params, transaction);
   }
 }

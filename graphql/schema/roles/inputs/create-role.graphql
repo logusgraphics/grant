@@ -1,4 +1,7 @@
 input CreateRoleInput {
   name: String!
   description: String
+  tagIds: [ID!]
+  groupIds: [ID!]
+  scope: Scope!
 }

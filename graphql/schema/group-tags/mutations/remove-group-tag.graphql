@@ -1,3 +1,0 @@
-extend type Mutation {
-  removeGroupTag(input: RemoveGroupTagInput!): GroupTag!
-}

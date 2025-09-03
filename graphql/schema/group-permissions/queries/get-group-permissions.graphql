@@ -1,3 +1,0 @@
-extend type Query {
-  groupPermissions(scope: Scope!, groupId: ID!): [GroupPermission!]!
-}

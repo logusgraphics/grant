@@ -1,22 +1,25 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import {
-  QueryRoleTagsArgs,
-  MutationAddRoleTagArgs,
-  MutationRemoveRoleTagArgs,
-  RoleTag,
-} from '@/graphql/generated/types';
+import { AddRoleTagInput, RemoveRoleTagInput, RoleTag } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { roleTagAuditLogs } from '@/graphql/repositories/role-tags/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
   getRoleTagsParamsSchema,
-  addRoleTagParamsSchema,
-  removeRoleTagParamsSchema,
   roleTagSchema,
+  addRoleTagInputSchema,
+  removeRoleTagInputSchema,
+  getRoleTagIntersectionInputSchema,
 } from './schemas';
 
 export class RoleTagService extends AuditService {
@@ -60,29 +63,47 @@ export class RoleTagService extends AuditService {
     return existingRoleTags.some((rt) => rt.tagId === tagId);
   }
 
-  public async getRoleTags(params: Omit<QueryRoleTagsArgs, 'scope'>): Promise<RoleTag[]> {
-    const validatedParams = validateInput(getRoleTagsParamsSchema, params, 'getRoleTags method');
+  public async getRoleTags(params: { roleId: string }): Promise<RoleTag[]> {
+    const context = 'RoleTagService.getRoleTags';
+    const validatedParams = validateInput(getRoleTagsParamsSchema, params, context);
+    const { roleId } = validatedParams;
 
-    await this.roleExists(validatedParams.roleId);
+    await this.roleExists(roleId);
 
-    const result = await this.repositories.roleTagRepository.getRoleTags(validatedParams);
-    return validateOutput(
-      createDynamicSingleSchema(roleTagSchema).array(),
-      result,
-      'getRoleTags method'
-    );
+    const result = await this.repositories.roleTagRepository.getRoleTags(params);
+    return validateOutput(createDynamicSingleSchema(roleTagSchema).array(), result, context);
   }
 
-  public async addRoleTag(params: MutationAddRoleTagArgs): Promise<RoleTag> {
-    const validatedParams = validateInput(addRoleTagParamsSchema, params, 'addRoleTag method');
+  public async getRoleTagIntersection(params: {
+    roleIds: string[];
+    tagIds: string[];
+  }): Promise<RoleTag[]> {
+    const context = 'RoleTagService.getRoleTagIntersection';
+    const validatedParams = validateInput(getRoleTagIntersectionInputSchema, params, context);
+    const { roleIds, tagIds } = validatedParams;
 
-    const hasTag = await this.roleHasTag(validatedParams.input.roleId, validatedParams.input.tagId);
+    const roleTags = await this.repositories.roleTagRepository.getRoleTagIntersection({
+      roleIds,
+      tagIds,
+    });
+    return validateOutput(roleTagSchema.array(), roleTags, context);
+  }
+
+  public async addRoleTag(params: AddRoleTagInput, transaction?: Transaction): Promise<RoleTag> {
+    const context = 'RoleTagService.addRoleTag';
+    const validatedParams = validateInput(addRoleTagInputSchema, params, context);
+    const { roleId, tagId } = validatedParams;
+
+    const hasTag = await this.roleHasTag(roleId, tagId);
 
     if (hasTag) {
       throw new Error('Role already has this tag');
     }
 
-    const roleTag = await this.repositories.roleTagRepository.addRoleTag(validatedParams);
+    const roleTag = await this.repositories.roleTagRepository.addRoleTag(
+      { roleId, tagId },
+      transaction
+    );
 
     const newValues = {
       id: roleTag.id,
@@ -93,34 +114,33 @@ export class RoleTagService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_role_tag_mutation',
+      context,
     };
 
-    await this.logCreate(roleTag.id, newValues, metadata);
+    await this.logCreate(roleTag.id, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(roleTagSchema), roleTag, 'addRoleTag method');
+    return validateOutput(createDynamicSingleSchema(roleTagSchema), roleTag, context);
   }
 
   public async removeRoleTag(
-    params: MutationRemoveRoleTagArgs & { hardDelete?: boolean }
+    params: RemoveRoleTagInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<RoleTag> {
-    const validatedParams = validateInput(
-      removeRoleTagParamsSchema,
-      params,
-      'removeRoleTag method'
-    );
+    const context = 'RoleTagService.removeRoleTag';
+    const validatedParams = validateInput(removeRoleTagInputSchema, params, context);
+    const { roleId, tagId, hardDelete } = validatedParams;
 
-    const hasTag = await this.roleHasTag(validatedParams.input.roleId, validatedParams.input.tagId);
+    const hasTag = await this.roleHasTag(roleId, tagId);
 
     if (!hasTag) {
       throw new Error('Role does not have this tag');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const roleTag = isHardDelete
-      ? await this.repositories.roleTagRepository.hardDeleteRoleTag(validatedParams)
-      : await this.repositories.roleTagRepository.softDeleteRoleTag(validatedParams);
+      ? await this.repositories.roleTagRepository.hardDeleteRoleTag(validatedParams, transaction)
+      : await this.repositories.roleTagRepository.softDeleteRoleTag(validatedParams, transaction);
 
     const oldValues = {
       id: roleTag.id,
@@ -135,22 +155,17 @@ export class RoleTagService extends AuditService {
       deletedAt: roleTag.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_role_tag_mutation',
-      };
-      await this.logHardDelete(roleTag.id, oldValues, metadata);
+      await this.logHardDelete(roleTag.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_role_tag_mutation',
-      };
-      await this.logSoftDelete(roleTag.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(roleTag.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(roleTagSchema),
-      roleTag,
-      'removeRoleTag method'
-    );
+    return validateOutput(createDynamicSingleSchema(roleTagSchema), roleTag, context);
   }
 }

@@ -79,8 +79,8 @@ export class ProjectService extends AuditService {
     params: Omit<CreateProjectInput, 'organizationId' | 'tagIds'>,
     transaction?: Transaction
   ): Promise<Project> {
-    const validationContext = 'ProjectService.createProject';
-    const validatedParams = validateInput(createProjectParamsSchema, params, validationContext);
+    const context = 'ProjectService.createProject';
+    const validatedParams = validateInput(createProjectParamsSchema, params, context);
     const { name, description } = validatedParams;
 
     const project = await this.repositories.projectRepository.createProject(
@@ -98,12 +98,12 @@ export class ProjectService extends AuditService {
     };
 
     const metadata = {
-      source: 'create_project_with_relations_mutation',
+      context,
     };
 
     await this.logCreate(project.id, newValues, metadata, transaction);
 
-    return validateOutput(createDynamicSingleSchema(projectSchema), project, validationContext);
+    return validateOutput(createDynamicSingleSchema(projectSchema), project, context);
   }
 
   public async updateProject(

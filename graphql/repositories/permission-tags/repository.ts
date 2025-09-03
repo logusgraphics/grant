@@ -1,9 +1,9 @@
 import {
-  QueryPermissionTagsArgs,
-  MutationAddPermissionTagArgs,
-  MutationRemovePermissionTagArgs,
+  AddPermissionTagInput,
   PermissionTag,
+  RemovePermissionTagInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { PermissionTagModel, permissionTags } from './schema';
@@ -24,34 +24,53 @@ export class PermissionTagRepository extends PivotRepository<PermissionTagModel,
     };
   }
 
-  public async getPermissionTags(
-    params: Omit<QueryPermissionTagsArgs, 'scope'>
-  ): Promise<PermissionTag[]> {
+  public async getPermissionTags(params: { permissionId: string }): Promise<PermissionTag[]> {
     return this.query({ parentId: params.permissionId });
   }
 
-  public async addPermissionTag(params: MutationAddPermissionTagArgs): Promise<PermissionTag> {
-    return this.add({
-      parentId: params.input.permissionId,
-      relatedId: params.input.tagId,
-    });
+  public async getPermissionTagIntersection(params: {
+    permissionIds: string[];
+    tagIds: string[];
+  }): Promise<PermissionTag[]> {
+    return this.queryIntersection({ parentIds: params.permissionIds, relatedIds: params.tagIds });
+  }
+
+  public async addPermissionTag(
+    params: AddPermissionTagInput,
+    transaction?: Transaction
+  ): Promise<PermissionTag> {
+    return this.add(
+      {
+        parentId: params.permissionId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 
   public async softDeletePermissionTag(
-    params: MutationRemovePermissionTagArgs
+    params: RemovePermissionTagInput,
+    transaction?: Transaction
   ): Promise<PermissionTag> {
-    return this.softDelete({
-      parentId: params.input.permissionId,
-      relatedId: params.input.tagId,
-    });
+    return this.softDelete(
+      {
+        parentId: params.permissionId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 
   public async hardDeletePermissionTag(
-    params: MutationRemovePermissionTagArgs
+    params: RemovePermissionTagInput,
+    transaction?: Transaction
   ): Promise<PermissionTag> {
-    return this.hardDelete({
-      parentId: params.input.permissionId,
-      relatedId: params.input.tagId,
-    });
+    return this.hardDelete(
+      {
+        parentId: params.permissionId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 }

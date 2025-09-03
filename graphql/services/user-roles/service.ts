@@ -1,22 +1,24 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import {
-  QueryUserRolesArgs,
-  MutationAddUserRoleArgs,
-  MutationRemoveUserRoleArgs,
-  UserRole,
-} from '@/graphql/generated/types';
+import { AddUserRoleInput, RemoveUserRoleInput, UserRole } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { userRolesAuditLogs } from '@/graphql/repositories/user-roles/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
-  getUserRolesParamsSchema,
-  addUserRoleParamsSchema,
-  removeUserRoleParamsSchema,
   userRoleSchema,
+  queryUserRolesArgsSchema,
+  addUserRoleInputSchema,
+  removeUserRoleInputSchema,
 } from './schemas';
 
 export class UserRoleService extends AuditService {
@@ -60,34 +62,34 @@ export class UserRoleService extends AuditService {
     return existingUserRoles.some((ur) => ur.roleId === roleId);
   }
 
-  public async getUserRoles(params: Omit<QueryUserRolesArgs, 'scope'>): Promise<UserRole[]> {
-    const validatedParams = validateInput(getUserRolesParamsSchema, params, 'getUserRoles method');
+  public async getUserRoles(params: { userId: string }): Promise<UserRole[]> {
+    const context = 'UserRoleService.getUserRoles';
+    const validatedParams = validateInput(queryUserRolesArgsSchema, params, context);
+    const { userId } = validatedParams;
 
-    await this.userExists(validatedParams.userId);
+    await this.userExists(userId);
 
     const result = await this.repositories.userRoleRepository.getUserRoles({
-      userId: validatedParams.userId,
+      userId,
     });
-    return validateOutput(
-      createDynamicSingleSchema(userRoleSchema).array(),
-      result,
-      'getUserRoles method'
-    );
+    return validateOutput(createDynamicSingleSchema(userRoleSchema).array(), result, context);
   }
 
-  public async addUserRole(params: MutationAddUserRoleArgs): Promise<UserRole> {
-    const validatedParams = validateInput(addUserRoleParamsSchema, params, 'addUserRole method');
+  public async addUserRole(params: AddUserRoleInput, transaction?: Transaction): Promise<UserRole> {
+    const context = 'UserRoleService.addUserRole';
+    const validatedParams = validateInput(addUserRoleInputSchema, params, context);
+    const { userId, roleId } = validatedParams;
 
-    const hasRole = await this.userHasRole(
-      validatedParams.input.userId,
-      validatedParams.input.roleId
-    );
+    const hasRole = await this.userHasRole(userId, roleId);
 
     if (hasRole) {
       throw new Error('User already has this role');
     }
 
-    const userRole = await this.repositories.userRoleRepository.addUserRole(validatedParams);
+    const userRole = await this.repositories.userRoleRepository.addUserRole(
+      validatedParams,
+      transaction
+    );
 
     const newValues = {
       id: userRole.id,
@@ -98,41 +100,33 @@ export class UserRoleService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_user_role_mutation',
+      context,
     };
 
-    await this.logCreate(userRole.id, newValues, metadata);
+    await this.logCreate(userRole.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(userRoleSchema),
-      userRole,
-      'addUserRole method'
-    );
+    return validateOutput(createDynamicSingleSchema(userRoleSchema), userRole, context);
   }
 
   public async removeUserRole(
-    params: MutationRemoveUserRoleArgs & { hardDelete?: boolean }
+    params: RemoveUserRoleInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<UserRole> {
-    const validatedParams = validateInput(
-      removeUserRoleParamsSchema,
-      params,
-      'removeUserRole method'
-    );
+    const context = 'UserRoleService.removeUserRole';
+    const validatedParams = validateInput(removeUserRoleInputSchema, params, context);
+    const { userId, roleId, hardDelete } = validatedParams;
 
-    const hasRole = await this.userHasRole(
-      validatedParams.input.userId,
-      validatedParams.input.roleId
-    );
+    const hasRole = await this.userHasRole(userId, roleId);
 
     if (!hasRole) {
       throw new Error('User does not have this role');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const userRole = isHardDelete
-      ? await this.repositories.userRoleRepository.hardDeleteUserRole(validatedParams)
-      : await this.repositories.userRoleRepository.softDeleteUserRole(validatedParams);
+      ? await this.repositories.userRoleRepository.hardDeleteUserRole(validatedParams, transaction)
+      : await this.repositories.userRoleRepository.softDeleteUserRole(validatedParams, transaction);
 
     const oldValues = {
       id: userRole.id,
@@ -147,22 +141,17 @@ export class UserRoleService extends AuditService {
       deletedAt: userRole.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_user_role_mutation',
-      };
-      await this.logHardDelete(userRole.id, oldValues, metadata);
+      await this.logHardDelete(userRole.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_user_role_mutation',
-      };
-      await this.logSoftDelete(userRole.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(userRole.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(userRoleSchema),
-      userRole,
-      'removeUserRole method'
-    );
+    return validateOutput(createDynamicSingleSchema(userRoleSchema), userRole, context);
   }
 }

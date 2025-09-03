@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { idSchema, scopeSchema } from '../common/schemas';
+import { deleteSchema, idSchema, scopeSchema } from '../common/schemas';
 
 export const queryOrganizationGroupsArgsSchema = z.object({
   scope: scopeSchema,
@@ -16,7 +16,7 @@ export const addOrganizationGroupInputSchema = z.object({
   groupId: idSchema.refine((groupId) => groupId.trim().length > 0, 'Group ID is required'),
 });
 
-export const removeOrganizationGroupInputSchema = z.object({
+export const removeOrganizationGroupInputSchema = deleteSchema.extend({
   organizationId: idSchema.refine(
     (organizationId) => organizationId.trim().length > 0,
     'Organization ID is required'

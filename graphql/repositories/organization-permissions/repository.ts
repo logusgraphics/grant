@@ -1,3 +1,5 @@
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
+
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -32,40 +34,43 @@ export class OrganizationPermissionRepository extends PivotRepository<
 
   public async addOrganizationPermission(
     organizationId: string,
-    permissionId: string
+    permissionId: string,
+    transaction?: Transaction
   ): Promise<OrganizationPermissionModel> {
     const baseParams: BasePivotAddArgs = {
       parentId: organizationId,
       relatedId: permissionId,
     };
 
-    const organizationPermission = await this.add(baseParams);
+    const organizationPermission = await this.add(baseParams, transaction);
     return organizationPermission;
   }
 
   public async softDeleteOrganizationPermission(
     organizationId: string,
-    permissionId: string
+    permissionId: string,
+    transaction?: Transaction
   ): Promise<OrganizationPermissionModel | null> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: organizationId,
       relatedId: permissionId,
     };
 
-    const organizationPermission = await this.softDelete(baseParams);
+    const organizationPermission = await this.softDelete(baseParams, transaction);
     return organizationPermission;
   }
 
   public async hardDeleteOrganizationPermission(
     organizationId: string,
-    permissionId: string
+    permissionId: string,
+    transaction?: Transaction
   ): Promise<OrganizationPermissionModel | null> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: organizationId,
       relatedId: permissionId,
     };
 
-    const organizationPermission = await this.hardDelete(baseParams);
+    const organizationPermission = await this.hardDelete(baseParams, transaction);
     return organizationPermission;
   }
 }

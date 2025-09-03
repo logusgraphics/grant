@@ -1,3 +1,0 @@
-extend type Query {
-  projectPermissions(projectId: ID!): [ProjectPermission!]!
-}

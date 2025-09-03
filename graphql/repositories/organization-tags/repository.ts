@@ -1,9 +1,9 @@
 import {
-  QueryOrganizationTagsArgs,
-  MutationAddOrganizationTagArgs,
-  MutationRemoveOrganizationTagArgs,
   OrganizationTag,
+  AddOrganizationTagInput,
+  RemoveOrganizationTagInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { OrganizationTagModel, organizationTags } from './schema';
@@ -27,34 +27,46 @@ export class OrganizationTagRepository extends PivotRepository<
     };
   }
 
-  public async getOrganizationTags(params: QueryOrganizationTagsArgs): Promise<OrganizationTag[]> {
+  public async getOrganizationTags(params: { organizationId: string }): Promise<OrganizationTag[]> {
     return this.query({ parentId: params.organizationId });
   }
 
   public async addOrganizationTag(
-    params: MutationAddOrganizationTagArgs
+    params: AddOrganizationTagInput,
+    transaction?: Transaction
   ): Promise<OrganizationTag> {
-    return this.add({
-      parentId: params.input.organizationId,
-      relatedId: params.input.tagId,
-    });
+    return this.add(
+      {
+        parentId: params.organizationId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 
   public async softDeleteOrganizationTag(
-    params: MutationRemoveOrganizationTagArgs
+    params: RemoveOrganizationTagInput,
+    transaction?: Transaction
   ): Promise<OrganizationTag> {
-    return this.softDelete({
-      parentId: params.input.organizationId,
-      relatedId: params.input.tagId,
-    });
+    return this.softDelete(
+      {
+        parentId: params.organizationId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 
   public async hardDeleteOrganizationTag(
-    params: MutationRemoveOrganizationTagArgs
+    params: RemoveOrganizationTagInput,
+    transaction?: Transaction
   ): Promise<OrganizationTag> {
-    return this.hardDelete({
-      parentId: params.input.organizationId,
-      relatedId: params.input.tagId,
-    });
+    return this.hardDelete(
+      {
+        parentId: params.organizationId,
+        relatedId: params.tagId,
+      },
+      transaction
+    );
   }
 }

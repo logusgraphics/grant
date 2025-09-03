@@ -1,4 +1,6 @@
 input UpdateRoleInput {
   name: String
   description: String
+  tagIds: [ID!]
+  groupIds: [ID!]
 }

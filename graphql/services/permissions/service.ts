@@ -2,12 +2,13 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
   QueryPermissionsArgs,
-  MutationCreatePermissionArgs,
   MutationUpdatePermissionArgs,
   MutationDeletePermissionArgs,
   Permission,
   PermissionPage,
+  CreatePermissionInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { permissionAuditLogs } from '@/graphql/repositories/permissions/schema';
 import { AuthenticatedUser } from '@/graphql/types';
@@ -18,6 +19,8 @@ import {
   validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  SelectedFields,
+  DeleteParams,
 } from '../common';
 
 import {
@@ -51,45 +54,39 @@ export class PermissionService extends AuditService {
   }
 
   public async getPermissions(
-    params: Omit<QueryPermissionsArgs, 'scope'> & { requestedFields?: string[] }
+    params: Omit<QueryPermissionsArgs, 'scope' | 'tagIds'> & SelectedFields<Permission>
   ): Promise<PermissionPage> {
-    const validatedParams = validateInput(
-      getPermissionsParamsSchema,
-      params,
-      'getPermissions method'
-    );
-    const result = await this.repositories.permissionRepository.getPermissions(
-      validatedParams as any
-    );
+    const context = 'PermissionService.getPermissions';
+    validateInput(getPermissionsParamsSchema, params, context);
 
-    // Transform repository result to standard format for validation
+    const result = await this.repositories.permissionRepository.getPermissions(params);
+
     const transformedResult = {
       items: result.permissions,
       totalCount: result.totalCount,
       hasNextPage: result.hasNextPage,
     };
 
-    const validatedResult = validateOutput(
+    validateOutput(
       createDynamicPaginatedSchema(permissionSchema, params.requestedFields),
       transformedResult,
-      'getPermissions method'
-    ) as any;
+      context
+    );
 
-    return {
-      permissions: validatedResult.items,
-      hasNextPage: validatedResult.hasNextPage,
-      totalCount: validatedResult.totalCount,
-    };
+    return result;
   }
 
-  public async createPermission(params: MutationCreatePermissionArgs): Promise<Permission> {
-    const validatedParams = validateInput(
-      createPermissionParamsSchema,
-      params,
-      'createPermission method'
+  public async createPermission(
+    params: Omit<CreatePermissionInput, 'scope' | 'tagIds'>,
+    transaction?: Transaction
+  ): Promise<Permission> {
+    const context = 'PermissionService.createPermission';
+    const validatedParams = validateInput(createPermissionParamsSchema, params, context);
+
+    const permission = await this.repositories.permissionRepository.createPermission(
+      validatedParams,
+      transaction
     );
-    const permission =
-      await this.repositories.permissionRepository.createPermission(validatedParams);
 
     const newValues = {
       id: permission.id,
@@ -100,28 +97,28 @@ export class PermissionService extends AuditService {
     };
 
     const metadata = {
-      source: 'create_permission_mutation',
+      context,
     };
 
-    await this.logCreate(permission.id, newValues, metadata);
+    await this.logCreate(permission.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(permissionSchema),
-      permission,
-      'createPermission method'
-    );
+    return validateOutput(createDynamicSingleSchema(permissionSchema), permission, context);
   }
 
-  public async updatePermission(params: MutationUpdatePermissionArgs): Promise<Permission> {
-    const validatedParams = validateInput(
-      updatePermissionParamsSchema,
-      params,
-      'updatePermission method'
-    );
+  public async updatePermission(
+    params: MutationUpdatePermissionArgs,
+    transaction?: Transaction
+  ): Promise<Permission> {
+    const context = 'PermissionService.updatePermission';
+    const validatedParams = validateInput(updatePermissionParamsSchema, params, context);
 
-    const oldPermission = await this.getPermission(validatedParams.id);
-    const updatedPermission =
-      await this.repositories.permissionRepository.updatePermission(validatedParams);
+    const { id, input } = validatedParams;
+
+    const oldPermission = await this.getPermission(id);
+    const updatedPermission = await this.repositories.permissionRepository.updatePermission(
+      { id, input },
+      transaction
+    );
 
     const oldValues = {
       id: oldPermission.id,
@@ -140,33 +137,35 @@ export class PermissionService extends AuditService {
     };
 
     const metadata = {
-      source: 'update_permission_mutation',
+      context,
     };
 
-    await this.logUpdate(updatedPermission.id, oldValues, newValues, metadata);
+    await this.logUpdate(updatedPermission.id, oldValues, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(permissionSchema),
-      updatedPermission,
-      'updatePermission method'
-    );
+    return validateOutput(createDynamicSingleSchema(permissionSchema), updatedPermission, context);
   }
 
   public async deletePermission(
-    params: MutationDeletePermissionArgs & { hardDelete?: boolean }
+    params: Omit<MutationDeletePermissionArgs, 'scope'> & DeleteParams,
+    transaction?: Transaction
   ): Promise<Permission> {
-    const validatedParams = validateInput(
-      deletePermissionParamsSchema,
-      params,
-      'deletePermission method'
-    );
+    const context = 'PermissionService.deletePermission';
+    const validatedParams = validateInput(deletePermissionParamsSchema, params, context);
 
-    const oldPermission = await this.getPermission(validatedParams.id);
-    const isHardDelete = params.hardDelete === true;
+    const { id, hardDelete } = validatedParams;
+
+    const oldPermission = await this.getPermission(id);
+    const isHardDelete = hardDelete === true;
 
     const deletedPermission = isHardDelete
-      ? await this.repositories.permissionRepository.hardDeletePermission(validatedParams)
-      : await this.repositories.permissionRepository.softDeletePermission(validatedParams);
+      ? await this.repositories.permissionRepository.hardDeletePermission(
+          validatedParams,
+          transaction
+        )
+      : await this.repositories.permissionRepository.softDeletePermission(
+          validatedParams,
+          transaction
+        );
 
     const oldValues = {
       id: oldPermission.id,
@@ -176,27 +175,22 @@ export class PermissionService extends AuditService {
       updatedAt: oldPermission.updatedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_permission_mutation',
-      };
-      await this.logHardDelete(deletedPermission.id, oldValues, metadata);
+      await this.logHardDelete(deletedPermission.id, oldValues, metadata, transaction);
     } else {
       const newValues = {
         ...oldValues,
         deletedAt: deletedPermission.deletedAt,
       };
 
-      const metadata = {
-        source: 'soft_delete_permission_mutation',
-      };
-      await this.logSoftDelete(deletedPermission.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(deletedPermission.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(permissionSchema),
-      deletedPermission,
-      'deletePermission method'
-    );
+    return validateOutput(createDynamicSingleSchema(permissionSchema), deletedPermission, context);
   }
 }

@@ -1,3 +1,0 @@
-extend type Query {
-  organizationProjects(organizationId: ID!): [OrganizationProject!]!
-}

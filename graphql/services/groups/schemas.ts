@@ -9,6 +9,7 @@ import {
   sortableParamsSchema,
   nonEmptyNameSchema,
   sortOrderSchema,
+  deleteSchema,
 } from '../common/schemas';
 
 export const groupSortableFieldSchema = z.enum(['name', 'description', 'createdAt', 'updatedAt']);
@@ -18,25 +19,23 @@ export const groupSortInputSchema = z.object({
 });
 
 export const getGroupsParamsSchema = sortableParamsSchema.extend({
-  sort: groupSortInputSchema.optional(),
+  sort: groupSortInputSchema.nullable().optional(),
 });
 
 export const createGroupParamsSchema = z.object({
-  input: z.object({
-    name: nonEmptyNameSchema,
-    description: descriptionSchema,
-  }),
+  name: nonEmptyNameSchema,
+  description: descriptionSchema,
 });
 
 export const updateGroupParamsSchema = z.object({
   id: idSchema,
   input: z.object({
-    name: nonEmptyNameSchema.optional(),
-    description: descriptionSchema,
+    name: nonEmptyNameSchema.nullable().optional(),
+    description: descriptionSchema.nullable().optional(),
   }),
 });
 
-export const deleteGroupParamsSchema = z.object({
+export const deleteGroupParamsSchema = deleteSchema.extend({
   id: idSchema,
 });
 

@@ -1,16 +1,22 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  MutationAddOrganizationUserArgs,
-  MutationRemoveOrganizationUserArgs,
+  AddOrganizationUserInput,
   OrganizationUser,
-  QueryOrganizationUsersArgs,
+  RemoveOrganizationUserInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { organizationUsersAuditLogs } from '@/graphql/repositories/organization-users/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  DeleteParams,
+} from '../common';
 
 import {
   getOrganizationUsersParamsSchema,
@@ -61,46 +67,43 @@ export class OrganizationUserService extends AuditService {
     return existingOrganizationUsers.some((ou) => ou.userId === userId);
   }
 
-  public async getOrganizationUsers(
-    params: Omit<QueryOrganizationUsersArgs, 'scope'>
-  ): Promise<OrganizationUser[]> {
-    const validatedParams = validateInput(
-      getOrganizationUsersParamsSchema,
-      params,
-      'getOrganizationUsers method'
-    );
+  public async getOrganizationUsers(params: {
+    organizationId: string;
+  }): Promise<OrganizationUser[]> {
+    const context = 'OrganizationUserService.getOrganizationUsers';
+    const validatedParams = validateInput(getOrganizationUsersParamsSchema, params, context);
+    const { organizationId } = validatedParams;
 
-    await this.organizationExists(validatedParams.organizationId);
+    await this.organizationExists(organizationId);
 
-    const result =
-      await this.repositories.organizationUserRepository.getOrganizationUsers(validatedParams);
+    const result = await this.repositories.organizationUserRepository.getOrganizationUsers({
+      organizationId,
+    });
     return validateOutput(
       createDynamicSingleSchema(organizationUserSchema).array(),
       result,
-      'getOrganizationUsers method'
+      context
     );
   }
 
   public async addOrganizationUser(
-    params: MutationAddOrganizationUserArgs
+    params: AddOrganizationUserInput,
+    transaction?: Transaction
   ): Promise<OrganizationUser> {
-    const validatedParams = validateInput(
-      addOrganizationUserParamsSchema,
-      params,
-      'addOrganizationUser method'
-    );
+    const context = 'OrganizationUserService.addOrganizationUser';
+    const validatedParams = validateInput(addOrganizationUserParamsSchema, params, context);
+    const { organizationId, userId } = validatedParams;
 
-    const hasUser = await this.organizationHasUser(
-      validatedParams.input.organizationId,
-      validatedParams.input.userId
-    );
+    const hasUser = await this.organizationHasUser(organizationId, userId);
 
     if (hasUser) {
       throw new Error('Organization already has this user');
     }
 
-    const organizationUser =
-      await this.repositories.organizationUserRepository.addOrganizationUser(validatedParams);
+    const organizationUser = await this.repositories.organizationUserRepository.addOrganizationUser(
+      { organizationId, userId },
+      transaction
+    );
 
     const newValues = {
       id: organizationUser.id,
@@ -111,44 +114,42 @@ export class OrganizationUserService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_organization_user_mutation',
+      context,
     };
 
-    await this.logCreate(organizationUser.id, newValues, metadata);
+    await this.logCreate(organizationUser.id, newValues, metadata, transaction);
 
     return validateOutput(
       createDynamicSingleSchema(organizationUserSchema),
       organizationUser,
-      'addOrganizationUser method'
+      context
     );
   }
 
   public async removeOrganizationUser(
-    params: MutationRemoveOrganizationUserArgs & { hardDelete?: boolean }
+    params: RemoveOrganizationUserInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<OrganizationUser> {
-    const validatedParams = validateInput(
-      removeOrganizationUserParamsSchema,
-      params,
-      'removeOrganizationUser method'
-    );
+    const context = 'OrganizationUserService.removeOrganizationUser';
+    const validatedParams = validateInput(removeOrganizationUserParamsSchema, params, context);
+    const { organizationId, userId, hardDelete } = validatedParams;
 
-    const hasUser = await this.organizationHasUser(
-      validatedParams.input.organizationId,
-      validatedParams.input.userId
-    );
+    const hasUser = await this.organizationHasUser(organizationId, userId);
 
     if (!hasUser) {
       throw new Error('Organization does not have this user');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const organizationUser = isHardDelete
       ? await this.repositories.organizationUserRepository.hardDeleteOrganizationUser(
-          validatedParams
+          validatedParams,
+          transaction
         )
       : await this.repositories.organizationUserRepository.softDeleteOrganizationUser(
-          validatedParams
+          validatedParams,
+          transaction
         );
 
     const oldValues = {
@@ -164,22 +165,21 @@ export class OrganizationUserService extends AuditService {
       deletedAt: organizationUser.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_organization_user_mutation',
-      };
-      await this.logHardDelete(organizationUser.id, oldValues, metadata);
+      await this.logHardDelete(organizationUser.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_organization_user_mutation',
-      };
-      await this.logSoftDelete(organizationUser.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(organizationUser.id, oldValues, newValues, metadata, transaction);
     }
 
     return validateOutput(
       createDynamicSingleSchema(organizationUserSchema),
       organizationUser,
-      'removeOrganizationUser method'
+      context
     );
   }
 }

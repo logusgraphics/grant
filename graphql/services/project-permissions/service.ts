@@ -1,7 +1,6 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  QueryProjectPermissionsArgs,
   ProjectPermission,
   RemoveProjectPermissionInput,
   AddProjectPermissionInput,
@@ -68,9 +67,7 @@ export class ProjectPermissionService extends AuditService {
     return existingProjectPermissions.some((pp) => pp.permissionId === permissionId);
   }
 
-  public async getProjectPermissions(
-    params: QueryProjectPermissionsArgs
-  ): Promise<ProjectPermission[]> {
+  public async getProjectPermissions(params: { projectId: string }): Promise<ProjectPermission[]> {
     const context = 'ProjectPermissionService.getProjectPermissions';
     const validatedParams = validateInput(getProjectPermissionsParamsSchema, params, context);
 

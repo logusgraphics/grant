@@ -1,11 +1,6 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import {
-  QueryProjectTagsArgs,
-  ProjectTag,
-  AddProjectTagInput,
-  RemoveProjectTagInput,
-} from '@/graphql/generated/types';
+import { ProjectTag, AddProjectTagInput, RemoveProjectTagInput } from '@/graphql/generated/types';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { projectTagAuditLogs } from '@/graphql/repositories/project-tags/schema';
@@ -68,7 +63,7 @@ export class ProjectTagService extends AuditService {
     return existingProjectTags.some((pt) => pt.tagId === tagId);
   }
 
-  public async getProjectTags(params: QueryProjectTagsArgs): Promise<ProjectTag[]> {
+  public async getProjectTags(params: { projectId: string }): Promise<ProjectTag[]> {
     const context = 'ProjectTagService.getProjectTags';
     const validatedParams = validateInput(getProjectTagsParamsSchema, params, context);
 

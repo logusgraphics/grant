@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import { pgTable, uuid, varchar, timestamp, index } from 'drizzle-orm/pg-core';
 
 export const organizations = pgTable(
@@ -33,6 +34,15 @@ export const organizationAuditLogs = pgTable(
   ]
 );
 
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  projects: many(organizationProjects),
+  users: many(organizationUsers),
+  roles: many(organizationRoles),
+  groups: many(organizationGroups),
+  permissions: many(organizationPermissions),
+  tags: many(organizationTags),
+}));
+
 export type OrganizationModel = typeof organizations.$inferSelect;
 export type NewOrganizationModel = typeof organizations.$inferInsert;
 export type OrganizationAuditLogModel = typeof organizationAuditLogs.$inferSelect;
@@ -47,3 +57,10 @@ export const OrganizationAuditAction = {
 
 export type OrganizationAuditActionType =
   (typeof OrganizationAuditAction)[keyof typeof OrganizationAuditAction];
+
+import { organizationGroups } from '../organization-groups/schema';
+import { organizationPermissions } from '../organization-permissions/schema';
+import { organizationProjects } from '../organization-projects/schema';
+import { organizationRoles } from '../organization-roles/schema';
+import { organizationTags } from '../organization-tags/schema';
+import { organizationUsers } from '../organization-users/schema';

@@ -3,7 +3,6 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js/driver';
 import {
   AddProjectUserInput,
   ProjectUser,
-  QueryProjectUsersArgs,
   RemoveProjectUserInput,
 } from '@/graphql/generated/types';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
@@ -67,7 +66,7 @@ export class ProjectUserService extends AuditService {
     return existingProjectUsers.some((pu) => pu.userId === userId);
   }
 
-  public async getProjectUsers(params: QueryProjectUsersArgs): Promise<ProjectUser[]> {
+  public async getProjectUsers(params: { projectId: string }): Promise<ProjectUser[]> {
     const context = 'ProjectUserService.getProjectUsers';
     const validatedParams = validateInput(getProjectUsersParamsSchema, params, context);
 

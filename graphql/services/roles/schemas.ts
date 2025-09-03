@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { RoleSortableField } from '@/graphql/generated/types';
+
 import {
   idSchema,
   nameSchema,
@@ -7,11 +9,14 @@ import {
   sortOrderSchema,
   baseEntitySchema,
   paginatedResponseSchema,
-  sortableParamsSchema,
   nonEmptyNameSchema,
+  queryParamsSchema,
+  deleteSchema,
 } from '../common/schemas';
 
-export const roleSortableFieldSchema = z.enum(['name']);
+export const roleSortableFieldSchema = z.enum(
+  Object.values(RoleSortableField) as [RoleSortableField, ...RoleSortableField[]]
+);
 export const roleSortInputSchema = z.object({
   field: roleSortableFieldSchema,
   order: sortOrderSchema,
@@ -23,8 +28,8 @@ export const createRoleInputSchema = z.object({
 });
 
 export const updateRoleInputSchema = z.object({
-  name: nonEmptyNameSchema.optional(),
-  description: descriptionSchema,
+  name: nonEmptyNameSchema.nullable().optional(),
+  description: descriptionSchema.nullable().optional(),
 });
 
 export const createRoleArgsSchema = z.object({
@@ -36,14 +41,8 @@ export const updateRoleArgsSchema = z.object({
   input: updateRoleInputSchema,
 });
 
-export const deleteRoleArgsSchema = z.object({
+export const deleteRoleArgsSchema = deleteSchema.extend({
   id: idSchema,
-});
-
-export const queryRolesArgsSchema = sortableParamsSchema.extend({
-  ids: z.array(idSchema).optional(),
-  tagIds: z.array(idSchema).optional(),
-  sort: roleSortInputSchema.optional(),
 });
 
 export const roleSchema = baseEntitySchema.extend({
@@ -59,10 +58,6 @@ export const rolePageSchema = paginatedResponseSchema(roleSchema).transform((dat
   totalCount: data.totalCount,
 }));
 
-export const getRolesParamsSchema = queryRolesArgsSchema.extend({
-  requestedFields: z.array(z.string()).optional(),
+export const getRolesParamsSchema = queryParamsSchema.extend({
+  sort: roleSortInputSchema.nullable().optional(),
 });
-
-export const createRoleParamsSchema = createRoleArgsSchema;
-export const updateRoleParamsSchema = updateRoleArgsSchema;
-export const deleteRoleParamsSchema = deleteRoleArgsSchema;

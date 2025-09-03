@@ -1,17 +1,33 @@
 import {
   QueryOrganizationsArgs,
-  MutationCreateOrganizationArgs,
   MutationUpdateOrganizationArgs,
   MutationDeleteOrganizationArgs,
   Organization,
   OrganizationPage,
+  OrganizationProject,
+  OrganizationRole,
+  OrganizationGroup,
+  OrganizationPermission,
+  OrganizationUser,
+  OrganizationTag,
+  CreateOrganizationInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   EntityRepository,
+  RelationsConfig,
   BaseCreateArgs,
   BaseUpdateArgs,
   BaseDeleteArgs,
 } from '@/graphql/repositories/common';
+import { SelectedFields } from '@/graphql/services/common';
+
+import { organizationGroups } from '../organization-groups/schema';
+import { organizationPermissions } from '../organization-permissions/schema';
+import { organizationProjects } from '../organization-projects/schema';
+import { organizationRoles } from '../organization-roles/schema';
+import { organizationTags } from '../organization-tags/schema';
+import { organizationUsers } from '../organization-users/schema';
 
 import { OrganizationModel, organizations } from './schema';
 
@@ -20,6 +36,38 @@ export class OrganizationRepository extends EntityRepository<OrganizationModel, 
   protected schemaName = 'organizations' as const;
   protected searchFields: Array<keyof OrganizationModel> = ['name', 'slug'];
   protected defaultSortField: keyof OrganizationModel = 'createdAt';
+  protected relations: RelationsConfig<Organization> = {
+    projects: {
+      field: 'project',
+      table: organizationProjects,
+      extract: (v: OrganizationProject[]) => v.map(({ project }) => project),
+    },
+    roles: {
+      field: 'role',
+      table: organizationRoles,
+      extract: (v: OrganizationRole[]) => v.map(({ role }) => role),
+    },
+    groups: {
+      field: 'group',
+      table: organizationGroups,
+      extract: (v: OrganizationGroup[]) => v.map(({ group }) => group),
+    },
+    permissions: {
+      field: 'permission',
+      table: organizationPermissions,
+      extract: (v: OrganizationPermission[]) => v.map(({ permission }) => permission),
+    },
+    users: {
+      field: 'user',
+      table: organizationUsers,
+      extract: (v: OrganizationUser[]) => v.map(({ user }) => user),
+    },
+    tags: {
+      field: 'tag',
+      table: organizationTags,
+      extract: (v: OrganizationTag[]) => v.map(({ tag }) => tag),
+    },
+  };
 
   private generateSlug(name: string): string {
     return name
@@ -29,9 +77,7 @@ export class OrganizationRepository extends EntityRepository<OrganizationModel, 
   }
 
   public async getOrganizations(
-    params: Omit<QueryOrganizationsArgs, 'scope'> & {
-      requestedFields?: Array<keyof OrganizationModel>;
-    }
+    params: Omit<QueryOrganizationsArgs, 'scope'> & SelectedFields<OrganizationModel>
   ): Promise<OrganizationPage> {
     const result = await this.query(params);
     return {
@@ -41,16 +87,22 @@ export class OrganizationRepository extends EntityRepository<OrganizationModel, 
     };
   }
 
-  public async createOrganization(params: MutationCreateOrganizationArgs): Promise<Organization> {
+  public async createOrganization(
+    params: Omit<CreateOrganizationInput, 'scope'>,
+    transaction?: Transaction
+  ): Promise<Organization> {
     const baseParams: BaseCreateArgs = {
-      name: params.input.name,
-      slug: this.generateSlug(params.input.name),
+      name: params.name,
+      slug: this.generateSlug(params.name),
     };
 
-    return this.create(baseParams);
+    return this.create(baseParams, transaction);
   }
 
-  public async updateOrganization(params: MutationUpdateOrganizationArgs): Promise<Organization> {
+  public async updateOrganization(
+    params: MutationUpdateOrganizationArgs,
+    transaction?: Transaction
+  ): Promise<Organization> {
     const baseParams: BaseUpdateArgs = {
       id: params.id,
       input: {
@@ -59,26 +111,28 @@ export class OrganizationRepository extends EntityRepository<OrganizationModel, 
       },
     };
 
-    return this.update(baseParams);
+    return this.update(baseParams, transaction);
   }
 
   public async softDeleteOrganization(
-    params: MutationDeleteOrganizationArgs
+    params: MutationDeleteOrganizationArgs,
+    transaction?: Transaction
   ): Promise<Organization> {
     const baseParams: BaseDeleteArgs = {
       id: params.id,
     };
 
-    return this.softDelete(baseParams);
+    return this.softDelete(baseParams, transaction);
   }
 
   public async hardDeleteOrganization(
-    params: MutationDeleteOrganizationArgs
+    params: MutationDeleteOrganizationArgs,
+    transaction?: Transaction
   ): Promise<Organization> {
     const baseParams: BaseDeleteArgs = {
       id: params.id,
     };
 
-    return this.hardDelete(baseParams);
+    return this.hardDelete(baseParams, transaction);
   }
 }

@@ -1,3 +1,0 @@
-extend type Query {
-  userRoles(scope: Scope!, userId: ID!): [UserRole!]!
-}

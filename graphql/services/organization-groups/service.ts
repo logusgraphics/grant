@@ -1,22 +1,29 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import {
-  MutationAddOrganizationGroupArgs,
-  MutationRemoveOrganizationGroupArgs,
+  AddOrganizationGroupInput,
   OrganizationGroup,
-  QueryOrganizationGroupsArgs,
+  RemoveOrganizationGroupInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { organizationGroupsAuditLogs } from '@/graphql/repositories/organization-groups/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
-import { AuditService, validateInput, validateOutput, createDynamicSingleSchema } from '../common';
+import {
+  AuditService,
+  validateInput,
+  validateOutput,
+  createDynamicSingleSchema,
+  SelectedFields,
+  DeleteParams,
+} from '../common';
 
 import {
   getOrganizationGroupsParamsSchema,
-  addOrganizationGroupParamsSchema,
-  removeOrganizationGroupParamsSchema,
+  removeOrganizationGroupInputSchema,
   organizationGroupSchema,
+  addOrganizationGroupInputSchema,
 } from './schemas';
 
 export class OrganizationGroupService extends AuditService {
@@ -62,49 +69,46 @@ export class OrganizationGroupService extends AuditService {
   }
 
   public async getOrganizationGroups(
-    params: Omit<QueryOrganizationGroupsArgs, 'scope'>
+    params: { organizationId: string } & SelectedFields<OrganizationGroup>
   ): Promise<OrganizationGroup[]> {
-    const validatedParams = validateInput(
-      getOrganizationGroupsParamsSchema,
-      params,
-      'getOrganizationGroups method'
-    );
+    const context = 'OrganizationGroupService.getOrganizationGroups';
+    const validatedParams = validateInput(getOrganizationGroupsParamsSchema, params, context);
 
-    if (!validatedParams.organizationId) {
+    const { organizationId } = validatedParams;
+
+    if (!organizationId) {
       throw new Error('Organization ID is required');
     }
-    await this.organizationExists(validatedParams.organizationId);
+    await this.organizationExists(organizationId);
 
-    const result =
-      await this.repositories.organizationGroupRepository.getOrganizationGroups(validatedParams);
+    const result = await this.repositories.organizationGroupRepository.getOrganizationGroups({
+      organizationId,
+    });
     return validateOutput(
       createDynamicSingleSchema(organizationGroupSchema).array(),
       result,
-      'getOrganizationGroups method'
+      context
     );
   }
 
   public async addOrganizationGroup(
-    params: MutationAddOrganizationGroupArgs
+    params: AddOrganizationGroupInput,
+    transaction?: Transaction
   ): Promise<OrganizationGroup> {
-    const validatedParams = validateInput(
-      addOrganizationGroupParamsSchema,
-      params,
-      'addOrganizationGroup method'
-    );
+    const context = 'OrganizationGroupService.addOrganizationGroup';
+    const validatedParams = validateInput(addOrganizationGroupInputSchema, params, context);
+    const { organizationId, groupId } = validatedParams;
 
-    const hasGroup = await this.organizationHasGroup(
-      validatedParams.input.organizationId,
-      validatedParams.input.groupId
-    );
+    const hasGroup = await this.organizationHasGroup(organizationId, groupId);
 
     if (hasGroup) {
       throw new Error('Organization already has this group');
     }
 
     const result = await this.repositories.organizationGroupRepository.addOrganizationGroup(
-      validatedParams.input.organizationId,
-      validatedParams.input.groupId
+      organizationId,
+      groupId,
+      transaction
     );
 
     const newValues = {
@@ -116,46 +120,39 @@ export class OrganizationGroupService extends AuditService {
     };
 
     const metadata = {
-      source: 'add_organization_group_mutation',
+      context,
     };
 
-    await this.logCreate(result.id, newValues, metadata);
+    await this.logCreate(result.id, newValues, metadata, transaction);
 
-    return validateOutput(
-      createDynamicSingleSchema(organizationGroupSchema),
-      result,
-      'addOrganizationGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(organizationGroupSchema), result, context);
   }
 
   public async removeOrganizationGroup(
-    params: MutationRemoveOrganizationGroupArgs & { hardDelete?: boolean }
+    params: RemoveOrganizationGroupInput & DeleteParams,
+    transaction?: Transaction
   ): Promise<OrganizationGroup> {
-    const validatedParams = validateInput(
-      removeOrganizationGroupParamsSchema,
-      params,
-      'removeOrganizationGroup method'
-    );
+    const context = 'OrganizationGroupService.removeOrganizationGroup';
+    const validatedParams = validateInput(removeOrganizationGroupInputSchema, params, context);
 
-    const hasGroup = await this.organizationHasGroup(
-      validatedParams.input.organizationId,
-      validatedParams.input.groupId
-    );
+    const { organizationId, groupId, hardDelete } = validatedParams;
+
+    const hasGroup = await this.organizationHasGroup(organizationId, groupId);
 
     if (!hasGroup) {
       throw new Error('Organization does not have this group');
     }
 
-    const isHardDelete = params.hardDelete === true;
+    const isHardDelete = hardDelete === true;
 
     const result = isHardDelete
       ? await this.repositories.organizationGroupRepository.hardDeleteOrganizationGroup(
-          validatedParams.input.organizationId,
-          validatedParams.input.groupId
+          organizationId,
+          groupId
         )
       : await this.repositories.organizationGroupRepository.softDeleteOrganizationGroup(
-          validatedParams.input.organizationId,
-          validatedParams.input.groupId
+          organizationId,
+          groupId
         );
 
     if (!result) {
@@ -175,22 +172,17 @@ export class OrganizationGroupService extends AuditService {
       deletedAt: result.deletedAt,
     };
 
+    const metadata = {
+      context,
+      hardDelete,
+    };
+
     if (isHardDelete) {
-      const metadata = {
-        source: 'hard_delete_organization_group_mutation',
-      };
-      await this.logHardDelete(result.id, oldValues, metadata);
+      await this.logHardDelete(result.id, oldValues, metadata, transaction);
     } else {
-      const metadata = {
-        source: 'soft_delete_organization_group_mutation',
-      };
-      await this.logSoftDelete(result.id, oldValues, newValues, metadata);
+      await this.logSoftDelete(result.id, oldValues, newValues, metadata, transaction);
     }
 
-    return validateOutput(
-      createDynamicSingleSchema(organizationGroupSchema),
-      result,
-      'removeOrganizationGroup method'
-    );
+    return validateOutput(createDynamicSingleSchema(organizationGroupSchema), result, context);
   }
 }

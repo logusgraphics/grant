@@ -1,3 +1,0 @@
-extend type Mutation {
-  removeOrganizationTag(input: RemoveOrganizationTagInput!): OrganizationTag!
-}

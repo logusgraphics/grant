@@ -1,9 +1,9 @@
 import {
-  QueryOrganizationRolesArgs,
-  MutationAddOrganizationRoleArgs,
-  MutationRemoveOrganizationRoleArgs,
+  AddOrganizationRoleInput,
   OrganizationRole,
+  RemoveOrganizationRoleInput,
 } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { PivotRepository } from '@/graphql/repositories/common';
 
 import { OrganizationRoleModel, organizationRoles } from './schema';
@@ -27,36 +27,48 @@ export class OrganizationRoleRepository extends PivotRepository<
     };
   }
 
-  public async getOrganizationRoles(
-    params: QueryOrganizationRolesArgs
-  ): Promise<OrganizationRole[]> {
+  public async getOrganizationRoles(params: {
+    organizationId: string;
+  }): Promise<OrganizationRole[]> {
     return this.query({ parentId: params.organizationId });
   }
 
   public async addOrganizationRole(
-    params: MutationAddOrganizationRoleArgs
+    params: AddOrganizationRoleInput,
+    transaction?: Transaction
   ): Promise<OrganizationRole> {
-    return this.add({
-      parentId: params.input.organizationId,
-      relatedId: params.input.roleId,
-    });
+    return this.add(
+      {
+        parentId: params.organizationId,
+        relatedId: params.roleId,
+      },
+      transaction
+    );
   }
 
   public async softDeleteOrganizationRole(
-    params: MutationRemoveOrganizationRoleArgs
+    params: RemoveOrganizationRoleInput,
+    transaction?: Transaction
   ): Promise<OrganizationRole> {
-    return this.softDelete({
-      parentId: params.input.organizationId,
-      relatedId: params.input.roleId,
-    });
+    return this.softDelete(
+      {
+        parentId: params.organizationId,
+        relatedId: params.roleId,
+      },
+      transaction
+    );
   }
 
   public async hardDeleteOrganizationRole(
-    params: MutationRemoveOrganizationRoleArgs
+    params: RemoveOrganizationRoleInput,
+    transaction?: Transaction
   ): Promise<OrganizationRole> {
-    return this.hardDelete({
-      parentId: params.input.organizationId,
-      relatedId: params.input.roleId,
-    });
+    return this.hardDelete(
+      {
+        parentId: params.organizationId,
+        relatedId: params.roleId,
+      },
+      transaction
+    );
   }
 }

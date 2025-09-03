@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { idSchema } from '../common/schemas';
+import { deleteSchema, idSchema } from '../common/schemas';
 
 export const roleTagSchema = z.object({
   id: idSchema,
@@ -24,11 +24,12 @@ export const addRoleTagParamsSchema = z.object({
   input: addRoleTagInputSchema,
 });
 
-export const removeRoleTagInputSchema = z.object({
+export const removeRoleTagInputSchema = deleteSchema.extend({
   roleId: idSchema,
   tagId: idSchema,
 });
 
-export const removeRoleTagParamsSchema = z.object({
-  input: removeRoleTagInputSchema,
+export const getRoleTagIntersectionInputSchema = z.object({
+  roleIds: z.array(idSchema),
+  tagIds: z.array(idSchema),
 });

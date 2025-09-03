@@ -1,4 +1,5 @@
 import { RoleGroup } from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import {
   PivotRepository,
   BasePivotQueryArgs,
@@ -32,35 +33,47 @@ export class RoleGroupRepository extends PivotRepository<RoleGroupModel, RoleGro
     return this.query(baseParams);
   }
 
-  public async addRoleGroup(roleId: string, groupId: string): Promise<RoleGroup> {
+  public async addRoleGroup(
+    roleId: string,
+    groupId: string,
+    transaction?: Transaction
+  ): Promise<RoleGroup> {
     const baseParams: BasePivotAddArgs = {
       parentId: roleId,
       relatedId: groupId,
     };
 
-    const roleGroup = await this.add(baseParams);
+    const roleGroup = await this.add(baseParams, transaction);
 
     return roleGroup;
   }
 
-  public async softDeleteRoleGroup(roleId: string, groupId: string): Promise<RoleGroup> {
+  public async softDeleteRoleGroup(
+    roleId: string,
+    groupId: string,
+    transaction?: Transaction
+  ): Promise<RoleGroup> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: roleId,
       relatedId: groupId,
     };
 
-    const roleGroup = await this.softDelete(baseParams);
+    const roleGroup = await this.softDelete(baseParams, transaction);
 
     return roleGroup;
   }
 
-  public async hardDeleteRoleGroup(roleId: string, groupId: string): Promise<RoleGroup> {
+  public async hardDeleteRoleGroup(
+    roleId: string,
+    groupId: string,
+    transaction?: Transaction
+  ): Promise<RoleGroup> {
     const baseParams: BasePivotRemoveArgs = {
       parentId: roleId,
       relatedId: groupId,
     };
 
-    const roleGroup = await this.hardDelete(baseParams);
+    const roleGroup = await this.hardDelete(baseParams, transaction);
 
     return roleGroup;
   }

@@ -1,9 +1,10 @@
 import { MutationResolvers } from '@/graphql/generated/types';
+
 export const deletePermissionResolver: MutationResolvers['deletePermission'] = async (
   _parent,
-  { id },
+  { id, scope },
   context
 ) => {
-  const deletedPermission = await context.services.permissions.deletePermission({ id });
+  const deletedPermission = await context.controllers.permissions.deletePermission({ id, scope });
   return deletedPermission;
 };

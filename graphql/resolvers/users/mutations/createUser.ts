@@ -4,6 +4,6 @@ export const createUserResolver: MutationResolvers['createUser'] = async (
   { input },
   context
 ) => {
-  const createdUser = await context.services.users.createUser({ input });
+  const createdUser = await context.controllers.users.createUser({ input });
   return createdUser;
 };

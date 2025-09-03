@@ -5,6 +5,6 @@ export const createGroupResolver: MutationResolvers['createGroup'] = async (
   { input },
   context
 ) => {
-  const createdGroup = await context.services.groups.createGroup({ input });
+  const createdGroup = await context.controllers.groups.createGroup({ input });
   return createdGroup;
 };
