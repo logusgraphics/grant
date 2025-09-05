@@ -19,6 +19,7 @@ import {
   addRoleTagInputSchema,
   removeRoleTagInputSchema,
   getRoleTagIntersectionInputSchema,
+  removeRoleTagsInputSchema,
 } from './schemas';
 
 export class RoleTagService extends AuditService {
@@ -177,5 +178,32 @@ export class RoleTagService extends AuditService {
     }
 
     return validateOutput(createDynamicSingleSchema(roleTagSchema), roleTag, context);
+  }
+
+  public async removeRoleTags(
+    params: { tagId: string } & DeleteParams,
+    transaction?: Transaction
+  ): Promise<RoleTag[]> {
+    const context = 'RoleTagService.removeRoleTags';
+    const validatedParams = validateInput(removeRoleTagsInputSchema, params, context);
+    const { tagId, hardDelete } = validatedParams;
+
+    const roleTags = await this.repositories.roleTagRepository.getRoleTags({ tagId }, transaction);
+
+    const isHardDelete = hardDelete === true;
+
+    const deletedRoleTags = await Promise.all(
+      roleTags.map((roleTag) =>
+        isHardDelete
+          ? this.repositories.roleTagRepository.hardDeleteRoleTag(roleTag, transaction)
+          : this.repositories.roleTagRepository.softDeleteRoleTag(roleTag, transaction)
+      )
+    );
+
+    return validateOutput(
+      createDynamicSingleSchema(roleTagSchema).array(),
+      deletedRoleTags,
+      context
+    );
   }
 }

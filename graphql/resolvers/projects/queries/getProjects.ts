@@ -9,7 +9,6 @@ export const getProjectsResolver: QueryResolvers['projects'] = async (
   info
 ) => {
   const requestedFields = getDirectFieldSelection<keyof ProjectModel>(info, ['projects']);
-
   return await context.controllers.projects.getProjects({
     organizationId,
     page,

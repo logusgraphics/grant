@@ -30,6 +30,18 @@ export class TagController extends ScopeController {
 
     let tagIds = await this.getScopedTagIds(scope);
 
+    if (scope.tenant === Tenant.Project) {
+      const projectOrganization = await this.services.organizationProjects.getOrganizationProject({
+        projectId: scope.id,
+      });
+      const organizationId = projectOrganization.organizationId;
+      const organizationTags = await this.services.organizationTags.getOrganizationTags({
+        organizationId,
+      });
+      const organizationTagIds = organizationTags.map((ot) => ot.tagId);
+      tagIds = tagIds.filter((tagId) => !organizationTagIds.includes(tagId));
+    }
+
     if (ids && ids.length > 0) {
       tagIds = ids.filter((tagId) => tagIds.includes(tagId));
     }
@@ -87,18 +99,28 @@ export class TagController extends ScopeController {
 
   public async deleteTag(params: MutationDeleteTagArgs & DeleteParams): Promise<Tag> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
-      const { id: tagId, scope } = params;
+      const { id: tagId, scope, hardDelete } = params;
       switch (scope.tenant) {
         case Tenant.Organization:
           await this.services.organizationTags.removeOrganizationTag(
-            { organizationId: scope.id, tagId },
+            { organizationId: scope.id, tagId, hardDelete },
             tx
           );
           break;
         case Tenant.Project:
-          await this.services.projectTags.removeProjectTag({ projectId: scope.id, tagId }, tx);
+          await this.services.projectTags.removeProjectTag(
+            { projectId: scope.id, tagId, hardDelete },
+            tx
+          );
           break;
       }
+
+      await Promise.all([
+        this.services.userTags.removeUserTags({ tagId, hardDelete }, tx),
+        this.services.roleTags.removeRoleTags({ tagId, hardDelete }, tx),
+        this.services.groupTags.removeGroupTags({ tagId, hardDelete }, tx),
+        this.services.permissionTags.removePermissionTags({ tagId, hardDelete }, tx),
+      ]);
 
       return await this.services.tags.deleteTag(params, tx);
     });

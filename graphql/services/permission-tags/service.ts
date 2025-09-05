@@ -23,6 +23,7 @@ import {
   addPermissionTagInputSchema,
   removePermissionTagInputSchema,
   getPermissionTagIntersectionParamsSchema,
+  removePermissionTagsInputSchema,
 } from './schemas';
 
 export class PermissionTagService extends AuditService {
@@ -204,5 +205,41 @@ export class PermissionTagService extends AuditService {
     }
 
     return validateOutput(createDynamicSingleSchema(permissionTagSchema), permissionTag, context);
+  }
+
+  public async removePermissionTags(
+    params: { tagId: string } & DeleteParams,
+    transaction?: Transaction
+  ): Promise<PermissionTag[]> {
+    const context = 'PermissionTagService.removePermissionTags';
+    const validatedParams = validateInput(removePermissionTagsInputSchema, params, context);
+    const { tagId, hardDelete } = validatedParams;
+
+    const permissionTags = await this.repositories.permissionTagRepository.getPermissionTags(
+      { tagId },
+      transaction
+    );
+
+    const isHardDelete = hardDelete === true;
+
+    const deletedPermissionTags = await Promise.all(
+      permissionTags.map((permissionTag) =>
+        isHardDelete
+          ? this.repositories.permissionTagRepository.hardDeletePermissionTag(
+              permissionTag,
+              transaction
+            )
+          : this.repositories.permissionTagRepository.softDeletePermissionTag(
+              permissionTag,
+              transaction
+            )
+      )
+    );
+
+    return validateOutput(
+      createDynamicSingleSchema(permissionTagSchema).array(),
+      deletedPermissionTags,
+      context
+    );
   }
 }

@@ -22,6 +22,7 @@ import {
   removeOrganizationProjectInputSchema,
   queryOrganizationProjectsArgsSchema,
   addOrganizationProjectInputSchema,
+  queryOrganizationProjectArgsSchema,
 } from './schemas';
 
 export class OrganizationProjectService extends AuditService {
@@ -101,6 +102,32 @@ export class OrganizationProjectService extends AuditService {
 
     return validateOutput(
       createDynamicSingleSchema(organizationProjectSchema).array(),
+      result,
+      validationContext
+    );
+  }
+
+  public async getOrganizationProject(
+    params: { projectId: string },
+    transaction?: Transaction
+  ): Promise<OrganizationProject> {
+    const validationContext = 'OrganizationProjectService.getOrganizationProject';
+    const validatedParams = validateInput(
+      queryOrganizationProjectArgsSchema,
+      params,
+      validationContext
+    );
+    const { projectId } = validatedParams;
+
+    await this.projectExists(projectId, transaction);
+
+    const result = await this.repositories.organizationProjectRepository.getOrganizationProject(
+      { projectId },
+      transaction
+    );
+
+    return validateOutput(
+      createDynamicSingleSchema(organizationProjectSchema),
       result,
       validationContext
     );

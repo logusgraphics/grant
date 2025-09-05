@@ -10,7 +10,6 @@ import {
 import { DbSchema } from '@/graphql/lib/providers/database/connection';
 import { EntityCache } from '@/graphql/lib/scopeFiltering';
 import { Transaction, TransactionManager } from '@/graphql/lib/transactions/TransactionManager';
-import { ProjectModel } from '@/graphql/repositories/projects/schema';
 import { Services } from '@/graphql/services';
 import { DeleteParams, SelectedFields } from '@/graphql/services/common';
 
@@ -26,7 +25,7 @@ export class ProjectController extends ScopeController {
   }
 
   public async getProjects(
-    params: QueryProjectsArgs & SelectedFields<ProjectModel>
+    params: QueryProjectsArgs & SelectedFields<Project>
   ): Promise<ProjectPage> {
     const { organizationId, page, limit, sort, search, ids, tagIds, requestedFields } = params;
 
@@ -64,6 +63,22 @@ export class ProjectController extends ScopeController {
       search,
       requestedFields,
     });
+
+    if (Array.isArray(requestedFields) && requestedFields.includes('tags')) {
+      const scopedTagIds = await this.getScopedTagIds(scope);
+      return {
+        ...projectsResult,
+        projects: projectsResult.projects.map((project) => {
+          if (Array.isArray(project.tags)) {
+            return {
+              ...project,
+              tags: project.tags.filter((tag) => scopedTagIds.includes(tag.id)),
+            };
+          }
+          return project;
+        }),
+      };
+    }
 
     return projectsResult;
   }

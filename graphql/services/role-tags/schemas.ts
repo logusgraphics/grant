@@ -29,6 +29,10 @@ export const removeRoleTagInputSchema = deleteSchema.extend({
   tagId: idSchema,
 });
 
+export const removeRoleTagsInputSchema = deleteSchema.extend({
+  tagId: idSchema,
+});
+
 export const getRoleTagIntersectionInputSchema = z.object({
   roleIds: z.array(idSchema),
   tagIds: z.array(idSchema),

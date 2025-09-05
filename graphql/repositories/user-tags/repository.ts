@@ -26,11 +26,12 @@ export class UserTagRepository extends PivotRepository<UserTagModel, UserTag> {
   }
 
   public async getUserTags(
-    params: { userId: string },
+    params: { userId?: string; tagId?: string },
     transaction?: Transaction
   ): Promise<UserTag[]> {
     const baseParams: BasePivotQueryArgs = {
       parentId: params.userId,
+      relatedId: params.tagId,
     };
 
     return this.query(baseParams, transaction);

@@ -19,6 +19,7 @@ import {
   addUserTagInputSchema,
   removeUserTagInputSchema,
   getUserTagIntersectionInputSchema,
+  removeUsersTagsInputSchema,
 } from './schemas';
 
 export class UserTagService extends AuditService {
@@ -176,5 +177,32 @@ export class UserTagService extends AuditService {
     }
 
     return validateOutput(createDynamicSingleSchema(userTagSchema), userTag, context);
+  }
+
+  public async removeUserTags(
+    params: { tagId: string } & DeleteParams,
+    transaction?: Transaction
+  ): Promise<UserTag[]> {
+    const context = 'UserTagService.removeUsersTags';
+    const validatedParams = validateInput(removeUsersTagsInputSchema, params, context);
+    const { tagId, hardDelete } = validatedParams;
+
+    const userTags = await this.repositories.userTagRepository.getUserTags({ tagId }, transaction);
+
+    const isHardDelete = hardDelete === true;
+
+    const deletedUserTags = await Promise.all(
+      userTags.map((userTag) =>
+        isHardDelete
+          ? this.repositories.userTagRepository.hardDeleteUserTag(userTag, transaction)
+          : this.repositories.userTagRepository.softDeleteUserTag(userTag, transaction)
+      )
+    );
+
+    return validateOutput(
+      createDynamicSingleSchema(userTagSchema).array(),
+      deletedUserTags,
+      context
+    );
   }
 }

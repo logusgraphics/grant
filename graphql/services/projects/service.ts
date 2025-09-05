@@ -9,7 +9,7 @@ import {
 import { DbSchema } from '@/graphql/lib/providers/database/connection';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
-import { projectAuditLogs, ProjectModel } from '@/graphql/repositories/projects/schema';
+import { projectAuditLogs } from '@/graphql/repositories/projects/schema';
 import { AuthenticatedUser } from '@/graphql/types';
 
 import {
@@ -53,7 +53,7 @@ export class ProjectService extends AuditService {
   }
 
   public async getProjects(
-    params: Omit<QueryProjectsArgs, 'organizationId' | 'tagIds'> & SelectedFields<ProjectModel>
+    params: Omit<QueryProjectsArgs, 'organizationId' | 'tagIds'> & SelectedFields<Project>
   ): Promise<ProjectPage> {
     const validationContext = 'ProjectService.getProjects';
     validateInput(getProjectsParamsSchema, params, validationContext);

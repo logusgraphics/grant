@@ -29,6 +29,10 @@ export const removePermissionTagInputSchema = deleteSchema.extend({
   tagId: idSchema,
 });
 
+export const removePermissionTagsInputSchema = deleteSchema.extend({
+  tagId: idSchema,
+});
+
 export const removePermissionTagParamsSchema = z.object({
   input: removePermissionTagInputSchema,
 });

@@ -16,7 +16,8 @@ export interface BasePivotEntity extends BasePivotModel {
 }
 
 export interface BasePivotQueryArgs {
-  parentId: string;
+  parentId?: string;
+  relatedId?: string;
 }
 
 export interface PivotIntersectionQueryArgs {
@@ -50,12 +51,12 @@ export abstract class PivotRepository<
     table: any,
     parentIdField: keyof TPivotModel,
     relatedIdField: keyof TPivotModel,
-    parentId: string,
+    parentId?: string,
     relatedId?: string
   ): any {
     const conditions = [isNull(table.deletedAt)];
 
-    if (relatedId) {
+    if (relatedId && parentId) {
       const relationCondition = and(
         eq(table[parentIdField], parentId),
         eq(table[relatedIdField], relatedId)
@@ -63,10 +64,15 @@ export abstract class PivotRepository<
       if (relationCondition) {
         conditions.push(relationCondition);
       }
-    } else {
+    } else if (parentId) {
       const parentCondition = eq(table[parentIdField], parentId);
       if (parentCondition) {
         conditions.push(parentCondition);
+      }
+    } else if (relatedId) {
+      const relatedCondition = eq(table[relatedIdField], relatedId);
+      if (relatedCondition) {
+        conditions.push(relatedCondition);
       }
     }
 
@@ -88,7 +94,7 @@ export abstract class PivotRepository<
     };
   }
 
-  private first<T>(result: T | T[]): T {
+  protected first<T>(result: T | T[]): T {
     return Array.isArray(result) ? result[0] : result;
   }
 
@@ -103,7 +109,8 @@ export abstract class PivotRepository<
         this.table,
         this.parentIdField,
         this.relatedIdField,
-        params.parentId
+        params.parentId,
+        params.relatedId
       );
 
       const result = await dbInstance.select().from(this.table).where(whereClause);

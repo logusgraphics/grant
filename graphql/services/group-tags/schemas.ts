@@ -21,6 +21,10 @@ export const getGroupTagIntersectionInputSchema = z.object({
   tagIds: z.array(idSchema).refine((tagIds) => tagIds.length > 0, 'Tag IDs are required'),
 });
 
+export const removeGroupTagsInputSchema = deleteSchema.extend({
+  tagId: idSchema,
+});
+
 export const addGroupTagArgsSchema = z.object({
   input: addGroupTagInputSchema,
 });

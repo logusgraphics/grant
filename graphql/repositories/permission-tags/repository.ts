@@ -25,10 +25,10 @@ export class PermissionTagRepository extends PivotRepository<PermissionTagModel,
   }
 
   public async getPermissionTags(
-    params: { permissionId: string },
+    params: { permissionId?: string; tagId?: string },
     transaction?: Transaction
   ): Promise<PermissionTag[]> {
-    return this.query({ parentId: params.permissionId }, transaction);
+    return this.query({ parentId: params.permissionId, relatedId: params.tagId }, transaction);
   }
 
   public async getPermissionTagIntersection(

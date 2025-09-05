@@ -16,6 +16,10 @@ export const removeUserTagInputSchema = deleteSchema.extend({
   userId: idSchema.refine((userId) => userId.trim().length > 0, 'User ID is required'),
 });
 
+export const removeUsersTagsInputSchema = deleteSchema.extend({
+  tagId: idSchema.refine((tagId) => tagId.trim().length > 0, 'Tag ID is required'),
+});
+
 export const addUserTagArgsSchema = z.object({
   input: addUserTagInputSchema,
 });

@@ -19,6 +19,7 @@ import {
   groupTagSchema,
   queryGroupTagsArgsSchema,
   removeGroupTagInputSchema,
+  removeGroupTagsInputSchema,
 } from './schemas';
 
 export class GroupTagService extends AuditService {
@@ -157,8 +158,14 @@ export class GroupTagService extends AuditService {
     const isHardDelete = hardDelete === true;
 
     const result = isHardDelete
-      ? await this.repositories.groupTagRepository.hardDeleteGroupTag(groupId, tagId, transaction)
-      : await this.repositories.groupTagRepository.softDeleteGroupTag(groupId, tagId, transaction);
+      ? await this.repositories.groupTagRepository.hardDeleteGroupTag(
+          { groupId, tagId },
+          transaction
+        )
+      : await this.repositories.groupTagRepository.softDeleteGroupTag(
+          { groupId, tagId },
+          transaction
+        );
 
     if (!result) {
       throw new Error('Failed to remove group tag');
@@ -189,5 +196,35 @@ export class GroupTagService extends AuditService {
     }
 
     return validateOutput(createDynamicSingleSchema(groupTagSchema), result, context);
+  }
+
+  public async removeGroupTags(
+    params: { tagId: string } & DeleteParams,
+    transaction?: Transaction
+  ): Promise<GroupTag[]> {
+    const context = 'GroupTagService.removeGroupTags';
+    const validatedParams = validateInput(removeGroupTagsInputSchema, params, context);
+    const { tagId, hardDelete } = validatedParams;
+
+    const groupTags = await this.repositories.groupTagRepository.getGroupTags(
+      { tagId },
+      transaction
+    );
+
+    const isHardDelete = hardDelete === true;
+
+    const deletedGroupTags = await Promise.all(
+      groupTags.map((groupTag) =>
+        isHardDelete
+          ? this.repositories.groupTagRepository.hardDeleteGroupTag(groupTag, transaction)
+          : this.repositories.groupTagRepository.softDeleteGroupTag(groupTag, transaction)
+      )
+    );
+
+    return validateOutput(
+      createDynamicSingleSchema(groupTagSchema).array(),
+      deletedGroupTags,
+      context
+    );
   }
 }

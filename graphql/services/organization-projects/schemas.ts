@@ -6,6 +6,10 @@ export const queryOrganizationProjectsArgsSchema = z.object({
   organizationId: idSchema,
 });
 
+export const queryOrganizationProjectArgsSchema = z.object({
+  projectId: idSchema,
+});
+
 export const addOrganizationProjectInputSchema = z.object({
   organizationId: idSchema.refine(
     (organizationId) => organizationId.trim().length > 0,

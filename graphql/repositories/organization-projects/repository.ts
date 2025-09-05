@@ -41,6 +41,17 @@ export class OrganizationProjectRepository extends PivotRepository<
     return this.query(baseParams, transaction);
   }
 
+  public async getOrganizationProject(
+    params: { projectId: string },
+    transaction?: Transaction
+  ): Promise<OrganizationProject> {
+    const baseParams: BasePivotQueryArgs = {
+      relatedId: params.projectId,
+    };
+    const result = await this.query(baseParams, transaction);
+    return this.first(result);
+  }
+
   public async addOrganizationProject(
     params: AddOrganizationProjectInput,
     transaction?: Transaction

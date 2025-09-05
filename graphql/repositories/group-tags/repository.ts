@@ -14,10 +14,10 @@ export class GroupTagRepository extends PivotRepository<GroupTag, GroupTag> {
   }
 
   public async getGroupTags(
-    params: { groupId: string },
+    params: { groupId?: string; tagId?: string },
     transaction?: Transaction
   ): Promise<GroupTag[]> {
-    return this.query({ parentId: params.groupId }, transaction);
+    return this.query({ parentId: params.groupId, relatedId: params.tagId }, transaction);
   }
 
   public async getGroupTagIntersection(
@@ -43,13 +43,12 @@ export class GroupTagRepository extends PivotRepository<GroupTag, GroupTag> {
   }
 
   public async softDeleteGroupTag(
-    groupId: string,
-    tagId: string,
+    params: { groupId: string; tagId: string },
     transaction?: Transaction
   ): Promise<GroupTag | null> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: groupId,
-      relatedId: tagId,
+      parentId: params.groupId,
+      relatedId: params.tagId,
     };
 
     const groupTag = await this.softDelete(baseParams, transaction);
@@ -57,13 +56,12 @@ export class GroupTagRepository extends PivotRepository<GroupTag, GroupTag> {
   }
 
   public async hardDeleteGroupTag(
-    groupId: string,
-    tagId: string,
+    params: { groupId: string; tagId: string },
     transaction?: Transaction
   ): Promise<GroupTag | null> {
     const baseParams: BasePivotRemoveArgs = {
-      parentId: groupId,
-      relatedId: tagId,
+      parentId: params.groupId,
+      relatedId: params.tagId,
     };
 
     const groupTag = await this.hardDelete(baseParams, transaction);
