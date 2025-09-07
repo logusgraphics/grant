@@ -24,13 +24,14 @@ export function GroupCards() {
   const loading = useGroupsStore((state) => state.loading);
 
   const transformPermissionsToBadges = (group: Group) => {
-    return (group.permissions || []).map((permission) => ({
-      id: permission.id,
-      label: permission.name,
-      className: permission.tags?.find((tag: Tag) => tag.isPrimary)?.color
-        ? getTagBorderClasses(permission.tags?.find((tag: Tag) => tag.isPrimary)?.color as TagColor)
-        : undefined,
-    }));
+    return (group.permissions || []).map((permission) => {
+      const primaryTag = permission.tags?.find((tag: Tag) => tag.isPrimary);
+      return {
+        id: permission.id,
+        label: permission.name,
+        className: primaryTag ? getTagBorderClasses(primaryTag.color as TagColor) : undefined,
+      };
+    });
   };
 
   return (

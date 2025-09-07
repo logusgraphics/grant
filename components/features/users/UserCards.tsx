@@ -24,13 +24,14 @@ export function UserCards() {
   const loading = useUsersStore((state) => state.loading);
 
   const transformRolesToBadges = (user: User) => {
-    return (user.roles || []).map((role) => ({
-      id: role.id,
-      label: role.name,
-      className: role.tags?.find((tag: Tag) => tag.isPrimary)?.color
-        ? getTagBorderClasses(role.tags?.find((tag: Tag) => tag.isPrimary)?.color as TagColor)
-        : undefined,
-    }));
+    return (user.roles || []).map((role) => {
+      const primaryTag = role.tags?.find((tag: Tag) => tag.isPrimary);
+      return {
+        id: role.id,
+        label: role.name,
+        className: primaryTag ? getTagBorderClasses(primaryTag.color as TagColor) : undefined,
+      };
+    });
   };
 
   return (

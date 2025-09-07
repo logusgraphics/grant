@@ -44,7 +44,46 @@ const httpLink = new HttpLink({
 
 export function getClient() {
   return new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        // Disable normalization for scoped entities to prevent cache conflicts
+        Role: {
+          keyFields: false,
+        },
+        Group: {
+          keyFields: false,
+        },
+        User: {
+          keyFields: false,
+        },
+        Permission: {
+          keyFields: false,
+        },
+        Tag: {
+          keyFields: false,
+        },
+        // For paginated results, use scope-aware cache keys
+        Query: {
+          fields: {
+            roles: {
+              keyArgs: ['scope'],
+            },
+            groups: {
+              keyArgs: ['scope'],
+            },
+            users: {
+              keyArgs: ['scope'],
+            },
+            permissions: {
+              keyArgs: ['scope'],
+            },
+            tags: {
+              keyArgs: ['scope'],
+            },
+          },
+        },
+      },
+    }),
     link: from([authLink, httpLink]),
   });
 }
