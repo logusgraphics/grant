@@ -258,6 +258,33 @@ export type CreateUserInput = {
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
+export type CreateUserSessionInput = {
+  expiresAt: Scalars['Date']['input'];
+  ipAddress?: InputMaybe<Scalars['String']['input']>;
+  scopeId: Scalars['ID']['input'];
+  scopeTenant: Tenant;
+  token: Scalars['String']['input'];
+  userAgent?: InputMaybe<Scalars['String']['input']>;
+  userAuthenticationMethodId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+export type DeleteUserSessionInput = {
+  id: Scalars['ID']['input'];
+};
+
+export type GetUserSessionsInput = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  requestedFields?: InputMaybe<Array<Scalars['String']['input']>>;
+  scopeId?: InputMaybe<Scalars['ID']['input']>;
+  scopeTenant?: InputMaybe<Tenant>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<UserSessionSortInput>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type Group = Auditable & {
   __typename?: 'Group';
   createdAt: Scalars['Date']['output'];
@@ -1162,9 +1189,9 @@ export type TagSortInput = {
 };
 
 export enum Tenant {
-  Account = 'ACCOUNT',
-  Organization = 'ORGANIZATION',
-  Project = 'PROJECT'
+  Account = 'account',
+  Organization = 'organization',
+  Project = 'project'
 }
 
 export type UpdateAccountInput = {
@@ -1257,6 +1284,13 @@ export type UpdateUserInput = {
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
+export type UpdateUserSessionInput = {
+  id: Scalars['ID']['input'];
+  ipAddress?: InputMaybe<Scalars['String']['input']>;
+  lastUsedAt?: InputMaybe<Scalars['Date']['input']>;
+  userAgent?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateUserTagInput = {
   isPrimary: Scalars['Boolean']['input'];
   tagId: Scalars['ID']['input'];
@@ -1293,9 +1327,9 @@ export type UserAuthenticationMethod = Auditable & {
 };
 
 export enum UserAuthenticationMethodProvider {
-  Email = 'EMAIL',
-  Github = 'GITHUB',
-  Google = 'GOOGLE'
+  Email = 'email',
+  Github = 'github',
+  Google = 'google'
 }
 
 export type UserPage = PaginatedResults & {
@@ -1329,6 +1363,47 @@ export type UserRoleUserArgs = {
 
 export enum UserSearchableField {
   Name = 'name'
+}
+
+export type UserSession = Auditable & {
+  __typename?: 'UserSession';
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  expiresAt: Scalars['Date']['output'];
+  id: Scalars['ID']['output'];
+  ipAddress?: Maybe<Scalars['String']['output']>;
+  lastUsedAt: Scalars['Date']['output'];
+  scopeId: Scalars['ID']['output'];
+  scopeTenant: Tenant;
+  token: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
+  user?: Maybe<User>;
+  userAgent?: Maybe<Scalars['String']['output']>;
+  userAuthenticationMethod?: Maybe<UserAuthenticationMethod>;
+  userAuthenticationMethodId: Scalars['ID']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+export type UserSessionPage = PaginatedResults & {
+  __typename?: 'UserSessionPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  totalCount: Scalars['Int']['output'];
+  userSessions: Array<UserSession>;
+};
+
+export enum UserSessionSearchableField {
+  ScopeId = 'scopeId',
+  ScopeTenant = 'scopeTenant',
+  Token = 'token'
+}
+
+export type UserSessionSortInput = {
+  field: UserSessionSortableField;
+  order: SortOrder;
+};
+
+export enum UserSessionSortableField {
+  LastUsedAt = 'lastUsedAt'
 }
 
 export type UserSortInput = {
@@ -1434,9 +1509,9 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = ResolversObject<{
-  Auditable: ( Account ) | ( AccountProject ) | ( Group ) | ( GroupPermission ) | ( GroupTag ) | ( Organization ) | ( OrganizationGroup ) | ( OrganizationPermission ) | ( OrganizationProject ) | ( OrganizationRole ) | ( OrganizationTag ) | ( OrganizationUser ) | ( Permission ) | ( PermissionTag ) | ( Project ) | ( ProjectGroup ) | ( ProjectPermission ) | ( ProjectRole ) | ( ProjectTag ) | ( ProjectUser ) | ( Role ) | ( RoleGroup ) | ( RoleTag ) | ( Tag ) | ( User ) | ( UserAuthenticationMethod ) | ( UserRole ) | ( UserTag );
+  Auditable: ( Account ) | ( AccountProject ) | ( Group ) | ( GroupPermission ) | ( GroupTag ) | ( Organization ) | ( OrganizationGroup ) | ( OrganizationPermission ) | ( OrganizationProject ) | ( OrganizationRole ) | ( OrganizationTag ) | ( OrganizationUser ) | ( Permission ) | ( PermissionTag ) | ( Project ) | ( ProjectGroup ) | ( ProjectPermission ) | ( ProjectRole ) | ( ProjectTag ) | ( ProjectUser ) | ( Role ) | ( RoleGroup ) | ( RoleTag ) | ( Tag ) | ( User ) | ( UserAuthenticationMethod ) | ( UserRole ) | ( UserSession ) | ( UserTag );
   Creatable: never;
-  PaginatedResults: ( AccountPage ) | ( GroupPage ) | ( OrganizationPage ) | ( PermissionPage ) | ( ProjectPage ) | ( RolePage ) | ( TagPage ) | ( UserPage );
+  PaginatedResults: ( AccountPage ) | ( GroupPage ) | ( OrganizationPage ) | ( PermissionPage ) | ( ProjectPage ) | ( RolePage ) | ( TagPage ) | ( UserPage ) | ( UserSessionPage );
   Searchable: never;
 }>;
 
@@ -1480,7 +1555,10 @@ export type ResolversTypes = ResolversObject<{
   CreateTagInput: CreateTagInput;
   CreateUserAuthenticationMethodInput: CreateUserAuthenticationMethodInput;
   CreateUserInput: CreateUserInput;
+  CreateUserSessionInput: CreateUserSessionInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
+  DeleteUserSessionInput: DeleteUserSessionInput;
+  GetUserSessionsInput: GetUserSessionsInput;
   Group: ResolverTypeWrapper<Group>;
   GroupPage: ResolverTypeWrapper<GroupPage>;
   GroupPermission: ResolverTypeWrapper<GroupPermission>;
@@ -1572,6 +1650,7 @@ export type ResolversTypes = ResolversObject<{
   UpdateTagInput: UpdateTagInput;
   UpdateUserAuthenticationMethodInput: UpdateUserAuthenticationMethodInput;
   UpdateUserInput: UpdateUserInput;
+  UpdateUserSessionInput: UpdateUserSessionInput;
   UpdateUserTagInput: UpdateUserTagInput;
   User: ResolverTypeWrapper<User>;
   UserAuthenticationMethod: ResolverTypeWrapper<UserAuthenticationMethod>;
@@ -1579,6 +1658,11 @@ export type ResolversTypes = ResolversObject<{
   UserPage: ResolverTypeWrapper<UserPage>;
   UserRole: ResolverTypeWrapper<UserRole>;
   UserSearchableField: UserSearchableField;
+  UserSession: ResolverTypeWrapper<UserSession>;
+  UserSessionPage: ResolverTypeWrapper<UserSessionPage>;
+  UserSessionSearchableField: UserSessionSearchableField;
+  UserSessionSortInput: UserSessionSortInput;
+  UserSessionSortableField: UserSessionSortableField;
   UserSortInput: UserSortInput;
   UserSortableField: UserSortableField;
   UserTag: ResolverTypeWrapper<UserTag>;
@@ -1621,7 +1705,10 @@ export type ResolversParentTypes = ResolversObject<{
   CreateTagInput: CreateTagInput;
   CreateUserAuthenticationMethodInput: CreateUserAuthenticationMethodInput;
   CreateUserInput: CreateUserInput;
+  CreateUserSessionInput: CreateUserSessionInput;
   Date: Scalars['Date']['output'];
+  DeleteUserSessionInput: DeleteUserSessionInput;
+  GetUserSessionsInput: GetUserSessionsInput;
   Group: Group;
   GroupPage: GroupPage;
   GroupPermission: GroupPermission;
@@ -1699,11 +1786,15 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateTagInput: UpdateTagInput;
   UpdateUserAuthenticationMethodInput: UpdateUserAuthenticationMethodInput;
   UpdateUserInput: UpdateUserInput;
+  UpdateUserSessionInput: UpdateUserSessionInput;
   UpdateUserTagInput: UpdateUserTagInput;
   User: User;
   UserAuthenticationMethod: UserAuthenticationMethod;
   UserPage: UserPage;
   UserRole: UserRole;
+  UserSession: UserSession;
+  UserSessionPage: UserSessionPage;
+  UserSessionSortInput: UserSessionSortInput;
   UserSortInput: UserSortInput;
   UserTag: UserTag;
 }>;
@@ -1742,7 +1833,7 @@ export type AccountProjectResolvers<ContextType = GraphqlContext, ParentType ext
 }>;
 
 export type AuditableResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Auditable'] = ResolversParentTypes['Auditable']> = ResolversObject<{
-  __resolveType: TypeResolveFn<'Account' | 'AccountProject' | 'Group' | 'GroupPermission' | 'GroupTag' | 'Organization' | 'OrganizationGroup' | 'OrganizationPermission' | 'OrganizationProject' | 'OrganizationRole' | 'OrganizationTag' | 'OrganizationUser' | 'Permission' | 'PermissionTag' | 'Project' | 'ProjectGroup' | 'ProjectPermission' | 'ProjectRole' | 'ProjectTag' | 'ProjectUser' | 'Role' | 'RoleGroup' | 'RoleTag' | 'Tag' | 'User' | 'UserAuthenticationMethod' | 'UserRole' | 'UserTag', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Account' | 'AccountProject' | 'Group' | 'GroupPermission' | 'GroupTag' | 'Organization' | 'OrganizationGroup' | 'OrganizationPermission' | 'OrganizationProject' | 'OrganizationRole' | 'OrganizationTag' | 'OrganizationUser' | 'Permission' | 'PermissionTag' | 'Project' | 'ProjectGroup' | 'ProjectPermission' | 'ProjectRole' | 'ProjectTag' | 'ProjectUser' | 'Role' | 'RoleGroup' | 'RoleTag' | 'Tag' | 'User' | 'UserAuthenticationMethod' | 'UserRole' | 'UserSession' | 'UserTag', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1937,7 +2028,7 @@ export type OrganizationUserResolvers<ContextType = GraphqlContext, ParentType e
 }>;
 
 export type PaginatedResultsResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['PaginatedResults'] = ResolversParentTypes['PaginatedResults']> = ResolversObject<{
-  __resolveType: TypeResolveFn<'AccountPage' | 'GroupPage' | 'OrganizationPage' | 'PermissionPage' | 'ProjectPage' | 'RolePage' | 'TagPage' | 'UserPage', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AccountPage' | 'GroupPage' | 'OrganizationPage' | 'PermissionPage' | 'ProjectPage' | 'RolePage' | 'TagPage' | 'UserPage' | 'UserSessionPage', ParentType, ContextType>;
   hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
 }>;
@@ -2189,6 +2280,32 @@ export type UserRoleResolvers<ContextType = GraphqlContext, ParentType extends R
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type UserSessionResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['UserSession'] = ResolversParentTypes['UserSession']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  expiresAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  ipAddress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  lastUsedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  scopeId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  scopeTenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  token?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  userAgent?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  userAuthenticationMethod?: Resolver<Maybe<ResolversTypes['UserAuthenticationMethod']>, ParentType, ContextType>;
+  userAuthenticationMethodId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type UserSessionPageResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['UserSessionPage'] = ResolversParentTypes['UserSessionPage']> = ResolversObject<{
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  userSessions?: Resolver<Array<ResolversTypes['UserSession']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type UserTagResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['UserTag'] = ResolversParentTypes['UserTag']> = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
@@ -2246,6 +2363,8 @@ export type Resolvers<ContextType = GraphqlContext> = ResolversObject<{
   UserAuthenticationMethod?: UserAuthenticationMethodResolvers<ContextType>;
   UserPage?: UserPageResolvers<ContextType>;
   UserRole?: UserRoleResolvers<ContextType>;
+  UserSession?: UserSessionResolvers<ContextType>;
+  UserSessionPage?: UserSessionPageResolvers<ContextType>;
   UserTag?: UserTagResolvers<ContextType>;
 }>;
 

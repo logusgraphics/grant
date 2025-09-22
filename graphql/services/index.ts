@@ -28,6 +28,7 @@ import { createRoleService } from './roles';
 import { createTagService } from './tags';
 import { createUserAuthenticationMethodService } from './user-authentication-methods';
 import { createUserRoleService } from './user-roles';
+import { createUserSessionService } from './user-sessions';
 import { createUserTagService } from './user-tags';
 import { createUserService } from './users';
 
@@ -43,6 +44,7 @@ export function createServices(
     accountProjects: createAccountProjectService(repositories, user, db),
     users: createUserService(repositories, user, db),
     userAuthenticationMethods: createUserAuthenticationMethodService(repositories, user, db),
+    userSessions: createUserSessionService(repositories, user, db),
     roles: createRoleService(repositories, user, db),
     userRoles: createUserRoleService(repositories, user, db),
     userTags: createUserTagService(repositories, user, db),

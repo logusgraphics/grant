@@ -1,4 +1,4 @@
-import { eq, inArray, ilike, or, and, isNull, count, desc, asc, SQL } from 'drizzle-orm';
+import { eq, inArray, ilike, or, and, isNull, count, desc, asc, gte, lte, SQL } from 'drizzle-orm';
 
 import { Auditable, Searchable, SortOrder } from '@/graphql/generated/types';
 import { DbSchema } from '@/graphql/lib/database/connection';
@@ -15,7 +15,7 @@ interface BaseSortable<TModel> {
 }
 
 // New filter types
-export type FilterOperator = 'eq' | 'in' | 'ilike' | 'isNull';
+export type FilterOperator = 'eq' | 'gte' | 'lte' | 'in' | 'ilike' | 'isNull';
 
 export interface FilterCondition<TModel> {
   field: keyof TModel;
@@ -143,6 +143,10 @@ export abstract class EntityRepository<TModel extends Auditable, TEntity extends
       switch (filter.operator) {
         case 'eq':
           return eq(column, filter.value);
+        case 'gte':
+          return gte(column, filter.value);
+        case 'lte':
+          return lte(column, filter.value);
         case 'in':
           return Array.isArray(filter.value) ? inArray(column, filter.value) : undefined;
         case 'ilike':

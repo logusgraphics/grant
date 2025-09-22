@@ -25,9 +25,9 @@ interface PaginatedResults {
 }
 
 enum Tenant {
-  ACCOUNT
-  ORGANIZATION
-  PROJECT
+  account
+  organization
+  project
 }
 
 enum SortOrder {

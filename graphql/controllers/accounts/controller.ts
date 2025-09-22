@@ -7,6 +7,8 @@ import {
   MutationUpdateAccountArgs,
   CreateAccountInput,
   UserAuthenticationMethodProvider,
+  Tenant,
+  AccountType,
 } from '@/graphql/generated/types';
 import { DbSchema } from '@/graphql/lib/database/connection';
 import { Transaction, TransactionManager } from '@/graphql/lib/transactions/TransactionManager';
@@ -41,73 +43,64 @@ export class AccountController extends ScopeController {
     return accountsResult;
   }
 
-  public async createAccount(params: Omit<CreateAccountInput, 'ownerId'>): Promise<Account> {
+  public async createAccount(
+    params: Omit<CreateAccountInput, 'ownerId'>
+  ): Promise<{ account: Account; accessToken: string; refreshToken: string }> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
-      const { name, type, provider, providerId, providerData } = params;
-      let parsedProviderData;
+      const { name, type, provider, providerId, providerData: providerDataString } = params;
 
-      try {
-        parsedProviderData = JSON.parse(providerData);
-      } catch {
-        throw new Error('Invalid provider data');
-      }
-
-      switch (provider) {
-        case UserAuthenticationMethodProvider.Email:
-          const { password } = parsedProviderData;
-          if (password) {
-            const hashedPassword = this.services.userAuthenticationMethods.hashPassword(password);
-            const otp = this.services.userAuthenticationMethods.generateOtp();
-            parsedProviderData = {
-              otp,
-              hashedPassword,
-            };
-          }
-          break;
-        case UserAuthenticationMethodProvider.Google:
-        case UserAuthenticationMethodProvider.Github:
-          try {
-            const { token } = parsedProviderData;
-            const validatedProviderData =
-              await this.services.userAuthenticationMethods.validateAuthProvider(
-                provider,
-                providerId,
-                token
-              );
-            parsedProviderData = { ...validatedProviderData };
-          } catch {
-            throw new Error('Invalid token');
-          }
-          break;
-      }
+      const { providerData, isVerified } =
+        await this.services.userAuthenticationMethods.processProvider(
+          provider,
+          providerId,
+          providerDataString
+        );
 
       const user = await this.services.users.createUser({ name }, tx);
 
-      await this.services.userAuthenticationMethods.createUserAuthenticationMethod(
-        {
-          userId: user.id,
-          provider,
-          providerId,
-          providerData: parsedProviderData,
-        },
-        tx
-      );
+      const userAuthenticationMethod =
+        await this.services.userAuthenticationMethods.createUserAuthenticationMethod(
+          {
+            userId: user.id,
+            provider,
+            providerId,
+            providerData,
+            isVerified,
+          },
+          tx
+        );
 
       const account = await this.services.accounts.createAccount(
         { name, type, ownerId: user.id },
         tx
       );
 
-      switch (provider) {
-        case UserAuthenticationMethodProvider.Email:
-          await this.services.userAuthenticationMethods.sendOtp(
-            providerId,
-            parsedProviderData?.otp?.token
-          );
-          break;
+      const session = await this.services.userSessions.createSession(
+        {
+          userId: user.id,
+          userAuthenticationMethodId: userAuthenticationMethod.id,
+          scopeTenant: type === AccountType.Organization ? Tenant.Organization : Tenant.Account,
+          scopeId: account.id,
+        },
+        tx
+      );
+
+      if (provider === UserAuthenticationMethodProvider.Email) {
+        const { token } = providerData.otp as { token: string };
+        if (token) {
+          try {
+            await this.services.userAuthenticationMethods.sendOtp(providerId, token);
+          } catch (error) {
+            console.error('Error sending OTP', error);
+          }
+        }
       }
 
-      return account;
+      return {
+        account,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      };
     });
   }
 

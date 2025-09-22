@@ -1,0 +1,5 @@
+type UserSessionPage implements PaginatedResults {
+  userSessions: [UserSession!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}

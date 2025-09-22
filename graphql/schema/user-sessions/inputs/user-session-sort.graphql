@@ -1,0 +1,4 @@
+input UserSessionSortInput {
+  field: UserSessionSortableField!
+  order: SortOrder!
+}

@@ -1,84 +1,164 @@
-import { eq, and, lt, gte } from 'drizzle-orm';
+import {
+  UserSession,
+  CreateUserSessionInput,
+  UserAuthenticationMethod,
+  User,
+  UserSessionSearchableField,
+  Tenant,
+  UpdateUserSessionInput,
+  GetUserSessionsInput,
+  UserSessionPage,
+  SortOrder,
+  UserSessionSortableField,
+  DeleteUserSessionInput,
+} from '@/graphql/generated/types';
+import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
+import { SelectedFields } from '@/graphql/services/common';
 
-import { UserSession, SessionScope } from '@/graphql/generated/types';
-
-import { EntityRepository, RelationsConfig } from '../common/EntityRepository';
+import {
+  BaseUpdateArgs,
+  EntityRepository,
+  FilterCondition,
+  RelationsConfig,
+} from '../common/EntityRepository';
+import { userAuthenticationMethods } from '../user-authentication-methods/schema';
+import { users } from '../users/schema';
 
 import { userSessions, UserSessionModel } from './schema';
 
 export class UserSessionRepository extends EntityRepository<UserSessionModel, UserSession> {
   protected table = userSessions;
-  protected schemaName = 'users' as const; // TODO: Add userSessions to main schema
-  protected searchFields: Array<keyof UserSessionModel> = ['token', 'scope'];
+  protected schemaName = 'userSessions' as const;
+  protected searchFields: Array<keyof UserSessionModel> = Object.values(UserSessionSearchableField);
   protected defaultSortField: keyof UserSessionModel = 'createdAt';
-  protected relations: RelationsConfig<UserSession> = {};
+  protected relations: RelationsConfig<UserSession> = {
+    user: {
+      field: 'user',
+      table: users,
+      extract: (value: User) => value,
+    },
+    userAuthenticationMethod: {
+      field: 'userAuthenticationMethod',
+      table: userAuthenticationMethods,
+      extract: (value: UserAuthenticationMethod) => value,
+    },
+  };
 
-  // Custom methods specific to sessions
-  async findByToken(token: string): Promise<UserSessionModel | null> {
-    const result = await this.db
-      .select()
-      .from(userSessions)
-      .where(eq(userSessions.token, token))
-      .limit(1);
+  public async getUserSessions(
+    params: GetUserSessionsInput & SelectedFields<UserSession>,
+    transaction?: Transaction
+  ): Promise<UserSessionPage> {
+    const filters: FilterCondition<UserSessionModel>[] = [];
 
-    return result[0] || null;
+    if (params.userId) {
+      filters.push({
+        field: 'userId',
+        operator: 'eq',
+        value: params.userId,
+      });
+    }
+
+    if (params.scopeTenant) {
+      filters.push({
+        field: 'scopeTenant',
+        operator: 'eq',
+        value: params.scopeTenant,
+      });
+    }
+
+    if (params.scopeId) {
+      filters.push({
+        field: 'scopeId',
+        operator: 'eq',
+        value: params.scopeId,
+      });
+    }
+
+    const result = await this.query(
+      {
+        limit: params.limit,
+        page: params.page,
+        search: params.search,
+        sort: params.sort,
+        ids: params.ids,
+        filters,
+        requestedFields: params.requestedFields,
+      },
+      transaction
+    );
+
+    return {
+      userSessions: result.items,
+      totalCount: result.totalCount,
+      hasNextPage: result.hasNextPage,
+    };
   }
 
-  async findValidByToken(token: string): Promise<UserSessionModel | null> {
-    const now = new Date();
-    const result = await this.db
-      .select()
-      .from(userSessions)
-      .where(and(eq(userSessions.token, token), gte(userSessions.expiresAt, now)))
-      .limit(1);
-
-    return result[0] || null;
+  public async createUserSession(
+    session: CreateUserSessionInput,
+    transaction?: Transaction
+  ): Promise<UserSession> {
+    return this.create(session, transaction);
   }
 
-  async findByUserId(userId: string): Promise<UserSessionModel[]> {
-    return this.db.select().from(userSessions).where(eq(userSessions.userId, userId));
-  }
-
-  async findByUserAndScope(
+  public async getLastValidUserSession(
     userId: string,
-    scope: SessionScope,
-    scopeId: string
-  ): Promise<UserSessionModel[]> {
-    return this.db
-      .select()
-      .from(userSessions)
-      .where(
-        and(
-          eq(userSessions.userId, userId),
-          eq(userSessions.scope, scope),
-          eq(userSessions.scopeId, scopeId)
-        )
-      );
-  }
-
-  async updateLastUsed(id: string): Promise<void> {
-    await this.db
-      .update(userSessions)
-      .set({ lastUsedAt: new Date() })
-      .where(eq(userSessions.id, id));
-  }
-
-  async deleteByToken(token: string): Promise<void> {
-    await this.db.delete(userSessions).where(eq(userSessions.token, token));
-  }
-
-  async deleteByUserId(userId: string): Promise<void> {
-    await this.db.delete(userSessions).where(eq(userSessions.userId, userId));
-  }
-
-  async deleteExpiredSessions(): Promise<void> {
+    scopeTenant: Tenant,
+    scopeId: string,
+    token?: string
+  ): Promise<UserSession> {
     const now = new Date();
-    await this.db.delete(userSessions).where(lt(userSessions.expiresAt, now));
+
+    const filters: FilterCondition<UserSessionModel>[] = [
+      { field: 'expiresAt', operator: 'gte', value: now },
+      { field: 'userId', operator: 'eq', value: userId },
+      { field: 'scopeTenant', operator: 'eq', value: scopeTenant },
+      { field: 'scopeId', operator: 'eq', value: scopeId },
+    ];
+
+    if (token) {
+      filters.push({ field: 'token', operator: 'eq', value: token });
+    }
+
+    const result = await this.query({
+      limit: 1,
+      sort: {
+        field: UserSessionSortableField.LastUsedAt,
+        order: SortOrder.Desc,
+      },
+      filters,
+    });
+
+    return result.items[0];
   }
 
-  async deleteUserSessionsExceptCurrent(userId: string, currentSessionId: string): Promise<void> {
-    await this.db
-      .delete(userSessions)
-      .where(and(eq(userSessions.userId, userId), eq(userSessions.id, currentSessionId)));
+  async updateUserSession(
+    params: UpdateUserSessionInput,
+    transaction?: Transaction
+  ): Promise<UserSession> {
+    const baseUpdateArgs: BaseUpdateArgs = {
+      id: params.id,
+      input: {
+        lastUsedAt: params.lastUsedAt,
+        userAgent: params.userAgent,
+        ipAddress: params.ipAddress,
+      },
+    };
+
+    return this.update(baseUpdateArgs, transaction);
+  }
+
+  async softDeleteUserSession(
+    params: DeleteUserSessionInput,
+    transaction?: Transaction
+  ): Promise<UserSession> {
+    return this.softDelete(params, transaction);
+  }
+
+  async hardDeleteUserSession(
+    params: DeleteUserSessionInput,
+    transaction?: Transaction
+  ): Promise<UserSession> {
+    return this.hardDelete(params, transaction);
   }
 }

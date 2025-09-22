@@ -11,11 +11,11 @@ export const userSessions = pgTable(
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
-    authMethodId: uuid('auth_method_id')
+    userAuthenticationMethodId: uuid('user_authentication_method_id')
       .references(() => userAuthenticationMethods.id, { onDelete: 'cascade' })
       .notNull(),
     token: varchar('token', { length: 255 }).notNull().unique(),
-    scope: varchar('scope', { length: 50 }).notNull(), // 'account', 'organization', 'project'
+    scopeTenant: varchar('scope_tenant', { length: 50 }).notNull(), // 'account', 'organization', 'project'
     scopeId: uuid('scope_id').notNull(), // ID of the account/organization/project
     expiresAt: timestamp('expires_at').notNull(),
     lastUsedAt: timestamp('last_used_at'),
@@ -28,9 +28,9 @@ export const userSessions = pgTable(
   (t) => [
     index('user_sessions_token_idx').on(t.token),
     index('user_sessions_user_id_idx').on(t.userId),
-    index('user_sessions_scope_scope_id_idx').on(t.scope, t.scopeId),
+    index('user_sessions_scope_tenant_scope_id_idx').on(t.scopeTenant, t.scopeId),
     index('user_sessions_expires_at_idx').on(t.expiresAt),
-    index('user_sessions_auth_method_id_idx').on(t.authMethodId),
+    index('user_sessions_user_authentication_method_id_idx').on(t.userAuthenticationMethodId),
     index('user_sessions_deleted_at_idx').on(t.deletedAt),
   ]
 );
@@ -40,19 +40,11 @@ export const userSessionsRelations = relations(userSessions, ({ one }) => ({
     fields: [userSessions.userId],
     references: [users.id],
   }),
-  authMethod: one(userAuthenticationMethods, {
-    fields: [userSessions.authMethodId],
+  userAuthenticationMethod: one(userAuthenticationMethods, {
+    fields: [userSessions.userAuthenticationMethodId],
     references: [userAuthenticationMethods.id],
   }),
 }));
 
 export type UserSessionModel = typeof userSessions.$inferSelect;
 export type NewUserSessionModel = typeof userSessions.$inferInsert;
-
-export const SessionScope = {
-  ACCOUNT: 'account',
-  ORGANIZATION: 'organization',
-  PROJECT: 'project',
-} as const;
-
-export type SessionScopeType = (typeof SessionScope)[keyof typeof SessionScope];

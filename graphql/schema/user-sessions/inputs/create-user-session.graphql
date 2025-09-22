@@ -1,0 +1,10 @@
+input CreateUserSessionInput {
+  userId: ID!
+  userAuthenticationMethodId: ID!
+  scopeTenant: Tenant!
+  scopeId: ID!
+  token: String!
+  expiresAt: Date!
+  userAgent: String
+  ipAddress: String
+}

@@ -3,6 +3,7 @@ import {
   MutationDeleteUserAuthenticationMethodArgs,
   MutationUpdateUserAuthenticationMethodArgs,
   QueryUserAuthenticationMethodsArgs,
+  User,
   UserAuthenticationMethod,
 } from '@/graphql/generated/types';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
@@ -25,8 +26,7 @@ export class UserAuthenticationMethodRepository extends EntityRepository<
     user: {
       field: 'user',
       table: users,
-      extract: (v: Array<UserAuthenticationMethod>) =>
-        v.map(({ user }: UserAuthenticationMethod) => user),
+      extract: (v: User) => v,
     },
   };
 
@@ -65,7 +65,9 @@ export class UserAuthenticationMethodRepository extends EntityRepository<
   }
 
   async createUserAuthenticationMethod(
-    params: CreateUserAuthenticationMethodInput,
+    params: Omit<CreateUserAuthenticationMethodInput, 'providerData'> & {
+      providerData?: Record<string, unknown>;
+    },
     transaction?: Transaction
   ): Promise<UserAuthenticationMethod> {
     return this.create(params, transaction);

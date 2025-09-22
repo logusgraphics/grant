@@ -20,7 +20,7 @@ export const searchSchema = z
 
 export const actionSchema = z.string().min(1, 'Action is required').max(255, 'Action too long');
 
-export const tenantSchema = z.enum(Object.values(Tenant) as [string, ...string[]]);
+export const tenantSchema = z.enum(Object.values(Tenant) as [Tenant, ...Tenant[]]);
 
 export const scopeSchema = z.object({
   id: idSchema,

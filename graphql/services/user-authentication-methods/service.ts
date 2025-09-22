@@ -23,6 +23,7 @@ import {
   createDynamicSingleSchema,
   SelectedFields,
   DeleteParams,
+  emailSchema,
 } from '../common';
 
 import {
@@ -30,10 +31,21 @@ import {
   queryUserAuthenticationMethodsArgsSchema,
   createUserAuthenticationMethodInputSchema,
   deleteUserAuthenticationMethodArgsSchema,
-  validateTokenSchema,
   updateUserAuthenticationMethodInputSchema,
   sendOtpSchema,
+  parseProviderDataSchema,
+  passwordPolicySchema,
 } from './schemas';
+
+interface ProcessedProvider {
+  providerData: Record<string, unknown>;
+  isVerified: boolean;
+}
+
+interface Otp {
+  token: string;
+  validUntil: number;
+}
 
 export class UserAuthenticationMethodService extends AuditService {
   constructor(
@@ -71,7 +83,9 @@ export class UserAuthenticationMethodService extends AuditService {
   }
 
   public async createUserAuthenticationMethod(
-    params: CreateUserAuthenticationMethodInput & { providerData?: Record<string, unknown> },
+    params: Omit<CreateUserAuthenticationMethodInput, 'providerData'> & {
+      providerData?: Record<string, unknown>;
+    },
     transaction?: Transaction
   ): Promise<UserAuthenticationMethod> {
     const context = 'UserAuthenticationMethodService.createUserAuthenticationMethod';
@@ -235,31 +249,88 @@ export class UserAuthenticationMethodService extends AuditService {
     );
   }
 
-  public async validateAuthProvider(
-    provider: UserAuthenticationMethodProvider,
-    providerId: string,
-    token: string
-  ): Promise<Record<string, unknown> | undefined> {
-    const context = 'UserAuthenticationMethodService.validateToken';
-    validateInput(validateTokenSchema, { provider, token }, context);
-    let providerData;
-    switch (provider) {
-      case UserAuthenticationMethodProvider.Email:
-        // TODO: validate token against stored otp
-        break;
-      case UserAuthenticationMethodProvider.Google:
-        // TODO: validate with google sdk
-        break;
-      case UserAuthenticationMethodProvider.Github:
-        // TODO: validate with github sdk
-        break;
+  private processEmailProvider(
+    email: string,
+    providerData: Record<string, unknown>,
+    context: string
+  ): ProcessedProvider {
+    const { password } = providerData;
+    if (!password || typeof password !== 'string') {
+      throw new Error('Password is required and must be a string');
     }
-    return providerData;
+    if (!email || typeof email !== 'string') {
+      throw new Error('Email is required and must be a string');
+    }
+    validateInput(emailSchema, email, context);
+    const validatedPassword = validateInput(passwordPolicySchema, password, context);
+    const hashedPassword = this.hashPassword(validatedPassword);
+    const otp = this.generateOtp();
+    return {
+      providerData: {
+        otp,
+        hashedPassword,
+      },
+      isVerified: false,
+    };
   }
 
-  public generateOtp(): { token: string; validUntil: number } {
+  private processGoogleProvider(
+    providerId: string,
+    providerData: Record<string, unknown>,
+    context: string
+  ): ProcessedProvider {
+    // TODO: implement google provider
+    return { providerData, isVerified: false };
+  }
+
+  private processGithubProvider(
+    providerId: string,
+    providerData: Record<string, unknown>,
+    context: string
+  ): ProcessedProvider {
+    // TODO: implement github provider
+    return { providerData, isVerified: false };
+  }
+
+  public async processProvider(
+    provider: UserAuthenticationMethodProvider,
+    providerId: string,
+    providerDataString: string
+  ): Promise<ProcessedProvider> {
+    const context = 'UserAuthenticationMethodService.parseProviderData';
+    validateInput(
+      parseProviderDataSchema,
+      { providerId, provider, providerData: providerDataString },
+      context
+    );
+
+    let providerData;
+
+    try {
+      providerData = JSON.parse(providerDataString);
+    } catch {
+      throw new Error('Invalid provider data');
+    }
+
+    switch (provider) {
+      case UserAuthenticationMethodProvider.Email:
+        return this.processEmailProvider(providerId, providerData, context);
+      case UserAuthenticationMethodProvider.Google:
+        return this.processGoogleProvider(providerId, providerData, context);
+      case UserAuthenticationMethodProvider.Github:
+        return this.processGithubProvider(providerId, providerData, context);
+      default:
+        throw new Error('Invalid provider');
+    }
+  }
+
+  public generateOtp(): Otp {
     const token = randomBytes(32).toString('hex');
-    const validUntil = Date.now() + 1000 * 60 * 5; // 5 minutes
+    const DEFAULT_OTP_VALIDITY_MINUTES = 5;
+    const otpValidityMinutes = Number(
+      process.env.OTP_VALIDITY_MINUTES || DEFAULT_OTP_VALIDITY_MINUTES
+    );
+    const validUntil = Date.now() + 1000 * 60 * otpValidityMinutes;
     return { token, validUntil };
   }
 

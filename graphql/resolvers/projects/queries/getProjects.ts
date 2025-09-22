@@ -4,13 +4,13 @@ import { ProjectModel } from '@/graphql/repositories/projects/schema';
 
 export const getProjectsResolver: QueryResolvers['projects'] = async (
   _parent,
-  { organizationId, page, limit, sort, search, ids, tagIds },
+  { scope, page, limit, sort, search, ids, tagIds },
   context,
   info
 ) => {
   const requestedFields = getDirectFieldSelection<keyof ProjectModel>(info, ['projects']);
   return await context.controllers.projects.getProjects({
-    organizationId,
+    scope,
     page,
     limit,
     sort,

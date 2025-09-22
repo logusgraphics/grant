@@ -2,9 +2,9 @@ import { MutationResolvers } from '@/graphql/generated/types';
 
 export const deleteProjectResolver: MutationResolvers['deleteProject'] = async (
   _parent,
-  { id, organizationId },
+  { id, scope },
   context
 ) => {
-  const deletedProject = await context.controllers.projects.deleteProject({ id, organizationId });
+  const deletedProject = await context.controllers.projects.deleteProject({ id, scope });
   return deletedProject;
 };
