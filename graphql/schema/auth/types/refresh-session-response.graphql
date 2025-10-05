@@ -1,0 +1,4 @@
+type RefreshSessionResponse {
+  accessToken: String!
+  refreshToken: String!
+}

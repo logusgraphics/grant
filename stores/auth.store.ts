@@ -3,10 +3,10 @@ import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
 import { Account, AccountType } from '@/graphql/generated/types';
+import { removeStoredTokens, setStoredTokens } from '@/lib/auth';
 
 interface AuthState {
   // Authentication state
-  isAuthenticated: boolean;
   loading: boolean;
 
   // Account state
@@ -16,7 +16,6 @@ interface AuthState {
   refreshToken: string | null;
 
   // Actions
-  setAuthentication: (isAuthenticated: boolean) => void;
   setLoading: (loading: boolean) => void;
   setAccounts: (accounts: Account[]) => void;
   setCurrentAccount: (account: Account | null) => void;
@@ -26,6 +25,7 @@ interface AuthState {
   setAuthData: (data: { accounts: Account[]; accessToken: string; refreshToken: string }) => void;
 
   // Computed
+  isAuthenticated: () => boolean;
   getCurrentPersonalAccount: () => Account | null;
   getCurrentOrganizationAccount: () => Account | null;
   hasMultipleAccounts: () => boolean;
@@ -36,8 +36,7 @@ export const useAuthStore = create<AuthState>()(
     persist(
       (set, get) => ({
         // Initial state
-        isAuthenticated: false,
-        loading: false,
+        loading: true,
 
         // Account state
         accounts: [],
@@ -46,21 +45,20 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: null,
 
         // Actions
-        setAuthentication: (isAuthenticated) => set({ isAuthenticated }),
         setLoading: (loading) => set({ loading }),
         setAccounts: (accounts) => set({ accounts }),
         setCurrentAccount: (currentAccount) => set({ currentAccount }),
         setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
 
-        clearAuth: () =>
+        clearAuth: () => {
+          removeStoredTokens();
           set({
-            isAuthenticated: false,
             accounts: [],
             currentAccount: null,
             accessToken: null,
             refreshToken: null,
-          }),
-
+          });
+        },
         switchAccount: (accountId) => {
           const currentAccounts = get().accounts;
           const targetAccount = currentAccounts.find((account) => account.id === accountId);
@@ -71,11 +69,11 @@ export const useAuthStore = create<AuthState>()(
 
         setAuthData: (data) => {
           const { accounts, accessToken, refreshToken } = data;
-          // Auto-select the first account as current
           const currentAccount = accounts.length > 0 ? accounts[0] : null;
 
+          setStoredTokens(accessToken, refreshToken);
+
           set({
-            isAuthenticated: true,
             accounts,
             currentAccount,
             accessToken,
@@ -98,17 +96,24 @@ export const useAuthStore = create<AuthState>()(
           const { accounts } = get();
           return accounts.length > 1;
         },
+
+        isAuthenticated: () => {
+          const { accessToken, refreshToken } = get();
+          return !!accessToken && !!refreshToken;
+        },
       }),
       {
         name: 'auth-store',
         // Only persist auth-related data, not loading states
         partialize: (state) => ({
-          isAuthenticated: state.isAuthenticated,
           accounts: state.accounts,
           currentAccount: state.currentAccount,
           accessToken: state.accessToken,
           refreshToken: state.refreshToken,
         }),
+        onRehydrateStorage: () => (state) => {
+          state?.setLoading(false);
+        },
       }
     ),
     {

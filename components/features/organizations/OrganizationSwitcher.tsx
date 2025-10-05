@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 import { Check, ChevronsUpDown, Building2 } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { redirect, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { OrganizationSortableField, SortOrder } from '@/graphql/generated/types';
 import { useOrganizations } from '@/hooks/organizations/useOrganizations';
-import { useRouter, usePathname } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 interface OrganizationSwitcherProps {
@@ -27,7 +27,6 @@ interface OrganizationSwitcherProps {
 
 export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
   const t = useTranslations('common');
-  const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
   const [open, setOpen] = React.useState(false);
@@ -56,7 +55,7 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
     // Redirect to the organization's projects page
     const newPath = `/dashboard/organizations/${organizationId}/projects`;
     if (pathname !== newPath) {
-      router.replace(newPath);
+      redirect(newPath);
     }
   };
 

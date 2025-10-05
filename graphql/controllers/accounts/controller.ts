@@ -15,6 +15,8 @@ import {
   LoginResponse,
   SortOrder,
   UserSessionSortableField,
+  RefreshSessionResponse,
+  MutationRefreshSessionArgs,
 } from '@/graphql/generated/types';
 import { DbSchema } from '@/graphql/lib/database/connection';
 import { Transaction, TransactionManager } from '@/graphql/lib/transactions/TransactionManager';
@@ -39,6 +41,22 @@ export class AccountController extends ScopeController {
 
   private getVerificationExpiryDate(): Date {
     return new Date(Date.now() + this.getVerificationExpirationMs());
+  }
+
+  public async refreshSession(params: MutationRefreshSessionArgs): Promise<RefreshSessionResponse> {
+    return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      const session = await this.services.userSessions.refreshSession(
+        params.accessToken,
+        params.refreshToken,
+        tx
+      );
+
+      if (!session) {
+        throw new Error('Invalid refresh token');
+      }
+
+      return session;
+    });
   }
 
   public async login(params: MutationLoginArgs): Promise<LoginResponse> {

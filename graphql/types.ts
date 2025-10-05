@@ -1,6 +1,6 @@
 import { Controllers } from './controllers';
+import { Scope } from './generated/types';
 
-// Backward compatibility alias for generated types
 export type GraphqlContext = {
   user: AuthenticatedUser | null;
   controllers: Controllers;
@@ -8,6 +8,5 @@ export type GraphqlContext = {
 
 export interface AuthenticatedUser {
   id: string;
-  name: string;
-  email: string;
+  scope: Scope;
 }

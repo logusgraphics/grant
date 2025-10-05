@@ -1,21 +1,24 @@
 'use client';
 
-import { redirect } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { useLocale } from 'next-intl';
 
-import { useAuth } from '@/hooks/auth';
+import { FullPageLoader } from '@/components/common';
 import { getRedirectPath } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function DashboardPage() {
-  const currentLocale = useLocale();
-  const { currentAccount } = useAuthStore();
-  const { logout } = useAuth({ disableAutoRedirect: true });
+  const { currentAccount, clearAuth, loading } = useAuthStore();
+  const locale = useLocale();
 
-  if (currentAccount) {
-    const redirectTo = getRedirectPath(currentAccount.type, currentAccount.id, currentLocale);
-    redirect(redirectTo);
-  } else {
-    logout();
-  }
+  useEffect(() => {
+    if (loading) return;
+    if (currentAccount) {
+      const redirectTo = getRedirectPath(currentAccount.type, currentAccount.id, locale);
+      window.location.href = redirectTo;
+    }
+  }, [currentAccount, locale, clearAuth, loading]);
+
+  return <FullPageLoader />;
 }

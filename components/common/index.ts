@@ -29,3 +29,4 @@ export { CardHeader, type CardHeaderProps } from './CardHeader';
 export { ScrollBadges, type BadgeItem } from './ScrollBadges';
 export { Tags, type TagsProps } from './Tags';
 export { Breadcrumb } from './Breadcrumb';
+export { FullPageLoader } from './FullPageLoader';

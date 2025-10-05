@@ -417,6 +417,7 @@ export type Mutation = {
   deleteTag: Tag;
   deleteUser: User;
   login: LoginResponse;
+  refreshSession: RefreshSessionResponse;
   register: CreateAccountResult;
   updateAccount: Account;
   updateGroup: Group;
@@ -512,6 +513,12 @@ export type MutationDeleteUserArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+
+export type MutationRefreshSessionArgs = {
+  accessToken: Scalars['String']['input'];
+  refreshToken: Scalars['String']['input'];
 };
 
 
@@ -962,6 +969,12 @@ export type QueryUsersArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<UserSortInput>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type RefreshSessionResponse = {
+  __typename?: 'RefreshSessionResponse';
+  accessToken: Scalars['String']['output'];
+  refreshToken: Scalars['String']['output'];
 };
 
 export type RegisterInput = {
@@ -1618,6 +1631,7 @@ export type ResolversTypes = ResolversObject<{
   ProjectTag: ResolverTypeWrapper<ProjectTag>;
   ProjectUser: ResolverTypeWrapper<ProjectUser>;
   Query: ResolverTypeWrapper<{}>;
+  RefreshSessionResponse: ResolverTypeWrapper<RefreshSessionResponse>;
   RegisterInput: RegisterInput;
   RemoveAccountProjectInput: RemoveAccountProjectInput;
   RemoveGroupPermissionInput: RemoveGroupPermissionInput;
@@ -1766,6 +1780,7 @@ export type ResolversParentTypes = ResolversObject<{
   ProjectTag: ProjectTag;
   ProjectUser: ProjectUser;
   Query: {};
+  RefreshSessionResponse: RefreshSessionResponse;
   RegisterInput: RegisterInput;
   RemoveAccountProjectInput: RemoveAccountProjectInput;
   RemoveGroupPermissionInput: RemoveGroupPermissionInput;
@@ -1964,6 +1979,7 @@ export type MutationResolvers<ContextType = GraphqlContext, ParentType extends R
   deleteTag?: Resolver<ResolversTypes['Tag'], ParentType, ContextType, RequireFields<MutationDeleteTagArgs, 'id' | 'scope'>>;
   deleteUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationDeleteUserArgs, 'id' | 'scope'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType, RequireFields<MutationLoginArgs, 'input'>>;
+  refreshSession?: Resolver<ResolversTypes['RefreshSessionResponse'], ParentType, ContextType, RequireFields<MutationRefreshSessionArgs, 'accessToken' | 'refreshToken'>>;
   register?: Resolver<ResolversTypes['CreateAccountResult'], ParentType, ContextType, RequireFields<MutationRegisterArgs, 'input'>>;
   updateAccount?: Resolver<ResolversTypes['Account'], ParentType, ContextType, RequireFields<MutationUpdateAccountArgs, 'id' | 'input'>>;
   updateGroup?: Resolver<ResolversTypes['Group'], ParentType, ContextType, RequireFields<MutationUpdateGroupArgs, 'id' | 'input'>>;
@@ -2205,6 +2221,12 @@ export type QueryResolvers<ContextType = GraphqlContext, ParentType extends Reso
   users?: Resolver<ResolversTypes['UserPage'], ParentType, ContextType, RequireFields<QueryUsersArgs, 'scope'>>;
 }>;
 
+export type RefreshSessionResponseResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['RefreshSessionResponse'] = ResolversParentTypes['RefreshSessionResponse']> = ResolversObject<{
+  accessToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  refreshToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type RoleResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Role'] = ResolversParentTypes['Role']> = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
@@ -2398,6 +2420,7 @@ export type Resolvers<ContextType = GraphqlContext> = ResolversObject<{
   ProjectTag?: ProjectTagResolvers<ContextType>;
   ProjectUser?: ProjectUserResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  RefreshSessionResponse?: RefreshSessionResponseResolvers<ContextType>;
   Role?: RoleResolvers<ContextType>;
   RoleGroup?: RoleGroupResolvers<ContextType>;
   RolePage?: RolePageResolvers<ContextType>;

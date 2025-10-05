@@ -3,7 +3,7 @@
 import { forwardRef } from 'react';
 
 import { Globe } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { redirect, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { locales } from '@/i18n/routing';
 
 const LOCALE_LABELS: Record<string, string> = {
@@ -29,7 +29,6 @@ interface LanguageSwitcherProps {
 
 export const LanguageSwitcher = forwardRef<HTMLButtonElement, LanguageSwitcherProps>(
   ({ trigger }, ref) => {
-    const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const currentLocale = useLocale();
@@ -58,9 +57,7 @@ export const LanguageSwitcher = forwardRef<HTMLButtonElement, LanguageSwitcherPr
                 <DropdownMenuRadioItem
                   key={locale}
                   value={locale}
-                  onClick={() =>
-                    router.replace(`${pathname}?${searchParams.toString()}`, { locale })
-                  }
+                  onClick={() => redirect(`/${locale}/${pathname}?${searchParams.toString()}`)}
                   className="cursor-pointer"
                 >
                   {LOCALE_LABELS[locale]}

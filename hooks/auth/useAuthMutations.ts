@@ -9,7 +9,6 @@ import {
   AccountType,
   UserAuthenticationEmailProviderAction,
 } from '@/graphql/generated/types';
-import { setStoredTokens } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 import { LOGIN, LOGOUT, REGISTER } from './mutations';
@@ -52,8 +51,6 @@ export function useAuthMutations() {
       const loginData = result.data?.login;
 
       if (loginData?.accessToken && loginData?.refreshToken && loginData?.accounts) {
-        setStoredTokens(loginData.accessToken, loginData.refreshToken);
-
         setAuthData({
           accounts: loginData.accounts,
           accessToken: loginData.accessToken,
@@ -61,11 +58,10 @@ export function useAuthMutations() {
         });
       }
 
-      // Handle verification status
       if (loginData?.requiresEmailVerification) {
         toast.warning(t('login.verificationRequired'), {
           description: t('login.verifyEmailDescription'),
-          duration: 8000, // Longer duration for important message
+          duration: 8000,
         });
       } else {
         toast.success(t('login.success'));
@@ -101,24 +97,18 @@ export function useAuthMutations() {
       const registerData = result.data?.register;
 
       if (registerData?.accessToken && registerData?.refreshToken && registerData?.account) {
-        // Store tokens locally
-        setStoredTokens(registerData.accessToken, registerData.refreshToken);
-
-        // Create accounts array from single account
         const accounts = [registerData.account];
 
-        // Store account data in Zustand store
         setAuthData({
           accounts,
           accessToken: registerData.accessToken,
           refreshToken: registerData.refreshToken,
         });
 
-        // Handle verification status
         if (registerData?.requiresEmailVerification) {
           toast.warning(t('register.verificationRequired'), {
             description: t('register.verificationRequired'),
-            duration: 8000, // Longer duration for important message
+            duration: 8000,
           });
         } else {
           toast.success(t('register.success'));
@@ -129,15 +119,11 @@ export function useAuthMutations() {
     } catch (error) {
       console.error('Error registering:', error);
 
-      // Check if it's a validation error with detailed field errors
       if (error instanceof Error && error.message.includes('Input validation failed')) {
-        // For validation errors, show a simple message since field-specific errors
-        // are already shown via form validation
         toast.error(t('register.error'), {
           description: 'Please check the form for validation errors',
         });
       } else {
-        // For other errors (network, server, etc.), show the full error message
         toast.error(t('register.error'), {
           description: error instanceof Error ? error.message : 'An unknown error occurred',
         });
@@ -150,8 +136,6 @@ export function useAuthMutations() {
   const handleLogout = async () => {
     try {
       const result = await logout();
-      // Clear auth store will be handled by the logout function in useAuth hook
-
       toast.success(t('notifications.logoutSuccess'));
       return result.data?.logout;
     } catch (error) {

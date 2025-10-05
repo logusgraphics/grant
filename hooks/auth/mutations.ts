@@ -21,6 +21,15 @@ export const LOGOUT = gql`
   }
 `;
 
+export const REFRESH_SESSION = gql`
+  mutation RefreshSession($accessToken: String!, $refreshToken: String!) {
+    refreshSession(accessToken: $accessToken, refreshToken: $refreshToken) {
+      accessToken
+      refreshToken
+    }
+  }
+`;
+
 export const REGISTER = gql`
   mutation Register($input: RegisterInput!) {
     register(input: $input) {

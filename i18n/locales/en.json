@@ -1,8 +1,8 @@
 {
   "common": {
     "app": {
-      "title": "Identity Central",
-      "description": "Unified identity management across multiple authentication systems"
+      "title": "Grant",
+      "description": "A modern authorization platform for individuals and organizations."
     },
     "auth": {
       "login": "Sign In",
@@ -55,6 +55,7 @@
     },
     "emptyElements": "No {title} to display",
     "loading": "Loading...",
+    "redirecting": "Redirecting...",
     "error": "Error",
     "organizations": {
       "select": "Select organization",

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Identity Central',
+  title: 'Grant',
   description: 'Unified identity management across multiple authentication systems.',
   icons: {
     icon: [{ url: '/favicon.svg?v=3', type: 'image/svg+xml' }, { url: '/favicon.svg?v=3' }],

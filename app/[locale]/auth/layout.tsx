@@ -1,6 +1,10 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useEffect } from 'react';
+
+import { useLocale, useTranslations } from 'next-intl';
+
+import { useAuthStore } from '@/stores/auth.store';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -8,6 +12,15 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   const t = useTranslations('auth');
+  const { loading, currentAccount } = useAuthStore();
+  const locale = useLocale();
+
+  useEffect(() => {
+    if (loading) return;
+    if (currentAccount) {
+      window.location.href = `/${locale}/dashboard`;
+    }
+  }, [currentAccount, locale, loading]);
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] grid lg:grid-cols-2">

@@ -1,11 +1,25 @@
 'use client';
 
-import { redirect, useParams } from 'next/navigation';
+import { useEffect } from 'react';
+
+import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 
+import { FullPageLoader } from '@/components/common';
+import { AccountType } from '@/graphql/generated/types';
+import { useAuthStore } from '@/stores/auth.store';
+
 export default function AccountPage() {
+  const { currentAccount, loading } = useAuthStore();
   const currentLocale = useLocale();
   const params = useParams();
-  const accountId = params.accountId as string;
-  return redirect(`/${currentLocale}/dashboard/accounts/${accountId}/projects`);
+
+  useEffect(() => {
+    if (loading) return;
+    if (currentAccount && currentAccount.type === AccountType.Personal) {
+      window.location.href = `/${currentLocale}/dashboard/accounts/${currentAccount.id}/projects`;
+    }
+  }, [currentLocale, params, currentAccount, loading]);
+
+  return <FullPageLoader />;
 }

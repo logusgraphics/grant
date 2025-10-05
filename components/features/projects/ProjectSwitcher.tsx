@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { redirect, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ProjectSortableField, SortOrder, Tenant } from '@/graphql/generated/types';
 import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
 import { useProjects } from '@/hooks/projects/useProjects';
-import { useRouter, usePathname } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 interface ProjectSwitcherProps {
@@ -28,7 +28,6 @@ interface ProjectSwitcherProps {
 
 export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
   const t = useTranslations('common');
-  const router = useRouter();
   const pathname = usePathname();
   const scope = useScopeFromParams();
   const params = useParams();
@@ -63,7 +62,7 @@ export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
         throw new Error('Invalid scope');
     }
     if (pathname !== newPath) {
-      router.replace(newPath);
+      redirect(newPath);
     }
   };
 

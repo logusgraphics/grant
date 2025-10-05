@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 
 import { Menu, X, Sun, Moon, Globe, LogOut } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Breadcrumb } from '@/components/common/Breadcrumb';
 import { Logo } from '@/components/common/Logo';
@@ -13,21 +13,27 @@ import { LanguageSwitcher } from '@/components/settings/LanguageSwitcher';
 import { ThemeToggle } from '@/components/settings/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAuth } from '@/hooks/auth';
 import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function Header() {
   const t = useTranslations('common');
   const themeT = useTranslations('theme');
-  const { isAuthenticated, logout } = useAuth();
+  const locale = useLocale();
+  const { loading, isAuthenticated, clearAuth } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const themeToggleRef = useRef<HTMLButtonElement>(null);
   const languageSwitcherRef = useRef<HTMLButtonElement>(null);
 
+  const showLoginButton = useMemo(() => {
+    return !loading && !isAuthenticated();
+  }, [isAuthenticated, loading]);
+
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    logout();
+    clearAuth();
+    window.location.href = `/${locale}/auth/login`;
   };
 
   const mobileThemeTrigger = (
@@ -97,7 +103,7 @@ export function Header() {
           <div className="flex items-center space-x-3">
             <ThemeToggle ref={themeToggleRef} trigger={desktopThemeTrigger} />
             <LanguageSwitcher ref={languageSwitcherRef} trigger={desktopLanguageTrigger} />
-            {!isAuthenticated ? (
+            {showLoginButton ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

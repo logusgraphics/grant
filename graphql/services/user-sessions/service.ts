@@ -14,12 +14,12 @@ import { DbSchema } from '@/graphql/lib/database/connection';
 import { Transaction } from '@/graphql/lib/transactions/TransactionManager';
 import { Repositories } from '@/graphql/repositories';
 import { userSessionAuditLogs } from '@/graphql/repositories/user-sessions/schema';
+import { AuthenticatedUser } from '@/graphql/types';
 import {
-  JWT_EXPIRATION_MINUTES,
+  ACCESS_TOKEN_EXPIRATION_MINUTES,
   JWT_SECRET,
   REFRESH_TOKEN_EXPIRATION_DAYS,
-} from '@/graphql/resolvers/auth/constants';
-import { AuthenticatedUser } from '@/graphql/types';
+} from '@/lib/constants';
 
 import { AuditService, SelectedFields, validateInput, validateOutput } from '../common';
 
@@ -51,7 +51,7 @@ export class UserSessionService extends AuditService {
   }
 
   private getAccessTokenExpirationDate(from: number = Date.now()): Date {
-    return new Date(from + JWT_EXPIRATION_MINUTES * 60 * 1000);
+    return new Date(from + ACCESS_TOKEN_EXPIRATION_MINUTES * 60 * 1000);
   }
 
   private getRefreshTokenExpirationDate(from: number = Date.now()): Date {

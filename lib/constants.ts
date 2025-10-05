@@ -1,10 +1,20 @@
+// Authentication constants
 export const AUTH_ACCESS_TOKEN_KEY = 'auth_access_token';
 export const AUTH_REFRESH_TOKEN_KEY = 'auth_refresh_token';
 export const AUTH_HEADER_KEY = 'authorization';
-export const ACCESS_TOKEN_EXPIRATION_HOURS =
-  Number(process.env.NEXT_PUBLIC_ACCESS_TOKEN_EXPIRATION_HOURS) ?? 2;
+
+// JWT configuration
+export const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Token expiration settings
+export const ACCESS_TOKEN_EXPIRATION_MINUTES =
+  Number(process.env.ACCESS_TOKEN_EXPIRATION_MINUTES) || 15;
 export const REFRESH_TOKEN_EXPIRATION_DAYS =
-  Number(process.env.NEXT_PUBLIC_REFRESH_TOKEN_EXPIRATION_DAYS) ?? 7;
+  Number(process.env.REFRESH_TOKEN_EXPIRATION_DAYS) || 30;
+
+// Provider verification
 export const PROVIDER_VERIFICATION_EXPIRATION_DAYS =
   Number(process.env.NEXT_PUBLIC_PROVIDER_VERIFICATION_EXPIRATION_DAYS) ?? 7;
+
+// System constants
 export const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';

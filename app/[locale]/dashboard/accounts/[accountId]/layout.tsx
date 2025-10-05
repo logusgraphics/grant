@@ -1,12 +1,28 @@
 'use client';
 
+import { useEffect } from 'react';
+
+import { useLocale } from 'next-intl';
+
 import { PersonalWorkspaceNav } from '@/components/navigation/PersonalWorkspaceNav';
+import { AccountType } from '@/graphql/generated/types';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface PersonalWorkspaceLayoutProps {
   children: React.ReactNode;
 }
 
 export default function PersonalWorkspaceLayout({ children }: PersonalWorkspaceLayoutProps) {
+  const { currentAccount, loading } = useAuthStore();
+  const currentLocale = useLocale();
+
+  useEffect(() => {
+    if (loading) return;
+    if (currentAccount && currentAccount.type === AccountType.Organization) {
+      window.location.href = `/${currentLocale}/dashboard/organizations`;
+    }
+  }, [currentLocale, currentAccount, loading]);
+
   return (
     <div className="flex h-full">
       {/* Desktop Sidebar */}

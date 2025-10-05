@@ -1,33 +1,17 @@
 'use client';
 
-import { ApolloClient, HttpLink, InMemoryCache, from } from '@apollo/client';
+import { ApolloClient, HttpLink, InMemoryCache, from, Observable } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { onError } from '@apollo/client/link/error';
 
 import { useAuthStore } from '@/stores/auth.store';
 
-import { isTokenValid } from './auth';
+let refreshPromise: Promise<void> | null = null;
+let refreshInProgress = false;
 
 const authLink = setContext((_, { headers }) => {
   try {
-    // Get token from Zustand store instead of localStorage
     const accessToken = useAuthStore.getState().accessToken;
-
-    if (accessToken && !isTokenValid(accessToken)) {
-      if (typeof window !== 'undefined') {
-        // Clear invalid token from both store and localStorage (fallback cleanup)
-        useAuthStore.getState().setTokens('', '');
-        console.warn('⚠️ Invalid/expired token removed from auth store');
-      }
-      return { headers };
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      if (accessToken) {
-        console.log('🔐 Valid auth token found, including in request headers');
-      } else {
-        console.log('🔓 No auth token found, proceeding without authorization');
-      }
-    }
 
     return {
       headers: {
@@ -36,10 +20,121 @@ const authLink = setContext((_, { headers }) => {
       },
     };
   } catch (error) {
-    console.error('❌ Error in auth link:', error);
+    console.error('Error in auth link:', error);
     return { headers };
   }
 });
+
+const redirectToLogin = () => {
+  if (typeof window !== 'undefined') {
+    useAuthStore.getState().clearAuth();
+    const currentPath = window.location.pathname;
+    const locale = currentPath.split('/')[1] || 'en';
+    window.location.href = `/${locale}/auth/login`;
+  }
+};
+
+const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
+  const handleUnauthorized = () => {
+    const { accessToken, refreshToken } = useAuthStore.getState();
+
+    if (accessToken && refreshToken) {
+      return new Observable<any>((observer) => {
+        if (!refreshInProgress) {
+          refreshInProgress = true;
+          refreshPromise = refreshSession(accessToken, refreshToken);
+        }
+
+        refreshPromise!
+          .then(() => {
+            const newToken = useAuthStore.getState().accessToken;
+
+            operation.setContext({
+              headers: {
+                ...operation.getContext().headers,
+                authorization: `Bearer ${newToken}`,
+              },
+              fetchPolicy: 'network-only',
+            });
+
+            const retryObservable = forward(operation);
+            const subscription = retryObservable.subscribe(observer);
+
+            return () => {
+              subscription.unsubscribe();
+            };
+          })
+          .catch((refreshError) => {
+            console.error('Token refresh failed:', refreshError);
+            refreshPromise = null;
+            refreshInProgress = false;
+            redirectToLogin();
+            observer.error(refreshError);
+          });
+      });
+    } else {
+      redirectToLogin();
+      return Observable.of();
+    }
+  };
+
+  if (graphQLErrors) {
+    for (const error of graphQLErrors) {
+      if (
+        error.extensions &&
+        typeof error.extensions === 'object' &&
+        'http' in error.extensions &&
+        error.extensions.http &&
+        typeof error.extensions.http === 'object' &&
+        'status' in error.extensions.http &&
+        error.extensions.http.status === 401
+      ) {
+        return handleUnauthorized();
+      }
+    }
+  }
+
+  if (networkError && 'statusCode' in networkError && networkError.statusCode === 401) {
+    return handleUnauthorized();
+  }
+});
+
+const refreshSession = async (accessToken: string, refreshToken: string) => {
+  try {
+    const { REFRESH_SESSION } = await import('@/hooks/auth/mutations');
+
+    const tempClient = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new HttpLink({
+        uri: process.env.NEXT_PUBLIC_GRAPHQL_URL,
+        credentials: 'include',
+      }),
+    });
+
+    const result = await tempClient.mutate({
+      mutation: REFRESH_SESSION,
+      variables: {
+        accessToken,
+        refreshToken,
+      },
+    });
+
+    if (result.data?.refreshSession) {
+      const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+        result.data.refreshSession;
+
+      useAuthStore.getState().setTokens(newAccessToken, newRefreshToken);
+    }
+
+    refreshPromise = null;
+    refreshInProgress = false;
+  } catch (refreshError) {
+    console.error('Token refresh failed:', refreshError);
+    refreshPromise = null;
+    refreshInProgress = false;
+    throw refreshError;
+  }
+};
 
 const httpLink = new HttpLink({
   uri: process.env.NEXT_PUBLIC_GRAPHQL_URL,
@@ -88,6 +183,6 @@ export function getClient() {
         },
       },
     }),
-    link: from([authLink, httpLink]),
+    link: from([authLink, errorLink, httpLink]),
   });
 }

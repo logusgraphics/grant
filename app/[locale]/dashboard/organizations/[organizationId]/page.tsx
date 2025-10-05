@@ -1,11 +1,26 @@
 'use client';
 
-import { redirect, useParams } from 'next/navigation';
+import { useEffect } from 'react';
+
+import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 
+import { FullPageLoader } from '@/components/common';
+import { AccountType } from '@/graphql/generated/types';
+import { useAuthStore } from '@/stores/auth.store';
+
 export default function OrganizationPage() {
-  const currentLocale = useLocale();
+  const { currentAccount, loading, clearAuth } = useAuthStore();
+  const locale = useLocale();
   const params = useParams();
-  const organizationId = params.organizationId as string;
-  return redirect(`/${currentLocale}/dashboard/organizations/${organizationId}/projects`);
+
+  useEffect(() => {
+    if (loading) return;
+    if (currentAccount && currentAccount.type === AccountType.Organization) {
+      const organizationId = params.organizationId as string;
+      window.location.href = `/${locale}/dashboard/organizations/${organizationId}/projects`;
+    }
+  }, [locale, params, currentAccount, loading, clearAuth]);
+
+  return <FullPageLoader />;
 }
