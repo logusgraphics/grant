@@ -13,6 +13,7 @@ import { Transaction, TransactionManager } from '@/graphql/lib/transactions/Tran
 import { TagModel } from '@/graphql/repositories/tags/schema';
 import { Services } from '@/graphql/services';
 import { DeleteParams, SelectedFields } from '@/graphql/services/common';
+import { AuthenticatedUser } from '@/graphql/types';
 
 import { ScopeController } from '../base/ScopeController';
 
@@ -25,12 +26,17 @@ export class TagController extends ScopeController {
     super(scopeCache, services);
   }
 
-  public async getTags(params: QueryTagsArgs & SelectedFields<TagModel>): Promise<TagPage> {
+  public async getTags(
+    params: QueryTagsArgs & SelectedFields<TagModel>,
+    user: AuthenticatedUser
+  ): Promise<TagPage> {
     const { scope, page, limit, sort, search, ids, requestedFields } = params;
 
     let tagIds = await this.getScopedTagIds(scope);
 
-    if (scope.tenant === Tenant.Project) {
+    // Tags can be inherited from organization to project
+    // We don't want to mix scopes for tags
+    if (scope.tenant === Tenant.Project && user.scope.tenant === Tenant.Organization) {
       const projectOrganization = await this.services.organizationProjects.getOrganizationProject({
         projectId: scope.id,
       });

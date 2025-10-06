@@ -1,0 +1,3 @@
+extend type Query {
+  checkUsername(username: String!): UsernameAvailability!
+}

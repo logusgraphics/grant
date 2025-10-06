@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useProjectScope } from '@/hooks/common/useProjectScope';
 import { useProjects } from '@/hooks/projects';
 import { useProjectsStore } from '@/stores/projects.store';
 
@@ -11,7 +11,7 @@ import { ProjectTable } from './ProjectTable';
 import { ProjectView } from './ProjectViewSwitcher';
 
 export function ProjectViewer() {
-  const scope = useScopeFromParams();
+  const scope = useProjectScope();
 
   const view = useProjectsStore((state) => state.view);
   const page = useProjectsStore((state) => state.page);

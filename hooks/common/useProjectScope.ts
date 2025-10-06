@@ -4,15 +4,8 @@ import { useParams } from 'next/navigation';
 
 import { Scope, Tenant } from '@/graphql/generated/types';
 
-export function useScopeFromParams(): Scope | null {
+export function useProjectScope(): Scope | null {
   const params = useParams();
-
-  if (params.projectId) {
-    return {
-      tenant: Tenant.Project,
-      id: params.projectId as string,
-    };
-  }
 
   if (params.organizationId) {
     return {

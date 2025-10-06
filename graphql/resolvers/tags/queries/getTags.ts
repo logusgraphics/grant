@@ -10,15 +10,18 @@ export const getTagsResolver: QueryResolvers['tags'] = async (
 ) => {
   const requestedFields = getDirectFieldSelection<keyof TagModel>(info, ['tags']);
 
-  const tags = await context.controllers.tags.getTags({
-    scope,
-    page,
-    limit,
-    sort,
-    search,
-    ids,
-    requestedFields,
-  });
+  const tags = await context.controllers.tags.getTags(
+    {
+      scope,
+      page,
+      limit,
+      sort,
+      search,
+      ids,
+      requestedFields,
+    },
+    context.user!
+  );
 
   return tags;
 };

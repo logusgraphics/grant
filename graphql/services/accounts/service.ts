@@ -84,11 +84,12 @@ export class AccountService extends AuditService {
   ): Promise<Account> {
     const context = 'AccountService.createAccount';
     const validatedParams = validateInput(createAccountInputSchema, params, context);
-    const { name, type, ownerId } = validatedParams;
+    const { name, username, type, ownerId } = validatedParams;
 
     const account = await this.repositories.accountRepository.createAccount(
       {
         name,
+        username,
         type,
         ownerId,
       },
@@ -110,6 +111,17 @@ export class AccountService extends AuditService {
     await this.logCreate(account.id, newValues, metadata, transaction);
 
     return validateOutput(createDynamicSingleSchema(accountSchema), account, context);
+  }
+
+  public async checkUsernameAvailability(username: string): Promise<boolean> {
+    if (!username || username.trim().length < 3) {
+      return false;
+    }
+
+    const slugifiedUsername = this.repositories.accountRepository.generateSlug(username);
+    const existingAccount = await this.repositories.accountRepository.findBySlug(slugifiedUsername);
+
+    return !existingAccount;
   }
 
   public async updateAccount(

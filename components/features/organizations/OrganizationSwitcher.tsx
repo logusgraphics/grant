@@ -33,13 +33,11 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
 
   const currentOrganizationId = params.organizationId as string;
 
-  // Load all organizations with limit -1 (always call this hook)
   const { organizations, loading, error } = useOrganizations({
     limit: -1,
     sort: { field: OrganizationSortableField.Name, order: SortOrder.Asc },
   });
 
-  // Only show on project pages or organization pages
   const isProjectPage = !!params.projectId;
   const isOrganizationPage = !!params.organizationId;
 
@@ -52,7 +50,6 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
   const handleOrganizationSelect = (organizationId: string) => {
     setOpen(false);
 
-    // Redirect to the organization's projects page
     const newPath = `/dashboard/organizations/${organizationId}/projects`;
     if (pathname !== newPath) {
       redirect(newPath);

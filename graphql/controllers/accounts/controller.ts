@@ -174,7 +174,7 @@ export class AccountController extends ScopeController {
           userAuthenticationMethodId: userAuthenticationMethod.id,
           scopeTenant:
             account.type === AccountType.Organization ? Tenant.Organization : Tenant.Account,
-          scopeId: account.id,
+          scopeId: account.id, // TODO: refactor to match organization id
         },
         tx
       );
@@ -208,11 +208,20 @@ export class AccountController extends ScopeController {
     return accountsResult;
   }
 
+  public async checkUsername(username: string): Promise<{ available: boolean; username: string }> {
+    const isAvailable = await this.services.accounts.checkUsernameAvailability(username);
+
+    return {
+      available: isAvailable,
+      username,
+    };
+  }
+
   public async createAccount(
     params: Omit<CreateAccountInput, 'ownerId'>
   ): Promise<CreateAccountResult> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
-      const { name, type, provider, providerId, providerData } = params;
+      const { name, username, type, provider, providerId, providerData } = params;
 
       const { providerData: processedProviderData, isVerified } =
         await this.services.userAuthenticationMethods.processProvider(
@@ -236,7 +245,7 @@ export class AccountController extends ScopeController {
         );
 
       const account = await this.services.accounts.createAccount(
-        { name, type, ownerId: user.id },
+        { name, username, type, ownerId: user.id },
         tx
       );
 
@@ -245,7 +254,7 @@ export class AccountController extends ScopeController {
           userId: user.id,
           userAuthenticationMethodId: userAuthenticationMethod.id,
           scopeTenant: type === AccountType.Organization ? Tenant.Organization : Tenant.Account,
-          scopeId: account.id,
+          scopeId: account.id, // TODO: refactor to match organization id
         },
         tx
       );

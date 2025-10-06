@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ProjectSortableField, SortOrder, Tenant } from '@/graphql/generated/types';
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useProjectScope } from '@/hooks/common/useProjectScope';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,7 @@ interface ProjectSwitcherProps {
 export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
   const t = useTranslations('common');
   const pathname = usePathname();
-  const scope = useScopeFromParams();
+  const scope = useProjectScope();
   const params = useParams();
   const [open, setOpen] = React.useState(false);
 

@@ -9,6 +9,7 @@ import * as userQueries from './users/queries';
 export const Query = {
   _empty: () => null,
   accounts: accountQueries.getAccounts,
+  checkUsername: accountQueries.checkUsername,
   users: userQueries.getUsers,
   roles: roleQueries.getRoles,
   groups: groupQueries.getGroups,

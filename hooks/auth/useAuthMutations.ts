@@ -20,6 +20,7 @@ interface LoginInput {
 
 interface RegisterInput {
   name: string;
+  username?: string;
   email: string;
   password: string;
   accountType: AccountType;
@@ -83,6 +84,7 @@ export function useAuthMutations() {
         variables: {
           input: {
             name: input.name,
+            username: input.username,
             type: input.accountType,
             provider: UserAuthenticationMethodProvider.Email,
             providerId: input.email,
@@ -122,6 +124,15 @@ export function useAuthMutations() {
       if (error instanceof Error && error.message.includes('Input validation failed')) {
         toast.error(t('register.error'), {
           description: 'Please check the form for validation errors',
+        });
+      } else if (
+        error instanceof Error &&
+        error.message.includes(
+          'duplicate key value violates unique constraint "accounts_slug_unique"'
+        )
+      ) {
+        toast.error(t('register.error'), {
+          description: t('validation.usernameUnique'),
         });
       } else {
         toast.error(t('register.error'), {

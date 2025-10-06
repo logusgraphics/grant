@@ -5,12 +5,11 @@ import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Project, Tenant } from '@/graphql/generated/types';
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useProjectScope } from '@/hooks/common/useProjectScope';
 import { Link } from '@/i18n/navigation';
 
 interface ProjectNavigationButtonProps {
   project: Project;
-  organizationId: string; // Keep for backward compatibility, will be ignored when scope is available
   variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
@@ -19,25 +18,22 @@ interface ProjectNavigationButtonProps {
 
 export function ProjectNavigationButton({
   project,
-  organizationId,
   variant = 'outline',
   size = 'icon',
   className,
   round = true,
 }: ProjectNavigationButtonProps) {
   const t = useTranslations('projects');
-  const scope = useScopeFromParams();
+  const scope = useProjectScope();
 
   const getProjectUrl = () => {
-    if (!scope) return `/dashboard/organizations/${organizationId}/projects/${project.id}`;
-
-    switch (scope.tenant) {
+    switch (scope!.tenant) {
       case Tenant.Account:
-        return `/dashboard/accounts/${scope.id}/projects/${project.id}`;
+        return `/dashboard/accounts/${scope!.id}/projects/${project.id}`;
       case Tenant.Organization:
-        return `/dashboard/organizations/${scope.id}/projects/${project.id}`;
+        return `/dashboard/organizations/${scope!.id}/projects/${project.id}`;
       default:
-        return `/dashboard/organizations/${organizationId}/projects/${project.id}`;
+        throw new Error('Invalid scope');
     }
   };
 

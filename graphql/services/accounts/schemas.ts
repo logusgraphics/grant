@@ -33,6 +33,7 @@ export const accountTypeSchema = z.enum(
 
 export const createAccountInputSchema = z.object({
   name: nonEmptyNameSchema,
+  username: z.string().nullable().optional(),
   type: accountTypeSchema,
   ownerId: idSchema,
 });

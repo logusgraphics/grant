@@ -1,12 +1,12 @@
 'use client';
 
 import { DeleteDialog } from '@/components/common';
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useProjectScope } from '@/hooks/common/useProjectScope';
 import { useProjectMutations } from '@/hooks/projects';
 import { useProjectsStore } from '@/stores/projects.store';
 
 export function DeleteProjectDialog() {
-  const scope = useScopeFromParams();
+  const scope = useProjectScope();
   const organizationId = scope!.id;
   const projectToDelete = useProjectsStore((state) => state.projectToDelete);
   const setProjectToDelete = useProjectsStore((state) => state.setProjectToDelete);

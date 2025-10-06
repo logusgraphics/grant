@@ -1,3 +1,5 @@
+import { and, eq, isNull } from 'drizzle-orm';
+
 import {
   Account,
   AccountPage,
@@ -36,8 +38,18 @@ export class AccountRepository extends EntityRepository<AccountModel, Account> {
     },
   };
 
-  private generateSlug(name: string): string {
+  public generateSlug(name: string): string {
     return slugifySafe(name);
+  }
+
+  public async findBySlug(slug: string, _transaction?: Transaction): Promise<Account | null> {
+    const result = await this.db
+      .select()
+      .from(this.table)
+      .where(and(eq(this.table.slug, slug), isNull(this.table.deletedAt)))
+      .limit(1);
+
+    return result.length > 0 ? (result[0] as Account) : null;
   }
 
   public async getAccounts(
@@ -58,7 +70,7 @@ export class AccountRepository extends EntityRepository<AccountModel, Account> {
   ): Promise<Account> {
     const baseParams: BaseCreateArgs = {
       name: params.name,
-      slug: this.generateSlug(params.name),
+      slug: params.username || this.generateSlug(params.name),
       ownerId: params.ownerId,
       type: params.type,
     };

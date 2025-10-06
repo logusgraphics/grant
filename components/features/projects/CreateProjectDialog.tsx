@@ -6,14 +6,14 @@ import { CreateDialog, CreateDialogRelationship } from '@/components/common';
 import { PrimaryTagSelector } from '@/components/ui/primary-tag-selector';
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { useProjectMutations } from '@/hooks';
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useProjectScope } from '@/hooks/common/useProjectScope';
 import { useTags } from '@/hooks/tags';
 import { useProjectsStore } from '@/stores/projects.store';
 
 import { createProjectSchema, type CreateProjectFormValues } from './types';
 
 export function CreateProjectDialog() {
-  const scope = useScopeFromParams();
+  const scope = useProjectScope();
   const { tags, loading: tagsLoading } = useTags({ scope: scope! });
   const isCreateDialogOpen = useProjectsStore((state) => state.isCreateDialogOpen);
   const setCreateDialogOpen = useProjectsStore((state) => state.setCreateDialogOpen);

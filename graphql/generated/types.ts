@@ -195,6 +195,7 @@ export type CreateAccountInput = {
   providerData: Scalars['JSON']['input'];
   providerId: Scalars['String']['input'];
   type: AccountType;
+  username?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateAccountResult = {
@@ -879,6 +880,7 @@ export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
   accounts: AccountPage;
+  checkUsername: UsernameAvailability;
   groups: GroupPage;
   organizations: OrganizationPage;
   permissions: PermissionPage;
@@ -895,6 +897,11 @@ export type QueryAccountsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<AccountSortInput>;
+};
+
+
+export type QueryCheckUsernameArgs = {
+  username: Scalars['String']['input'];
 };
 
 
@@ -983,6 +990,7 @@ export type RegisterInput = {
   providerData: Scalars['JSON']['input'];
   providerId: Scalars['String']['input'];
   type: AccountType;
+  username?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RemoveAccountProjectInput = {
@@ -1465,6 +1473,12 @@ export type UserTagUserArgs = {
   scope: Scope;
 };
 
+export type UsernameAvailability = {
+  __typename?: 'UsernameAvailability';
+  available: Scalars['Boolean']['output'];
+  username: Scalars['String']['output'];
+};
+
 export type WithIndex<TObject> = TObject & Record<string, any>;
 export type ResolversObject<TObject> = WithIndex<TObject>;
 
@@ -1700,6 +1714,7 @@ export type ResolversTypes = ResolversObject<{
   UserSortInput: UserSortInput;
   UserSortableField: UserSortableField;
   UserTag: ResolverTypeWrapper<UserTag>;
+  UsernameAvailability: ResolverTypeWrapper<UsernameAvailability>;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -1837,6 +1852,7 @@ export type ResolversParentTypes = ResolversObject<{
   UserSessionSortInput: UserSessionSortInput;
   UserSortInput: UserSortInput;
   UserTag: UserTag;
+  UsernameAvailability: UsernameAvailability;
 }>;
 
 export type AccountResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Account'] = ResolversParentTypes['Account']> = ResolversObject<{
@@ -2212,6 +2228,7 @@ export type ProjectUserResolvers<ContextType = GraphqlContext, ParentType extend
 export type QueryResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   accounts?: Resolver<ResolversTypes['AccountPage'], ParentType, ContextType, Partial<QueryAccountsArgs>>;
+  checkUsername?: Resolver<ResolversTypes['UsernameAvailability'], ParentType, ContextType, RequireFields<QueryCheckUsernameArgs, 'username'>>;
   groups?: Resolver<ResolversTypes['GroupPage'], ParentType, ContextType, RequireFields<QueryGroupsArgs, 'scope'>>;
   organizations?: Resolver<ResolversTypes['OrganizationPage'], ParentType, ContextType, Partial<QueryOrganizationsArgs>>;
   permissions?: Resolver<ResolversTypes['PermissionPage'], ParentType, ContextType, RequireFields<QueryPermissionsArgs, 'scope'>>;
@@ -2384,6 +2401,12 @@ export type UserTagResolvers<ContextType = GraphqlContext, ParentType extends Re
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type UsernameAvailabilityResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['UsernameAvailability'] = ResolversParentTypes['UsernameAvailability']> = ResolversObject<{
+  available?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type Resolvers<ContextType = GraphqlContext> = ResolversObject<{
   Account?: AccountResolvers<ContextType>;
   AccountPage?: AccountPageResolvers<ContextType>;
@@ -2435,5 +2458,6 @@ export type Resolvers<ContextType = GraphqlContext> = ResolversObject<{
   UserSession?: UserSessionResolvers<ContextType>;
   UserSessionPage?: UserSessionPageResolvers<ContextType>;
   UserTag?: UserTagResolvers<ContextType>;
+  UsernameAvailability?: UsernameAvailabilityResolvers<ContextType>;
 }>;
 

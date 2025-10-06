@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -25,9 +25,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AccountType } from '@/graphql/generated/types';
 import { useAuthMutations, usePageTitle } from '@/hooks';
+import { useUsernameValidation } from '@/hooks/accounts/useUsernameValidation';
 import { Link } from '@/i18n/navigation';
+import { slugifySafe } from '@/lib/slugify';
 import {
   passwordPolicySchema,
   getPasswordStrength,
@@ -37,14 +40,17 @@ import {
 export default function RegisterPage() {
   const t = useTranslations('auth');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [usernameManuallySet, setUsernameManuallySet] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   usePageTitle('auth.register');
 
   const { register: handleRegister } = useAuthMutations();
+  const { isChecking, isAvailable, checkUsername } = useUsernameValidation();
 
   const formSchema = z
     .object({
       name: z.string().min(2, t('validation.name')),
+      username: z.string().min(3, t('validation.username')).optional().or(z.literal('')),
       email: z.string().email(t('validation.email')),
       password: passwordPolicySchema,
       confirmPassword: z.string(),
@@ -53,12 +59,26 @@ export default function RegisterPage() {
     .refine((data) => data.password === data.confirmPassword, {
       message: t('validation.passwordMatch'),
       path: ['confirmPassword'],
-    });
+    })
+    .refine(
+      (data) => {
+        // If username is provided and we've checked availability, it must be available
+        if (data.username && data.username.length >= 3 && isAvailable === false) {
+          return false;
+        }
+        return true;
+      },
+      {
+        message: t('validation.usernameUnique'),
+        path: ['username'],
+      }
+    );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -71,6 +91,7 @@ export default function RegisterPage() {
     try {
       await handleRegister({
         name: values.name,
+        username: values.username || undefined,
         email: values.email,
         password: values.password,
         accountType: values.accountType,
@@ -84,6 +105,39 @@ export default function RegisterPage() {
   const passwordStrength = getPasswordStrength(passwordValue);
   const passwordRequirements = getPasswordRequirements();
 
+  // Auto-slugify username when name changes (if username hasn't been manually set)
+  const nameValue = form.watch('name');
+
+  React.useEffect(() => {
+    if (nameValue && !usernameManuallySet) {
+      const slugifiedName = slugifySafe(nameValue);
+      form.setValue('username', slugifiedName);
+
+      // Check availability of auto-generated username
+      if (slugifiedName.length >= 3) {
+        checkUsername(slugifiedName);
+      }
+    }
+  }, [nameValue, usernameManuallySet, form, checkUsername]);
+
+  // Track when user manually changes username
+  const handleUsernameChange = (value: string) => {
+    setUsernameManuallySet(true);
+    form.setValue('username', value);
+
+    // Trigger debounced username availability check
+    if (value && value.trim().length >= 3) {
+      checkUsername(value);
+    }
+  };
+
+  // Revalidate form when username availability changes
+  React.useEffect(() => {
+    if (isAvailable !== null) {
+      form.trigger('username');
+    }
+  }, [isAvailable, form]);
+
   return (
     <Form {...form}>
       <div className="mb-6">
@@ -91,6 +145,79 @@ export default function RegisterPage() {
         <p className="text-muted-foreground mt-2">{t('register.description')}</p>
       </div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="accountType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                {t('form.accountType.label')}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center w-4 h-4 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Account type information"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 z-[99999999]" align="start">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-medium text-sm">
+                          {t('form.accountType.explanations.personal.title')}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {t('form.accountType.explanations.personal.description')}
+                        </p>
+                      </div>
+                      <div className="border-t pt-3">
+                        <h4 className="font-medium text-sm">
+                          {t('form.accountType.explanations.organization.title')}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {t('form.accountType.explanations.organization.description')}
+                        </p>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </FormLabel>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <FormControl>
+                    <Button
+                      ref={buttonRef}
+                      variant="outline"
+                      className="w-full justify-between"
+                      disabled={isSubmitting}
+                    >
+                      {field.value === AccountType.Personal
+                        ? t('form.accountType.options.personal')
+                        : field.value === AccountType.Organization
+                          ? t('form.accountType.options.organization')
+                          : t('form.accountType.placeholder')}
+                      <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="min-w-full"
+                  style={{ width: buttonRef.current?.offsetWidth + 'px' }}
+                >
+                  <DropdownMenuItem onClick={() => field.onChange(AccountType.Personal)}>
+                    {t('form.accountType.options.personal')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => field.onChange(AccountType.Organization)}>
+                    {t('form.accountType.options.organization')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="name"
@@ -105,6 +232,70 @@ export default function RegisterPage() {
                 />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                {t('form.username.label')}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center w-4 h-4 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Username information"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 z-[99999999]" align="start">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-medium text-sm">{t('form.username.popover.title')}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {t('form.username.popover.description')}
+                        </p>
+                      </div>
+                      <div className="border-t pt-3">
+                        <h4 className="font-medium text-sm">
+                          {t('form.username.popover.autoGeneration.title')}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {t('form.username.popover.autoGeneration.description')}
+                        </p>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={t('form.username.placeholder')}
+                  disabled={isSubmitting}
+                  {...field}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+
+              {/* Username Availability Status */}
+              {field.value && field.value.length >= 3 && (
+                <p className="text-sm">
+                  {isChecking ? (
+                    <span className="text-muted-foreground">
+                      {t('form.username.availability.checking')}
+                    </span>
+                  ) : isAvailable === true ? (
+                    <span className="text-green-600 dark:text-green-400">
+                      {t('form.username.availability.available')}
+                    </span>
+                  ) : null}
+                </p>
+              )}
             </FormItem>
           )}
         />
@@ -223,46 +414,7 @@ export default function RegisterPage() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="accountType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('form.accountType.label')}</FormLabel>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <FormControl>
-                    <Button
-                      ref={buttonRef}
-                      variant="outline"
-                      className="w-full justify-between"
-                      disabled={isSubmitting}
-                    >
-                      {field.value === AccountType.Personal
-                        ? t('form.accountType.options.personal')
-                        : field.value === AccountType.Organization
-                          ? t('form.accountType.options.organization')
-                          : t('form.accountType.placeholder')}
-                      <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="min-w-full"
-                  style={{ width: buttonRef.current?.offsetWidth + 'px' }}
-                >
-                  <DropdownMenuItem onClick={() => field.onChange(AccountType.Personal)}>
-                    {t('form.accountType.options.personal')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => field.onChange(AccountType.Organization)}>
-                    {t('form.accountType.options.organization')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? t('register.submitting') : t('register.submit')}
         </Button>

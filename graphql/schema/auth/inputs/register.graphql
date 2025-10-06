@@ -1,5 +1,6 @@
 input RegisterInput {
   name: String!
+  username: String
   type: AccountType!
   provider: UserAuthenticationMethodProvider!
   providerId: String!

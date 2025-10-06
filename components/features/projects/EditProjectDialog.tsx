@@ -8,7 +8,7 @@ import {
 import { PrimaryTagSelector } from '@/components/ui/primary-tag-selector';
 import { TagCheckboxList } from '@/components/ui/tag-checkbox-list';
 import { Project, Tag } from '@/graphql/generated/types';
-import { useScopeFromParams } from '@/hooks/common/useScopeFromParams';
+import { useProjectScope } from '@/hooks/common/useProjectScope';
 import { useProjectMutations } from '@/hooks/projects';
 import { useTags } from '@/hooks/tags';
 import { useProjectsStore } from '@/stores/projects.store';
@@ -16,7 +16,7 @@ import { useProjectsStore } from '@/stores/projects.store';
 import { editProjectSchema, type EditProjectFormValues } from './types';
 
 export function EditProjectDialog() {
-  const scope = useScopeFromParams();
+  const scope = useProjectScope();
   const { tags, loading: tagsLoading } = useTags({ scope: scope! });
   const projectToEdit = useProjectsStore((state) => state.projectToEdit);
   const setProjectToEdit = useProjectsStore((state) => state.setProjectToEdit);

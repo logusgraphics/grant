@@ -109,6 +109,25 @@
         "label": "Name",
         "placeholder": "Enter your name"
       },
+      "username": {
+        "label": "Username",
+        "placeholder": "Enter your username",
+        "description": "This will be your unique identifier. If left empty, it will be generated from your name.",
+        "popover": {
+          "title": "Username",
+          "description": "This will be your unique identifier. If left empty, it will be generated from your name.",
+          "autoGeneration": {
+            "title": "Auto-Generation",
+            "description": "Your username is automatically generated from your name. You can edit it anytime, but once you do, it won't auto-update when you change your name."
+          }
+        },
+        "availability": {
+          "checking": "Checking availability...",
+          "available": "✓ Username is available",
+          "unavailable": "✗ Username is already taken",
+          "error": "Error checking username availability"
+        }
+      },
       "email": {
         "label": "Email",
         "placeholder": "Enter your email"
@@ -127,6 +146,16 @@
         "options": {
           "personal": "Personal Account",
           "organization": "Organization Account"
+        },
+        "explanations": {
+          "personal": {
+            "title": "Personal Account",
+            "description": "Perfect for individual users who want to manage their own projects and access control. Ideal for developers, freelancers, and personal projects."
+          },
+          "organization": {
+            "title": "Organization Account",
+            "description": "Designed for teams and companies. Includes advanced features like team management, role-based access control, and centralized administration for multiple users and projects."
+          }
         }
       }
     },
@@ -172,7 +201,9 @@
       "email": "Please enter a valid email address",
       "password": "Password must be at least 8 characters",
       "name": "Name must be at least 2 characters",
-      "passwordMatch": "Passwords don't match"
+      "passwordMatch": "Passwords don't match",
+      "username": "Username must be at least 3 characters",
+      "usernameUnique": "This username is already taken. Please choose a different one."
     }
   },
   "users": {

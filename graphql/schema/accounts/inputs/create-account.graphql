@@ -1,5 +1,6 @@
 input CreateAccountInput {
   name: String!
+  username: String
   type: AccountType!
   ownerId: String!
   provider: UserAuthenticationMethodProvider!
