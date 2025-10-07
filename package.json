@@ -34,15 +34,19 @@
     "publish:core": "pnpm --filter @logusgraphics/grant-core publish-package",
     "version:core:patch": "pnpm --filter @logusgraphics/grant-core version-patch",
     "version:core:minor": "pnpm --filter @logusgraphics/grant-core version-minor",
-    "version:core:major": "pnpm --filter @logusgraphics/grant-core version-major"
+    "version:core:major": "pnpm --filter @logusgraphics/grant-core version-major",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
-    "turbo": "^2.0.0",
-    "prettier": "^3.5.3",
-    "typescript": "^5",
     "@types/node": "^20.19.17",
     "concurrently": "^8.2.2",
-    "graphql": "^16.10.0"
+    "graphql": "^16.10.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.0.0",
+    "typescript": "^5",
+    "vitepress": "^1.6.4"
   },
   "engines": {
     "node": ">=18.0.0",

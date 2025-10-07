@@ -9,6 +9,10 @@ build/
 out/
 tsconfig.tsbuildinfo
 
+# VitePress
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
 # Environment files
 .env
 .env.local

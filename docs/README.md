@@ -1,261 +1,202 @@
-# Documentation Index
+# Grant Platform Documentation
 
-This directory contains all the documentation for Identity Central. Each document focuses on a specific aspect of the system to keep information organized and digestible.
+This directory contains the VitePress documentation site for Grant Platform.
 
-## 📚 Complete Documentation Overview
+## 🚀 Getting Started
 
-### 🏗️ Architecture & Design
+### Prerequisites
 
-- **[Multi-Tenancy Specification](./MULTI_TENANCY_SPECIFICATION.md)** - Complete multi-tenancy architecture, account-based design, organization/project isolation, and implementation strategy
-- **[Relationship Model & Natural Hierarchies](./RELATIONSHIP_MODEL.md)** - Entity relationships, RBAC system design, permission resolution, and security considerations
-- **[Field Selection Optimization](./FIELD_SELECTION_OPTIMIZATION.md)** - GraphQL performance optimization techniques and database query optimization
+- Node.js 18+
+- pnpm (recommended) or npm
 
-### 🗄️ Database & Backend
-
-- **[Drizzle ORM Implementation](./DRIZZLE_IMPLEMENTATION.md)** - Database schema, implementation details, migration strategies, and seeding system
-
-### 🛠️ Development & Implementation
-
-- **[Development Guide](./DEVELOPMENT_GUIDE.md)** - Project structure, best practices, scaffolding guidelines, and collaboration workflows
-- **[Testing Guide](./TESTING.md)** - Testing framework setup, writing tests, coverage reporting, and testing best practices
-- **[Components Documentation](./COMPONENTS.md)** - Component architecture, usage guidelines, and implementation details
-
-## 🚀 Quick Start Documentation
-
-### For New Developers
-
-**Essential reading order:**
-
-1. **[Main README](../README.md)** - Project overview, quick start, and basic setup
-2. **[Development Guide](./DEVELOPMENT_GUIDE.md)** - Project structure and development workflow
-3. **[PostgreSQL Implementation](./POSTGRES_IMPLEMENTATION.md)** - Database setup and seeding
-4. **[Testing Guide](./TESTING.md)** - Testing practices and framework
-
-### For Database Developers
-
-**Database-focused documentation:**
-
-1. **[Drizzle ORM Implementation](./DRIZZLE_IMPLEMENTATION.md)** - Complete database implementation guide
-2. **[Relationship Model](./RELATIONSHIP_MODEL.md)** - Entity relationships and data design
-3. **[Field Selection Optimization](./FIELD_SELECTION_OPTIMIZATION.md)** - Query optimization
-
-### For Frontend Developers
-
-**Frontend-focused documentation:**
-
-1. **[Development Guide](./DEVELOPMENT_GUIDE.md)** - Project structure and patterns
-2. **[Components Documentation](./COMPONENTS.md)** - Component architecture
-3. **[Testing Guide](./TESTING.md)** - Frontend testing practices
-4. **[Multi-Tenancy Specification](./MULTI_TENANCY_SPECIFICATION.md)** - Understanding the data model
-
-### For Architects & System Designers
-
-**Architecture-focused documentation:**
-
-1. **[Multi-Tenancy Specification](./MULTI_TENANCY_SPECIFICATION.md)** - Core architectural decisions
-2. **[Relationship Model](./RELATIONSHIP_MODEL.md)** - Data architecture and relationships
-3. **[Field Selection Optimization](./FIELD_SELECTION_OPTIMIZATION.md)** - Performance architecture
-4. **[Drizzle ORM Implementation](./DRIZZLE_IMPLEMENTATION.md)** - Database architecture
-
-## 📋 Documentation by Category
-
-### 🏛️ System Architecture
-
-| Document                                                          | Description                                         | Audience                        |
-| ----------------------------------------------------------------- | --------------------------------------------------- | ------------------------------- |
-| [Multi-Tenancy Specification](./MULTI_TENANCY_SPECIFICATION.md)   | Account-based multi-tenancy, organization isolation | Architects, Backend Developers  |
-| [Relationship Model](./RELATIONSHIP_MODEL.md)                     | Entity relationships, RBAC design, security         | Architects, Database Developers |
-| [Field Selection Optimization](./FIELD_SELECTION_OPTIMIZATION.md) | GraphQL performance, query optimization             | Backend Developers, Architects  |
-
-### 🗃️ Database & Data Management
-
-| Document                                                  | Description                                   | Audience                    |
-| --------------------------------------------------------- | --------------------------------------------- | --------------------------- |
-| [Drizzle ORM Implementation](./DRIZZLE_IMPLEMENTATION.md) | Database schema, migrations, seeding workflow | Database Developers, DevOps |
-
-### 💻 Development & Testing
-
-| Document                                    | Description                                  | Audience            |
-| ------------------------------------------- | -------------------------------------------- | ------------------- |
-| [Development Guide](./DEVELOPMENT_GUIDE.md) | Project structure, best practices, workflows | All Developers      |
-| [Testing Guide](./TESTING.md)               | Testing framework, practices, coverage       | All Developers      |
-| [Components Documentation](./COMPONENTS.md) | Component architecture, UI patterns          | Frontend Developers |
-
-### 🚀 Getting Started
-
-| Document                                                | Description                                 | Audience       |
-| ------------------------------------------------------- | ------------------------------------------- | -------------- |
-| [Main README](../README.md)                             | Project overview, quick start, installation | Everyone       |
-| [Package Scripts Reference](#package-scripts-reference) | All available npm scripts and commands      | All Developers |
-
-## 📦 Package Scripts Reference
-
-### Development Scripts
+### Installation
 
 ```bash
-npm run dev              # Start development server
-npm run build           # Build for production
-npm run start           # Start production server
-npm run lint            # Run ESLint
-npm run format          # Format code with Prettier
-npm run test            # Run tests with Vitest
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Preview production build
+pnpm preview
 ```
 
-### Database Scripts
+## 📁 Structure
 
+```
+docs/
+├── .vitepress/
+│   └── config.ts          # VitePress configuration
+├── api/                   # API documentation
+├── architecture/          # Architecture guides
+├── concepts/              # Core concepts
+├── development/           # Development guides
+├── packages/              # Package documentation
+├── deployment/            # Deployment guides
+├── business/              # Business model docs
+├── enterprise/            # Enterprise features
+├── advanced/              # Advanced topics
+├── troubleshooting/       # Troubleshooting guides
+├── index.md               # Homepage
+├── introduction.md        # Introduction
+├── quick-start.md         # Quick start guide
+├── package.json           # Dependencies
+└── TABLE_OF_CONTENTS.md   # Content structure
+```
+
+## 📝 Content Guidelines
+
+### Writing Style
+- **Clear and concise** - Use simple language and short sentences
+- **Code examples** - Include practical examples for every concept
+- **Progressive disclosure** - Start simple, add complexity gradually
+- **Cross-references** - Link related concepts and sections
+
+### Markdown Standards
+- Use proper heading hierarchy (H1 → H2 → H3)
+- Include code blocks with language specification
+- Use tables for structured data
+- Add diagrams for complex concepts
+
+### Code Examples
+- **TypeScript preferred** - Use TypeScript for all code examples
+- **Complete examples** - Include imports and full context
+- **Error handling** - Show how to handle errors
+- **Best practices** - Follow project coding standards
+
+## 🎨 Customization
+
+### Theme Configuration
+The VitePress theme is configured in `.vitepress/config.ts`:
+
+- **Navigation** - Top-level navigation menu
+- **Sidebar** - Hierarchical sidebar structure
+- **Search** - Local search functionality
+- **Social links** - GitHub, Twitter, etc.
+
+### Styling
+- **CSS Variables** - Use CSS custom properties for theming
+- **Component Styles** - Custom components and layouts
+- **Responsive Design** - Mobile-first approach
+
+## 🔄 Content Management
+
+### Adding New Content
+1. Create new markdown files in appropriate directories
+2. Update sidebar configuration in `config.ts`
+3. Add cross-references to related content
+4. Test locally with `pnpm dev`
+
+### Updating Existing Content
+1. Edit markdown files directly
+2. Update code examples to match current API
+3. Verify all links work correctly
+4. Test changes locally
+
+### Content Review Process
+1. **Technical accuracy** - Verify all code examples work
+2. **Clarity** - Ensure content is easy to understand
+3. **Completeness** - Check all sections are covered
+4. **Consistency** - Follow established patterns and style
+
+## 🚀 Deployment
+
+### Production Build
 ```bash
-npm run db:generate     # Generate Drizzle migrations
-npm run db:migrate      # Apply database migrations
-npm run db:seed         # Seed with fake data
-npm run db:seed:json    # Import from JSON files
-npm run db:reset        # Reset database
+pnpm build
 ```
 
-### Docker Scripts
+This creates a `dist/` directory with static files ready for deployment.
 
-```bash
-npm run docker:up       # Start database containers
-npm run docker:down     # Stop database containers
-npm run docker:logs     # View container logs
+### Deployment Options
+- **GitHub Pages** - Automatic deployment from main branch
+- **Vercel** - One-click deployment with previews
+- **Netlify** - Custom domain and CDN
+- **AWS S3** - Static website hosting with CloudFront
+
+### CI/CD Integration
+The documentation site can be automatically deployed:
+
+```yaml
+# GitHub Actions example
+name: Deploy Docs
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**']
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: pnpm install
+      - run: pnpm build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/dist
 ```
 
-### GraphQL Scripts
+## 📊 Analytics & Monitoring
 
-```bash
-npm run generate        # Generate GraphQL types
-```
+### Usage Analytics
+- **Page views** - Track popular content
+- **Search queries** - Understand user needs
+- **User journeys** - Optimize content flow
+- **Performance** - Monitor load times
 
-### Documentation Scripts
+### Content Metrics
+- **Completeness** - Track documentation coverage
+- **Accuracy** - Monitor broken links and outdated content
+- **User feedback** - Collect ratings and comments
+- **Support impact** - Measure reduction in support tickets
 
-```bash
-npm run docs:check      # Verify all documentation files exist
-```
+## 🤝 Contributing
 
-For detailed information about database scripts, see the **[Database Scripts Guide](../scripts/README.md)**.
+### Documentation Contributions
+1. **Fork the repository**
+2. **Create a feature branch**
+3. **Make your changes**
+4. **Test locally with `pnpm dev`**
+5. **Submit a pull request**
 
-## 🗂️ Project Structure Overview
+### Content Types
+- **Bug fixes** - Correct errors and typos
+- **Updates** - Keep content current with code changes
+- **New content** - Add missing documentation
+- **Improvements** - Enhance clarity and examples
 
-```
-identity-central/
-├── apps/                  # Applications
-│   ├── api/              # Apollo Server API
-│   │   └── tests/        # API tests
-│   └── web/              # Next.js web app
-│       └── tests/        # Web app tests (future)
-├── packages/             # Shared packages
-│   └── @logusgraphics/   # Scoped packages
-├── docs/                 # 📚 All documentation (this directory)
-└── public/              # Static assets
-```
+### Review Process
+- **Technical review** - Verify accuracy and completeness
+- **Editorial review** - Check style and clarity
+- **Community feedback** - Gather user input
+- **Final approval** - Merge after all checks pass
 
-## 🔄 Database Workflow Quick Reference
+## 📚 Resources
 
-### Complete Setup
+### VitePress Documentation
+- [VitePress Guide](https://vitepress.dev/guide/)
+- [Configuration Reference](https://vitepress.dev/reference/config/)
+- [Theme Customization](https://vitepress.dev/guide/custom-theme/)
 
-```bash
-# 1. Start database
-npm run docker:up
+### Markdown Resources
+- [Markdown Guide](https://www.markdownguide.org/)
+- [GitHub Flavored Markdown](https://github.github.com/gfm/)
+- [Mermaid Diagrams](https://mermaid-js.github.io/mermaid/)
 
-# 2. Generate schema migrations
-npm run db:generate
-
-# 3. Apply migrations
-npm run db:migrate
-
-# 4. Seed with data (choose one)
-npm run db:seed          # Generate fake data
-npm run db:seed:json     # Import from JSON files
-```
-
-### Development Workflow
-
-```bash
-# Reset and reseed for testing
-npm run db:reset
-npm run db:seed
-
-# Check database status
-npm run docker:logs
-```
-
-For complete database documentation, see **[Drizzle ORM Implementation](./DRIZZLE_IMPLEMENTATION.md)**.
-
-## 🎯 Common Tasks & Documentation
-
-### Setting Up Development Environment
-
-1. **[Main README](../README.md)** - Basic installation and setup
-2. **[Development Guide](./DEVELOPMENT_GUIDE.md)** - Detailed development setup
-3. **[PostgreSQL Implementation](./POSTGRES_IMPLEMENTATION.md)** - Database setup
-
-### Understanding the System Architecture
-
-1. **[Multi-Tenancy Specification](./MULTI_TENANCY_SPECIFICATION.md)** - Core architecture
-2. **[Relationship Model](./RELATIONSHIP_MODEL.md)** - Data relationships
-3. **[Field Selection Optimization](./FIELD_SELECTION_OPTIMIZATION.md)** - Performance design
-
-### Working with the Database
-
-1. **[Drizzle ORM Implementation](./DRIZZLE_IMPLEMENTATION.md)** - Complete database guide
-2. **[Relationship Model](./RELATIONSHIP_MODEL.md)** - Understanding data structure
-
-### Testing and Quality Assurance
-
-1. **[Testing Guide](./TESTING.md)** - Testing framework and practices
-2. **[Development Guide](./DEVELOPMENT_GUIDE.md)** - Code quality standards
-3. **[Components Documentation](./COMPONENTS.md)** - Component testing
-
-### Building User Interfaces
-
-1. **[Components Documentation](./COMPONENTS.md)** - Component architecture
-2. **[Development Guide](./DEVELOPMENT_GUIDE.md)** - UI development patterns
-3. **[Testing Guide](./TESTING.md)** - Frontend testing
-
-## 📝 Documentation Standards
-
-All documentation in this project follows these standards:
-
-- **Clear structure** with proper headings and sections
-- **Code examples** with syntax highlighting
-- **Diagrams and visuals** where helpful
-- **Cross-references** to related documentation
-- **Regular updates** to keep information current
-- **Practical examples** and real-world usage
-- **Troubleshooting sections** for common issues
-
-## 🤝 Contributing to Documentation
-
-When contributing to documentation:
-
-1. **Follow the existing structure and style**
-2. **Use clear, concise language**
-3. **Include practical examples and code snippets**
-4. **Update this index if adding new documentation**
-5. **Cross-reference related documentation**
-6. **Test all code examples and commands**
-7. **Review for accuracy and completeness**
-
-For more information on contributing, see the **[Development Guide](./DEVELOPMENT_GUIDE.md)**.
-
-## 🔍 Finding Specific Information
-
-### Need help with...
-
-- **Project setup?** → [Main README](../README.md)
-- **Database issues?** → [Drizzle ORM Implementation](./DRIZZLE_IMPLEMENTATION.md)
-- **Architecture questions?** → [Multi-Tenancy Specification](./MULTI_TENANCY_SPECIFICATION.md) + [Relationship Model](./RELATIONSHIP_MODEL.md)
-- **Development workflow?** → [Development Guide](./DEVELOPMENT_GUIDE.md)
-- **Testing problems?** → [Testing Guide](./TESTING.md)
-- **Component usage?** → [Components Documentation](./COMPONENTS.md)
-- **Performance optimization?** → [Field Selection Optimization](./FIELD_SELECTION_OPTIMIZATION.md)
-
-### Still can't find what you need?
-
-1. Check the relevant document's troubleshooting section
-2. Search through the codebase for examples
-3. Review the Git history for recent changes
-4. Create an issue or ask the team
+### Writing Resources
+- [Technical Writing Guide](https://developers.google.com/tech-writing)
+- [Documentation Best Practices](https://docs.microsoft.com/en-us/contribute/)
+- [API Documentation Standards](https://swagger.io/specification/)
 
 ---
 
-**📍 Remember:** This documentation index is your starting point. Each document contains detailed information, examples, and troubleshooting guides for its specific area.
+**Questions?** Join our [Discord community](https://discord.gg/grant-platform) or open an issue on [GitHub](https://github.com/logusgraphics/grant-platform).
