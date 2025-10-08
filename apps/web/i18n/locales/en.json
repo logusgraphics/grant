@@ -172,8 +172,8 @@
       "submit": "Login",
       "noAccount": "Don't have an account?",
       "register": "Create account",
-      "success": "Identity access granted",
-      "error": "Identity verification failed",
+      "success": "Access granted",
+      "error": "Verification failed",
       "errorUnknown": "An unknown error occurred",
       "verificationRequired": "Email verification needed",
       "verifyEmailDescription": "Please verify your email to access all features"

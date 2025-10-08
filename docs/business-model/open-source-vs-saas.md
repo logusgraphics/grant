@@ -1,6 +1,9 @@
-# Grant Platform - Business Model Strategy
+---
+title: Open Source vs SaaS
+description: Understanding the differences between open source and SaaS offerings
+---
 
-## Overview
+# Open Source vs SaaS
 
 Grant Platform follows a dual-track business model: open source core with enterprise SaaS offering, similar to successful companies like Supabase, Vercel, and PlanetScale.
 
@@ -170,3 +173,7 @@ Grant Platform follows a dual-track business model: open source core with enterp
 - IPO or acquisition consideration
 - Global market leadership
 - Platform ecosystem expansion
+
+---
+
+**Next:** Compare [Feature Comparison](/business-model/feature-comparison) to see what's available in each tier.

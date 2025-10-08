@@ -166,14 +166,14 @@ pnpm dev:web    # Web app on :3000
 
 ### For SaaS Users
 
-- **[SaaS Features](/saas/)** - Available features and limitations
-- **[API Integration](/api/)** - Connect your applications
-- **[User Management](/concepts/users-roles)** - Managing users and roles
+- **[SaaS Features](/enterprise/saas-features)** - Available features and limitations
+- **[API Integration](/api-reference/)** - Connect your applications
+- **[User Management](/core-concepts/users-roles)** - Managing users and roles
 
 ### For Developers
 
 - **[Development Guide](/development/guide)** - Project structure and workflow
-- **[API Reference](/api/)** - Complete GraphQL API documentation
+- **[API Reference](/api-reference/)** - Complete GraphQL API documentation
 - **[Contributing](/development/contributing)** - How to contribute
 
 ## Common Issues

@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /quick-start
+      link: /getting-started/introduction
     - theme: alt
       text: View on GitHub
       link: https://github.com/logusgraphics/grant-platform
@@ -42,9 +42,9 @@ Welcome to the Grant documentation! This site provides comprehensive guides, API
 
 Get up and running with Grant Platform in minutes:
 
-- **[Self-Hosting Setup](/self-hosting/)** - Deploy on your own infrastructure
-- **[SaaS Trial](/saas/)** - Try our hosted solution
-- **[Local Development](/development/)** - Set up your development environment
+- **[Self-Hosting Setup](/deployment/self-hosting)** - Deploy on your own infrastructure
+- **[SaaS Trial](/enterprise/saas-features)** - Try our hosted solution
+- **[Local Development](/development/guide)** - Set up your development environment
 
 ## 📚 What You'll Find Here
 
@@ -105,7 +105,7 @@ Get up and running with Grant Platform in minutes:
 - **[RBAC/ACL System](/architecture/rbac-acl)** - Understanding the permission model
 - **[Multi-Tenancy](/architecture/multi-tenancy)** - Account and organization isolation
 - **[Self-Hosting](/deployment/self-hosting)** - Deploy on your infrastructure
-- **[API Reference](/api/)** - Complete API documentation
+- **[API Reference](/api-reference/)** - Complete API documentation
 - **[Contributing](/development/contributing)** - How to contribute to the project
 
 ## 🤝 Community & Support
@@ -127,4 +127,4 @@ Our documentation is organized to help you find what you need quickly:
 
 ---
 
-**Ready to get started?** Check out our [Quick Start Guide](/quick-start) or explore the [Architecture Overview](/architecture/overview) to understand how Grant Platform works.
+**Ready to get started?** Check out our [Quick Start Guide](/getting-started/quick-start) or explore the [Architecture Overview](/architecture/overview) to understand how Grant Platform works.

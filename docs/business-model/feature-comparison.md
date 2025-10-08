@@ -1,4 +1,9 @@
-# Grant Platform - Feature Comparison
+---
+title: Feature Comparison
+description: Detailed comparison between open source and SaaS enterprise features
+---
+
+# Feature Comparison
 
 ## Open Source Core vs SaaS Enterprise
 
@@ -121,3 +126,7 @@ npm install @logusgraphics/grant-enterprise
 - Dedicated Slack channel
 - Phone support
 - Custom training
+
+---
+
+**Next:** Learn about [Pricing](/business-model/pricing) for detailed cost information.

@@ -1,3 +1,8 @@
+---
+title: Multi-Tenancy
+description: Account-based multi-tenancy with organization and project isolation
+---
+
 # Multi-Tenancy Platform Specification
 
 ## Overview
@@ -416,3 +421,7 @@ The architecture supports:
 - **Explicit access control** with comprehensive audit trails
 - **Scalable design** for growth and expansion
 - **Clear separation of concerns** between platform and external system management
+
+---
+
+**Next:** Learn about the [RBAC/ACL System](/architecture/rbac-acl) to understand how permissions work.

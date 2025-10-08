@@ -128,10 +128,11 @@ export class UserSessionService extends AuditService {
     const { userId, scopeTenant, scopeId } = validatedSession;
     const sub = userId;
     const aud = `${scopeTenant}:${scopeId}`;
+    const jti = session.id;
     const iat = Math.floor(Date.now() / 1000); // in seconds
     const exp = Math.floor(this.getAccessTokenExpirationDate(Date.now()).getTime() / 1000); // in seconds
 
-    const jwtPayload: JwtPayload = { sub, aud, exp, iat };
+    const jwtPayload: JwtPayload = { sub, aud, exp, iat, jti };
 
     const accessToken = sign(jwtPayload, JWT_SECRET);
     const refreshToken = session.token;

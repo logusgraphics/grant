@@ -69,10 +69,10 @@ export default withMermaid({
         {
           text: 'Getting Started',
           items: [
-            { text: 'Introduction', link: '/introduction' },
-            { text: 'Quick Start', link: '/quick-start' },
-            { text: 'Installation', link: '/installation' },
-            { text: 'Configuration', link: '/configuration' },
+            { text: 'Introduction', link: '/getting-started/introduction' },
+            { text: 'Quick Start', link: '/getting-started/quick-start' },
+            { text: 'Installation', link: '/getting-started/installation' },
+            { text: 'Configuration', link: '/getting-started/configuration' },
           ],
         },
         {
@@ -88,11 +88,11 @@ export default withMermaid({
         {
           text: 'Core Concepts',
           items: [
-            { text: 'Accounts & Organizations', link: '/concepts/accounts-organizations' },
-            { text: 'Projects & Scoping', link: '/concepts/projects-scoping' },
-            { text: 'Users & Roles', link: '/concepts/users-roles' },
-            { text: 'Groups & Permissions', link: '/concepts/groups-permissions' },
-            { text: 'Tags & Relationships', link: '/concepts/tags-relationships' },
+            { text: 'Accounts & Organizations', link: '/core-concepts/accounts-organizations' },
+            { text: 'Projects & Scoping', link: '/core-concepts/projects-scoping' },
+            { text: 'Users & Roles', link: '/core-concepts/users-roles' },
+            { text: 'Groups & Permissions', link: '/core-concepts/groups-permissions' },
+            { text: 'Tags & Relationships', link: '/core-concepts/tags-relationships' },
           ],
         },
         {
@@ -127,10 +127,10 @@ export default withMermaid({
         {
           text: 'Business Model',
           items: [
-            { text: 'Open Source vs SaaS', link: '/business/open-source-vs-saas' },
-            { text: 'Feature Comparison', link: '/business/feature-comparison' },
-            { text: 'Pricing', link: '/business/pricing' },
-            { text: 'Migration Guide', link: '/business/migration' },
+            { text: 'Open Source vs SaaS', link: '/business-model/open-source-vs-saas' },
+            { text: 'Feature Comparison', link: '/business-model/feature-comparison' },
+            { text: 'Pricing', link: '/business-model/pricing' },
+            { text: 'Migration Guide', link: '/business-model/migration' },
           ],
         },
         {
@@ -145,22 +145,22 @@ export default withMermaid({
         {
           text: 'API Reference',
           items: [
-            { text: 'GraphQL Schema', link: '/api/graphql-schema' },
-            { text: 'Authentication', link: '/api/authentication' },
-            { text: 'Queries', link: '/api/queries' },
-            { text: 'Mutations', link: '/api/mutations' },
-            { text: 'Subscriptions', link: '/api/subscriptions' },
-            { text: 'Error Handling', link: '/api/error-handling' },
+            { text: 'GraphQL Schema', link: '/api-reference/graphql-schema' },
+            { text: 'Authentication', link: '/api-reference/authentication' },
+            { text: 'Queries', link: '/api-reference/queries' },
+            { text: 'Mutations', link: '/api-reference/mutations' },
+            { text: 'Subscriptions', link: '/api-reference/subscriptions' },
+            { text: 'Error Handling', link: '/api-reference/error-handling' },
           ],
         },
         {
           text: 'Advanced Topics',
           items: [
-            { text: 'Performance Optimization', link: '/advanced/performance' },
-            { text: 'Field Selection', link: '/advanced/field-selection' },
-            { text: 'Audit Logging', link: '/advanced/audit-logging' },
-            { text: 'Transaction Management', link: '/advanced/transactions' },
-            { text: 'Custom Middleware', link: '/advanced/middleware' },
+            { text: 'Performance Optimization', link: '/advanced-topics/performance' },
+            { text: 'Field Selection', link: '/advanced-topics/field-selection' },
+            { text: 'Audit Logging', link: '/advanced-topics/audit-logging' },
+            { text: 'Transaction Management', link: '/advanced-topics/transactions' },
+            { text: 'Custom Middleware', link: '/advanced-topics/middleware' },
           ],
         },
         {

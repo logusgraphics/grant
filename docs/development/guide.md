@@ -1,6 +1,11 @@
+---
+title: Development Guide
+description: Project structure, development practices, and collaboration guidelines
+---
+
 # Development Guide
 
-This guide covers the development practices, project structure, and collaboration guidelines for Identity Central.
+This guide covers the development practices, project structure, and collaboration guidelines for Grant Platform.
 
 ## Project Structure
 
@@ -357,3 +362,7 @@ Remember to:
 3. Commit your changes
 4. Push to the branch
 5. Create a new Pull Request
+
+---
+
+**Next:** Learn about [Project Structure](/development/structure) for detailed architecture information.
