@@ -14,7 +14,6 @@ import { EntityCache } from '@/graphql/controllers/base/ScopeController';
 import { Transaction, TransactionManager } from '@/graphql/lib/transactions/TransactionManager';
 import { Services } from '@/graphql/services';
 import { DeleteParams, SelectedFields } from '@/graphql/services/common';
-import { AuthenticatedUser } from '@/graphql/types';
 
 import { ScopeController } from '../base/ScopeController';
 
@@ -27,17 +26,15 @@ export class TagController extends ScopeController {
     super(scopeCache, services);
   }
 
-  public async getTags(
-    params: QueryTagsArgs & SelectedFields<TagModel>,
-    user: AuthenticatedUser
-  ): Promise<TagPage> {
+  public async getTags(params: QueryTagsArgs & SelectedFields<TagModel>): Promise<TagPage> {
     const { scope, page, limit, sort, search, ids, requestedFields } = params;
 
     let tagIds = await this.getScopedTagIds(scope);
 
     // Tags can be inherited from organization to project
     // We don't want to mix scopes for tags
-    if (scope.tenant === Tenant.Project && user.scope.tenant === Tenant.Organization) {
+    if (scope.tenant === Tenant.Project) {
+      // TODO: we need to determine if it's an account project or an organization project
       const projectOrganization = await this.services.organizationProjects.getOrganizationProject({
         projectId: scope.id,
       });

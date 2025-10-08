@@ -5,8 +5,7 @@ type UserSession implements Auditable {
   userAuthenticationMethodId: ID!
   userAuthenticationMethod: UserAuthenticationMethod
   token: String!
-  scopeTenant: Tenant!
-  scopeId: ID!
+  audience: String!
   expiresAt: Date!
   userAgent: String
   ipAddress: String

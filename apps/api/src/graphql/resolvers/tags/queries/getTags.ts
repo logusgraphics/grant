@@ -12,18 +12,15 @@ export const getTagsResolver: QueryResolvers<GraphqlContext>['tags'] = async (
 ) => {
   const requestedFields = getDirectFieldSelection<keyof TagModel>(info, ['tags']);
 
-  const tags = await context.controllers.tags.getTags(
-    {
-      scope,
-      page,
-      limit,
-      sort,
-      search,
-      ids,
-      requestedFields,
-    },
-    context.user!
-  );
+  const tags = await context.controllers.tags.getTags({
+    scope,
+    page,
+    limit,
+    sort,
+    search,
+    ids,
+    requestedFields,
+  });
 
   return tags;
 };

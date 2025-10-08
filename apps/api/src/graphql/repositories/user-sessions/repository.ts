@@ -7,7 +7,6 @@ import {
   UserAuthenticationMethod,
   User,
   UserSessionSearchableField,
-  Tenant,
   UpdateUserSessionInput,
   GetUserSessionsInput,
   UserSessionPage,
@@ -58,19 +57,11 @@ export class UserSessionRepository extends EntityRepository<UserSessionModel, Us
       });
     }
 
-    if (params.scopeTenant) {
+    if (params.audience) {
       filters.push({
-        field: 'scopeTenant',
+        field: 'audience',
         operator: 'eq',
-        value: params.scopeTenant,
-      });
-    }
-
-    if (params.scopeId) {
-      filters.push({
-        field: 'scopeId',
-        operator: 'eq',
-        value: params.scopeId,
+        value: params.audience,
       });
     }
 
@@ -103,8 +94,7 @@ export class UserSessionRepository extends EntityRepository<UserSessionModel, Us
 
   public async getLastValidUserSession(
     userId: string,
-    scopeTenant: Tenant,
-    scopeId: string,
+    audience: string,
     token?: string
   ): Promise<UserSession> {
     const now = new Date();
@@ -112,8 +102,7 @@ export class UserSessionRepository extends EntityRepository<UserSessionModel, Us
     const filters: FilterCondition<UserSessionModel>[] = [
       { field: 'expiresAt', operator: 'gte', value: now },
       { field: 'userId', operator: 'eq', value: userId },
-      { field: 'scopeTenant', operator: 'eq', value: scopeTenant },
-      { field: 'scopeId', operator: 'eq', value: scopeId },
+      { field: 'audience', operator: 'eq', value: audience },
     ];
 
     if (token) {

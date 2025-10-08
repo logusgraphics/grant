@@ -2,6 +2,7 @@ import { MutationResolvers } from '@logusgraphics/grant-schema';
 
 import { GraphqlContext } from '@/graphql/types';
 
-export const login: MutationResolvers<GraphqlContext>['login'] = async (_, args, context) => {
-  return context.controllers.accounts.login(args);
+export const login: MutationResolvers<GraphqlContext>['login'] = async (req, args, context) => {
+  const audience = context.origin;
+  return context.controllers.accounts.login(args, audience);
 };

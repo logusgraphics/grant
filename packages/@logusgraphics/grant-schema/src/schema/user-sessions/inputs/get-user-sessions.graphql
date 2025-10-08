@@ -5,7 +5,6 @@ input GetUserSessionsInput {
   sort: UserSessionSortInput
   ids: [ID!]
   userId: ID
-  scopeTenant: Tenant
-  scopeId: ID
+  audience: String
   requestedFields: [String!]
 }

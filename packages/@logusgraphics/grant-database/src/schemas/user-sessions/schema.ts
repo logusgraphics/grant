@@ -15,8 +15,7 @@ export const userSessions = pgTable(
       .references(() => userAuthenticationMethods.id, { onDelete: 'cascade' })
       .notNull(),
     token: varchar('token', { length: 255 }).notNull().unique(),
-    scopeTenant: varchar('scope_tenant', { length: 50 }).notNull(), // 'account', 'organization', 'project'
-    scopeId: uuid('scope_id').notNull(), // ID of the account/organization/project
+    audience: varchar('audience', { length: 255 }).notNull(),
     expiresAt: timestamp('expires_at').notNull(),
     lastUsedAt: timestamp('last_used_at'),
     userAgent: varchar('user_agent', { length: 500 }),
@@ -28,7 +27,6 @@ export const userSessions = pgTable(
   (t) => [
     index('user_sessions_token_idx').on(t.token),
     index('user_sessions_user_id_idx').on(t.userId),
-    index('user_sessions_scope_tenant_scope_id_idx').on(t.scopeTenant, t.scopeId),
     index('user_sessions_expires_at_idx').on(t.expiresAt),
     index('user_sessions_user_authentication_method_id_idx').on(t.userAuthenticationMethodId),
     index('user_sessions_deleted_at_idx').on(t.deletedAt),

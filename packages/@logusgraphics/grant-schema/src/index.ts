@@ -10,7 +10,6 @@ export type {
   ResolverTypeWrapper,
   ResolversObject,
   RequireFields,
-  // Specific resolver types
   AccountResolvers,
   GroupResolvers,
   UserResolvers,

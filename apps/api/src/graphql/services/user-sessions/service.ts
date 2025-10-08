@@ -5,7 +5,6 @@ import { userSessionAuditLogs } from '@logusgraphics/grant-database';
 import {
   UserSession,
   CreateUserSessionInput,
-  Tenant,
   UpdateUserSessionInput,
   GetUserSessionsInput,
   UserSessionPage,
@@ -74,18 +73,15 @@ export class UserSessionService extends AuditService {
     const decoded = this.decodeJwt(accessToken, ignoreExpired);
 
     const userId = decoded.sub;
-    const scope = decoded.aud as string;
+    const audience = decoded.aud as string;
 
-    if (!userId || !scope) {
+    if (!userId || !audience) {
       throw new Error('Invalid token');
     }
 
-    const [scopeTenant, scopeId] = scope.split(':');
-
     const session = await this.repositories.userSessionRepository.getLastValidUserSession(
       userId,
-      scopeTenant as Tenant,
-      scopeId,
+      audience,
       refreshToken
     );
 
@@ -125,9 +121,9 @@ export class UserSessionService extends AuditService {
   public signSession(session: UserSession): CreateSessionResult {
     const context = 'UserSessionService.signSession';
     const validatedSession = validateInput(userSessionSchema, session, context);
-    const { userId, scopeTenant, scopeId } = validatedSession;
+    const { userId, audience } = validatedSession;
     const sub = userId;
-    const aud = `${scopeTenant}:${scopeId}`;
+    const aud = audience;
     const jti = session.id;
     const iat = Math.floor(Date.now() / 1000); // in seconds
     const exp = Math.floor(this.getAccessTokenExpirationDate(Date.now()).getTime() / 1000); // in seconds
@@ -149,15 +145,13 @@ export class UserSessionService extends AuditService {
 
     const validatedParams = validateInput(createSessionSchema, params, context);
 
-    const { userId, userAuthenticationMethodId, scopeTenant, scopeId, userAgent, ipAddress } =
-      validatedParams;
+    const { userId, userAuthenticationMethodId, audience, userAgent, ipAddress } = validatedParams;
 
     const session = await this.repositories.userSessionRepository.createUserSession(
       {
         userId,
         userAuthenticationMethodId,
-        scopeTenant,
-        scopeId,
+        audience,
         token: this.generateRefreshToken(),
         expiresAt: this.getRefreshTokenExpirationDate(now),
         lastUsedAt: new Date(),
@@ -205,8 +199,7 @@ export class UserSessionService extends AuditService {
       {
         userId: currentSession.userId,
         userAuthenticationMethodId: currentSession.userAuthenticationMethodId,
-        scopeTenant: currentSession.scopeTenant,
-        scopeId: currentSession.scopeId,
+        audience: currentSession.audience,
       },
       transaction
     );

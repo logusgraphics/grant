@@ -203,6 +203,7 @@ describe('Feature Name', () => {
    ```
 
 2. **Test Database Operations**:
+
    ```typescript
    describe('User Repository', () => {
      it('should save user to database', async () => {
@@ -248,6 +249,7 @@ describe('Feature Name', () => {
    ```
 
 2. **Test Error States**:
+
    ```typescript
    it('should display error message for invalid email', () => {
      render(<UserForm />);

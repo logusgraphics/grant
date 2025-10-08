@@ -37,7 +37,7 @@ async function startServer() {
 
   await server.start();
 
-  function createContext(user: AuthenticatedUser | null) {
+  function createContext(user: AuthenticatedUser | null, origin: string): GraphqlContext {
     const scopeCache = {
       roles: new Map(),
       users: new Map(),
@@ -51,7 +51,7 @@ async function startServer() {
     const services = createServices(repositories, user, db);
     const controllers = createControllers(scopeCache, services, db);
 
-    return { user, controllers };
+    return { user, controllers, origin };
   }
 
   app.use(
@@ -75,6 +75,16 @@ async function startServer() {
     expressMiddleware(server, {
       context: async ({ req }) => {
         const authHeader = req.headers.authorization;
+        const origin = req.headers['origin'];
+
+        if (!origin) {
+          throw new GraphQLError('Origin is required', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              http: { status: 400 },
+            },
+          });
+        }
 
         const user = extractUserFromToken(authHeader || null);
 
@@ -87,7 +97,7 @@ async function startServer() {
           });
         }
 
-        return createContext(user);
+        return createContext(user, origin);
       },
     })
   );

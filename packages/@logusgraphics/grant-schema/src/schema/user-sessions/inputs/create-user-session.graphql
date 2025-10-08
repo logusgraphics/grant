@@ -1,8 +1,7 @@
 input CreateUserSessionInput {
   userId: ID!
   userAuthenticationMethodId: ID!
-  scopeTenant: Tenant!
-  scopeId: ID!
+  audience: String!
   token: String!
   lastUsedAt: Date!
   expiresAt: Date!

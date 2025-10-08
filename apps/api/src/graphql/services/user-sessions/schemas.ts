@@ -7,7 +7,6 @@ import {
   paginatedResponseSchema,
   deleteSchema,
   requestedFieldsSchema,
-  tenantSchema,
 } from '../common/schemas';
 
 export const sessionScopeSchema = z.enum(Object.values(Tenant) as [string, ...string[]]);
@@ -47,8 +46,7 @@ export const queryUserSessionsArgsSchema = z.object({
 export const userSessionSchema = baseEntitySchema.extend({
   userId: idSchema,
   token: z.string(),
-  scopeTenant: tenantSchema,
-  scopeId: idSchema,
+  audience: z.string(),
   userAuthenticationMethodId: idSchema,
   expiresAt: z.date(),
   lastUsedAt: z.date().nullable().optional(),
@@ -70,8 +68,7 @@ export const userSessionPageSchema = paginatedResponseSchema(userSessionSchema).
 export const createSessionSchema = z.object({
   userId: idSchema,
   userAuthenticationMethodId: idSchema,
-  scopeTenant: tenantSchema,
-  scopeId: idSchema,
+  audience: z.string(),
   userAgent: z.string().max(500).nullable().optional(),
   ipAddress: z.string().max(45).nullable().optional(),
 });

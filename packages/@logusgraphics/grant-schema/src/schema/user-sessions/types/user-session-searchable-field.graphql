@@ -1,5 +1,4 @@
 enum UserSessionSearchableField {
   token
-  scopeTenant
-  scopeId
+  audience
 }

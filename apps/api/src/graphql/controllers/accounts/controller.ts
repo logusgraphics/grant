@@ -7,8 +7,6 @@ import {
   MutationUpdateAccountArgs,
   CreateAccountInput,
   UserAuthenticationMethodProvider,
-  Tenant,
-  AccountType,
   CreateAccountResult,
   MutationLoginArgs,
   LoginResponse,
@@ -60,7 +58,7 @@ export class AccountController extends ScopeController {
     });
   }
 
-  public async login(params: MutationLoginArgs): Promise<LoginResponse> {
+  public async login(params: MutationLoginArgs, audience: string): Promise<LoginResponse> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
       const { provider, providerId, providerData } = params.input;
       const { providerData: processedProviderData } =
@@ -134,14 +132,10 @@ export class AccountController extends ScopeController {
         throw new AuthenticationError('User does not have an account');
       }
 
-      const account = user.accounts[0]; // TODO: define how to select the account to use by default
-
       const userSessionsResult = await this.services.userSessions.getUserSessions(
         {
           userId: user.id,
-          scopeTenant:
-            account.type === AccountType.Organization ? Tenant.Organization : Tenant.Account,
-          scopeId: account.id,
+          audience,
           limit: 1,
           sort: {
             field: UserSessionSortableField.LastUsedAt,
@@ -173,9 +167,7 @@ export class AccountController extends ScopeController {
         {
           userId: user.id,
           userAuthenticationMethodId: userAuthenticationMethod.id,
-          scopeTenant:
-            account.type === AccountType.Organization ? Tenant.Organization : Tenant.Account,
-          scopeId: account.id, // TODO: refactor to match organization id
+          audience,
         },
         tx
       );
@@ -219,7 +211,8 @@ export class AccountController extends ScopeController {
   }
 
   public async createAccount(
-    params: Omit<CreateAccountInput, 'ownerId'>
+    params: Omit<CreateAccountInput, 'ownerId'>,
+    audience: string
   ): Promise<CreateAccountResult> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
       const { name, username, type, provider, providerId, providerData } = params;
@@ -254,8 +247,7 @@ export class AccountController extends ScopeController {
         {
           userId: user.id,
           userAuthenticationMethodId: userAuthenticationMethod.id,
-          scopeTenant: type === AccountType.Organization ? Tenant.Organization : Tenant.Account,
-          scopeId: account.id, // TODO: refactor to match organization id
+          audience,
         },
         tx
       );
