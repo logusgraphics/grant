@@ -57,27 +57,27 @@ graph TB
     subgraph "Frontend Layer"
         WA[Web App<br/>Next.js Container]
     end
-    
+
     subgraph "API Layer"
         AS[API Server<br/>Apollo Container]
     end
-    
+
     subgraph "Data Layer"
         DB[Database<br/>PostgreSQL RDS]
     end
-    
+
     subgraph "Core Packages"
         CP[Core Package]
         SP[Schema Package]
         DP[Database Package]
     end
-    
+
     WA <--> AS
     AS <--> DB
     AS --> CP
     AS --> SP
     DB --> DP
-    
+
     style WA fill:transparent,stroke:#2563eb,stroke-width:2px
     style AS fill:transparent,stroke:#2563eb,stroke-width:2px
     style DB fill:transparent,stroke:#2563eb,stroke-width:2px
@@ -129,29 +129,29 @@ graph TB
         Mobile[Mobile App]
         API_Client[API Client]
     end
-    
+
     subgraph "Grant Platform"
         Gateway[API Gateway]
         Auth[Authentication Service]
         RBAC[RBAC Engine]
         DB[(PostgreSQL)]
     end
-    
+
     subgraph "Infrastructure"
         AWS[AWS Cloud]
         Docker[Docker Containers]
         CF[CloudFormation]
     end
-    
+
     Web --> Gateway
     Mobile --> Gateway
     API_Client --> Gateway
-    
+
     Gateway --> Auth
     Gateway --> RBAC
     Auth --> DB
     RBAC --> DB
-    
+
     Gateway --> AWS
     Auth --> Docker
     RBAC --> Docker
@@ -170,24 +170,24 @@ graph LR
         A3[Project Beta]
         A4[Users A1-A10]
     end
-    
+
     subgraph "Account: Beta Inc"
         B1[Organization B]
         B2[Project Gamma]
         B3[Project Delta]
         B4[Users B1-B15]
     end
-    
+
     A1 --> A2
     A1 --> A3
     A2 --> A4
     A3 --> A4
-    
+
     B1 --> B2
     B1 --> B3
     B2 --> B4
     B3 --> B4
-    
+
     A1 -.->|Isolated| B1
     A2 -.->|Isolated| B2
     A4 -.->|Isolated| B4
@@ -208,7 +208,7 @@ flowchart TD
     CheckPerm -->|Yes| CheckScope{In Scope?}
     CheckScope -->|No| Deny
     CheckScope -->|Yes| Allow[Access Granted]
-    
+
     style Start stroke:#2563eb,stroke-width:3px
     style Allow stroke:#10b981,stroke-width:2px
     style Deny stroke:#ef4444,stroke-width:2px
