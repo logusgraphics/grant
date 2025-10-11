@@ -1,0 +1,113 @@
+import { Response } from 'express';
+
+import { BaseController } from '@/rest/controllers/base.controller';
+import {
+  loginRequestSchema,
+  logoutRequestSchema,
+  refreshSessionRequestSchema,
+  registerRequestSchema,
+} from '@/rest/schemas';
+import { TypedRequest } from '@/rest/types';
+import { RequestContext } from '@/types';
+
+/**
+ * Authentication controller
+ * Handles user authentication and session management
+ */
+export class AuthController extends BaseController {
+  constructor(context: RequestContext) {
+    super(context);
+  }
+
+  /**
+   * Login endpoint
+   * POST /api/auth/login
+   * Body is validated by loginRequestSchema middleware
+   */
+  async login(req: TypedRequest<{ body: typeof loginRequestSchema }>, res: Response) {
+    try {
+      const { body } = req;
+      const { provider, providerId, providerData } = body;
+
+      const result = await this.handlers.accounts.login(
+        {
+          input: {
+            provider,
+            providerId,
+            providerData,
+          },
+        },
+        this.origin
+      );
+
+      this.success(res, result);
+    } catch (error) {
+      this.handleError(res, error, 401);
+    }
+  }
+
+  /**
+   * Register endpoint
+   * POST /api/auth/register
+   * Body is validated by registerRequestSchema middleware
+   * Returns CreateAccountResult with account, accessToken, and refreshToken
+   */
+  async register(req: TypedRequest<{ body: typeof registerRequestSchema }>, res: Response) {
+    try {
+      const { body } = req;
+      const { name, username, type, provider, providerId, providerData } = body;
+
+      const result = await this.handlers.accounts.createAccount(
+        {
+          name,
+          username,
+          type,
+          provider,
+          providerId,
+          providerData,
+        },
+        this.origin
+      );
+
+      this.success(res, result, 201);
+    } catch (error) {
+      this.handleError(res, error, 400);
+    }
+  }
+
+  /**
+   * Refresh session endpoint
+   * POST /api/auth/refresh
+   * Body is validated by refreshSessionRequestSchema middleware
+   */
+  async refreshSession(
+    req: TypedRequest<{ body: typeof refreshSessionRequestSchema }>,
+    res: Response
+  ) {
+    try {
+      const { accessToken, refreshToken } = req.body;
+
+      const result = await this.handlers.accounts.refreshSession({
+        accessToken,
+        refreshToken,
+      });
+
+      this.success(res, result);
+    } catch (error) {
+      this.handleError(res, error, 401);
+    }
+  }
+
+  /**
+   * Logout endpoint
+   * POST /api/auth/logout
+   * Body is validated by logoutRequestSchema middleware
+   */
+  async logout(req: TypedRequest<{ body: typeof logoutRequestSchema }>, res: Response) {
+    try {
+      this.success(res, { message: 'Logged out successfully' });
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+}

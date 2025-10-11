@@ -1,3 +1,3 @@
-export { createPermissionResolver as createPermission } from './createPermission';
-export { deletePermissionResolver as deletePermission } from './deletePermission';
-export { updatePermissionResolver as updatePermission } from './updatePermission';
+export { createPermissionResolver as createPermission } from './create-permission.resolver';
+export { deletePermissionResolver as deletePermission } from './delete-permission.resolver';
+export { updatePermissionResolver as updatePermission } from './update-permission.resolver';

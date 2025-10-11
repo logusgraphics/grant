@@ -1,3 +1,3 @@
-export * from './login';
-export * from './register';
-export * from './refreshSession';
+export * from './login.resolver';
+export * from './register.resolver';
+export * from './refresh-session.resolver';

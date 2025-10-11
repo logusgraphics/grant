@@ -1,1 +1,1 @@
-export { getGroupsResolver as getGroups } from './getGroups';
+export { getGroupsResolver as getGroups } from './get-groups.resolver';

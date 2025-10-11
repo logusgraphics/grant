@@ -1,1 +1,1 @@
-export { getOrganizationsResolver as getOrganizations } from './getOrganizations';
+export { getOrganizationsResolver as getOrganizations } from './get-organizations.resolver';

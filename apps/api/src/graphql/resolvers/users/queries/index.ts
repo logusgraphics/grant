@@ -1,1 +1,1 @@
-export { getUsersResolver as getUsers } from './getUsers';
+export { getUsersResolver as getUsers } from './get-users.resolver';

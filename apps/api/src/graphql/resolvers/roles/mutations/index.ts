@@ -1,3 +1,3 @@
-export { createRoleResolver as createRole } from './createRole';
-export { deleteRoleResolver as deleteRole } from './deleteRole';
-export { updateRoleResolver as updateRole } from './updateRole';
+export { createRoleResolver as createRole } from './create-role.resolver';
+export { deleteRoleResolver as deleteRole } from './delete-role.resolver';
+export { updateRoleResolver as updateRole } from './update-role.resolver';

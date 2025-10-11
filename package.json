@@ -44,6 +44,7 @@
     "@types/node": "^20.19.17",
     "concurrently": "^8.2.2",
     "graphql": "^16.10.0",
+    "lint-staged": "^16.2.4",
     "prettier": "^3.5.3",
     "turbo": "^2.0.0",
     "typescript": "^5",
@@ -53,5 +54,16 @@
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@8.15.0"
+  "packageManager": "pnpm@8.15.0",
+  "lint-staged": {
+    "apps/**/*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "packages/**/*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "*.{js,jsx,json,md,graphql,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
 }

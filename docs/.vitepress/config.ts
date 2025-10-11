@@ -1,4 +1,3 @@
-import { defineConfig } from 'vitepress';
 import { withMermaid } from 'vitepress-plugin-mermaid';
 
 export default withMermaid({
@@ -101,6 +100,7 @@ export default withMermaid({
             { text: 'Development Guide', link: '/development/guide' },
             { text: 'Project Structure', link: '/development/structure' },
             { text: 'GraphQL API', link: '/development/graphql' },
+            { text: 'REST API', link: '/development/rest-api' },
             { text: 'Database Schema', link: '/development/database' },
             { text: 'Testing', link: '/development/testing' },
             { text: 'Contributing', link: '/development/contributing' },
@@ -145,6 +145,7 @@ export default withMermaid({
         {
           text: 'API Reference',
           items: [
+            { text: 'REST API', link: '/api-reference/rest-api' },
             { text: 'GraphQL Schema', link: '/api-reference/graphql-schema' },
             { text: 'Authentication', link: '/api-reference/authentication' },
             { text: 'Queries', link: '/api-reference/queries' },

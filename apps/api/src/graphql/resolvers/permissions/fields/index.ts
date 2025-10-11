@@ -1,4 +1,4 @@
-import { permissionTagsResolver as tags } from './tags';
+import { permissionTagsResolver as tags } from './tags.resolver';
 
 export const permissionResolver = {
   tags,

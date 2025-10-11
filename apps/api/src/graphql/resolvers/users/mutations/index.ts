@@ -1,3 +1,3 @@
-export { createUserResolver as createUser } from './createUser';
-export { updateUserResolver as updateUser } from './updateUser';
-export { deleteUserResolver as deleteUser } from './deleteUser';
+export { createUserResolver as createUser } from './create-user.resolver';
+export { updateUserResolver as updateUser } from './update-user.resolver';
+export { deleteUserResolver as deleteUser } from './delete-user.resolver';

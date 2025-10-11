@@ -312,6 +312,234 @@ requestedFields?.forEach((field) => {
 });
 ```
 
+## REST API Field Selection
+
+While GraphQL has built-in field selection through its query syntax, the REST API implements field selection through query parameters for relationship loading.
+
+### Why Field Selection in REST?
+
+In traditional REST APIs, all relationships are either always included or never included. Our REST API allows clients to explicitly request relationships using the `relations` query parameter, providing:
+
+1. **Performance**: Only load expensive relationships when needed
+2. **Flexibility**: Clients control their data requirements
+3. **Consistency**: Mirrors GraphQL behavior for familiar developer experience
+
+### Usage
+
+Clients can request specific relationships using the `relations` query parameter:
+
+```bash
+# Single relation
+GET /api/accounts?relations=projects
+
+# Multiple relations (comma-separated)
+GET /api/accounts?relations=projects,owner
+
+# Multiple relations (array format)
+GET /api/accounts?relations=projects&relations=owner
+```
+
+### Implementation Flow
+
+1. **Schema Validation** - Zod validates and transforms the `relations` parameter:
+
+   ```typescript
+   export const relationsQuerySchema = z.object({
+     relations: z
+       .union([z.string(), z.array(z.string())])
+       .transform((val) => {
+         if (typeof val === 'string') {
+           return val.split(',').map((v) => v.trim());
+         }
+         return val;
+       })
+       .optional(),
+   });
+   ```
+
+2. **Parsing** - The `parseRelations` utility converts to typed field arrays:
+
+   ```typescript
+   import { parseRelations } from '@/lib/field-selection.lib';
+
+   const requestedFields = parseRelations<Account>(relations);
+   // 'projects,owner' → ['projects', 'owner']
+   ```
+
+3. **Repository Query** - Only requested relations are loaded via database joins:
+
+   ```typescript
+   protected query(params: { requestedFields?: Array<keyof TEntity> }) {
+     const withRelations = this.withRelations(requestedFields);
+     // Conditionally loads relations based on requestedFields
+   }
+   ```
+
+### Examples
+
+#### Without Relations (Default)
+
+Request:
+
+```bash
+GET /api/accounts/acc_123
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "acc_123",
+    "name": "Acme Corp",
+    "slug": "acme-corp",
+    "type": "organization",
+    "ownerId": "usr_456"
+  }
+}
+```
+
+#### With Relations
+
+Request:
+
+```bash
+GET /api/accounts/acc_123?relations=projects,owner
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "acc_123",
+    "name": "Acme Corp",
+    "slug": "acme-corp",
+    "type": "organization",
+    "ownerId": "usr_456",
+    "projects": [
+      {
+        "id": "prj_789",
+        "name": "Project Alpha"
+      }
+    ],
+    "owner": {
+      "id": "usr_456",
+      "name": "John Doe"
+    }
+  }
+}
+```
+
+### Available Relations by Entity
+
+#### Accounts
+
+- `projects` - Projects associated with the account
+- `owner` - User who owns the account
+
+#### Users
+
+- `roles` - Roles assigned to the user
+- `tags` - Tags associated with the user
+- `accounts` - Accounts owned by the user
+- `authenticationMethods` - Authentication methods for the user
+
+#### Organizations
+
+- `users` - Users in the organization
+- `projects` - Projects owned by the organization
+- `roles` - Roles defined in the organization
+- `groups` - Groups in the organization
+
+#### Projects
+
+- `accounts` - Accounts associated with the project
+- `users` - Users with access to the project
+- `roles` - Roles defined in the project
+- `groups` - Groups in the project
+
+#### Roles
+
+- `users` - Users with this role
+- `groups` - Groups with this role
+- `tags` - Tags associated with this role
+
+#### Groups
+
+- `users` - Users in this group
+- `permissions` - Permissions granted to this group
+- `tags` - Tags associated with this group
+
+### Performance Considerations
+
+| Scenario               | Query Type             | Performance Impact |
+| ---------------------- | ---------------------- | ------------------ |
+| No relations           | Single table query     | Fastest            |
+| 1-2 relations          | LEFT JOIN per relation | Fast               |
+| 3+ relations           | Multiple LEFT JOINs    | Moderate           |
+| Deeply nested (future) | Recursive joins        | Slowest            |
+
+**Best Practice**: Only request relations you actually need.
+
+### Comparison: GraphQL vs REST
+
+| Aspect           | GraphQL               | REST (with field selection) |
+| ---------------- | --------------------- | --------------------------- |
+| Field selection  | Automatic via query   | Explicit via `?relations=`  |
+| Base fields      | Must be requested     | Always returned             |
+| Nested relations | Deeply nested queries | Flat list of relations      |
+| Type safety      | Schema-driven         | Zod validation              |
+| Documentation    | Introspection         | OpenAPI/Swagger             |
+
+### Adding Field Selection to New REST Endpoints
+
+1. **Import utilities**:
+
+   ```typescript
+   import { parseRelations } from '@/lib/field-selection.lib';
+   import { relationsQuerySchema } from '@/rest/schemas/common.schemas';
+   ```
+
+2. **Add to query schema** (most schemas extend `listQuerySchema` which already includes `relationsQuerySchema`)
+
+3. **Parse in controller**:
+
+   ```typescript
+   const { relations } = req.query;
+   const requestedFields = parseRelations<Entity>(relations);
+
+   const result = await this.handlers.entity.getEntities({
+     // ... other params
+     requestedFields,
+   });
+   ```
+
+4. **Document in OpenAPI**:
+
+   ```typescript
+   registry.registerPath({
+     // ...
+     description: `
+       ### Relations
+       You can load related data by specifying the \`relations\` query parameter:
+       - \`fieldA\`: Description of fieldA
+       - \`fieldB\`: Description of fieldB
+       
+       Example: \`?relations=fieldA,fieldB\`
+     `,
+   });
+   ```
+
+### Future Enhancements
+
+1. **Nested Relations**: Support for `?relations=projects.users`
+2. **Field Exclusion**: Support for `?exclude=sensitiveField`
+3. **Sparse Fieldsets**: Support for `?fields=id,name` (JSON:API style)
+4. **DataLoader**: Batch and cache database queries for N+1 prevention
+
 ---
 
 **Next:** Learn about [Audit Logging](/advanced-topics/audit-logging) for comprehensive audit trail management.

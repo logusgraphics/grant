@@ -1,1 +1,1 @@
-export { getPermissionsResolver as getPermissions } from './getPermissions';
+export { getPermissionsResolver as getPermissions } from './get-permissions.resolver';

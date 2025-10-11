@@ -1,1 +1,1 @@
-export { getRolesResolver as getRoles } from './getRoles';
+export { getRolesResolver as getRoles } from './get-roles.resolver';

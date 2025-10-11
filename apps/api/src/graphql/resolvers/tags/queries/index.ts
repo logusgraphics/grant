@@ -1,1 +1,1 @@
-export { getTagsResolver as getTags } from './getTags';
+export { getTagsResolver as getTags } from './get-tags.resolver';

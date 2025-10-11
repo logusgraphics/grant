@@ -1,3 +1,3 @@
-export { createOrganizationResolver as createOrganization } from './createOrganization';
-export { updateOrganizationResolver as updateOrganization } from './updateOrganization';
-export { deleteOrganizationResolver as deleteOrganization } from './deleteOrganization';
+export { createOrganizationResolver as createOrganization } from './create-organization.resolver';
+export { updateOrganizationResolver as updateOrganization } from './update-organization.resolver';
+export { deleteOrganizationResolver as deleteOrganization } from './delete-organization.resolver';

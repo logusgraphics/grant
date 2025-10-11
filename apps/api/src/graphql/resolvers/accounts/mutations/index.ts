@@ -1,2 +1,2 @@
-export { updateAccountResolver as updateAccount } from './updateAccount';
-export { deleteAccountResolver as deleteAccount } from './deleteAccount';
+export { deleteAccountResolver as deleteAccount } from './delete-account.resolver';
+export { updateAccountResolver as updateAccount } from './update-account.resolver';

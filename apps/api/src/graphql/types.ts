@@ -1,12 +1,3 @@
-import { Controllers } from './controllers';
+import { RequestContext } from '@/types/context';
 
-export type GraphqlContext = {
-  user: AuthenticatedUser | null;
-  controllers: Controllers;
-  origin: string;
-};
-
-export interface AuthenticatedUser {
-  id: string;
-  aud: string;
-}
+export type GraphqlContext = RequestContext;

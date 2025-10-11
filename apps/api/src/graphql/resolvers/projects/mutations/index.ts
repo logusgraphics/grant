@@ -1,3 +1,3 @@
-export { createProjectResolver as createProject } from './createProject';
-export { updateProjectResolver as updateProject } from './updateProject';
-export { deleteProjectResolver as deleteProject } from './deleteProject';
+export { createProjectResolver as createProject } from './create-project.resolver';
+export { updateProjectResolver as updateProject } from './update-project.resolver';
+export { deleteProjectResolver as deleteProject } from './delete-project.resolver';

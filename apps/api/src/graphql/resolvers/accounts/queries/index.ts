@@ -1,2 +1,2 @@
-export { getAccountsResolver as getAccounts } from './getAccounts';
-export { checkUsernameResolver as checkUsername } from './checkUsername';
+export { getAccountsResolver as getAccounts } from './get-accounts.resolver';
+export { checkUsernameResolver as checkUsername } from './check-username.resolver';

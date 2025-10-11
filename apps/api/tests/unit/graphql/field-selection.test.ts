@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { getDirectFieldSelection } from '@/lib/fieldSelection';
+import { getDirectFieldSelection } from '@/lib/field-selection.lib';
 
 // Mock GraphQLResolveInfo structure
 const createMockResolveInfo = (fieldNodes: any[]) => ({
