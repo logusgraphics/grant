@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AccountType } from '@logusgraphics/grant-schema';
@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
+import { FullPageLoader } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,14 +33,15 @@ import { useUsernameValidation } from '@/hooks/accounts/useUsernameValidation';
 import { Link } from '@/i18n/navigation';
 import { slugifySafe } from '@/lib/slugify';
 import {
-  passwordPolicySchema,
-  getPasswordStrength,
   getPasswordRequirements,
+  getPasswordStrength,
+  passwordPolicySchema,
 } from '@/lib/validation/password-policy';
 
 export default function RegisterPage() {
   const t = useTranslations('auth');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAuthSuccess, setIsAuthSuccess] = useState(false);
   const [usernameManuallySet, setUsernameManuallySet] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   usePageTitle('auth.register');
@@ -96,7 +98,10 @@ export default function RegisterPage() {
         password: values.password,
         accountType: values.accountType,
       });
-    } finally {
+      // On success, show full page loader and keep form disabled during redirect
+      setIsAuthSuccess(true);
+    } catch {
+      // Only re-enable form on error
       setIsSubmitting(false);
     }
   };
@@ -107,18 +112,25 @@ export default function RegisterPage() {
 
   // Auto-slugify username when name changes (if username hasn't been manually set)
   const nameValue = form.watch('name');
+  const currentUsername = form.watch('username');
 
   React.useEffect(() => {
     if (nameValue && !usernameManuallySet) {
       const slugifiedName = slugifySafe(nameValue);
-      form.setValue('username', slugifiedName);
 
-      // Check availability of auto-generated username
-      if (slugifiedName.length >= 3) {
-        checkUsername(slugifiedName);
+      // Only update if the username is different to prevent infinite loops
+      if (slugifiedName !== currentUsername) {
+        form.setValue('username', slugifiedName);
+
+        // Check availability of auto-generated username
+        if (slugifiedName.length >= 3) {
+          checkUsername(slugifiedName);
+        }
       }
     }
-  }, [nameValue, usernameManuallySet, form, checkUsername]);
+    // form.setValue is stable in react-hook-form and doesn't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nameValue, currentUsername, usernameManuallySet, checkUsername]);
 
   // Track when user manually changes username
   const handleUsernameChange = (value: string) => {
@@ -136,7 +148,14 @@ export default function RegisterPage() {
     if (isAvailable !== null) {
       form.trigger('username');
     }
-  }, [isAvailable, form]);
+    // form.trigger is stable in react-hook-form and doesn't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAvailable]);
+
+  // Show full page loader during redirect after successful registration
+  if (isAuthSuccess) {
+    return <FullPageLoader />;
+  }
 
   return (
     <Form {...form}>

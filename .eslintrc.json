@@ -25,7 +25,16 @@
     "import/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index",
+          "object",
+          "type"
+        ],
         "pathGroups": [
           {
             "pattern": "react",
@@ -33,12 +42,17 @@
             "position": "before"
           },
           {
-            "pattern": "@/**",
-            "group": "internal",
-            "position": "after"
+            "pattern": "next",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "next/**",
+            "group": "external",
+            "position": "before"
           }
         ],
-        "pathGroupsExcludedImportTypes": ["react"],
+        "pathGroupsExcludedImportTypes": ["react", "builtin"],
         "newlines-between": "always",
         "alphabetize": {
           "order": "asc",

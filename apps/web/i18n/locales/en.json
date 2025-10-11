@@ -176,7 +176,8 @@
       "error": "Verification failed",
       "errorUnknown": "An unknown error occurred",
       "verificationRequired": "Email verification needed",
-      "verifyEmailDescription": "Please verify your email to access all features"
+      "verifyEmailDescription": "Please verify your email to access all features",
+      "redirecting": "Redirecting to dashboard..."
     },
     "register": {
       "title": "Create Account",
@@ -188,7 +189,8 @@
       "success": "Account created successfully",
       "error": "Failed to create account",
       "verificationRequired": "Email verification required",
-      "verifyEmailDescription": "Please check your email and verify your account to access all features"
+      "verifyEmailDescription": "Please check your email and verify your account to access all features",
+      "redirecting": "Redirecting to dashboard..."
     },
     "forgotPassword": {
       "title": "Reset Password",

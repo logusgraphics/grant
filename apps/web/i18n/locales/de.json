@@ -176,7 +176,8 @@
       "error": "Identitätsverifizierung fehlgeschlagen",
       "errorUnknown": "Ein unbekannter Fehler ist aufgetreten",
       "verificationRequired": "E-Mail-Verification erforderlich",
-      "verifyEmailDescription": "Bitte verifizieren Sie Ihre E-Mail für vollen Zugriff"
+      "verifyEmailDescription": "Bitte verifizieren Sie Ihre E-Mail für vollen Zugriff",
+      "redirecting": "Weiterleitung zum Dashboard..."
     },
     "register": {
       "title": "Identität erstellen",
@@ -188,7 +189,8 @@
       "success": "Konto erfolgreich erstellt",
       "error": "Konto konnte nicht erstellt werden",
       "verificationRequired": "E-Mail-Verification erforderlich",
-      "verifyEmailDescription": "Bitte prüfen Sie Ihre E-Mails und verifizieren Sie Ihr Konto für vollen Zugriff"
+      "verifyEmailDescription": "Bitte prüfen Sie Ihre E-Mails und verifizieren Sie Ihr Konto für vollen Zugriff",
+      "redirecting": "Weiterleitung zum Dashboard..."
     },
     "accountTypes": {
       "personal": "Persönliches Konto",

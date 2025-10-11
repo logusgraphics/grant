@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 
-import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { FullPageLoader } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -34,6 +36,7 @@ export default function LoginPage() {
   const params = useParams();
   const locale = params.locale as string;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAuthSuccess, setIsAuthSuccess] = useState(false);
   usePageTitle('auth.login');
 
   const form = useForm<LoginFormValues>({
@@ -54,10 +57,18 @@ export default function LoginPage() {
         email: values.email,
         password: values.password,
       });
-    } finally {
+      // On success, show full page loader and keep form disabled during redirect
+      setIsAuthSuccess(true);
+    } catch {
+      // Only re-enable form on error
       setIsSubmitting(false);
     }
   };
+
+  // Show full page loader during redirect after successful login
+  if (isAuthSuccess) {
+    return <FullPageLoader />;
+  }
 
   return (
     <div className="space-y-6">

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LucideIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useForm, DefaultValues } from 'react-hook-form';
+import { DefaultValues, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<TFormValues>({
+    // @ts-expect-error - Zod v4 schema type compatibility with react-hook-form (known issue)
     resolver: zodResolver(schema),
     defaultValues,
   });
@@ -155,6 +156,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
     return (
       <FormField
         key={field.name}
+        // @ts-expect-error - Zod v4 generic type compatibility with react-hook-form Control
         control={form.control}
         name={fieldName as any}
         render={({ field: formField }) => (
@@ -208,6 +210,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
           <DialogDescription>{t(description)}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
+          {/* @ts-expect-error - Zod v4 generic type compatibility with react-hook-form SubmitHandler */}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {fields.map(renderField)}
 
