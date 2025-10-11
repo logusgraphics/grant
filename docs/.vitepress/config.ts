@@ -8,6 +8,9 @@ export default withMermaid({
   base: '/',
   lang: 'en-US',
 
+  // Ignore dead links during development (docs are being built incrementally)
+  ignoreDeadLinks: true,
+
   // Vite configuration to fix dependency issues
   vite: {
     optimizeDeps: { include: ['@braintree/sanitize-url'] },

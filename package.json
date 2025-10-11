@@ -45,8 +45,8 @@
     "audit:pnpm": "pnpm audit --recursive"
   },
   "devDependencies": {
-    "@types/node": "^20.19.17",
-    "concurrently": "^8.2.2",
+    "@types/node": "^24.7.2",
+    "concurrently": "^9.2.1",
     "graphql": "^16.10.0",
     "lint-staged": "^16.2.4",
     "prettier": "^3.5.3",

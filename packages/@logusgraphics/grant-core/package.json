@@ -66,10 +66,10 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@types/node": "^20.19.17",
+    "@types/node": "^24.7.2",
     "eslint": "^8.57.0",
-    "typescript": "^5",
     "tsup": "^8.0.0",
+    "typescript": "^5",
     "vitest": "^3.2.4"
   },
   "peerDependencies": {

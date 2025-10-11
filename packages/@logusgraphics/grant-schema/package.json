@@ -22,11 +22,11 @@
     "@graphql-typed-document-node/core": "^3.2.0"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^5.0.5",
+    "@graphql-codegen/cli": "^6.0.0",
     "@graphql-codegen/client-preset": "^5.0.0",
     "@graphql-codegen/typescript": "^5.0.0",
     "@graphql-codegen/typescript-resolvers": "^5.0.0",
-    "@types/node": "^20.19.17",
+    "@types/node": "^24.7.2",
     "eslint": "^8.57.0",
     "typescript": "^5"
   }
