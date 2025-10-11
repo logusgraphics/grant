@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useQuery, ApolloError } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Role, QueryRolesArgs, RolePage } from '@logusgraphics/grant-schema';
 
 import { GET_ROLES } from './queries';
@@ -8,7 +8,7 @@ import { GET_ROLES } from './queries';
 interface UseRolesResult {
   roles: Role[];
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   totalCount: number;
   refetch: () => Promise<any>;
 }

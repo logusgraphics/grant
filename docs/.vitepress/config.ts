@@ -103,6 +103,7 @@ export default withMermaid({
             { text: 'REST API', link: '/development/rest-api' },
             { text: 'Database Schema', link: '/development/database' },
             { text: 'Testing', link: '/development/testing' },
+            { text: 'Security Audit', link: '/development/security-audit' },
             { text: 'Contributing', link: '/development/contributing' },
           ],
         },

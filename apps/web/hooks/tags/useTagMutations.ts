@@ -1,4 +1,5 @@
-import { ApolloCache, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { ApolloCache } from '@apollo/client';
 import {
   CreateTagInput,
   MutationDeleteTagArgs,
@@ -15,7 +16,7 @@ import { CREATE_TAG, UPDATE_TAG, DELETE_TAG } from './mutations';
 export function useTagMutations() {
   const t = useTranslations('tags');
 
-  const update = (cache: ApolloCache<any>) => {
+  const update = (cache: ApolloCache) => {
     evictTagsCache(cache);
   };
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useQuery, ApolloError } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Group, GroupPage, QueryGroupsArgs } from '@logusgraphics/grant-schema';
 
 import { GET_GROUPS } from './queries';
@@ -8,7 +8,7 @@ import { GET_GROUPS } from './queries';
 interface UseGroupsResult {
   groups: Group[];
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   totalCount: number;
   refetch: () => Promise<any>;
 }

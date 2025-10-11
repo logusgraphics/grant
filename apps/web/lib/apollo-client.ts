@@ -1,6 +1,6 @@
 'use client';
 
-import { ApolloClient, HttpLink, InMemoryCache, from, Observable } from '@apollo/client';
+import { ApolloClient, from, HttpLink, InMemoryCache, Observable } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 
@@ -34,8 +34,21 @@ const redirectToLogin = () => {
   }
 };
 
-const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
-  const handleUnauthorized = () => {
+const errorLink = onError(({ error, operation, forward }) => {
+  // Check if the error indicates unauthorized access
+  const isUnauthorized =
+    (error && 'statusCode' in error && error.statusCode === 401) ||
+    (error &&
+      'extensions' in error &&
+      typeof error.extensions === 'object' &&
+      error.extensions &&
+      'http' in error.extensions &&
+      typeof error.extensions.http === 'object' &&
+      error.extensions.http &&
+      'status' in error.extensions.http &&
+      error.extensions.http.status === 401);
+
+  if (isUnauthorized) {
     const { accessToken, refreshToken } = useAuthStore.getState();
 
     if (accessToken && refreshToken) {
@@ -74,28 +87,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
       });
     } else {
       redirectToLogin();
-      return Observable.of();
     }
-  };
-
-  if (graphQLErrors) {
-    for (const error of graphQLErrors) {
-      if (
-        error.extensions &&
-        typeof error.extensions === 'object' &&
-        'http' in error.extensions &&
-        error.extensions.http &&
-        typeof error.extensions.http === 'object' &&
-        'status' in error.extensions.http &&
-        error.extensions.http.status === 401
-      ) {
-        return handleUnauthorized();
-      }
-    }
-  }
-
-  if (networkError && 'statusCode' in networkError && networkError.statusCode === 401) {
-    return handleUnauthorized();
   }
 });
 

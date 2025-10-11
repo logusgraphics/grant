@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useQuery, ApolloError } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Project, ProjectPage, QueryProjectsArgs } from '@logusgraphics/grant-schema';
 
 import { GET_PROJECTS } from './queries';
@@ -8,7 +8,7 @@ import { GET_PROJECTS } from './queries';
 interface UseProjectsResult {
   projects: Project[];
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   totalCount: number;
   refetch: () => Promise<any>;
 }

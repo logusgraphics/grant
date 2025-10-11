@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useQuery, ApolloError } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Organization,
   OrganizationPage,
@@ -12,7 +12,7 @@ import { GET_ORGANIZATIONS } from './queries';
 interface UseOrganizationsResult {
   organizations: Organization[];
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   totalCount: number;
   refetch: () => Promise<any>;
 }

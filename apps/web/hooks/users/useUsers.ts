@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useQuery, ApolloError } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { User, QueryUsersArgs, UserPage } from '@logusgraphics/grant-schema';
 
 import { GET_USERS } from './queries';
@@ -8,7 +8,7 @@ import { GET_USERS } from './queries';
 interface UseUsersResult {
   users: User[];
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   totalCount: number;
   refetch: () => Promise<any>;
 }

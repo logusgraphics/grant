@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client/react';
 import { UsernameAvailability } from '@logusgraphics/grant-schema';
 
 import { useDebounce } from '@/hooks/common/useDebounce';
@@ -22,7 +22,7 @@ export function useUsernameValidation(): UseUsernameValidationReturn {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
   const performUsernameCheck = useCallback(
-    (username: string) => {
+    async (username: string) => {
       // Reset availability state
       setIsAvailable(null);
 
@@ -31,15 +31,17 @@ export function useUsernameValidation(): UseUsernameValidationReturn {
         return;
       }
 
-      checkUsernameQuery({
-        variables: { username: username.trim() },
-        onCompleted: (result) => {
-          setIsAvailable(result.checkUsername.available);
-        },
-        onError: () => {
-          setIsAvailable(null);
-        },
-      });
+      try {
+        const result = await checkUsernameQuery({
+          variables: { username: username.trim() },
+        });
+
+        if (result.data) {
+          setIsAvailable(result.data.checkUsername.available);
+        }
+      } catch {
+        setIsAvailable(null);
+      }
     },
     [checkUsernameQuery]
   );

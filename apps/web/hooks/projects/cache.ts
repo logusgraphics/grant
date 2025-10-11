@@ -1,6 +1,6 @@
 import { ApolloCache } from '@apollo/client';
 
-export function evictProjectsCache(cache: ApolloCache<any>) {
+export function evictProjectsCache(cache: ApolloCache) {
   cache.evict({
     fieldName: 'projects',
   });

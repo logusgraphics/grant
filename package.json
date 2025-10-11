@@ -38,7 +38,11 @@
     "version:core:major": "pnpm --filter @logusgraphics/grant-core version-major",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "audit": "./scripts/audit-security.sh",
+    "audit:quick": "./scripts/audit-quick.sh",
+    "audit:fix": "./scripts/audit-fix.sh",
+    "audit:pnpm": "pnpm audit --recursive"
   },
   "devDependencies": {
     "@types/node": "^20.19.17",

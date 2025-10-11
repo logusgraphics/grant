@@ -1,4 +1,5 @@
-import { ApolloCache, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { ApolloCache } from '@apollo/client';
 import { CreateProjectInput, Project, UpdateProjectInput } from '@logusgraphics/grant-schema';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ import { CREATE_PROJECT, UPDATE_PROJECT, DELETE_PROJECT } from './mutations';
 export function useProjectMutations() {
   const t = useTranslations('projects');
 
-  const update = (cache: ApolloCache<any>) => {
+  const update = (cache: ApolloCache) => {
     evictProjectsCache(cache);
   };
 

@@ -1,4 +1,5 @@
-import { ApolloCache, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { ApolloCache } from '@apollo/client';
 import {
   CreateRoleInput,
   MutationDeleteRoleArgs,
@@ -14,7 +15,7 @@ import { CREATE_ROLE, UPDATE_ROLE, DELETE_ROLE } from './mutations';
 export function useRoleMutations() {
   const t = useTranslations('roles');
 
-  const update = (cache: ApolloCache<any>) => {
+  const update = (cache: ApolloCache) => {
     evictRolesCache(cache);
   };
 

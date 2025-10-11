@@ -1,4 +1,5 @@
-import { ApolloCache, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { ApolloCache } from '@apollo/client';
 import {
   CreateOrganizationInput,
   MutationDeleteOrganizationArgs,
@@ -14,7 +15,7 @@ import { CREATE_ORGANIZATION, UPDATE_ORGANIZATION, DELETE_ORGANIZATION } from '.
 export function useOrganizationMutations() {
   const t = useTranslations('organizations');
 
-  const update = (cache: ApolloCache<any>) => {
+  const update = (cache: ApolloCache) => {
     evictOrganizationsCache(cache);
   };
 

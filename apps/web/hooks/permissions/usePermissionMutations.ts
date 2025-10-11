@@ -1,4 +1,5 @@
-import { ApolloCache, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { ApolloCache } from '@apollo/client';
 import {
   CreatePermissionInput,
   MutationDeletePermissionArgs,
@@ -13,7 +14,7 @@ import { CREATE_PERMISSION, UPDATE_PERMISSION, DELETE_PERMISSION } from './mutat
 
 export function usePermissionMutations() {
   const t = useTranslations('permissions');
-  const update = (cache: ApolloCache<any>) => {
+  const update = (cache: ApolloCache) => {
     evictPermissionsCache(cache);
   };
 

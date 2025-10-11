@@ -1,4 +1,5 @@
-import { ApolloCache, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { ApolloCache } from '@apollo/client';
 import {
   CreateGroupInput,
   Group,
@@ -14,7 +15,7 @@ import { CREATE_GROUP, UPDATE_GROUP, DELETE_GROUP } from './mutations';
 export function useGroupMutations() {
   const t = useTranslations('groups');
 
-  const update = (cache: ApolloCache<any>) => {
+  const update = (cache: ApolloCache) => {
     evictGroupsCache(cache);
   };
 

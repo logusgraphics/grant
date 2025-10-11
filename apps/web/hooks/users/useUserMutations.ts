@@ -1,4 +1,5 @@
-import { ApolloCache, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { ApolloCache } from '@apollo/client';
 import {
   CreateUserInput,
   MutationDeleteUserArgs,
@@ -14,7 +15,7 @@ import { CREATE_USER, UPDATE_USER, DELETE_USER } from './mutations';
 export function useUserMutations() {
   const t = useTranslations('users');
 
-  const update = (cache: ApolloCache<any>) => {
+  const update = (cache: ApolloCache) => {
     evictUsersCache(cache);
   };
 

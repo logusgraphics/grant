@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useQuery, ApolloError } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Tag, QueryTagsArgs, TagPage } from '@logusgraphics/grant-schema';
 
 import { GET_TAGS } from './queries';
@@ -8,7 +8,7 @@ import { GET_TAGS } from './queries';
 interface UseTagsResult {
   tags: Tag[];
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   totalCount: number;
   refetch: () => Promise<any>;
 }
