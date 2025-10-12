@@ -4,6 +4,7 @@
   "description": "Core RBAC/ACL system for the Grant platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

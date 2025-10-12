@@ -1,25 +1,26 @@
 import { randomBytes } from 'crypto';
 
-import { DbSchema } from '@logusgraphics/grant-database';
-import { userSessionAuditLogs } from '@logusgraphics/grant-database';
+import { DbSchema, userSessionAuditLogs } from '@logusgraphics/grant-database';
 import {
-  UserSession,
   CreateUserSessionInput,
-  UpdateUserSessionInput,
   GetUserSessionsInput,
+  UpdateUserSessionInput,
+  UserSession,
   UserSessionPage,
 } from '@logusgraphics/grant-schema';
-import { sign, verify, JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 import { AuditService, SelectedFields, validateInput, validateOutput } from './common';
 import {
-  userSessionSchema,
   createSessionSchema,
   refreshSessionSchema,
-  updateUserSessionSchema,
   sessionResultSchema,
+  updateUserSessionSchema,
+  userSessionSchema,
   validateAccessTokenSchema,
 } from './user-sessions.schemas';
+
+import type { JwtPayload } from 'jsonwebtoken';
 
 import {
   ACCESS_TOKEN_EXPIRATION_MINUTES,
@@ -56,8 +57,8 @@ export class UserSessionService extends AuditService {
     return new Date(from + REFRESH_TOKEN_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
   }
 
-  private decodeJwt(jwt: string, ignoreExpiration: boolean = false): JwtPayload {
-    const decoded = verify(jwt, JWT_SECRET, { ignoreExpiration });
+  private decodeJwt(token: string, ignoreExpiration: boolean = false): JwtPayload {
+    const decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration });
     if (!decoded) {
       throw new Error('Invalid token');
     }
@@ -129,7 +130,7 @@ export class UserSessionService extends AuditService {
 
     const jwtPayload: JwtPayload = { sub, aud, exp, iat, jti };
 
-    const accessToken = sign(jwtPayload, JWT_SECRET);
+    const accessToken = jwt.sign(jwtPayload, JWT_SECRET);
     const refreshToken = session.token;
 
     return validateOutput(sessionResultSchema, { accessToken, refreshToken }, context);
