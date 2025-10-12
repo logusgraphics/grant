@@ -6,6 +6,10 @@ import {
   RemoveOrganizationGroupInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   validateInput,
@@ -20,10 +24,6 @@ import {
   organizationGroupSchema,
   addOrganizationGroupInputSchema,
 } from './organization-groups.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class OrganizationGroupService extends AuditService {
   constructor(

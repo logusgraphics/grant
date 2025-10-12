@@ -160,7 +160,7 @@ export const passwordPolicySchema = z
   )
   .refine((password) => {
     if (!passwordPolicyConfig.requireSpecialChars) return true;
-    const specialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?~`]/;
+    const specialChars = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/;
     return specialChars.test(password);
   }, `Password must contain at least ${passwordPolicyConfig.minSpecialChars} special character(s)`)
   .refine((password) => {
@@ -190,7 +190,7 @@ export const passwordStrengthSchema = z.string().transform((password) => {
     uppercase: /[A-Z]/.test(password),
     lowercase: /[a-z]/.test(password),
     numbers: /\d/.test(password),
-    specialChars: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password),
+    specialChars: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/.test(password),
     noRepeats: !passwordPolicyConfig.forbiddenPatterns[0].test(password),
     noSequences: !passwordPolicyConfig.forbiddenSequences.some((seq) =>
       password.toLowerCase().includes(seq)

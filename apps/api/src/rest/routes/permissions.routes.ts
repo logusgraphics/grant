@@ -1,7 +1,5 @@
 import { Router } from 'express';
 
-import { PermissionsController } from '../controllers/permissions.controller';
-
 import { validate } from '@/middleware/validation.middleware';
 import {
   createPermissionRequestSchema,
@@ -17,6 +15,8 @@ import {
   TypedRequestQuery,
 } from '@/rest/types';
 import { RequestContext } from '@/types';
+
+import { PermissionsController } from '../controllers/permissions.controller';
 
 export function createPermissionsRouter(context: RequestContext): Router {
   const router = Router();

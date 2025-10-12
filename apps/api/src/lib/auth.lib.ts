@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 
-import type { JwtPayload } from 'jsonwebtoken';
-
 import { config } from '@/config';
 import { AuthenticatedUser } from '@/types';
+
+import type { JwtPayload } from 'jsonwebtoken';
 
 export function extractUserFromToken(authHeader: string | null): AuthenticatedUser | null {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

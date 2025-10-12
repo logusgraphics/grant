@@ -1,6 +1,6 @@
-import { AuthenticatedUser } from './auth';
-
 import { Handlers } from '@/handlers';
+
+import { AuthenticatedUser } from './auth';
 
 export interface RequestContext {
   user: AuthenticatedUser | null;

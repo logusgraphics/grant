@@ -7,6 +7,10 @@ import {
   UpdateProjectTagInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   validateInput,
@@ -22,10 +26,6 @@ import {
   getProjectTagsIntersectionSchema,
   updateProjectTagInputSchema,
 } from './project-tags.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class ProjectTagService extends AuditService {
   constructor(

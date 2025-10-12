@@ -40,37 +40,24 @@ export abstract class BaseController {
     });
   }
 
-  protected ok(res: Response, data: any) {
+  protected ok(res: Response, data: object) {
     res.status(200).json({
       success: true,
       data,
     });
   }
 
-  protected created(res: Response, data: any) {
+  protected created(res: Response, data: object) {
     res.status(201).json({
       success: true,
       data,
     });
   }
 
-  protected success(res: Response, data: any, statusCode: number = 200) {
+  protected success(res: Response, data: object, statusCode: number = 200) {
     res.status(statusCode).json({
       success: true,
       data,
-    });
-  }
-
-  protected paginatedResponse(res: Response, data: any, pagination: any) {
-    res.json({
-      success: true,
-      data,
-      pagination: {
-        page: pagination.page || 1,
-        limit: pagination.limit || 10,
-        total: pagination.total || data.length,
-        pages: Math.ceil((pagination.total || data.length) / (pagination.limit || 10)),
-      },
     });
   }
 }

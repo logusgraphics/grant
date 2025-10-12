@@ -6,6 +6,10 @@ import {
   RemoveOrganizationRoleInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   validateInput,
@@ -19,10 +23,6 @@ import {
   addOrganizationRoleInputSchema,
   removeOrganizationRoleInputSchema,
 } from './organization-roles.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class OrganizationRoleService extends AuditService {
   constructor(

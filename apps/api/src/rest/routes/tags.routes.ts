@@ -1,7 +1,5 @@
 import { Router } from 'express';
 
-import { TagsController } from '../controllers/tags.controller';
-
 import { validate } from '@/middleware/validation.middleware';
 import {
   createTagRequestSchema,
@@ -17,6 +15,8 @@ import {
   TypedRequestQuery,
 } from '@/rest/types';
 import { RequestContext } from '@/types';
+
+import { TagsController } from '../controllers/tags.controller';
 
 export function createTagsRouter(context: RequestContext): Router {
   const router = Router();

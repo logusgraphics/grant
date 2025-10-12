@@ -1,4 +1,4 @@
-import { DbSchema, RoleModel } from '@logusgraphics/grant-database';
+import { DbSchema } from '@logusgraphics/grant-database';
 import {
   Group,
   MutationCreateRoleArgs,
@@ -11,12 +11,12 @@ import {
   Tenant,
 } from '@logusgraphics/grant-schema';
 
-import { ScopeHandler } from './base/scope-handler';
-
 import { IEntityCacheAdapter } from '@/lib/cache';
 import { Transaction, TransactionManager } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 import { DeleteParams, SelectedFields } from '@/services/common';
+
+import { ScopeHandler } from './base/scope-handler';
 
 export class RoleHandler extends ScopeHandler {
   constructor(
@@ -27,7 +27,7 @@ export class RoleHandler extends ScopeHandler {
     super(scopeCache, services);
   }
 
-  public async getRoles(params: QueryRolesArgs & SelectedFields<RoleModel>): Promise<RolePage> {
+  public async getRoles(params: QueryRolesArgs & SelectedFields<Role>): Promise<RolePage> {
     const { scope, page, limit, sort, search, ids, tagIds, requestedFields } = params;
 
     let roleIds = await this.getScopedRoleIds(scope);

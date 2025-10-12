@@ -6,6 +6,10 @@ import {
 } from '@logusgraphics/grant-schema';
 import { Response } from 'express';
 
+import { parseRelations } from '@/lib/field-selection.lib';
+import { TypedRequest } from '@/rest/types';
+import { RequestContext } from '@/types';
+
 import {
   createOrganizationRequestSchema,
   deleteOrganizationQuerySchema,
@@ -15,10 +19,6 @@ import {
 } from '../schemas/organizations.schemas';
 
 import { BaseController } from './base.controller';
-
-import { parseRelations } from '@/lib/field-selection.lib';
-import { TypedRequest } from '@/rest/types';
-import { RequestContext } from '@/types';
 
 /**
  * Controller for organization-related REST endpoints
@@ -55,7 +55,7 @@ export class OrganizationsController extends BaseController {
         search,
         ids,
         sort,
-        requestedFields: requestedFields as any,
+        requestedFields,
       });
 
       return this.success(res, {
@@ -88,7 +88,7 @@ export class OrganizationsController extends BaseController {
       const result = await this.context.handlers.organizations.getOrganizations({
         ids: [id],
         limit: 1,
-        requestedFields: requestedFields as any,
+        requestedFields,
       });
 
       if (result.organizations.length === 0) {

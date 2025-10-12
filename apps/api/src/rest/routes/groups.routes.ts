@@ -1,7 +1,5 @@
 import { Router } from 'express';
 
-import { GroupsController } from '../controllers/groups.controller';
-
 import { validate } from '@/middleware/validation.middleware';
 import {
   createGroupRequestSchema,
@@ -17,6 +15,8 @@ import {
   TypedRequestQuery,
 } from '@/rest/types';
 import { RequestContext } from '@/types';
+
+import { GroupsController } from '../controllers/groups.controller';
 
 export function createGroupsRouter(context: RequestContext): Router {
   const router = Router();

@@ -12,6 +12,11 @@ import {
 } from '@logusgraphics/grant-schema';
 import { compareSync, hashSync } from 'bcrypt';
 
+import { AUTH_CONFIG } from '@/config';
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   DeleteParams,
@@ -31,10 +36,6 @@ import {
   updateUserAuthenticationMethodInputSchema,
   userAuthenticationMethodSchema,
 } from './user-authentication-methods.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 interface ProcessedProvider {
   providerData: Record<string, unknown>;
@@ -405,7 +406,6 @@ export class UserAuthenticationMethodService extends AuditService {
 
   public generateOtp(): Otp {
     const token = randomBytes(32).toString('hex');
-    const { AUTH_CONFIG } = require('@/config');
     const validUntil = Date.now() + 1000 * 60 * AUTH_CONFIG.otpValidityMinutes;
     return { token, validUntil };
   }

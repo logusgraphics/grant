@@ -1,4 +1,4 @@
-import { DbSchema, GroupModel } from '@logusgraphics/grant-database';
+import { DbSchema } from '@logusgraphics/grant-database';
 import {
   Group,
   GroupPage,
@@ -11,12 +11,12 @@ import {
   Tenant,
 } from '@logusgraphics/grant-schema';
 
-import { ScopeHandler } from './base/scope-handler';
-
 import { IEntityCacheAdapter } from '@/lib/cache';
 import { Transaction, TransactionManager } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 import { DeleteParams, SelectedFields } from '@/services/common';
+
+import { ScopeHandler } from './base/scope-handler';
 
 export class GroupHandler extends ScopeHandler {
   constructor(
@@ -27,7 +27,7 @@ export class GroupHandler extends ScopeHandler {
     super(scopeCache, services);
   }
 
-  public async getGroups(params: QueryGroupsArgs & SelectedFields<GroupModel>): Promise<GroupPage> {
+  public async getGroups(params: QueryGroupsArgs & SelectedFields<Group>): Promise<GroupPage> {
     const { scope, page, limit, sort, search, ids, tagIds, requestedFields } = params;
 
     let groupIds = await this.getScopedGroupIds(scope);

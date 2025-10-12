@@ -15,8 +15,8 @@ export default defineConfig(
       '**/.next/**',
       '**/.turbo/**',
       '**/build/**',
-      '**/graphql/generated/**',
       '**/coverage/**',
+      '**/generated/**',
     ],
   },
 
@@ -113,6 +113,20 @@ export default defineConfig(
           },
         },
       ],
+    },
+  },
+
+  // Allow 'any' in generic utility files and base classes
+  {
+    files: [
+      'apps/api/src/lib/**/*.ts',
+      'apps/api/src/repositories/common/**/*.ts',
+      'apps/api/src/services/common/**/*.ts',
+      'apps/api/src/rest/controllers/base.controller.ts',
+      'apps/api/src/middleware/validation.middleware.ts',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   }
 );

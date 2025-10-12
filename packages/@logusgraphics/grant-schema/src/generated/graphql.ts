@@ -18,8 +18,8 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  Date: { input: any; output: any };
-  JSON: { input: Record<string, any>; output: Record<string, any> };
+  Date: { input: Date; output: Date };
+  JSON: { input: Record<string, unknown>; output: Record<string, unknown> };
 };
 
 export type Account = Auditable & {
@@ -1492,8 +1492,8 @@ export type CreateGroupMutation = {
     id: string;
     name: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1509,8 +1509,8 @@ export type DeleteGroupMutation = {
     id: string;
     name: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1535,8 +1535,8 @@ export type GetGroupsQuery = {
       id: string;
       name: string;
       description?: string | null;
-      createdAt: any;
-      updatedAt: any;
+      createdAt: Date;
+      updatedAt: Date;
       permissions?: Array<{
         __typename?: 'Permission';
         id: string;
@@ -1573,8 +1573,8 @@ export type UpdateGroupMutation = {
     id: string;
     name: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1589,8 +1589,8 @@ export type CreateOrganizationMutation = {
     id: string;
     name: string;
     slug: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1605,8 +1605,8 @@ export type DeleteOrganizationMutation = {
     id: string;
     name: string;
     slug: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1629,8 +1629,8 @@ export type GetOrganizationsQuery = {
       id: string;
       name: string;
       slug: string;
-      createdAt: any;
-      updatedAt: any;
+      createdAt: Date;
+      updatedAt: Date;
       tags?: Array<{
         __typename?: 'Tag';
         id: string;
@@ -1654,8 +1654,8 @@ export type UpdateOrganizationMutation = {
     id: string;
     name: string;
     slug: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1671,8 +1671,8 @@ export type CreatePermissionMutation = {
     name: string;
     action: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1689,8 +1689,8 @@ export type DeletePermissionMutation = {
     name: string;
     action: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1716,8 +1716,8 @@ export type GetPermissionsQuery = {
       name: string;
       action: string;
       description?: string | null;
-      createdAt: any;
-      updatedAt: any;
+      createdAt: Date;
+      updatedAt: Date;
       tags?: Array<{
         __typename?: 'Tag';
         id: string;
@@ -1742,8 +1742,8 @@ export type UpdatePermissionMutation = {
     name: string;
     action: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1759,8 +1759,8 @@ export type CreateProjectMutation = {
     name: string;
     slug: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1777,8 +1777,8 @@ export type DeleteProjectMutation = {
     name: string;
     slug: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1804,8 +1804,8 @@ export type GetProjectsQuery = {
       name: string;
       slug: string;
       description?: string | null;
-      createdAt: any;
-      updatedAt: any;
+      createdAt: Date;
+      updatedAt: Date;
       tags?: Array<{
         __typename?: 'Tag';
         id: string;
@@ -1830,8 +1830,8 @@ export type UpdateProjectMutation = {
     name: string;
     slug: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1846,8 +1846,8 @@ export type CreateRoleMutation = {
     id: string;
     name: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1863,8 +1863,8 @@ export type DeleteRoleMutation = {
     id: string;
     name: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1889,8 +1889,8 @@ export type GetRolesQuery = {
       id: string;
       name: string;
       description?: string | null;
-      createdAt: any;
-      updatedAt: any;
+      createdAt: Date;
+      updatedAt: Date;
       groups?: Array<{
         __typename?: 'Group';
         id: string;
@@ -1926,8 +1926,8 @@ export type UpdateRoleMutation = {
     id: string;
     name: string;
     description?: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1942,8 +1942,8 @@ export type CreateTagMutation = {
     id: string;
     name: string;
     color: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1959,8 +1959,8 @@ export type DeleteTagMutation = {
     id: string;
     name: string;
     color: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -1984,8 +1984,8 @@ export type GetTagsQuery = {
       id: string;
       name: string;
       color: string;
-      createdAt: any;
-      updatedAt: any;
+      createdAt: Date;
+      updatedAt: Date;
     }>;
   };
 };
@@ -2002,8 +2002,8 @@ export type UpdateTagMutation = {
     id: string;
     name: string;
     color: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Date;
+    updatedAt: Date;
   };
 };
 
@@ -2013,7 +2013,7 @@ export type CreateUserMutationVariables = Exact<{
 
 export type CreateUserMutation = {
   __typename?: 'Mutation';
-  createUser: { __typename?: 'User'; id: string; name: string; createdAt: any; updatedAt: any };
+  createUser: { __typename?: 'User'; id: string; name: string; createdAt: Date; updatedAt: Date };
 };
 
 export type DeleteUserMutationVariables = Exact<{
@@ -2023,7 +2023,7 @@ export type DeleteUserMutationVariables = Exact<{
 
 export type DeleteUserMutation = {
   __typename?: 'Mutation';
-  deleteUser: { __typename?: 'User'; id: string; name: string; createdAt: any; updatedAt: any };
+  deleteUser: { __typename?: 'User'; id: string; name: string; createdAt: Date; updatedAt: Date };
 };
 
 export type GetUsersQueryVariables = Exact<{
@@ -2046,8 +2046,8 @@ export type GetUsersQuery = {
       __typename?: 'User';
       id: string;
       name: string;
-      createdAt: any;
-      updatedAt: any;
+      createdAt: Date;
+      updatedAt: Date;
       roles?: Array<{
         __typename?: 'Role';
         id: string;
@@ -2078,7 +2078,7 @@ export type UpdateUserMutationVariables = Exact<{
 
 export type UpdateUserMutation = {
   __typename?: 'Mutation';
-  updateUser: { __typename?: 'User'; id: string; name: string; createdAt: any; updatedAt: any };
+  updateUser: { __typename?: 'User'; id: string; name: string; createdAt: Date; updatedAt: Date };
 };
 
 export const CheckUsernameDocument = {

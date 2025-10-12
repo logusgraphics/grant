@@ -1,4 +1,4 @@
-import { DbSchema, OrganizationModel } from '@logusgraphics/grant-database';
+import { DbSchema } from '@logusgraphics/grant-database';
 import {
   MutationCreateOrganizationArgs,
   MutationDeleteOrganizationArgs,
@@ -8,12 +8,12 @@ import {
   QueryOrganizationsArgs,
 } from '@logusgraphics/grant-schema';
 
-import { ScopeHandler } from './base/scope-handler';
-
 import { IEntityCacheAdapter } from '@/lib/cache';
 import { Transaction, TransactionManager } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 import { DeleteParams, SelectedFields } from '@/services/common';
+
+import { ScopeHandler } from './base/scope-handler';
 
 export class OrganizationHandler extends ScopeHandler {
   constructor(
@@ -25,7 +25,7 @@ export class OrganizationHandler extends ScopeHandler {
   }
 
   public async getOrganizations(
-    params: QueryOrganizationsArgs & SelectedFields<OrganizationModel>
+    params: QueryOrganizationsArgs & SelectedFields<Organization>
   ): Promise<OrganizationPage> {
     const { page, limit, sort, search, ids, requestedFields } = params;
 

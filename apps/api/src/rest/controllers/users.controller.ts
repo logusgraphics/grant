@@ -1,6 +1,10 @@
 import { SortOrder, User, UserSortableField, UserSortInput } from '@logusgraphics/grant-schema';
 import { Response } from 'express';
 
+import { parseRelations } from '@/lib/field-selection.lib';
+import { TypedRequest } from '@/rest/types';
+import { RequestContext } from '@/types';
+
 import {
   createUserRequestSchema,
   deleteUserQuerySchema,
@@ -10,10 +14,6 @@ import {
 } from '../schemas/users.schemas';
 
 import { BaseController } from './base.controller';
-
-import { parseRelations } from '@/lib/field-selection.lib';
-import { TypedRequest } from '@/rest/types';
-import { RequestContext } from '@/types';
 
 /**
  * Controller for user-related REST endpoints
@@ -50,7 +50,7 @@ export class UsersController extends BaseController {
         sort,
         tagIds,
         scope: { id: scopeId, tenant },
-        requestedFields: requestedFields as any,
+        requestedFields,
       });
 
       return this.success(res, {
@@ -84,7 +84,7 @@ export class UsersController extends BaseController {
         ids: [id],
         limit: 1,
         scope: { id: scopeId, tenant },
-        requestedFields: requestedFields as any,
+        requestedFields,
       });
 
       if (result.users.length === 0) {

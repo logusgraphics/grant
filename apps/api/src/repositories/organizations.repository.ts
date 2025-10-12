@@ -1,34 +1,37 @@
-import { organizationGroups } from '@logusgraphics/grant-database';
-import { organizationPermissions } from '@logusgraphics/grant-database';
-import { organizationProjects } from '@logusgraphics/grant-database';
-import { organizationRoles } from '@logusgraphics/grant-database';
-import { organizationTags } from '@logusgraphics/grant-database';
-import { organizationUsers } from '@logusgraphics/grant-database';
-import { OrganizationModel, organizations } from '@logusgraphics/grant-database';
 import {
-  QueryOrganizationsArgs,
-  MutationUpdateOrganizationArgs,
+  OrganizationModel,
+  organizationGroups,
+  organizationPermissions,
+  organizationProjects,
+  organizationRoles,
+  organizationTags,
+  organizationUsers,
+  organizations,
+} from '@logusgraphics/grant-database';
+import {
+  CreateOrganizationInput,
   MutationDeleteOrganizationArgs,
+  MutationUpdateOrganizationArgs,
   Organization,
+  OrganizationGroup,
   OrganizationPage,
+  OrganizationPermission,
   OrganizationProject,
   OrganizationRole,
-  OrganizationGroup,
-  OrganizationPermission,
-  OrganizationUser,
-  OrganizationTag,
-  CreateOrganizationInput,
   OrganizationSearchableField,
+  OrganizationTag,
+  OrganizationUser,
+  QueryOrganizationsArgs,
 } from '@logusgraphics/grant-schema';
 
 import { slugifySafe } from '@/lib/slugify.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import {
+  BaseCreateArgs,
+  BaseDeleteArgs,
+  BaseUpdateArgs,
   EntityRepository,
   RelationsConfig,
-  BaseCreateArgs,
-  BaseUpdateArgs,
-  BaseDeleteArgs,
 } from '@/repositories/common';
 import { SelectedFields } from '@/services/common';
 
@@ -77,7 +80,7 @@ export class OrganizationRepository extends EntityRepository<OrganizationModel, 
   }
 
   public async getOrganizations(
-    params: QueryOrganizationsArgs & SelectedFields<OrganizationModel>,
+    params: QueryOrganizationsArgs & SelectedFields<Organization>,
     transaction?: Transaction
   ): Promise<OrganizationPage> {
     const result = await this.query(params, transaction);

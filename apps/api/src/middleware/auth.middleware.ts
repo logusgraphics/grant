@@ -43,9 +43,9 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
  */
 export function errorHandler(
   error: Error,
-  req: AuthenticatedRequest,
+  _: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  __: NextFunction
 ) {
   console.error('API Error:', error);
 

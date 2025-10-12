@@ -6,6 +6,10 @@ import {
   RemoveGroupPermissionInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   validateInput,
@@ -19,10 +23,6 @@ import {
   removeGroupPermissionParamsSchema,
   groupPermissionSchema,
 } from './group-permissions.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class GroupPermissionService extends AuditService {
   constructor(

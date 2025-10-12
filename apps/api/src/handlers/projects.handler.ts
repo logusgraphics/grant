@@ -9,12 +9,12 @@ import {
   Tenant,
 } from '@logusgraphics/grant-schema';
 
-import { ScopeHandler } from './base/scope-handler';
-
 import { IEntityCacheAdapter } from '@/lib/cache';
 import { Transaction, TransactionManager } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 import { DeleteParams, SelectedFields } from '@/services/common';
+
+import { ScopeHandler } from './base/scope-handler';
 
 export class ProjectHandler extends ScopeHandler {
   constructor(

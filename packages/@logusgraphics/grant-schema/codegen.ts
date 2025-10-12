@@ -11,8 +11,8 @@ const config: CodegenConfig = {
         useIndexSignature: true,
         enumsAsTypes: false,
         scalars: {
-          DateTime: 'string',
-          JSON: 'Record<string, any>',
+          Date: 'Date',
+          JSON: 'Record<string, unknown>',
         },
         withHooks: false,
         withComponent: false,
@@ -26,10 +26,9 @@ const config: CodegenConfig = {
         useIndexSignature: true,
         enumsAsTypes: false,
         scalars: {
-          DateTime: 'string',
-          JSON: 'Record<string, any>',
+          Date: 'Date',
+          JSON: 'Record<string, unknown>',
         },
-        // No contextType - let consumers specify their own context
       },
     },
   },

@@ -3,7 +3,7 @@ import { MutationRefreshSessionArgs, MutationResolvers } from '@logusgraphics/gr
 import { GraphqlContext } from '@/graphql/types';
 
 export const refreshSession: MutationResolvers<GraphqlContext>['refreshSession'] = async (
-  _: any,
+  _,
   args: MutationRefreshSessionArgs,
   context: GraphqlContext
 ) => {

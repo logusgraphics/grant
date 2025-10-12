@@ -1,17 +1,14 @@
-import { accounts } from '@logusgraphics/grant-database';
-import { roles } from '@logusgraphics/grant-database';
-import { tags } from '@logusgraphics/grant-database';
-import { UserModel, users } from '@logusgraphics/grant-database';
+import { UserModel, accounts, roles, tags, users } from '@logusgraphics/grant-database';
 import {
-  QueryUsersArgs,
-  MutationUpdateUserArgs,
+  CreateUserInput,
   MutationDeleteUserArgs,
+  MutationUpdateUserArgs,
+  QueryUsersArgs,
   User,
   UserPage,
-  UserTag,
   UserRole,
-  CreateUserInput,
   UserSearchableField,
+  UserTag,
 } from '@logusgraphics/grant-schema';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -38,7 +35,7 @@ export class UserRepository extends EntityRepository<UserModel, User> {
     accounts: {
       field: 'owner',
       table: accounts,
-      extract: (v: any[]) => v,
+      extract: (v) => v,
     },
   };
 

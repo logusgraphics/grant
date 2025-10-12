@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { z, ZodError } from 'zod';
+import { ZodError, z } from 'zod';
 
 /**
  * Validation target - where to extract data from the request
@@ -19,7 +19,7 @@ export interface ValidationSchemas {
  * Format Zod validation errors into a user-friendly structure
  */
 function formatZodError(error: ZodError) {
-  const errors = error.issues.map((err: any) => ({
+  const errors = error.issues.map((err) => ({
     field: err.path.join('.'),
     message: err.message,
     code: err.code,

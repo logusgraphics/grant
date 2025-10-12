@@ -1,5 +1,8 @@
 import { DbSchema } from '@logusgraphics/grant-database';
 
+import { IEntityCacheAdapter } from '@/lib/cache/cache-adapter.interface';
+import { Services } from '@/services';
+
 import { AccountHandler } from './accounts.handler';
 import { GroupHandler } from './groups.handler';
 import { OrganizationHandler } from './organizations.handler';
@@ -8,9 +11,6 @@ import { ProjectHandler } from './projects.handler';
 import { RoleHandler } from './roles.handler';
 import { TagHandler } from './tags.handler';
 import { UserHandler } from './users.handler';
-
-import { IEntityCacheAdapter } from '@/lib/cache/cache-adapter.interface';
-import { Services } from '@/services';
 
 export type Handlers = ReturnType<typeof createHandlers>;
 

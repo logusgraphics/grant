@@ -5,6 +5,10 @@ import {
   RemoveAccountProjectInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   accountProjectSchema,
   addAccountProjectInputSchema,
@@ -19,10 +23,6 @@ import {
   createDynamicSingleSchema,
   DeleteParams,
 } from './common';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class AccountProjectService extends AuditService {
   constructor(

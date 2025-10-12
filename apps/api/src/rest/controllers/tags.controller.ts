@@ -6,8 +6,6 @@ import {
 } from '@logusgraphics/grant-schema';
 import { Response } from 'express';
 
-import { BaseController } from './base.controller';
-
 import {
   createTagRequestSchema,
   deleteTagQuerySchema,
@@ -22,6 +20,8 @@ import {
   TypedRequestQuery,
 } from '@/rest/types';
 import { RequestContext } from '@/types';
+
+import { BaseController } from './base.controller';
 
 export class TagsController extends BaseController {
   constructor(context: RequestContext) {

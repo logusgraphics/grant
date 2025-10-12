@@ -9,6 +9,10 @@ import {
   CreateGroupInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   validateInput,
@@ -25,10 +29,6 @@ import {
   deleteGroupParamsSchema,
   groupSchema,
 } from './groups.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class GroupService extends AuditService {
   constructor(

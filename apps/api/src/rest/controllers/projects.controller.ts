@@ -6,8 +6,6 @@ import {
 } from '@logusgraphics/grant-schema';
 import { Response } from 'express';
 
-import { BaseController } from './base.controller';
-
 import { parseRelations } from '@/lib/field-selection.lib';
 import {
   createProjectRequestSchema,
@@ -23,6 +21,8 @@ import {
   TypedRequestQuery,
 } from '@/rest/types';
 import { RequestContext } from '@/types';
+
+import { BaseController } from './base.controller';
 
 export class ProjectsController extends BaseController {
   constructor(context: RequestContext) {
@@ -46,7 +46,7 @@ export class ProjectsController extends BaseController {
         sort: sortField && sortOrder ? { field: sortField, order: sortOrder } : undefined,
         tagIds: tagIds || undefined,
         scope: { id: scopeId, tenant },
-        requestedFields: requestedFields || (['id', 'name', 'slug', 'description'] as any),
+        requestedFields,
       });
 
       this.ok(res, result);

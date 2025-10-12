@@ -10,6 +10,11 @@ import {
 } from '@logusgraphics/grant-schema';
 import jwt from 'jsonwebtoken';
 
+import { config } from '@/config';
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import { AuditService, SelectedFields, validateInput, validateOutput } from './common';
 import {
   createSessionSchema,
@@ -21,11 +26,6 @@ import {
 } from './user-sessions.schemas';
 
 import type { JwtPayload } from 'jsonwebtoken';
-
-import { config } from '@/config';
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 interface CreateSessionResult {
   refreshToken: string;

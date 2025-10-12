@@ -6,6 +6,10 @@ import {
   RemoveOrganizationUserInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   validateInput,
@@ -19,10 +23,6 @@ import {
   removeOrganizationUserParamsSchema,
   organizationUserSchema,
 } from './organization-users.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class OrganizationUserService extends AuditService {
   constructor(

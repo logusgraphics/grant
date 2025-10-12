@@ -7,6 +7,10 @@ import {
   UpdatePermissionTagInput,
 } from '@logusgraphics/grant-schema';
 
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { Repositories } from '@/repositories';
+import { AuthenticatedUser } from '@/types';
+
 import {
   AuditService,
   validateInput,
@@ -23,10 +27,6 @@ import {
   removePermissionTagsInputSchema,
   updatePermissionTagInputSchema,
 } from './permission-tags.schemas';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { Repositories } from '@/repositories';
-import { AuthenticatedUser } from '@/types';
 
 export class PermissionTagService extends AuditService {
   constructor(

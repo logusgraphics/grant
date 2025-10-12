@@ -1,34 +1,33 @@
-import { DbSchema } from '@logusgraphics/grant-database';
-import { organizationAuditLogs, OrganizationModel } from '@logusgraphics/grant-database';
+import { DbSchema, organizationAuditLogs } from '@logusgraphics/grant-database';
 import {
-  QueryOrganizationsArgs,
-  MutationUpdateOrganizationArgs,
+  CreateOrganizationInput,
   MutationDeleteOrganizationArgs,
+  MutationUpdateOrganizationArgs,
   Organization,
   OrganizationPage,
-  CreateOrganizationInput,
+  QueryOrganizationsArgs,
 } from '@logusgraphics/grant-schema';
-
-import {
-  AuditService,
-  validateInput,
-  validateOutput,
-  createDynamicPaginatedSchema,
-  createDynamicSingleSchema,
-  SelectedFields,
-  DeleteParams,
-} from './common';
-import {
-  getOrganizationsParamsSchema,
-  updateOrganizationParamsSchema,
-  deleteOrganizationParamsSchema,
-  organizationSchema,
-  createOrganizationInputSchema,
-} from './organizations.schemas';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { Repositories } from '@/repositories';
 import { AuthenticatedUser } from '@/types';
+
+import {
+  AuditService,
+  DeleteParams,
+  SelectedFields,
+  createDynamicPaginatedSchema,
+  createDynamicSingleSchema,
+  validateInput,
+  validateOutput,
+} from './common';
+import {
+  createOrganizationInputSchema,
+  deleteOrganizationParamsSchema,
+  getOrganizationsParamsSchema,
+  organizationSchema,
+  updateOrganizationParamsSchema,
+} from './organizations.schemas';
 
 export class OrganizationService extends AuditService {
   constructor(
@@ -59,7 +58,7 @@ export class OrganizationService extends AuditService {
   }
 
   public async getOrganizations(
-    params: QueryOrganizationsArgs & SelectedFields<OrganizationModel>,
+    params: QueryOrganizationsArgs & SelectedFields<Organization>,
     transaction?: Transaction
   ): Promise<OrganizationPage> {
     const context = 'OrganizationService.getOrganizations';

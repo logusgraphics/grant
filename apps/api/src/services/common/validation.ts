@@ -38,9 +38,6 @@ function formatValidationError(error: z.ZodIssue): string {
   const path = error.path.length > 0 ? error.path.join('.') : 'root';
   const field = path === 'root' ? 'data' : path;
 
-  // Use any cast for Zod v4 compatibility
-  const err = error as any;
-
   const message = `Field "${field}": ${error.message}`;
 
   return message;
