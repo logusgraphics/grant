@@ -1,16 +1,42 @@
-import { getMessages } from 'next-intl/server';
+'use client';
 
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { FullPageLoader } from '@/components/common';
 import { Header } from '@/components/layout/Header';
 import { MessagesProvider } from '@/components/providers/MessagesProvider';
 
-interface RootLayoutProps {
+interface LocaleLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
 }
 
-export default async function RootLayout({ children, params }: RootLayoutProps) {
-  const { locale } = await params;
-  const messages = await getMessages({ locale });
+export default function LocaleLayout({ children }: LocaleLayoutProps) {
+  const params = useParams();
+  const locale = params.locale as string;
+  const [messages, setMessages] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const messagesModule = await import(`@/i18n/locales/${locale}.json`);
+        setMessages(messagesModule.default);
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+        const fallbackMessages = await import('@/i18n/locales/en.json');
+        setMessages(fallbackMessages.default);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMessages();
+  }, [locale]);
+
+  if (loading) {
+    return <FullPageLoader />;
+  }
 
   return (
     <MessagesProvider messages={messages} locale={locale}>

@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
+'use client';
 
 import { Geist, Geist_Mono } from 'next/font/google';
 
-import './globals.css';
 import { ApolloProvider } from '@/components/providers/ApolloProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toast } from '@/components/ui/toast';
+import './globals.css';
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -17,15 +17,7 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 });
 
-export const metadata: Metadata = {
-  title: 'Grant',
-  description: 'Unified authorization platform across multiple authentication systems.',
-  icons: {
-    icon: [{ url: '/favicon.svg?v=3', type: 'image/svg+xml' }, { url: '/favicon.svg?v=3' }],
-  },
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
