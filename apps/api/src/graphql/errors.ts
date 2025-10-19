@@ -1,39 +1,20 @@
-import { ApolloServerErrorCode } from '@apollo/server/errors';
-import { GraphQLError } from 'graphql';
+/**
+ * @deprecated This file is deprecated. Use @/lib/errors instead.
+ *
+ * This file now re-exports from @/lib/errors for backward compatibility.
+ * The new error classes work with both REST and GraphQL APIs.
+ *
+ * Migration guide:
+ * - Old: import { ApiError } from '@/graphql/errors'
+ * - New: import { ApiError } from '@/lib/errors'
+ */
 
-export class ApiError extends GraphQLError {
-  constructor(
-    message: string,
-    public code: ApolloServerErrorCode = ApolloServerErrorCode.INTERNAL_SERVER_ERROR
-  ) {
-    super(message, {
-      extensions: {
-        code,
-      },
-    });
-  }
-}
-
-export class NotFoundError extends ApiError {
-  constructor(message: string) {
-    super(message, ApolloServerErrorCode.PERSISTED_QUERY_NOT_FOUND);
-  }
-}
-
-export class ValidationError extends ApiError {
-  constructor(message: string) {
-    super(message, ApolloServerErrorCode.BAD_USER_INPUT);
-  }
-}
-
-export class AuthenticationError extends ApiError {
-  constructor(message: string) {
-    super(message, ApolloServerErrorCode.BAD_REQUEST);
-  }
-}
-
-export class AuthorizationError extends ApiError {
-  constructor(message: string) {
-    super(message, ApolloServerErrorCode.BAD_REQUEST);
-  }
-}
+export {
+  ApiError,
+  AuthenticationError,
+  AuthorizationError,
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from '@/lib/errors';

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ValidationError as ApiValidationError } from '@/lib/errors';
+
 /**
  * Enhanced validation utilities with detailed error reporting
  *
@@ -23,6 +25,11 @@ import { z } from 'zod';
  *   "name": "",
  *   "description": "Test project"
  * }"
+ */
+
+/**
+ * @deprecated Use ApiValidationError from @/lib/errors instead
+ * This is kept for backward compatibility only
  */
 export class ValidationError extends Error {
   constructor(
@@ -88,7 +95,7 @@ export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown, context:
       .map((err, index) => `  ${index + 1}. ${formatValidationError(err)}`)
       .join('\n');
 
-    throw new ValidationError(
+    throw new ApiValidationError(
       `Input validation failed in ${context}:\n${errorMessages}\n\nData provided: ${getDataSummary(data)}\n\nSample data:\n${getSampleData(data)}`,
       result.error.issues
     );
@@ -105,7 +112,7 @@ export function validateOutput<T>(schema: z.ZodSchema<T>, data: unknown, context
       .map((err, index) => `  ${index + 1}. ${formatValidationError(err)}`)
       .join('\n');
 
-    throw new ValidationError(
+    throw new ApiValidationError(
       `Output validation failed in ${context}:\n${errorMessages}\n\nData provided: ${getDataSummary(data)}\n\nSample data:\n${getSampleData(data)}`,
       result.error.issues
     );
@@ -118,12 +125,12 @@ export function safeValidateInput<T>(
   schema: z.ZodSchema<T>,
   data: unknown,
   context: string
-): { success: true; data: T } | { success: false; error: ValidationError } {
+): { success: true; data: T } | { success: false; error: ApiValidationError } {
   try {
     const validData = validateInput(schema, data, context);
     return { success: true, data: validData };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ApiValidationError) {
       return { success: false, error };
     }
     throw error;
@@ -134,12 +141,12 @@ export function safeValidateOutput<T>(
   schema: z.ZodSchema<T>,
   data: unknown,
   context: string
-): { success: true; data: T } | { success: false; error: ValidationError } {
+): { success: true; data: T } | { success: false; error: ApiValidationError } {
   try {
     const validData = validateOutput(schema, data, context);
     return { success: true, data: validData };
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ApiValidationError) {
       return { success: false, error };
     }
     throw error;

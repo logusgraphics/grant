@@ -17,9 +17,9 @@ import {
 } from '@logusgraphics/grant-schema';
 
 import { config } from '@/config';
-import { AuthenticationError } from '@/graphql/errors';
 import { ScopeHandler } from '@/handlers/base/scope-handler';
 import { IEntityCacheAdapter } from '@/lib/cache';
+import { AuthenticationError } from '@/lib/errors';
 import { Transaction, TransactionManager } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 import { DeleteParams, SelectedFields } from '@/services/common';

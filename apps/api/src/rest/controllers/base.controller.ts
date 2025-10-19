@@ -1,6 +1,7 @@
 import { Response } from 'express';
 
 import { Handlers } from '@/handlers';
+import { ApiError } from '@/lib/errors';
 import { AuthenticatedUser } from '@/types/auth';
 import { RequestContext } from '@/types/context';
 
@@ -24,11 +25,25 @@ export abstract class BaseController {
     statusCodeOverride?: number
   ) {
     const context = typeof contextOrStatusCode === 'string' ? contextOrStatusCode : 'unknown';
+
+    console.error(`REST Controller Error (${context}):`, error);
+
+    // Handle ApiError instances with proper status codes and error codes
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        error: error.message,
+        code: error.code,
+        ...(error.extensions && { extensions: error.extensions }),
+        ...(process.env.NODE_ENV === 'development' && {
+          stack: error.stack,
+        }),
+      });
+    }
+
+    // Fallback for other errors
     const statusCode =
       statusCodeOverride ||
       (typeof contextOrStatusCode === 'number' ? contextOrStatusCode : error.statusCode || 500);
-
-    console.error(`REST Controller Error (${context}):`, error);
 
     res.status(statusCode).json({
       error: error.message || 'Internal server error',

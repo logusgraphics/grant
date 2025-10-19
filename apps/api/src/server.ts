@@ -22,6 +22,7 @@ import {
 import { schema } from '@/graphql/resolvers';
 import { GraphqlContext } from '@/graphql/types';
 import { CacheFactory } from '@/lib/cache/cache.factory';
+import { formatGraphQLError } from '@/lib/errors';
 import { authMiddleware } from '@/middleware/auth.middleware';
 import { contextMiddleware } from '@/middleware/context.middleware';
 import { createRestRouter } from '@/rest';
@@ -40,6 +41,7 @@ async function startServer() {
     schema,
     introspection: APOLLO_CONFIG.introspection,
     csrfPrevention: APOLLO_CONFIG.csrfPrevention,
+    formatError: formatGraphQLError,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ApolloServerPluginLandingPageLocalDefault({ embed: true }),

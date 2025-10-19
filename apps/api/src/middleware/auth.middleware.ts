@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 
 import { extractUserFromToken } from '@/lib/auth.lib';
+import { ApiError } from '@/lib/errors';
 import { AuthenticatedRequest } from '@/types';
 
 /**
@@ -49,18 +50,31 @@ export function errorHandler(
 ) {
   console.error('API Error:', error);
 
-  // Handle specific error types
+  // Handle ApiError instances with proper status codes
+  if (error instanceof ApiError) {
+    return res.status(error.statusCode).json({
+      error: error.message,
+      code: error.code,
+      ...(error.extensions && { extensions: error.extensions }),
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+    });
+  }
+
+  // Handle legacy ValidationError (for backward compatibility)
   if (error.name === 'ValidationError') {
     return res.status(400).json({
       error: error.message,
       code: 'VALIDATION_ERROR',
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
     });
   }
 
+  // Handle legacy UnauthorizedError (for backward compatibility)
   if (error.name === 'UnauthorizedError') {
     return res.status(401).json({
       error: 'Unauthorized',
       code: 'UNAUTHORIZED',
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
     });
   }
 
@@ -68,6 +82,6 @@ export function errorHandler(
   res.status(500).json({
     error: 'Internal server error',
     code: 'INTERNAL_ERROR',
-    ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+    ...(process.env.NODE_ENV === 'development' && { details: error.message, stack: error.stack }),
   });
 }
