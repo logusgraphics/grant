@@ -84,6 +84,10 @@ export default withMermaid({
             { text: 'Projects & Scoping', link: '/core-concepts/projects-scoping' },
             { text: 'Users & Roles', link: '/core-concepts/users-roles' },
             { text: 'Groups & Permissions', link: '/core-concepts/groups-permissions' },
+            {
+              text: 'Organization Members & Invitations',
+              link: '/core-concepts/organization-invitations',
+            },
             { text: 'Tags & Relationships', link: '/core-concepts/tags-relationships' },
           ],
         },
@@ -153,6 +157,7 @@ export default withMermaid({
           items: [
             { text: 'Caching System', link: '/advanced-topics/caching' },
             { text: 'Cache Setup Guide', link: '/advanced-topics/caching-setup' },
+            { text: 'Email Service & Adapters', link: '/advanced-topics/email-service' },
             { text: 'Performance Optimization', link: '/advanced-topics/performance' },
             { text: 'Field Selection', link: '/advanced-topics/field-selection' },
             { text: 'Audit Logging', link: '/advanced-topics/audit-logging' },
