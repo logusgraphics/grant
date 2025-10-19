@@ -58,11 +58,29 @@ export const getUsersResponseSchema = createSuccessResponseSchema(
 );
 
 export const createUserRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').openapi({
+    description: "User's full name",
+    example: 'John Doe',
+  }),
   scope: scopeSchema,
-  roleIds: z.array(z.string()).optional(),
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  roleIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of role IDs to assign to the user',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the user',
+      example: ['123e4567-e89b-12d3-a456-426614174002'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the user',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+  }),
 });
 
 export const createUserResponseSchema = createSuccessResponseSchema(
@@ -71,14 +89,39 @@ export const createUserResponseSchema = createSuccessResponseSchema(
 );
 
 export const updateUserRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
-  roleIds: z.array(z.string()).optional(),
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional().openapi({
+    description: "Updated user's full name",
+    example: 'Jane Doe',
+  }),
+  roleIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of role IDs to assign to the user',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the user',
+      example: ['123e4567-e89b-12d3-a456-426614174002'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the user',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+  }),
 });
 
 export const userParamsSchema = z.object({
-  id: z.string().uuid('Invalid user ID'),
+  id: z
+    .string()
+    .uuid('Invalid user ID')
+    .openapi({
+      description: 'UUID of the user',
+      example: '123e4567-e89b-12d3-a456-426614174003',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const updateUserResponseSchema = createSuccessResponseSchema(

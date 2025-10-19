@@ -34,23 +34,46 @@ export const getTagsResponseSchema = createSuccessResponseSchema(
 );
 
 export const createTagRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color must be a valid hex color'),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').openapi({
+    description: 'Name of the tag',
+    example: 'Frontend',
+  }),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, 'Color must be a valid hex color')
+    .openapi({
+      description: 'Hex color code for the tag',
+      example: '#3B82F6',
+    }),
   scope: scopeSchema,
 });
 
 export const createTagResponseSchema = createSuccessResponseSchema(tagSchema);
 
 export const updateTagRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional().openapi({
+    description: 'Updated name of the tag',
+    example: 'Backend',
+  }),
   color: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Color must be a valid hex color')
-    .optional(),
+    .optional()
+    .openapi({
+      description: 'Updated hex color code for the tag',
+      example: '#10B981',
+    }),
 });
 
 export const tagParamsSchema = z.object({
-  id: z.string().uuid('Invalid tag ID'),
+  id: z
+    .string()
+    .uuid('Invalid tag ID')
+    .openapi({
+      description: 'UUID of the tag',
+      example: '123e4567-e89b-12d3-a456-426614174008',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const updateTagResponseSchema = createSuccessResponseSchema(tagSchema);

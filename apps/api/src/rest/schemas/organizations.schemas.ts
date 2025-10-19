@@ -58,17 +58,30 @@ export const getOrganizationsResponseSchema = createSuccessResponseSchema(
 );
 
 export const createOrganizationRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').openapi({
+    description: 'Name of the organization',
+    example: 'Acme Corporation',
+  }),
 });
 
 export const createOrganizationResponseSchema = createSuccessResponseSchema(organizationSchema);
 
 export const updateOrganizationRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional().openapi({
+    description: 'Updated name of the organization',
+    example: 'Acme Corp',
+  }),
 });
 
 export const organizationParamsSchema = z.object({
-  id: z.string().uuid('Invalid organization ID'),
+  id: z
+    .string()
+    .uuid('Invalid organization ID')
+    .openapi({
+      description: 'UUID of the organization',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const updateOrganizationResponseSchema = createSuccessResponseSchema(organizationSchema);

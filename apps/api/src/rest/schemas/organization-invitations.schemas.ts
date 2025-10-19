@@ -29,23 +29,49 @@ export const organizationInvitationWithRelationsSchema = organizationInvitationS
 });
 
 export const invitationParamsSchema = z.object({
-  id: z.string().uuid('Invalid invitation ID'),
+  id: z
+    .string()
+    .uuid('Invalid invitation ID')
+    .openapi({
+      description: 'UUID of the invitation to revoke',
+      example: '123e4567-e89b-12d3-a456-426614174002',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const invitationTokenParamsSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
+  token: z
+    .string()
+    .min(1, 'Token is required')
+    .openapi({
+      description: 'Unique invitation token',
+      example: 'inv_a1b2c3d4e5f6g7h8i9j0',
+      param: { in: 'path', name: 'token' },
+    }),
 });
 
 export const inviteMemberRequestSchema = z.object({
-  organizationId: z.string().uuid('Invalid organization ID'),
-  email: z.string().email('Invalid email address'),
-  roleId: z.string().uuid('Invalid role ID'),
+  organizationId: z.string().uuid('Invalid organization ID').openapi({
+    description: 'UUID of the organization to invite the member to',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  }),
+  email: z.string().email('Invalid email address').openapi({
+    description: 'Email address of the user to invite',
+    example: 'newmember@example.com',
+  }),
+  roleId: z.string().uuid('Invalid role ID').openapi({
+    description: 'UUID of the role to assign to the invited member',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const inviteMemberResponseSchema = createSuccessResponseSchema(organizationInvitationSchema);
 
 export const getOrganizationInvitationsQuerySchema = z.object({
-  organizationId: z.string().uuid('Invalid organization ID'),
+  organizationId: z.string().uuid('Invalid organization ID').openapi({
+    description: 'UUID of the organization to list invitations for',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  }),
   status: z
     .enum(
       Object.values(OrganizationInvitationStatus) as [
@@ -55,7 +81,7 @@ export const getOrganizationInvitationsQuerySchema = z.object({
     )
     .optional()
     .openapi({
-      description: 'Filter invitations by status',
+      description: 'Filter invitations by status (pending, accepted, expired, revoked)',
       example: 'pending',
     }),
 });
@@ -69,12 +95,24 @@ export const getOrganizationInvitationsResponseSchema = createSuccessResponseSch
 );
 
 export const acceptInvitationRequestSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
+  token: z.string().min(1, 'Token is required').openapi({
+    description: 'Unique invitation token received via email',
+    example: 'inv_a1b2c3d4e5f6g7h8i9j0',
+  }),
   userData: z
     .object({
-      name: z.string().min(1, 'Name is required'),
-      username: z.string().min(3, 'Username must be at least 3 characters'),
-      password: z.string().min(8, 'Password must be at least 8 characters'),
+      name: z.string().min(1, 'Name is required').openapi({
+        description: "User's full name",
+        example: 'Jane Doe',
+      }),
+      username: z.string().min(3, 'Username must be at least 3 characters').openapi({
+        description: 'Unique username for the account',
+        example: 'janedoe',
+      }),
+      password: z.string().min(8, 'Password must be at least 8 characters').openapi({
+        description: 'Secure password (minimum 8 characters)',
+        example: 'SecureP@ssw0rd',
+      }),
     })
     .optional()
     .openapi({

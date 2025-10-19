@@ -58,26 +58,75 @@ export const getGroupsResponseSchema = createSuccessResponseSchema(
 );
 
 export const createGroupRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
-  description: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').openapi({
+    description: 'Name of the group',
+    example: 'Engineering Team',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Description of the group',
+    example: 'Development and engineering staff',
+  }),
   scope: scopeSchema,
-  permissionIds: z.array(z.string()).optional(),
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  permissionIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of permission IDs to assign to the group',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the group',
+      example: ['123e4567-e89b-12d3-a456-426614174002'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the group',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+  }),
 });
 
 export const createGroupResponseSchema = createSuccessResponseSchema(groupSchema);
 
 export const updateGroupRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
-  description: z.string().optional(),
-  permissionIds: z.array(z.string()).optional(),
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional().openapi({
+    description: 'Updated name of the group',
+    example: 'Senior Engineering Team',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Updated description of the group',
+    example: 'Senior development and engineering staff',
+  }),
+  permissionIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of permission IDs to assign to the group',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the group',
+      example: ['123e4567-e89b-12d3-a456-426614174002'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the group',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+  }),
 });
 
 export const groupParamsSchema = z.object({
-  id: z.string().uuid('Invalid group ID'),
+  id: z
+    .string()
+    .uuid('Invalid group ID')
+    .openapi({
+      description: 'UUID of the group',
+      example: '123e4567-e89b-12d3-a456-426614174006',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const updateGroupResponseSchema = createSuccessResponseSchema(groupSchema);

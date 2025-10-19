@@ -83,6 +83,20 @@ async function startServer() {
         displayRequestDuration: true,
         filter: true,
         tryItOutEnabled: true,
+        // Improve schema display
+        defaultModelsExpandDepth: 3, // Expand models to show nested structure
+        defaultModelExpandDepth: 3, // Expand individual model properties
+        docExpansion: 'list', // Show operations list expanded
+        deepLinking: true, // Enable deep linking for sharing
+        displayOperationId: false,
+        // Show request body examples prominently
+        syntaxHighlight: {
+          activate: true,
+          theme: 'monokai',
+        },
+        // Show full request/response information
+        showExtensions: true,
+        showCommonExtensions: true,
       },
     })
   );

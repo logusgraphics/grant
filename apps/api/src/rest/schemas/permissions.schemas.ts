@@ -63,26 +63,69 @@ export const getPermissionsResponseSchema = createSuccessResponseSchema(
 );
 
 export const createPermissionRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
-  description: z.string().optional(),
-  action: z.string().min(1, 'Action is required'),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').openapi({
+    description: 'Name of the permission',
+    example: 'Read Users',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Description of the permission',
+    example: 'Allows reading user data',
+  }),
+  action: z.string().min(1, 'Action is required').openapi({
+    description: 'Action identifier for the permission',
+    example: 'users:read',
+  }),
   scope: scopeSchema,
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the permission',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the permission',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const createPermissionResponseSchema = createSuccessResponseSchema(permissionSchema);
 
 export const updatePermissionRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
-  description: z.string().optional(),
-  action: z.string().min(1, 'Action is required').optional(),
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional().openapi({
+    description: 'Updated name of the permission',
+    example: 'Read All Users',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Updated description of the permission',
+    example: 'Allows reading all user data across the system',
+  }),
+  action: z.string().min(1, 'Action is required').optional().openapi({
+    description: 'Updated action identifier for the permission',
+    example: 'users:read:all',
+  }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the permission',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the permission',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const permissionParamsSchema = z.object({
-  id: z.string().uuid('Invalid permission ID'),
+  id: z
+    .string()
+    .uuid('Invalid permission ID')
+    .openapi({
+      description: 'UUID of the permission',
+      example: '123e4567-e89b-12d3-a456-426614174007',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const updatePermissionResponseSchema = createSuccessResponseSchema(permissionSchema);

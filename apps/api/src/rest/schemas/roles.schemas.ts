@@ -58,24 +58,61 @@ export const getRolesResponseSchema = createSuccessResponseSchema(
 );
 
 export const createRoleRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
-  description: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').openapi({
+    description: 'Name of the role',
+    example: 'Developer',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Description of the role',
+    example: 'Full access to development resources',
+  }),
   scope: scopeSchema,
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the role',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the role',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const createRoleResponseSchema = createSuccessResponseSchema(roleSchema);
 
 export const updateRoleRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
-  description: z.string().optional(),
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional().openapi({
+    description: 'Updated name of the role',
+    example: 'Senior Developer',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Updated description of the role',
+    example: 'Senior level access to development resources',
+  }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the role',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the role',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const roleParamsSchema = z.object({
-  id: z.string().uuid('Invalid role ID'),
+  id: z
+    .string()
+    .uuid('Invalid role ID')
+    .openapi({
+      description: 'UUID of the role',
+      example: '123e4567-e89b-12d3-a456-426614174004',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const updateRoleResponseSchema = createSuccessResponseSchema(roleSchema);

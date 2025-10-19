@@ -62,24 +62,61 @@ export const getProjectsResponseSchema = createSuccessResponseSchema(
 );
 
 export const createProjectRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long'),
-  description: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').openapi({
+    description: 'Name of the project',
+    example: 'Mobile App',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Description of the project',
+    example: 'iOS and Android mobile application',
+  }),
   scope: scopeSchema,
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the project',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the project',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const createProjectResponseSchema = createSuccessResponseSchema(projectSchema);
 
 export const updateProjectRequestSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
-  description: z.string().optional(),
-  tagIds: z.array(z.string()).optional(),
-  primaryTagId: z.string().optional(),
+  name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional().openapi({
+    description: 'Updated name of the project',
+    example: 'Mobile App v2',
+  }),
+  description: z.string().optional().openapi({
+    description: 'Updated description of the project',
+    example: 'Next generation mobile application',
+  }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the project',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the project',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const projectParamsSchema = z.object({
-  id: z.string().uuid('Invalid project ID'),
+  id: z
+    .string()
+    .uuid('Invalid project ID')
+    .openapi({
+      description: 'UUID of the project',
+      example: '123e4567-e89b-12d3-a456-426614174005',
+      param: { in: 'path', name: 'id' },
+    }),
 });
 
 export const updateProjectResponseSchema = createSuccessResponseSchema(projectSchema);

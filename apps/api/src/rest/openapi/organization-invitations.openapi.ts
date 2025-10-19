@@ -60,6 +60,11 @@ Invite a new or existing user to join an organization with a specific role.
         content: {
           'application/json': {
             schema: inviteMemberRequestSchema,
+            example: {
+              organizationId: '123e4567-e89b-12d3-a456-426614174000',
+              email: 'newmember@example.com',
+              roleId: '123e4567-e89b-12d3-a456-426614174001',
+            },
           },
         },
       },
@@ -141,6 +146,27 @@ Accept an organization invitation using the token received via email.
         content: {
           'application/json': {
             schema: acceptInvitationRequestSchema,
+            examples: {
+              existingUser: {
+                summary: 'Existing user accepting invitation',
+                description: 'User already has an account in the system',
+                value: {
+                  token: 'inv_a1b2c3d4e5f6g7h8i9j0',
+                },
+              },
+              newUser: {
+                summary: 'New user accepting invitation with registration',
+                description: 'User needs to create an account',
+                value: {
+                  token: 'inv_a1b2c3d4e5f6g7h8i9j0',
+                  userData: {
+                    name: 'Jane Doe',
+                    username: 'janedoe',
+                    password: 'SecureP@ssw0rd',
+                  },
+                },
+              },
+            },
           },
         },
       },
