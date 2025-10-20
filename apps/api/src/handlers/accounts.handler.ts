@@ -23,6 +23,7 @@ import { AuthenticationError } from '@/lib/errors';
 import { Transaction, TransactionManager } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 import { DeleteParams, SelectedFields } from '@/services/common';
+import { Otp } from '@/services/user-authentication-methods.service';
 
 export class AccountHandler extends ScopeHandler {
   constructor(
@@ -161,6 +162,7 @@ export class AccountHandler extends ScopeHandler {
             verificationExpiry: userAuthenticationMethod.isVerified
               ? null
               : this.getVerificationExpiryDate(),
+            email: provider === UserAuthenticationMethodProvider.Email ? providerId : null,
           };
         }
       }
@@ -182,6 +184,7 @@ export class AccountHandler extends ScopeHandler {
         verificationExpiry: userAuthenticationMethod.isVerified
           ? null
           : this.getVerificationExpiryDate(),
+        email: provider === UserAuthenticationMethodProvider.Email ? providerId : null,
       };
     });
   }
@@ -214,7 +217,8 @@ export class AccountHandler extends ScopeHandler {
 
   public async createAccount(
     params: Omit<CreateAccountInput, 'ownerId'>,
-    audience: string
+    audience: string,
+    locale?: string
   ): Promise<CreateAccountResult> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
       const { name, username, type, provider, providerId, providerData } = params;
@@ -255,10 +259,10 @@ export class AccountHandler extends ScopeHandler {
       );
 
       if (provider === UserAuthenticationMethodProvider.Email) {
-        const { token } = processedProviderData.otp as { token: string };
-        if (token) {
+        const { token, validUntil } = processedProviderData.otp as Otp;
+        if (token && validUntil > Date.now()) {
           try {
-            await this.services.userAuthenticationMethods.sendOtp(providerId, token);
+            await this.services.email.sendOtp({ to: providerId, token, validUntil, locale });
           } catch (error) {
             console.error('Error sending OTP', error);
           }
@@ -271,6 +275,7 @@ export class AccountHandler extends ScopeHandler {
         refreshToken: session.refreshToken,
         requiresEmailVerification: !isVerified,
         verificationExpiry: isVerified ? null : this.getVerificationExpiryDate(),
+        email: provider === UserAuthenticationMethodProvider.Email ? providerId : null,
       };
 
       return result;
@@ -300,6 +305,41 @@ export class AccountHandler extends ScopeHandler {
       ]);
 
       return await this.services.accounts.deleteAccount(params, tx);
+    });
+  }
+
+  public async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
+    return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      await this.services.userAuthenticationMethods.verifyEmail(token, tx);
+      return {
+        success: true,
+        message: 'Email verified successfully',
+      };
+    });
+  }
+
+  public async resendVerificationEmail(
+    email: string,
+    locale?: string
+  ): Promise<{ success: boolean; message: string }> {
+    return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      const { token, validUntil } =
+        await this.services.userAuthenticationMethods.resendVerificationEmail(email, tx);
+
+      try {
+        await this.services.email.sendOtp({ to: email, token, validUntil, locale });
+      } catch (error) {
+        console.error('Error sending verification email', error);
+        throw new AuthenticationError(
+          'Failed to send verification email',
+          'errors:auth.emailSendFailed'
+        );
+      }
+
+      return {
+        success: true,
+        message: 'Verification email sent successfully',
+      };
     });
   }
 }

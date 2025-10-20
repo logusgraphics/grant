@@ -1,0 +1,3 @@
+extend type Mutation {
+  verifyEmail(input: VerifyEmailInput!): VerifyEmailResponse!
+}

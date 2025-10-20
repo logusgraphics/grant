@@ -1,12 +1,17 @@
 import { useMutation } from '@apollo/client/react';
 import {
-  LoginResponse,
-  CreateAccountResult,
-  UserAuthenticationMethodProvider,
   AccountType,
+  CreateAccountResult,
+  LoginDocument,
+  LoginResponse,
+  RegisterDocument,
+  ResendVerificationDocument,
+  ResendVerificationResponse,
   UserAuthenticationEmailProviderAction,
+  UserAuthenticationMethodProvider,
+  VerifyEmailDocument,
+  VerifyEmailResponse,
 } from '@logusgraphics/grant-schema';
-import { LoginDocument, RegisterDocument } from '@logusgraphics/grant-schema';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -28,9 +33,16 @@ interface RegisterInput {
 export function useAuthMutations() {
   const t = useTranslations('auth');
   const { setAuthData, clearAuth } = useAuthStore();
+  const authStore = useAuthStore();
 
   const [login] = useMutation<{ login: LoginResponse }>(LoginDocument);
   const [register] = useMutation<{ register: CreateAccountResult }>(RegisterDocument);
+  const [verifyEmailMutation] = useMutation<{ verifyEmail: VerifyEmailResponse }>(
+    VerifyEmailDocument
+  );
+  const [resendVerificationMutation] = useMutation<{
+    resendVerification: ResendVerificationResponse;
+  }>(ResendVerificationDocument);
 
   const handleLogin = async (input: LoginInput) => {
     try {
@@ -54,6 +66,9 @@ export function useAuthMutations() {
           accounts: loginData.accounts,
           accessToken: loginData.accessToken,
           refreshToken: loginData.refreshToken,
+          email: loginData.email ?? null,
+          requiresEmailVerification: loginData.requiresEmailVerification ?? false,
+          verificationExpiry: loginData.verificationExpiry ?? null,
         });
       }
 
@@ -69,9 +84,50 @@ export function useAuthMutations() {
       return loginData;
     } catch (error) {
       console.error('Error logging in:', error);
-      toast.error(t('login.error'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
+
+      // Check if the error is due to user not being verified using translationKey (language-agnostic)
+      // GraphQL errors have a graphQLErrors array with extensions
+      const graphqlError = error as {
+        graphQLErrors?: Array<{ extensions?: { translationKey?: string } }>;
+      };
+      const translationKey = graphqlError.graphQLErrors?.[0]?.extensions?.translationKey;
+
+      if (translationKey === 'errors:auth.userNotVerified') {
+        toast.error(t('notifications.userNotVerified'), {
+          description: t('notifications.verificationExpired'),
+          duration: 10000,
+          action: {
+            label: 'Resend Email',
+            onClick: async () => {
+              try {
+                await resendVerificationMutation({
+                  variables: {
+                    input: {
+                      email: input.email,
+                    },
+                  },
+                });
+
+                toast.success(t('resendVerification.success'), {
+                  description: t('resendVerification.successDescription'),
+                });
+              } catch (resendError) {
+                console.error('Error resending verification:', resendError);
+                toast.error(t('resendVerification.error'), {
+                  description:
+                    resendError instanceof Error
+                      ? resendError.message
+                      : 'An unknown error occurred',
+                });
+              }
+            },
+          },
+        });
+      } else {
+        toast.error(t('login.error'), {
+          description: error instanceof Error ? error.message : 'An unknown error occurred',
+        });
+      }
       throw error;
     }
   };
@@ -103,6 +159,9 @@ export function useAuthMutations() {
           accounts,
           accessToken: registerData.accessToken,
           refreshToken: registerData.refreshToken,
+          email: registerData.email ?? null,
+          requiresEmailVerification: registerData.requiresEmailVerification ?? false,
+          verificationExpiry: registerData.verificationExpiry ?? null,
         });
 
         if (registerData?.requiresEmailVerification) {
@@ -157,9 +216,80 @@ export function useAuthMutations() {
     }
   };
 
+  const handleVerifyEmail = async (token: string) => {
+    try {
+      const result = await verifyEmailMutation({
+        variables: {
+          input: {
+            token,
+          },
+        },
+      });
+
+      const verifyData = result.data?.verifyEmail;
+
+      if (verifyData?.success) {
+        // Clear email verification requirement from auth store
+        const currentState = authStore;
+        if (currentState.accounts.length > 0) {
+          setAuthData({
+            accounts: currentState.accounts,
+            accessToken: currentState.accessToken || '',
+            refreshToken: currentState.refreshToken || '',
+            email: currentState.email,
+            requiresEmailVerification: false,
+            verificationExpiry: null,
+          });
+        }
+
+        toast.success(t('verifyEmail.success'), {
+          description: verifyData.message,
+        });
+      }
+
+      return verifyData;
+    } catch (error) {
+      console.error('Error verifying email:', error);
+      toast.error(t('verifyEmail.error'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
+  const handleResendVerification = async (email: string) => {
+    try {
+      const result = await resendVerificationMutation({
+        variables: {
+          input: {
+            email,
+          },
+        },
+      });
+
+      const resendData = result.data?.resendVerification;
+
+      if (resendData?.success) {
+        toast.success(t('resendVerification.success'), {
+          description: resendData.message,
+        });
+      }
+
+      return resendData;
+    } catch (error) {
+      console.error('Error resending verification:', error);
+      toast.error(t('resendVerification.error'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
   return {
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,
+    verifyEmail: handleVerifyEmail,
+    resendVerification: handleResendVerification,
   };
 }

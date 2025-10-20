@@ -1,0 +1,26 @@
+{
+  "verification": {
+    "subject": "Verifizieren Sie Ihre E-Mail-Adresse",
+    "greeting": "Hallo,",
+    "message": "Vielen Dank für Ihre Anmeldung! Bitte verifizieren Sie Ihre E-Mail-Adresse, indem Sie auf die Schaltfläche unten klicken:",
+    "button": "E-Mail-Adresse verifizieren",
+    "expiresIn": "Dieser Link läuft in {{minutes}} Minuten ab.",
+    "alternativeText": "Wenn die Schaltfläche nicht funktioniert, kopieren Sie diesen Link und fügen Sie ihn ein:",
+    "footer": {
+      "noRequest": "Wenn Sie kein Konto erstellt haben, können Sie diese E-Mail ignorieren.",
+      "typo": "Möglicherweise hat jemand versehentlich Ihre E-Mail-Adresse eingegeben."
+    },
+    "signature": "Grant Platform"
+  },
+  "invitation": {
+    "subject": "Sie wurden zu {{organizationName}} eingeladen",
+    "greeting": "Hallo,",
+    "message": "{{inviterName}} hat Sie eingeladen, {{organizationName}} als {{roleName}} beizutreten.",
+    "button": "Einladung annehmen",
+    "expiresIn": "Diese Einladung läuft in {{days}} Tagen ab.",
+    "footer": {
+      "noRequest": "Wenn Sie diese Einladung nicht kennen, können Sie diese E-Mail ignorieren."
+    },
+    "signature": "Grant Platform"
+  }
+}

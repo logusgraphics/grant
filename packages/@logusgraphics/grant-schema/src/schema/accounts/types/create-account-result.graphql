@@ -4,4 +4,5 @@ type CreateAccountResult {
   refreshToken: String!
   requiresEmailVerification: Boolean
   verificationExpiry: Date
+  email: String
 }

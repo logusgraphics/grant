@@ -23,7 +23,7 @@ export type SupportedLocale = (typeof supportedLocales)[number];
 
 export const defaultLocale: SupportedLocale = 'en';
 
-export const namespaces = ['common', 'errors'] as const;
+export const namespaces = ['common', 'errors', 'email'] as const;
 export type Namespace = (typeof namespaces)[number];
 
 export async function initializeI18n() {

@@ -199,6 +199,38 @@
       "rememberPassword": "Remember your credentials?",
       "backToLogin": "Back to login"
     },
+    "verifyEmail": {
+      "title": "Email Verification",
+      "description": "We're verifying your email address",
+      "verifying": "Verifying your email...",
+      "verifyingDescription": "Please wait while we verify your email address",
+      "success": "Email Verified Successfully!",
+      "successDescription": "Your email has been verified. You can now access all features.",
+      "error": "Verification Failed",
+      "errorDescription": "We couldn't verify your email. The link may have expired or is invalid.",
+      "missingToken": "Invalid Verification Link",
+      "missingTokenDescription": "This verification link is invalid or missing required information.",
+      "goToLogin": "Go to Login",
+      "redirecting": "Redirecting to login..."
+    },
+    "resendVerification": {
+      "title": "Resend Verification Email",
+      "description": "Enter your email to receive a new verification link",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "submit": "Resend Verification",
+      "success": "Verification email sent!",
+      "successDescription": "Check your inbox for the verification link",
+      "error": "Failed to send verification email",
+      "backToLogin": "Back to Login"
+    },
+    "notifications": {
+      "logoutSuccess": "You have been logged out",
+      "logoutError": "Failed to logout",
+      "verificationWarning": "Please verify your email to access all features. Your verification link will expire in {days} days.",
+      "verificationExpired": "Your email verification has expired. Please request a new verification email.",
+      "userNotVerified": "Email verification required"
+    },
     "validation": {
       "email": "Please enter a valid email address",
       "password": "Password must be at least 8 characters",

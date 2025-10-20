@@ -7,6 +7,8 @@ import {
   logoutRequestSchema,
   refreshSessionRequestSchema,
   registerRequestSchema,
+  resendVerificationRequestSchema,
+  verifyEmailRequestSchema,
 } from '@/rest/schemas';
 import { TypedRequest } from '@/rest/types';
 import { RequestContext } from '@/types';
@@ -32,6 +34,17 @@ export function createAuthRoutes(context: RequestContext) {
 
   router.post('/logout', validateBody(logoutRequestSchema), (req, res) =>
     authController.logout(req as TypedRequest<{ body: typeof logoutRequestSchema }>, res)
+  );
+
+  router.post('/verify-email', validateBody(verifyEmailRequestSchema), (req, res) =>
+    authController.verifyEmail(req as TypedRequest<{ body: typeof verifyEmailRequestSchema }>, res)
+  );
+
+  router.post('/resend-verification', validateBody(resendVerificationRequestSchema), (req, res) =>
+    authController.resendVerification(
+      req as TypedRequest<{ body: typeof resendVerificationRequestSchema }>,
+      res
+    )
   );
 
   return router;

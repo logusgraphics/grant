@@ -66,7 +66,12 @@ export class EmailService {
   /**
    * Send an OTP email
    */
-  public async sendOtp(params: { to: string; token: string }): Promise<void> {
+  public async sendOtp(params: {
+    to: string;
+    token: string;
+    validUntil: number;
+    locale?: string;
+  }): Promise<void> {
     return this.emailAdapter.sendOtp(params);
   }
 }

@@ -218,6 +218,7 @@ export type CreateAccountResult = {
   __typename?: 'CreateAccountResult';
   accessToken: Scalars['String']['output'];
   account: Account;
+  email?: Maybe<Scalars['String']['output']>;
   refreshToken: Scalars['String']['output'];
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
@@ -410,6 +411,7 @@ export type LoginResponse = {
   __typename?: 'LoginResponse';
   accessToken: Scalars['String']['output'];
   accounts: Array<Account>;
+  email?: Maybe<Scalars['String']['output']>;
   refreshToken: Scalars['String']['output'];
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
@@ -438,6 +440,7 @@ export type Mutation = {
   login: LoginResponse;
   refreshSession: RefreshSessionResponse;
   register: CreateAccountResult;
+  resendVerification: ResendVerificationResponse;
   revokeInvitation: OrganizationInvitation;
   updateAccount: Account;
   updateGroup: Group;
@@ -447,6 +450,7 @@ export type Mutation = {
   updateRole: Role;
   updateTag: Tag;
   updateUser: User;
+  verifyEmail: VerifyEmailResponse;
 };
 
 export type MutationAcceptInvitationArgs = {
@@ -536,6 +540,10 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationResendVerificationArgs = {
+  input: ResendVerificationInput;
+};
+
 export type MutationRevokeInvitationArgs = {
   id: Scalars['ID']['input'];
 };
@@ -578,6 +586,10 @@ export type MutationUpdateTagArgs = {
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
   input: UpdateUserInput;
+};
+
+export type MutationVerifyEmailArgs = {
+  input: VerifyEmailInput;
 };
 
 export type Organization = Auditable & {
@@ -1120,6 +1132,16 @@ export type RemoveUserTagInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type ResendVerificationInput = {
+  email: Scalars['String']['input'];
+};
+
+export type ResendVerificationResponse = {
+  __typename?: 'ResendVerificationResponse';
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type Role = Auditable & {
   __typename?: 'Role';
   createdAt: Scalars['Date']['output'];
@@ -1507,6 +1529,16 @@ export type UsernameAvailability = {
   username: Scalars['String']['output'];
 };
 
+export type VerifyEmailInput = {
+  token: Scalars['String']['input'];
+};
+
+export type VerifyEmailResponse = {
+  __typename?: 'VerifyEmailResponse';
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type CheckUsernameQueryVariables = Exact<{
   username: Scalars['String']['input'];
 }>;
@@ -1526,6 +1558,9 @@ export type LoginMutation = {
     __typename?: 'LoginResponse';
     accessToken: string;
     refreshToken: string;
+    requiresEmailVerification?: boolean | null;
+    verificationExpiry?: Date | null;
+    email?: string | null;
     accounts: Array<{
       __typename?: 'Account';
       id: string;
@@ -1560,8 +1595,33 @@ export type RegisterMutation = {
     __typename?: 'CreateAccountResult';
     accessToken: string;
     refreshToken: string;
+    requiresEmailVerification?: boolean | null;
+    verificationExpiry?: Date | null;
+    email?: string | null;
     account: { __typename?: 'Account'; id: string; name: string; slug: string; type: AccountType };
   };
+};
+
+export type ResendVerificationMutationVariables = Exact<{
+  input: ResendVerificationInput;
+}>;
+
+export type ResendVerificationMutation = {
+  __typename?: 'Mutation';
+  resendVerification: {
+    __typename?: 'ResendVerificationResponse';
+    success: boolean;
+    message: string;
+  };
+};
+
+export type VerifyEmailMutationVariables = Exact<{
+  input: VerifyEmailInput;
+}>;
+
+export type VerifyEmailMutation = {
+  __typename?: 'Mutation';
+  verifyEmail: { __typename?: 'VerifyEmailResponse'; success: boolean; message: string };
 };
 
 export type CreateGroupMutationVariables = Exact<{
@@ -2341,6 +2401,9 @@ export const LoginDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'refreshToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'requiresEmailVerification' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'verificationExpiry' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'accounts' },
@@ -2453,6 +2516,9 @@ export const RegisterDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'refreshToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'requiresEmailVerification' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'verificationExpiry' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'account' },
@@ -2474,6 +2540,92 @@ export const RegisterDocument = {
     },
   ],
 } as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
+export const ResendVerificationDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ResendVerification' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ResendVerificationInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resendVerification' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ResendVerificationMutation, ResendVerificationMutationVariables>;
+export const VerifyEmailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'VerifyEmail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'VerifyEmailInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'verifyEmail' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<VerifyEmailMutation, VerifyEmailMutationVariables>;
 export const CreateGroupDocument = {
   kind: 'Document',
   definitions: [

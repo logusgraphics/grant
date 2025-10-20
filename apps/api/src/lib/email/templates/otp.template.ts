@@ -1,19 +1,39 @@
+import { config } from '@/config';
+import { defaultLocale, translateStatic, type SupportedLocale } from '@/i18n';
+
 import { SendOtpParams } from '../email.interface';
 
-export function getOtpEmailSubject(): string {
-  return 'Verify your email address';
+export function getOtpEmailSubject(params: SendOtpParams): string {
+  const emailLocale = (params.locale || defaultLocale) as SupportedLocale;
+  return translateStatic('email:verification.subject', emailLocale);
 }
 
-export function getOtpEmailHtml(params: SendOtpParams): string {
-  const { token } = params;
+export function getOtpEmailHtml(params: SendOtpParams, locale: SupportedLocale = 'en'): string {
+  const { token, validUntil, locale: paramsLocale } = params;
+  const emailLocale = (paramsLocale || locale) as SupportedLocale;
+  const verificationUrl = `${config.security.frontendUrl}/${emailLocale}/verify-email?token=${encodeURIComponent(token)}`;
+  const expirationMinutes = Math.floor((validUntil - Date.now()) / 1000 / 60);
+
+  const t = {
+    greeting: translateStatic('email:verification.greeting', emailLocale),
+    message: translateStatic('email:verification.message', emailLocale),
+    button: translateStatic('email:verification.button', emailLocale),
+    expiresIn: translateStatic('email:verification.expiresIn', emailLocale, {
+      minutes: expirationMinutes,
+    }),
+    alternativeText: translateStatic('email:verification.alternativeText', emailLocale),
+    footerNoRequest: translateStatic('email:verification.footer.noRequest', emailLocale),
+    footerTypo: translateStatic('email:verification.footer.typo', emailLocale),
+    signature: translateStatic('email:verification.signature', emailLocale),
+  };
 
   return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${locale}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Your Email</title>
+  <title>${t.button}</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -48,20 +68,32 @@ export function getOtpEmailHtml(params: SendOtpParams): string {
       margin-bottom: 15px;
       color: #4b5563;
     }
-    .otp-code {
-      background-color: #f3f4f6;
-      border: 2px solid #2563eb;
-      border-radius: 6px;
-      padding: 20px;
+    .button-container {
       text-align: center;
       margin: 30px 0;
     }
-    .code {
-      font-size: 32px;
-      font-weight: bold;
-      letter-spacing: 8px;
-      color: #2563eb;
-      font-family: 'Courier New', monospace;
+    .verify-button {
+      display: inline-block;
+      background-color: #2563eb;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    .verify-button:hover {
+      background-color: #1d4ed8;
+    }
+    .alternative-link {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9fafb;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #6b7280;
+      word-break: break-all;
     }
     .footer {
       margin-top: 30px;
@@ -76,26 +108,31 @@ export function getOtpEmailHtml(params: SendOtpParams): string {
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">Grant Platform</div>
+      <div class="logo">${t.signature}</div>
     </div>
     
-    <h1>Verify your email address</h1>
+    <h1>${translateStatic('email:verification.subject', emailLocale)}</h1>
     
-    <p>Hi there,</p>
+    <p>${t.greeting}</p>
     
-    <p>Use the verification code below to complete your registration:</p>
+    <p>${t.message}</p>
     
-    <div class="otp-code">
-      <div class="code">${token}</div>
+    <div class="button-container">
+      <a href="${verificationUrl}" class="verify-button">${t.button}</a>
     </div>
     
     <p style="text-align: center; font-size: 14px; color: #6b7280;">
-      This code will expire in 15 minutes.
+      ${t.expiresIn}
     </p>
     
+    <div class="alternative-link">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #374151;">${t.alternativeText}</p>
+      <p style="margin: 0;">${verificationUrl}</p>
+    </div>
+    
     <div class="footer">
-      <p>If you didn't request this code, you can safely ignore this email.</p>
-      <p>Someone else might have typed your email address by mistake.</p>
+      <p>${t.footerNoRequest}</p>
+      <p>${t.footerTypo}</p>
     </div>
   </div>
 </body>
@@ -103,24 +140,39 @@ export function getOtpEmailHtml(params: SendOtpParams): string {
   `.trim();
 }
 
-export function getOtpEmailText(params: SendOtpParams): string {
-  const { token } = params;
+export function getOtpEmailText(params: SendOtpParams, locale: SupportedLocale = 'en'): string {
+  const { token, validUntil, locale: paramsLocale } = params;
+  const emailLocale = (paramsLocale || locale) as SupportedLocale;
+  const verificationUrl = `${config.security.frontendUrl}/${emailLocale}/verify-email?token=${encodeURIComponent(token)}`;
+  const expirationMinutes = Math.floor((validUntil - Date.now()) / 1000 / 60);
+
+  const t = {
+    subject: translateStatic('email:verification.subject', emailLocale),
+    greeting: translateStatic('email:verification.greeting', emailLocale),
+    message: translateStatic('email:verification.message', emailLocale),
+    expiresIn: translateStatic('email:verification.expiresIn', emailLocale, {
+      minutes: expirationMinutes,
+    }),
+    footerNoRequest: translateStatic('email:verification.footer.noRequest', emailLocale),
+    footerTypo: translateStatic('email:verification.footer.typo', emailLocale),
+    signature: translateStatic('email:verification.signature', emailLocale),
+  };
 
   return `
-Verify your email address
+${t.subject}
 
-Hi there,
+${t.greeting}
 
-Use the verification code below to complete your registration:
+${t.message}
 
-${token}
+${verificationUrl}
 
-This code will expire in 15 minutes.
+${t.expiresIn}
 
-If you didn't request this code, you can safely ignore this email.
-Someone else might have typed your email address by mistake.
+${t.footerNoRequest}
+${t.footerTypo}
 
 ---
-Grant Platform
+${t.signature}
   `.trim();
 }

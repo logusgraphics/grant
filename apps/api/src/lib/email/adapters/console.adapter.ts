@@ -29,7 +29,7 @@ export class ConsoleEmailAdapter implements IEmailService {
   }
 
   async sendOtp(params: SendOtpParams): Promise<void> {
-    const subject = getOtpEmailSubject();
+    const subject = getOtpEmailSubject(params);
     const text = getOtpEmailText(params);
 
     console.log('\n' + '='.repeat(80));

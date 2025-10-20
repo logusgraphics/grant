@@ -2,6 +2,9 @@ mutation Login($input: LoginInput!) {
   login(input: $input) {
     accessToken
     refreshToken
+    requiresEmailVerification
+    verificationExpiry
+    email
     accounts {
       id
       name

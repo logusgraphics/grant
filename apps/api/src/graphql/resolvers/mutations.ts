@@ -12,6 +12,8 @@ export const Mutation = {
   login: authMutations.login,
   register: authMutations.register,
   refreshSession: authMutations.refreshSession,
+  verifyEmail: authMutations.verifyEmail,
+  resendVerification: authMutations.resendVerification,
   updateAccount: accountMutations.updateAccount,
   deleteAccount: accountMutations.deleteAccount,
   createUser: userMutations.createUser,

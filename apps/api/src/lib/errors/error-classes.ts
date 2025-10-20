@@ -1,36 +1,11 @@
-/**
- * Generic error classes for both REST and GraphQL APIs
- *
- * These errors extend the base Error class and include metadata
- * that can be used by both REST controllers and GraphQL formatters.
- */
-
 export interface ErrorOptions {
-  /**
-   * HTTP status code for REST responses
-   */
   statusCode?: number;
-  /**
-   * Error code for both REST and GraphQL
-   */
   code?: string;
-  /**
-   * Additional metadata to include in error response
-   */
   extensions?: Record<string, any>;
-  /**
-   * i18n translation key (e.g., 'errors:auth.invalidCredentials')
-   */
   translationKey?: string;
-  /**
-   * Parameters for i18n interpolation
-   */
   translationParams?: Record<string, any>;
 }
 
-/**
- * Base error class for all API errors
- */
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -54,9 +29,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Error for resource not found scenarios
- */
 export class NotFoundError extends ApiError {
   constructor(
     message: string,
@@ -75,9 +47,6 @@ export class NotFoundError extends ApiError {
   }
 }
 
-/**
- * Error for validation failures
- */
 export class ValidationError extends ApiError {
   constructor(
     message: string,
@@ -100,9 +69,6 @@ export class ValidationError extends ApiError {
   }
 }
 
-/**
- * Error for authentication failures
- */
 export class AuthenticationError extends ApiError {
   constructor(
     message: string,
@@ -121,9 +87,6 @@ export class AuthenticationError extends ApiError {
   }
 }
 
-/**
- * Error for authorization failures
- */
 export class AuthorizationError extends ApiError {
   constructor(
     message: string,
@@ -142,9 +105,6 @@ export class AuthorizationError extends ApiError {
   }
 }
 
-/**
- * Error for conflicts (e.g., duplicate resources)
- */
 export class ConflictError extends ApiError {
   constructor(
     message: string,
@@ -163,9 +123,6 @@ export class ConflictError extends ApiError {
   }
 }
 
-/**
- * Error for bad requests
- */
 export class BadRequestError extends ApiError {
   constructor(
     message: string,

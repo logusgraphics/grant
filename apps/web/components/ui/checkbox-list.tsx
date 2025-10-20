@@ -97,7 +97,7 @@ export function CheckboxList({
               </AutoScrollArea>
             )}
           </div>
-          {error && <FormMessage className="text-red-500 text-sm mt-1">{error}</FormMessage>}
+          {error && <FormMessage className="text-destructive text-sm mt-1">{error}</FormMessage>}
         </FormItem>
       )}
     />

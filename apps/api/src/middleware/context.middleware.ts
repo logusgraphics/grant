@@ -2,6 +2,7 @@ import { DbSchema } from '@logusgraphics/grant-database';
 import { NextFunction, Response } from 'express';
 
 import { createHandlers } from '@/handlers';
+import { getLocale } from '@/i18n';
 import { IEntityCacheAdapter } from '@/lib/cache/cache-adapter.interface';
 import { BadRequestError } from '@/lib/errors';
 import { createRepositories } from '@/repositories';
@@ -17,6 +18,7 @@ export function contextMiddleware(db: DbSchema, scopeCache: IEntityCacheAdapter)
       throw new BadRequestError('Origin is required', 'errors:common.originRequired');
     }
 
+    const locale = getLocale(req);
     const repositories = createRepositories(db);
     const services = createServices(repositories, req.user || null, db);
     const handlers = createHandlers(scopeCache, services, db);
@@ -25,6 +27,7 @@ export function contextMiddleware(db: DbSchema, scopeCache: IEntityCacheAdapter)
       user: req.user || null,
       handlers,
       origin,
+      locale,
     };
 
     next();

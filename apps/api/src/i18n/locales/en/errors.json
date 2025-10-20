@@ -6,6 +6,8 @@
     "methodNotFound": "Authentication method not found",
     "noAccount": "User does not have an account",
     "invalidToken": "Invalid or expired token",
+    "tokenExpired": "Verification token has expired",
+    "alreadyVerified": "Email is already verified",
     "invalidRefreshToken": "Invalid refresh token",
     "invalidSession": "Session has expired",
     "sessionNotFound": "User session not found",
@@ -13,7 +15,8 @@
     "forbidden": "Access forbidden",
     "passwordRequired": "Password is required and must be a string",
     "emailRequired": "Email is required and must be a string",
-    "invalidAction": "Invalid authentication action"
+    "invalidAction": "Invalid authentication action",
+    "emailSendFailed": "Failed to send verification email"
   },
   "validation": {
     "required": "{{field}} is required",

@@ -104,3 +104,37 @@ export const logoutResponseSchema = createSuccessResponseSchema(
   logoutResultSchema,
   'Successfully logged out'
 );
+
+export const verifyEmailRequestSchema = z.object({
+  token: z.string().min(1, 'Token is required').openapi({
+    description: 'Email verification token',
+    example: 'abc123def456...',
+  }),
+});
+
+export const verifyEmailResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+export const verifyEmailResponseSchema = createSuccessResponseSchema(
+  verifyEmailResultSchema,
+  'Successfully verified email'
+);
+
+export const resendVerificationRequestSchema = z.object({
+  email: z.string().email('Invalid email address').openapi({
+    description: 'Email address to resend verification to',
+    example: 'user@example.com',
+  }),
+});
+
+export const resendVerificationResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+export const resendVerificationResponseSchema = createSuccessResponseSchema(
+  resendVerificationResultSchema,
+  'Successfully resent verification email'
+);

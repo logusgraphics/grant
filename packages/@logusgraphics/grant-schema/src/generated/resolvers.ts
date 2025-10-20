@@ -219,6 +219,7 @@ export type CreateAccountResult = {
   __typename?: 'CreateAccountResult';
   accessToken: Scalars['String']['output'];
   account: Account;
+  email?: Maybe<Scalars['String']['output']>;
   refreshToken: Scalars['String']['output'];
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
@@ -411,6 +412,7 @@ export type LoginResponse = {
   __typename?: 'LoginResponse';
   accessToken: Scalars['String']['output'];
   accounts: Array<Account>;
+  email?: Maybe<Scalars['String']['output']>;
   refreshToken: Scalars['String']['output'];
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
@@ -439,6 +441,7 @@ export type Mutation = {
   login: LoginResponse;
   refreshSession: RefreshSessionResponse;
   register: CreateAccountResult;
+  resendVerification: ResendVerificationResponse;
   revokeInvitation: OrganizationInvitation;
   updateAccount: Account;
   updateGroup: Group;
@@ -448,6 +451,7 @@ export type Mutation = {
   updateRole: Role;
   updateTag: Tag;
   updateUser: User;
+  verifyEmail: VerifyEmailResponse;
 };
 
 export type MutationAcceptInvitationArgs = {
@@ -537,6 +541,10 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationResendVerificationArgs = {
+  input: ResendVerificationInput;
+};
+
 export type MutationRevokeInvitationArgs = {
   id: Scalars['ID']['input'];
 };
@@ -579,6 +587,10 @@ export type MutationUpdateTagArgs = {
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
   input: UpdateUserInput;
+};
+
+export type MutationVerifyEmailArgs = {
+  input: VerifyEmailInput;
 };
 
 export type Organization = Auditable & {
@@ -1121,6 +1133,16 @@ export type RemoveUserTagInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type ResendVerificationInput = {
+  email: Scalars['String']['input'];
+};
+
+export type ResendVerificationResponse = {
+  __typename?: 'ResendVerificationResponse';
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type Role = Auditable & {
   __typename?: 'Role';
   createdAt: Scalars['Date']['output'];
@@ -1508,6 +1530,16 @@ export type UsernameAvailability = {
   username: Scalars['String']['output'];
 };
 
+export type VerifyEmailInput = {
+  token: Scalars['String']['input'];
+};
+
+export type VerifyEmailResponse = {
+  __typename?: 'VerifyEmailResponse';
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type WithIndex<TObject> = TObject & Record<string, any>;
 export type ResolversObject<TObject> = WithIndex<TObject>;
 
@@ -1771,6 +1803,8 @@ export type ResolversTypes = ResolversObject<{
   RemoveRoleTagInput: RemoveRoleTagInput;
   RemoveUserRoleInput: RemoveUserRoleInput;
   RemoveUserTagInput: RemoveUserTagInput;
+  ResendVerificationInput: ResendVerificationInput;
+  ResendVerificationResponse: ResolverTypeWrapper<ResendVerificationResponse>;
   Role: ResolverTypeWrapper<Role>;
   RoleGroup: ResolverTypeWrapper<RoleGroup>;
   RolePage: ResolverTypeWrapper<RolePage>;
@@ -1821,6 +1855,8 @@ export type ResolversTypes = ResolversObject<{
   UserSortableField: UserSortableField;
   UserTag: ResolverTypeWrapper<UserTag>;
   UsernameAvailability: ResolverTypeWrapper<UsernameAvailability>;
+  VerifyEmailInput: VerifyEmailInput;
+  VerifyEmailResponse: ResolverTypeWrapper<VerifyEmailResponse>;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -1927,6 +1963,8 @@ export type ResolversParentTypes = ResolversObject<{
   RemoveRoleTagInput: RemoveRoleTagInput;
   RemoveUserRoleInput: RemoveUserRoleInput;
   RemoveUserTagInput: RemoveUserTagInput;
+  ResendVerificationInput: ResendVerificationInput;
+  ResendVerificationResponse: ResendVerificationResponse;
   Role: Role;
   RoleGroup: RoleGroup;
   RolePage: RolePage;
@@ -1965,6 +2003,8 @@ export type ResolversParentTypes = ResolversObject<{
   UserSortInput: UserSortInput;
   UserTag: UserTag;
   UsernameAvailability: UsernameAvailability;
+  VerifyEmailInput: VerifyEmailInput;
+  VerifyEmailResponse: VerifyEmailResponse;
 }>;
 
 export type AcceptInvitationResultResolvers<
@@ -2076,6 +2116,7 @@ export type CreateAccountResultResolvers<
 > = ResolversObject<{
   accessToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   refreshToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   requiresEmailVerification?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   verificationExpiry?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
@@ -2180,6 +2221,7 @@ export type LoginResponseResolvers<
 > = ResolversObject<{
   accessToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   accounts?: Resolver<Array<ResolversTypes['Account']>, ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   refreshToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   requiresEmailVerification?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   verificationExpiry?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
@@ -2310,6 +2352,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRegisterArgs, 'input'>
   >;
+  resendVerification?: Resolver<
+    ResolversTypes['ResendVerificationResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationResendVerificationArgs, 'input'>
+  >;
   revokeInvitation?: Resolver<
     ResolversTypes['OrganizationInvitation'],
     ParentType,
@@ -2363,6 +2411,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateUserArgs, 'id' | 'input'>
+  >;
+  verifyEmail?: Resolver<
+    ResolversTypes['VerifyEmailResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationVerifyEmailArgs, 'input'>
   >;
 }>;
 
@@ -2810,6 +2864,15 @@ export type RefreshSessionResponseResolvers<
   refreshToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
+export type ResendVerificationResponseResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ResendVerificationResponse'] = ResolversParentTypes['ResendVerificationResponse'],
+> = ResolversObject<{
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+}>;
+
 export type RoleResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Role'] = ResolversParentTypes['Role'],
@@ -3063,6 +3126,15 @@ export type UsernameAvailabilityResolvers<
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
+export type VerifyEmailResponseResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['VerifyEmailResponse'] = ResolversParentTypes['VerifyEmailResponse'],
+> = ResolversObject<{
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+}>;
+
 export type Resolvers<ContextType = any> = ResolversObject<{
   AcceptInvitationResult?: AcceptInvitationResultResolvers<ContextType>;
   Account?: AccountResolvers<ContextType>;
@@ -3103,6 +3175,7 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   ProjectUser?: ProjectUserResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RefreshSessionResponse?: RefreshSessionResponseResolvers<ContextType>;
+  ResendVerificationResponse?: ResendVerificationResponseResolvers<ContextType>;
   Role?: RoleResolvers<ContextType>;
   RoleGroup?: RoleGroupResolvers<ContextType>;
   RolePage?: RolePageResolvers<ContextType>;
@@ -3118,4 +3191,5 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   UserSessionPage?: UserSessionPageResolvers<ContextType>;
   UserTag?: UserTagResolvers<ContextType>;
   UsernameAvailability?: UsernameAvailabilityResolvers<ContextType>;
+  VerifyEmailResponse?: VerifyEmailResponseResolvers<ContextType>;
 }>;

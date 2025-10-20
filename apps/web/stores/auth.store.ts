@@ -1,7 +1,6 @@
 import { Account, AccountType } from '@logusgraphics/grant-schema';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
 import { removeStoredTokens, setStoredTokens } from '@/lib/auth';
 
@@ -15,6 +14,11 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
 
+  // Email verification state
+  email: string | null;
+  requiresEmailVerification: boolean;
+  verificationExpiry: Date | null;
+
   // Actions
   setLoading: (loading: boolean) => void;
   setAccounts: (accounts: Account[]) => void;
@@ -22,7 +26,14 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   clearAuth: () => void;
   switchAccount: (accountId: string) => void;
-  setAuthData: (data: { accounts: Account[]; accessToken: string; refreshToken: string }) => void;
+  setAuthData: (data: {
+    accounts: Account[];
+    accessToken: string;
+    refreshToken: string;
+    email?: string | null;
+    requiresEmailVerification?: boolean;
+    verificationExpiry?: Date | null;
+  }) => void;
 
   // Computed
   isAuthenticated: () => boolean;
@@ -44,6 +55,11 @@ export const useAuthStore = create<AuthState>()(
         accessToken: null,
         refreshToken: null,
 
+        // Email verification state
+        email: null,
+        requiresEmailVerification: false,
+        verificationExpiry: null,
+
         // Actions
         setLoading: (loading) => set({ loading }),
         setAccounts: (accounts) => set({ accounts }),
@@ -57,6 +73,9 @@ export const useAuthStore = create<AuthState>()(
             currentAccount: null,
             accessToken: null,
             refreshToken: null,
+            email: null,
+            requiresEmailVerification: false,
+            verificationExpiry: null,
           });
         },
         switchAccount: (accountId) => {
@@ -68,7 +87,14 @@ export const useAuthStore = create<AuthState>()(
         },
 
         setAuthData: (data) => {
-          const { accounts, accessToken, refreshToken } = data;
+          const {
+            accounts,
+            accessToken,
+            refreshToken,
+            email,
+            requiresEmailVerification,
+            verificationExpiry,
+          } = data;
           const currentAccount = accounts.length > 0 ? accounts[0] : null;
 
           setStoredTokens(accessToken, refreshToken);
@@ -78,6 +104,9 @@ export const useAuthStore = create<AuthState>()(
             currentAccount,
             accessToken,
             refreshToken,
+            email: email ?? null,
+            requiresEmailVerification: requiresEmailVerification ?? false,
+            verificationExpiry: verificationExpiry ?? null,
           });
         },
 
@@ -110,6 +139,9 @@ export const useAuthStore = create<AuthState>()(
           currentAccount: state.currentAccount,
           accessToken: state.accessToken,
           refreshToken: state.refreshToken,
+          email: state.email,
+          requiresEmailVerification: state.requiresEmailVerification,
+          verificationExpiry: state.verificationExpiry,
         }),
         onRehydrateStorage: () => (state) => {
           state?.setLoading(false);

@@ -4,6 +4,7 @@ import { ReactNode, useEffect } from 'react';
 
 import { useLocale } from 'next-intl';
 
+import { EmailVerificationBanner } from '@/components/common';
 import { useAuthStore } from '@/stores/auth.store';
 
 interface DashboardLayoutProps {
@@ -11,7 +12,14 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isAuthenticated, clearAuth, loading } = useAuthStore();
+  const {
+    isAuthenticated,
+    clearAuth,
+    loading,
+    email,
+    requiresEmailVerification,
+    verificationExpiry,
+  } = useAuthStore();
   const locale = useLocale();
 
   useEffect(() => {
@@ -25,6 +33,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-full">
       <div className="flex-1 flex flex-col">
+        {requiresEmailVerification && email && (
+          <EmailVerificationBanner email={email} expiresAt={verificationExpiry} />
+        )}
         <div className="flex-1">{children}</div>
       </div>
     </div>

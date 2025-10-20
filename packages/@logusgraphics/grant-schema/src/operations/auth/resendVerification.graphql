@@ -1,0 +1,6 @@
+mutation ResendVerification($input: ResendVerificationInput!) {
+  resendVerification(input: $input) {
+    success
+    message
+  }
+}

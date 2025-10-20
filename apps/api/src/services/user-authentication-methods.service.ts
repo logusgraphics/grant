@@ -33,7 +33,6 @@ import {
   parseProviderDataSchema,
   passwordPolicySchema,
   queryUserAuthenticationMethodsArgsSchema,
-  sendOtpSchema,
   updateUserAuthenticationMethodInputSchema,
   userAuthenticationMethodSchema,
 } from './user-authentication-methods.schemas';
@@ -43,7 +42,7 @@ interface ProcessedProvider {
   isVerified: boolean;
 }
 
-interface Otp {
+export interface Otp {
   token: string;
   validUntil: number;
 }
@@ -428,17 +427,127 @@ export class UserAuthenticationMethodService extends AuditService {
     return { token, validUntil };
   }
 
-  public async sendOtp(email: string, token: string): Promise<void> {
-    const context = 'UserAuthenticationMethodService.sendOtp';
-    validateInput(sendOtpSchema, { email, token }, context);
-    // TODO: send OTP to user
-  }
-
   public hashPassword(password: string): string {
     return hashSync(password, 10);
   }
 
   public verifyPassword(password: string, hashedPassword: string): boolean {
     return compareSync(password, hashedPassword);
+  }
+
+  public async verifyEmail(
+    token: string,
+    transaction?: Transaction
+  ): Promise<UserAuthenticationMethod> {
+    const context = 'UserAuthenticationMethodService.verifyEmail';
+
+    // Find authentication method by token
+    const targetMethod = await this.repositories.userAuthenticationMethodRepository.findByToken(
+      token,
+      transaction
+    );
+
+    if (!targetMethod) {
+      throw new NotFoundError('Invalid or expired verification token', 'errors:auth.invalidToken');
+    }
+
+    console.log('[verifyEmail] Found method:', {
+      id: targetMethod.id,
+      userId: targetMethod.userId,
+      provider: targetMethod.provider,
+      isVerified: targetMethod.isVerified,
+      hasOtp: !!(targetMethod.providerData as Record<string, unknown>)?.otp,
+    });
+
+    // Check if already verified
+    if (targetMethod.isVerified) {
+      console.log('[verifyEmail] Method already verified:', targetMethod.id);
+      // Return success instead of error for better UX - verification was already completed
+      return validateOutput(
+        createDynamicSingleSchema(userAuthenticationMethodSchema),
+        targetMethod,
+        context
+      );
+    }
+
+    const providerData = targetMethod.providerData as Record<string, unknown>;
+    const otp = providerData.otp as Otp | undefined;
+
+    if (!otp || !otp.validUntil) {
+      console.log('[verifyEmail] Invalid OTP data:', {
+        hasOtp: !!otp,
+        hasValidUntil: !!otp?.validUntil,
+      });
+      throw new BadRequestError('Invalid verification token', 'errors:auth.invalidToken');
+    }
+
+    if (Date.now() > otp.validUntil) {
+      throw new BadRequestError('Verification token has expired', 'errors:auth.tokenExpired');
+    }
+
+    // Mark as verified and remove OTP
+    const updatedProviderData = { ...providerData };
+    delete updatedProviderData.otp;
+
+    const updatedMethod =
+      await this.repositories.userAuthenticationMethodRepository.updateUserAuthenticationMethod(
+        targetMethod.id,
+        {
+          id: targetMethod.id,
+          isVerified: true,
+          providerData: updatedProviderData,
+        },
+        transaction
+      );
+
+    console.log('[verifyEmail] Updated method:', {
+      id: updatedMethod.id,
+      isVerified: updatedMethod.isVerified,
+    });
+
+    return validateOutput(
+      createDynamicSingleSchema(userAuthenticationMethodSchema),
+      updatedMethod,
+      context
+    );
+  }
+
+  public async resendVerificationEmail(
+    email: string,
+    transaction?: Transaction
+  ): Promise<{ token: string; validUntil: number }> {
+    const context = 'UserAuthenticationMethodService.resendVerificationEmail';
+
+    validateInput(emailSchema, email, context);
+
+    const method = await this.findByProviderAndProviderId(
+      UserAuthenticationMethodProvider.Email,
+      email,
+      transaction
+    );
+
+    if (!method) {
+      throw new NotFoundError('Authentication method not found', 'errors:auth.methodNotFound');
+    }
+
+    if (method.isVerified) {
+      throw new BadRequestError('Email is already verified', 'errors:auth.alreadyVerified');
+    }
+
+    // Generate new OTP
+    const otp = this.generateOtp();
+    const providerData = (method.providerData as Record<string, unknown>) || {};
+    providerData.otp = otp;
+
+    await this.repositories.userAuthenticationMethodRepository.updateUserAuthenticationMethod(
+      method.id,
+      {
+        id: method.id,
+        providerData,
+      },
+      transaction
+    );
+
+    return otp;
   }
 }

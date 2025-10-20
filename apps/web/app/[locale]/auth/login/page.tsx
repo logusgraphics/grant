@@ -90,11 +90,11 @@ export default function LoginPage() {
                     type="email"
                     placeholder={t('login.emailPlaceholder')}
                     {...field}
-                    className={form.formState.errors.email ? 'border-red-500' : ''}
+                    className={form.formState.errors.email ? 'border-destructive' : ''}
                   />
                 </FormControl>
                 {form.formState.errors.email && (
-                  <FormMessage className="text-red-500 text-sm mt-1">
+                  <FormMessage className="text-destructive text-sm mt-1">
                     {t('login.emailError')}
                   </FormMessage>
                 )}
@@ -112,11 +112,11 @@ export default function LoginPage() {
                     disabled={isSubmitting}
                     placeholder={t('login.passwordPlaceholder')}
                     {...field}
-                    className={form.formState.errors.password ? 'border-red-500' : ''}
+                    className={form.formState.errors.password ? 'border-destructive' : ''}
                   />
                 </FormControl>
                 {form.formState.errors.password && (
-                  <FormMessage className="text-red-500 text-sm mt-1">
+                  <FormMessage className="text-destructive text-sm mt-1">
                     {t('login.passwordError')}
                   </FormMessage>
                 )}
@@ -128,7 +128,7 @@ export default function LoginPage() {
               href={{
                 pathname: `/${locale}/auth/forgot-password`,
               }}
-              className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400"
+              className="text-sm text-primary hover:text-primary/80"
             >
               {t('login.forgotPassword')}
             </Link>
@@ -144,7 +144,7 @@ export default function LoginPage() {
           href={{
             pathname: `/${locale}/auth/register`,
           }}
-          className="text-blue-600 hover:text-blue-500 dark:text-blue-400"
+          className="text-primary hover:text-primary/80"
         >
           {t('login.register')}
         </Link>

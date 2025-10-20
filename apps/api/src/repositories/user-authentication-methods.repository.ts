@@ -1,13 +1,13 @@
-import { users } from '@logusgraphics/grant-database';
 import {
-  userAuthenticationMethods,
   UserAuthenticationMethodModel,
+  userAuthenticationMethods,
+  users,
 } from '@logusgraphics/grant-database';
 import {
   CreateUserAuthenticationMethodInput,
   DeleteUserAuthenticationMethodInput,
-  UpdateUserAuthenticationMethodInput,
   GetUserAuthenticationMethodsInput,
+  UpdateUserAuthenticationMethodInput,
   User,
   UserAuthenticationMethod,
 } from '@logusgraphics/grant-schema';
@@ -16,10 +16,10 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { SelectedFields } from '@/services/common';
 
 import {
-  EntityRepository,
-  RelationsConfig,
-  FilterCondition,
   BaseUpdateArgs,
+  EntityRepository,
+  FilterCondition,
+  RelationsConfig,
 } from './common/EntityRepository';
 
 export class UserAuthenticationMethodRepository extends EntityRepository<
@@ -146,5 +146,28 @@ export class UserAuthenticationMethodRepository extends EntityRepository<
     transaction?: Transaction
   ): Promise<UserAuthenticationMethod> {
     return this.hardDelete(params, transaction);
+  }
+
+  async findByToken(
+    token: string,
+    transaction?: Transaction
+  ): Promise<UserAuthenticationMethod | null> {
+    const filters: FilterCondition<UserAuthenticationMethodModel>[] = [
+      {
+        field: 'provider_data.otp.token' as keyof UserAuthenticationMethodModel,
+        operator: 'eq',
+        value: token,
+      },
+    ];
+
+    const result = await this.query(
+      {
+        filters,
+        limit: 1,
+      },
+      transaction
+    );
+
+    return result.items[0] || null;
   }
 }

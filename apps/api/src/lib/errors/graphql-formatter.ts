@@ -16,6 +16,8 @@ import { ApiError } from './error-classes';
  *
  * The formatted error includes:
  * - extensions.code: Error code (e.g., 'UNAUTHENTICATED', 'BAD_USER_INPUT')
+ * - extensions.translationKey: i18n key for client-side translation
+ * - extensions.translationParams: Parameters for translation interpolation
  * - extensions.http.status: HTTP status code for REST compatibility
  * - extensions.*: Any additional error metadata
  */
@@ -33,6 +35,8 @@ export function formatGraphQLError(
       extensions: {
         ...formattedError.extensions,
         code: apiError.code,
+        translationKey: apiError.translationKey,
+        translationParams: apiError.translationParams,
         http: {
           status: apiError.statusCode,
         },
@@ -49,6 +53,8 @@ export function formatGraphQLError(
       extensions: {
         ...formattedError.extensions,
         code: error.code,
+        translationKey: error.translationKey,
+        translationParams: error.translationParams,
         http: {
           status: error.statusCode,
         },

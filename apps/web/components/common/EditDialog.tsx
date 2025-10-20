@@ -240,7 +240,7 @@ export function EditDialog<TFormValues extends Record<string, any>, TEntity>({
               )}
             </FormControl>
             {hasError && (
-              <FormMessage className="text-red-500 text-sm mt-1">
+              <FormMessage className="text-destructive text-sm mt-1">
                 {String(error?.message || '')}
               </FormMessage>
             )}

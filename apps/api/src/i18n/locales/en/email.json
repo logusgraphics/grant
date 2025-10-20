@@ -1,0 +1,26 @@
+{
+  "verification": {
+    "subject": "Verify your email address",
+    "greeting": "Hi there,",
+    "message": "Thank you for signing up! Please verify your email address by clicking the button below:",
+    "button": "Verify Email Address",
+    "expiresIn": "This link will expire in {{minutes}} minutes.",
+    "alternativeText": "If the button doesn't work, copy and paste this link:",
+    "footer": {
+      "noRequest": "If you didn't create an account, you can safely ignore this email.",
+      "typo": "Someone else might have typed your email address by mistake."
+    },
+    "signature": "Grant Platform"
+  },
+  "invitation": {
+    "subject": "You've been invited to {{organizationName}}",
+    "greeting": "Hi there,",
+    "message": "{{inviterName}} has invited you to join {{organizationName}} as a {{roleName}}.",
+    "button": "Accept Invitation",
+    "expiresIn": "This invitation will expire in {{days}} days.",
+    "footer": {
+      "noRequest": "If you don't recognize this invitation, you can safely ignore this email."
+    },
+    "signature": "Grant Platform"
+  }
+}

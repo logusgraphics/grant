@@ -309,7 +309,7 @@ export default function RegisterPage() {
                       {t('form.username.availability.checking')}
                     </span>
                   ) : isAvailable === true ? (
-                    <span className="text-green-600 dark:text-green-400">
+                    <span className="text-success">
                       {t('form.username.availability.available')}
                     </span>
                   ) : null}
@@ -363,12 +363,12 @@ export default function RegisterPage() {
                           className={`h-2 w-8 rounded transition-colors ${
                             passwordStrength.score >= bar * 2
                               ? passwordStrength.strength === 'weak'
-                                ? 'bg-red-500'
+                                ? 'bg-destructive'
                                 : passwordStrength.strength === 'fair'
-                                  ? 'bg-yellow-500'
+                                  ? 'bg-warning'
                                   : passwordStrength.strength === 'good'
-                                    ? 'bg-blue-500'
-                                    : 'bg-green-500'
+                                    ? 'bg-info'
+                                    : 'bg-success'
                               : 'bg-gray-200 dark:bg-gray-700'
                           }`}
                         />
@@ -377,12 +377,12 @@ export default function RegisterPage() {
                     <span
                       className={`text-sm font-medium capitalize ${
                         passwordStrength.strength === 'weak'
-                          ? 'text-red-600'
+                          ? 'text-destructive'
                           : passwordStrength.strength === 'fair'
-                            ? 'text-yellow-600'
+                            ? 'text-warning'
                             : passwordStrength.strength === 'good'
-                              ? 'text-blue-600'
-                              : 'text-green-600'
+                              ? 'text-info'
+                              : 'text-success'
                       }`}
                     >
                       {passwordStrength.strength}
@@ -399,10 +399,10 @@ export default function RegisterPage() {
                           <li
                             key={index}
                             className={`flex items-center gap-2 ${
-                              isMet ? 'text-green-600' : 'text-gray-500'
+                              isMet ? 'text-success' : 'text-gray-500'
                             }`}
                           >
-                            <span className={isMet ? 'text-green-500' : 'text-gray-400'}>
+                            <span className={isMet ? 'text-success' : 'text-gray-400'}>
                               {isMet ? '✓' : '○'}
                             </span>
                             {requirement}
@@ -439,7 +439,7 @@ export default function RegisterPage() {
         </Button>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {t('register.haveAccount')}{' '}
-          <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 dark:text-blue-400">
+          <Link href="/auth/login" className="text-primary hover:text-primary/80">
             {t('register.login')}
           </Link>
         </p>

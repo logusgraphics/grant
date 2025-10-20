@@ -9,6 +9,8 @@ export interface SendInvitationParams {
 export interface SendOtpParams {
   to: string;
   token: string;
+  validUntil: number;
+  locale?: string;
 }
 
 export interface IEmailService {

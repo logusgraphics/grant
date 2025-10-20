@@ -181,7 +181,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
               )}
             </FormControl>
             {hasError && (
-              <FormMessage className="text-red-500 text-sm mt-1">
+              <FormMessage className="text-destructive text-sm mt-1">
                 {String(error?.message || '')}
               </FormMessage>
             )}

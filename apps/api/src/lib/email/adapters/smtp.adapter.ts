@@ -70,7 +70,7 @@ export class SmtpEmailAdapter implements IEmailService {
   }
 
   async sendOtp(params: SendOtpParams): Promise<void> {
-    const subject = getOtpEmailSubject();
+    const subject = getOtpEmailSubject(params);
     const html = getOtpEmailHtml(params);
     const text = getOtpEmailText(params);
 

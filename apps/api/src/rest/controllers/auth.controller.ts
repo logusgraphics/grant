@@ -6,6 +6,8 @@ import {
   logoutRequestSchema,
   refreshSessionRequestSchema,
   registerRequestSchema,
+  resendVerificationRequestSchema,
+  verifyEmailRequestSchema,
 } from '@/rest/schemas';
 import { TypedRequest } from '@/rest/types';
 import { RequestContext } from '@/types';
@@ -61,7 +63,8 @@ export class AuthController extends BaseController {
         providerId,
         providerData,
       },
-      this.origin
+      this.origin,
+      this.context.locale
     );
 
     this.success(res, result, 201);
@@ -93,5 +96,34 @@ export class AuthController extends BaseController {
    */
   async logout(req: TypedRequest<{ body: typeof logoutRequestSchema }>, res: Response) {
     this.success(res, { message: 'Logged out successfully' });
+  }
+
+  /**
+   * Verify email endpoint
+   * POST /api/auth/verify-email
+   * Body is validated by verifyEmailRequestSchema middleware
+   */
+  async verifyEmail(req: TypedRequest<{ body: typeof verifyEmailRequestSchema }>, res: Response) {
+    const { token } = req.body;
+
+    const result = await this.handlers.accounts.verifyEmail(token);
+
+    this.success(res, result);
+  }
+
+  /**
+   * Resend verification email endpoint
+   * POST /api/auth/resend-verification
+   * Body is validated by resendVerificationRequestSchema middleware
+   */
+  async resendVerification(
+    req: TypedRequest<{ body: typeof resendVerificationRequestSchema }>,
+    res: Response
+  ) {
+    const { email } = req.body;
+
+    const result = await this.handlers.accounts.resendVerificationEmail(email, this.context.locale);
+
+    this.success(res, result);
   }
 }

@@ -2,6 +2,9 @@ mutation Register($input: RegisterInput!) {
   register(input: $input) {
     accessToken
     refreshToken
+    requiresEmailVerification
+    verificationExpiry
+    email
     account {
       id
       name

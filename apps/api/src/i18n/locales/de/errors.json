@@ -6,6 +6,8 @@
     "methodNotFound": "Authentifizierungsmethode nicht gefunden",
     "noAccount": "Benutzer hat kein Konto",
     "invalidToken": "Ungültiger oder abgelaufener Token",
+    "tokenExpired": "Verifizierungstoken ist abgelaufen",
+    "alreadyVerified": "E-Mail ist bereits verifiziert",
     "invalidRefreshToken": "Ungültiger Aktualisierungstoken",
     "invalidSession": "Sitzung ist abgelaufen",
     "sessionNotFound": "Benutzersitzung nicht gefunden",
@@ -13,7 +15,8 @@
     "forbidden": "Zugriff verboten",
     "passwordRequired": "Passwort ist erforderlich und muss eine Zeichenkette sein",
     "emailRequired": "E-Mail ist erforderlich und muss eine Zeichenkette sein",
-    "invalidAction": "Ungültige Authentifizierungsaktion"
+    "invalidAction": "Ungültige Authentifizierungsaktion",
+    "emailSendFailed": "Fehler beim Senden der Verifizierungs-E-Mail"
   },
   "validation": {
     "required": "{{field}} ist erforderlich",
