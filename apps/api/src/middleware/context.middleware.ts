@@ -1,4 +1,4 @@
-import { db } from '@logusgraphics/grant-database';
+import { DbSchema } from '@logusgraphics/grant-database';
 import { NextFunction, Response } from 'express';
 
 import { createHandlers } from '@/handlers';
@@ -7,11 +7,7 @@ import { createRepositories } from '@/repositories';
 import { createServices } from '@/services';
 import { AuthenticatedRequest, ContextRequest } from '@/types';
 
-/**
- * Middleware that creates and injects the request context
- * Should be used after authMiddleware to get the user
- */
-export function contextMiddleware(scopeCache: IEntityCacheAdapter) {
+export function contextMiddleware(db: DbSchema, scopeCache: IEntityCacheAdapter) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const headers = req.headers;
     const origin = headers['origin'] || headers['host'];

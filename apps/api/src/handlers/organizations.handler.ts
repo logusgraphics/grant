@@ -1,3 +1,4 @@
+import { StandardRoleName } from '@logusgraphics/grant-constants';
 import { DbSchema } from '@logusgraphics/grant-database';
 import {
   MutationCreateOrganizationArgs,
@@ -49,23 +50,19 @@ export class OrganizationHandler extends ScopeHandler {
       const { input } = params;
       const { name } = input;
 
-      // 1. Create organization
       const organization = await this.services.organizations.createOrganization({ name }, tx);
 
-      // 2. Seed standard roles (owner, admin, dev, viewer)
       const seededRoles = await this.services.organizationRoles.seedOrganizationRoles(
         organization.id,
         tx
       );
 
-      // 3. Add current user to organization_users
       await this.services.organizationUsers.addOrganizationUser(
         { organizationId: organization.id, userId },
         tx
       );
 
-      // 4. Assign owner role to current user
-      const ownerRole = seededRoles.find((r) => r.role.name === 'owner');
+      const ownerRole = seededRoles.find((r) => r.role.name === StandardRoleName.Owner);
       if (ownerRole) {
         await this.services.userRoles.addUserRole({ userId, roleId: ownerRole.role.id }, tx);
       }

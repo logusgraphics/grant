@@ -5,20 +5,13 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { expressMiddleware } from '@as-integrations/express5';
+import { closeDatabase, initializeDatabase } from '@logusgraphics/grant-database';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 
-import {
-  APOLLO_CONFIG,
-  CORS_CONFIG,
-  HELMET_CONFIG,
-  SERVER_CONFIG,
-  config,
-  printConfigSummary,
-  validateConfig,
-} from '@/config';
+import { config, printConfigSummary, validateConfig } from '@/config';
 import { schema } from '@/graphql/resolvers';
 import { GraphqlContext } from '@/graphql/types';
 import { CacheFactory } from '@/lib/cache/cache.factory';
@@ -30,17 +23,23 @@ import { generateOpenApiDocument } from '@/rest/openapi';
 import { ContextRequest } from '@/types';
 
 async function startServer() {
-  // Validate configuration before starting
   validateConfig();
   printConfigSummary();
+
+  const db = initializeDatabase({
+    connectionString: config.db.url,
+    max: config.db.poolMax,
+    idleTimeout: config.db.idleTimeout,
+    connectTimeout: config.db.connectionTimeout,
+  });
 
   const app = express();
   const httpServer = http.createServer(app);
 
-  const server = new ApolloServer<GraphqlContext>({
+  const apolloServer = new ApolloServer<GraphqlContext>({
     schema,
-    introspection: APOLLO_CONFIG.introspection,
-    csrfPrevention: APOLLO_CONFIG.csrfPrevention,
+    introspection: config.apollo.introspection,
+    csrfPrevention: config.apollo.csrfPrevention,
     formatError: formatGraphQLError,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
@@ -49,10 +48,8 @@ async function startServer() {
     ],
   });
 
-  await server.start();
+  await apolloServer.start();
 
-  // Centralized scope cache - shared between GraphQL and REST APIs
-  // Factory creates the appropriate adapter based on CACHE_STRATEGY env variable
   const scopeCache = CacheFactory.createEntityCache({
     strategy: config.cache.strategy,
     redis:
@@ -65,63 +62,32 @@ async function startServer() {
         : undefined,
   });
 
-  // Apply CORS and security middleware
-  app.use(cors<cors.CorsRequest>(CORS_CONFIG));
-  app.use(helmet(HELMET_CONFIG));
+  app.use(cors<cors.CorsRequest>(config.cors));
+  app.use(helmet(config.helmet));
   app.use(express.json());
 
-  // Generate OpenAPI documentation
   const openApiDocument = generateOpenApiDocument();
 
-  // Swagger UI endpoint - serve API documentation
-  app.use(
-    '/api-docs',
-    swaggerUi.serve,
-    swaggerUi.setup(openApiDocument, {
-      customSiteTitle: 'Grant Platform API Docs',
-      customCss: '.swagger-ui .topbar { display: none }',
-      swaggerOptions: {
-        persistAuthorization: true,
-        displayRequestDuration: true,
-        filter: true,
-        tryItOutEnabled: true,
-        // Improve schema display
-        defaultModelsExpandDepth: 3, // Expand models to show nested structure
-        defaultModelExpandDepth: 3, // Expand individual model properties
-        docExpansion: 'list', // Show operations list expanded
-        deepLinking: true, // Enable deep linking for sharing
-        displayOperationId: false,
-        // Show request body examples prominently
-        syntaxHighlight: {
-          activate: true,
-          theme: 'monokai',
-        },
-        // Show full request/response information
-        showExtensions: true,
-        showCommonExtensions: true,
-      },
-    })
-  );
+  if (config.swagger.enabled) {
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument, config.swaggerSetup));
+  }
 
-  // OpenAPI JSON endpoint - serve raw spec
   app.get('/api-docs.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(openApiDocument);
   });
 
-  // REST API routes
-  app.use('/api', authMiddleware, contextMiddleware(scopeCache), (req, res, next) => {
+  app.use('/api', authMiddleware, contextMiddleware(db, scopeCache), (req, res, next) => {
     const contextReq = req as ContextRequest;
     const restRouter = createRestRouter(contextReq.context);
     restRouter(req, res, next);
   });
 
-  // GraphQL endpoint
   app.use(
     '/graphql',
     authMiddleware,
-    contextMiddleware(scopeCache),
-    expressMiddleware(server, {
+    contextMiddleware(db, scopeCache),
+    expressMiddleware(apolloServer, {
       context: async ({ req }: { req: express.Request }) => {
         const contextReq = req as ContextRequest;
         return contextReq.context;
@@ -129,28 +95,26 @@ async function startServer() {
     })
   );
 
-  // Health check endpoint
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  await new Promise<void>((resolve) => httpServer.listen({ port: SERVER_CONFIG.port }, resolve));
+  await new Promise<void>((resolve) => httpServer.listen({ port: config.app.port }, resolve));
 
-  console.log(`🚀 Apollo Server ready at http://localhost:${SERVER_CONFIG.port}/graphql`);
-  console.log(`🌐 REST API ready at http://localhost:${SERVER_CONFIG.port}/api`);
-  console.log(`📚 API Documentation at http://localhost:${SERVER_CONFIG.port}/api-docs`);
-  console.log(`📄 OpenAPI Spec at http://localhost:${SERVER_CONFIG.port}/api-docs.json`);
-  console.log(`📊 Health check available at http://localhost:${SERVER_CONFIG.port}/health`);
+  console.log(`🚀 Apollo Server ready at http://localhost:${config.app.port}/graphql`);
+  console.log(`🌐 REST API ready at http://localhost:${config.app.port}/api`);
+  if (config.swagger.enabled) {
+    console.log(`📚 API Documentation at http://localhost:${config.app.port}/api-docs`);
+    console.log(`📄 OpenAPI Spec at http://localhost:${config.app.port}/api-docs.json`);
+  }
+  console.log(`📊 Health check available at http://localhost:${config.app.port}/health`);
 
-  // Graceful shutdown
   const gracefulShutdown = async (signal: string) => {
     console.log(`\n${signal} received. Starting graceful shutdown...`);
 
-    // Close HTTP server
     httpServer.close(async () => {
       console.log('HTTP server closed');
 
-      // Disconnect cache
       try {
         await CacheFactory.disconnect(scopeCache);
         console.log('Cache disconnected');
@@ -158,10 +122,15 @@ async function startServer() {
         console.error('Error disconnecting cache:', error);
       }
 
+      try {
+        await closeDatabase();
+      } catch (error) {
+        console.error('Error closing database:', error);
+      }
+
       process.exit(0);
     });
 
-    // Force shutdown after 30 seconds
     setTimeout(() => {
       console.error('Forced shutdown after timeout');
       process.exit(1);

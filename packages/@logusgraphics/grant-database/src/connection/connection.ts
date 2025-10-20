@@ -1,34 +1,74 @@
-import * as dotenv from 'dotenv';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import postgres, { Sql } from 'postgres';
 
 import { schema } from '../schemas';
 
-dotenv.config();
+export type DbSchema = PostgresJsDatabase<typeof schema>;
 
-// Support both DATABASE_URL (legacy) and DB_URL (new standard)
-const connectionString = `${process.env.DB_URL || process.env.DATABASE_URL}`;
+interface DatabaseConnection {
+  db: DbSchema;
+  client: Sql;
+}
 
-const client = postgres(connectionString, {
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-});
+let connection: DatabaseConnection | null = null;
 
-export const db = drizzle(client, {
-  schema,
-});
+export interface DatabaseConfig {
+  connectionString: string;
+  max?: number;
+  idleTimeout?: number;
+  connectTimeout?: number;
+}
 
-export type DbSchema = typeof db;
+export function initializeDatabase(config: DatabaseConfig): DbSchema {
+  if (connection) {
+    console.warn('Database connection already initialized. Returning existing connection.');
+    return connection.db;
+  }
 
-process.on('SIGINT', async () => {
-  console.log('Closing database connections...');
-  await client.end();
-  process.exit(0);
-});
+  if (!config.connectionString) {
+    throw new Error('Database connection string is required');
+  }
 
-process.on('SIGTERM', async () => {
-  console.log('Closing database connections...');
-  await client.end();
-  process.exit(0);
-});
+  const connectionString = config.connectionString;
+
+  const client = postgres(connectionString, {
+    max: config?.max ?? 10,
+    idle_timeout: config?.idleTimeout ?? 20,
+    connect_timeout: config?.connectTimeout ?? 10,
+  });
+
+  const db = drizzle(client, { schema });
+
+  connection = { db, client };
+
+  console.log('✅ Database connection initialized');
+
+  return db;
+}
+
+export async function closeDatabase(): Promise<void> {
+  if (!connection) {
+    console.warn('No database connection to close');
+    return;
+  }
+
+  try {
+    await connection.client.end();
+    connection = null;
+    console.log('✅ Database connection closed');
+  } catch (error) {
+    console.error('Error closing database connection:', error);
+    throw error;
+  }
+}
+
+export function getDatabase(): DbSchema {
+  if (!connection) {
+    throw new Error('Database not initialized. Call initializeDatabase() first.');
+  }
+  return connection.db;
+}
+
+export function isDatabaseInitialized(): boolean {
+  return connection !== null;
+}

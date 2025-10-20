@@ -101,8 +101,11 @@ export const DB_CONFIG = {
   /** Minimum number of connections in the pool */
   poolMin: getEnvNumber('DB_POOL_MIN', 2),
 
-  /** Connection timeout in milliseconds */
-  connectionTimeout: getEnvNumber('DB_CONNECTION_TIMEOUT', 30000),
+  /** Connection timeout in seconds */
+  connectionTimeout: getEnvNumber('DB_CONNECTION_TIMEOUT', 30),
+
+  /** Idle timeout in seconds - how long a connection can be idle before being closed */
+  idleTimeout: getEnvNumber('DB_IDLE_TIMEOUT', 20),
 
   /** Query timeout in milliseconds */
   queryTimeout: getEnvNumber('DB_QUERY_TIMEOUT', 60000),
@@ -240,6 +243,58 @@ export const APOLLO_CONFIG = {
 
   /** Include stack traces in errors */
   includeStacktrace: getEnvBoolean('APOLLO_INCLUDE_STACKTRACE', APP_CONFIG.isDevelopment),
+} as const;
+
+// ============================================================================
+// Swagger/OpenAPI Configuration
+// ============================================================================
+
+export const SWAGGER_CONFIG = {
+  /** Enable Swagger UI documentation */
+  enabled: getEnvBoolean('SWAGGER_ENABLED', true),
+
+  /** Custom site title for Swagger UI */
+  siteTitle: getEnv('SWAGGER_SITE_TITLE', 'Grant Platform API Docs'),
+
+  /** Persist authorization between page refreshes */
+  persistAuthorization: getEnvBoolean('SWAGGER_PERSIST_AUTHORIZATION', true),
+
+  /** Display request duration in responses */
+  displayRequestDuration: getEnvBoolean('SWAGGER_DISPLAY_REQUEST_DURATION', true),
+
+  /** Enable filter/search in operations */
+  filter: getEnvBoolean('SWAGGER_FILTER', true),
+
+  /** Enable "Try it out" by default */
+  tryItOutEnabled: getEnvBoolean('SWAGGER_TRY_IT_OUT_ENABLED', true),
+
+  /** Depth to expand models/schemas */
+  modelsExpandDepth: getEnvNumber('SWAGGER_MODELS_EXPAND_DEPTH', 3),
+
+  /** Depth to expand individual model properties */
+  modelExpandDepth: getEnvNumber('SWAGGER_MODEL_EXPAND_DEPTH', 3),
+
+  /** Documentation expansion: 'list' | 'full' | 'none' */
+  docExpansion: getEnvEnum('SWAGGER_DOC_EXPANSION', ['list', 'full', 'none'] as const, 'list'),
+
+  /** Enable deep linking for sharing */
+  deepLinking: getEnvBoolean('SWAGGER_DEEP_LINKING', true),
+
+  /** Display operation IDs */
+  displayOperationId: getEnvBoolean('SWAGGER_DISPLAY_OPERATION_ID', false),
+
+  /** Syntax highlighting theme: 'agate' | 'arta' | 'monokai' | 'nord' | 'obsidian' | 'tomorrow-night' */
+  syntaxTheme: getEnvEnum(
+    'SWAGGER_SYNTAX_THEME',
+    ['agate', 'arta', 'monokai', 'nord', 'obsidian', 'tomorrow-night'] as const,
+    'monokai'
+  ),
+
+  /** Show extensions */
+  showExtensions: getEnvBoolean('SWAGGER_SHOW_EXTENSIONS', true),
+
+  /** Show common extensions */
+  showCommonExtensions: getEnvBoolean('SWAGGER_SHOW_COMMON_EXTENSIONS', true),
 } as const;
 
 // ============================================================================
@@ -390,29 +445,12 @@ export function printConfigSummary(): void {
   console.log('');
 }
 
-// Export all configurations as a single object
-export const config = {
-  app: APP_CONFIG,
-  db: DB_CONFIG,
-  jwt: JWT_CONFIG,
-  auth: AUTH_CONFIG,
-  cache: CACHE_CONFIG,
-  redis: REDIS_CONFIG,
-  security: SECURITY_CONFIG,
-  apollo: APOLLO_CONFIG,
-  email: EMAIL_CONFIG,
-  system: SYSTEM_CONSTANTS,
-} as const;
-
-// Export type for TypeScript consumers
-export type Config = typeof config;
-
 // ============================================================================
-// Helper Objects for Express/Apollo Middleware
+// Middleware Configuration (Computed from other configs)
 // ============================================================================
 
 /** CORS configuration for Express middleware */
-export const CORS_CONFIG = {
+const CORS_CONFIG = {
   origin: APP_CONFIG.isProduction
     ? SECURITY_CONFIG.frontendUrl
     : [
@@ -426,12 +464,54 @@ export const CORS_CONFIG = {
 } as const;
 
 /** Helmet security headers configuration */
-export const HELMET_CONFIG = {
+const HELMET_CONFIG = {
   contentSecurityPolicy: APP_CONFIG.isProduction ? undefined : false,
 } as const;
 
-/** Server configuration */
-export const SERVER_CONFIG = {
-  port: APP_CONFIG.port,
-  nodeEnv: APP_CONFIG.nodeEnv,
+/** Swagger UI setup configuration (computed from SWAGGER_CONFIG) */
+const SWAGGER_UI_SETUP_CONFIG = {
+  customSiteTitle: SWAGGER_CONFIG.siteTitle,
+  customCss: '.swagger-ui .topbar { display: none }',
+  swaggerOptions: {
+    persistAuthorization: SWAGGER_CONFIG.persistAuthorization,
+    displayRequestDuration: SWAGGER_CONFIG.displayRequestDuration,
+    filter: SWAGGER_CONFIG.filter,
+    tryItOutEnabled: SWAGGER_CONFIG.tryItOutEnabled,
+    defaultModelsExpandDepth: SWAGGER_CONFIG.modelsExpandDepth,
+    defaultModelExpandDepth: SWAGGER_CONFIG.modelExpandDepth,
+    docExpansion: SWAGGER_CONFIG.docExpansion,
+    deepLinking: SWAGGER_CONFIG.deepLinking,
+    displayOperationId: SWAGGER_CONFIG.displayOperationId,
+    syntaxHighlight: {
+      activate: true,
+      theme: SWAGGER_CONFIG.syntaxTheme,
+    },
+    showExtensions: SWAGGER_CONFIG.showExtensions,
+    showCommonExtensions: SWAGGER_CONFIG.showCommonExtensions,
+  },
 } as const;
+
+// ============================================================================
+// Unified Configuration Export
+// ============================================================================
+
+// Export all configurations as a single object
+export const config = {
+  app: APP_CONFIG,
+  db: DB_CONFIG,
+  jwt: JWT_CONFIG,
+  auth: AUTH_CONFIG,
+  cache: CACHE_CONFIG,
+  redis: REDIS_CONFIG,
+  security: SECURITY_CONFIG,
+  apollo: APOLLO_CONFIG,
+  swagger: SWAGGER_CONFIG,
+  swaggerSetup: SWAGGER_UI_SETUP_CONFIG,
+  email: EMAIL_CONFIG,
+  system: SYSTEM_CONSTANTS,
+  cors: CORS_CONFIG,
+  helmet: HELMET_CONFIG,
+} as const;
+
+// Export type for TypeScript consumers
+export type Config = typeof config;

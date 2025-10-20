@@ -1,3 +1,4 @@
+import { STANDARD_ROLES } from '@logusgraphics/grant-constants';
 import { DbSchema, organizationRolesAuditLogs } from '@logusgraphics/grant-database';
 import {
   AddOrganizationRoleInput,
@@ -194,10 +195,6 @@ export class OrganizationRoleService extends AuditService {
     );
   }
 
-  /**
-   * Seed standard organization roles (owner, admin, dev, viewer)
-   * This is called when a new organization is created
-   */
   public async seedOrganizationRoles(
     organizationId: string,
     transaction?: Transaction
@@ -206,29 +203,9 @@ export class OrganizationRoleService extends AuditService {
 
     await this.organizationExists(organizationId, transaction);
 
-    const standardRoles = [
-      {
-        name: 'owner',
-        description: 'Full control over the organization and all its resources',
-      },
-      {
-        name: 'admin',
-        description: 'Administrative access to manage organization settings and members',
-      },
-      {
-        name: 'dev',
-        description: 'Developer access to manage projects and resources',
-      },
-      {
-        name: 'viewer',
-        description: 'Read-only access to organization resources',
-      },
-    ];
-
     const results = [];
 
-    for (const roleData of standardRoles) {
-      // Create the role
+    for (const roleData of STANDARD_ROLES) {
       const role = await this.repositories.roleRepository.createRole(
         {
           name: roleData.name,
@@ -237,7 +214,6 @@ export class OrganizationRoleService extends AuditService {
         transaction
       );
 
-      // Associate role with organization
       const organizationRole =
         await this.repositories.organizationRoleRepository.addOrganizationRole(
           {
@@ -247,7 +223,6 @@ export class OrganizationRoleService extends AuditService {
           transaction
         );
 
-      // Log the creation
       const newValues = {
         id: organizationRole.id,
         organizationId: organizationRole.organizationId,

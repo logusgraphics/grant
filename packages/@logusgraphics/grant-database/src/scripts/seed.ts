@@ -1,14 +1,27 @@
 #!/usr/bin/env tsx
 
+import * as dotenv from 'dotenv';
 import { seed } from 'drizzle-seed';
 
-import { db } from '@/connection';
+import { closeDatabase, initializeDatabase } from '@/connection';
 import { roles, users } from '@/schemas';
+
+// Load environment variables
+dotenv.config();
 
 async function main() {
   console.log('🌱 Starting database seeding...');
 
   try {
+    // Initialize database connection
+    const connectionString = process.env.DB_URL;
+    if (!connectionString) {
+      console.error('❌ Error: DB_URL environment variable is required');
+      process.exit(1);
+    }
+
+    const db = initializeDatabase({ connectionString });
+
     // Check if data already exists
     const existingUsers = await db.select().from(users).limit(1);
     const existingRoles = await db.select().from(roles).limit(1);
@@ -25,7 +38,7 @@ async function main() {
 
     // Seed users first (no dependencies)
     console.log('📝 Seeding users...');
-    await seed(db as any, { users }).refine((f) => ({
+    await seed(db, { users }).refine((f) => ({
       users: {
         count: 50,
         columns: {
@@ -39,7 +52,7 @@ async function main() {
 
     // Seed roles
     console.log('🎭 Seeding roles...');
-    await seed(db as any, { roles }).refine((f) => ({
+    await seed(db, { roles }).refine((f) => ({
       roles: {
         count: 10,
         columns: {
@@ -74,6 +87,9 @@ async function main() {
   } catch (error) {
     console.error('❌ Error during seeding:', error);
     process.exit(1);
+  } finally {
+    // Close database connection
+    await closeDatabase();
   }
 }
 
