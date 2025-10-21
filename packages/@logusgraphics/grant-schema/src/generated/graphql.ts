@@ -307,7 +307,8 @@ export type DeleteUserSessionInput = {
 };
 
 export type GetUserAuthenticationMethodsInput = {
-  userId: Scalars['ID']['input'];
+  provider?: InputMaybe<UserAuthenticationMethodProvider>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type GetUserSessionsInput = {
@@ -440,7 +441,9 @@ export type Mutation = {
   login: LoginResponse;
   refreshSession: RefreshSessionResponse;
   register: CreateAccountResult;
+  requestPasswordReset: RequestPasswordResetResponse;
   resendVerification: ResendVerificationResponse;
+  resetPassword: ResetPasswordResponse;
   revokeInvitation: OrganizationInvitation;
   updateAccount: Account;
   updateGroup: Group;
@@ -540,8 +543,16 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationRequestPasswordResetArgs = {
+  input: RequestPasswordResetInput;
+};
+
 export type MutationResendVerificationArgs = {
   input: ResendVerificationInput;
+};
+
+export type MutationResetPasswordArgs = {
+  input: ResetPasswordInput;
 };
 
 export type MutationRevokeInvitationArgs = {
@@ -1132,6 +1143,17 @@ export type RemoveUserTagInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type RequestPasswordResetInput = {
+  email: Scalars['String']['input'];
+};
+
+export type RequestPasswordResetResponse = {
+  __typename?: 'RequestPasswordResetResponse';
+  message: Scalars['String']['output'];
+  messageKey: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type ResendVerificationInput = {
   email: Scalars['String']['input'];
 };
@@ -1140,6 +1162,18 @@ export type ResendVerificationResponse = {
   __typename?: 'ResendVerificationResponse';
   message: Scalars['String']['output'];
   messageKey?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type ResetPasswordInput = {
+  newPassword: Scalars['String']['input'];
+  token: Scalars['String']['input'];
+};
+
+export type ResetPasswordResponse = {
+  __typename?: 'ResetPasswordResponse';
+  message: Scalars['String']['output'];
+  messageKey: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
 };
 
@@ -1604,6 +1638,20 @@ export type RegisterMutation = {
   };
 };
 
+export type RequestPasswordResetMutationVariables = Exact<{
+  input: RequestPasswordResetInput;
+}>;
+
+export type RequestPasswordResetMutation = {
+  __typename?: 'Mutation';
+  requestPasswordReset: {
+    __typename?: 'RequestPasswordResetResponse';
+    success: boolean;
+    message: string;
+    messageKey: string;
+  };
+};
+
 export type ResendVerificationMutationVariables = Exact<{
   input: ResendVerificationInput;
 }>;
@@ -1614,6 +1662,20 @@ export type ResendVerificationMutation = {
     __typename?: 'ResendVerificationResponse';
     success: boolean;
     message: string;
+  };
+};
+
+export type ResetPasswordMutationVariables = Exact<{
+  input: ResetPasswordInput;
+}>;
+
+export type ResetPasswordMutation = {
+  __typename?: 'Mutation';
+  resetPassword: {
+    __typename?: 'ResetPasswordResponse';
+    success: boolean;
+    message: string;
+    messageKey: string;
   };
 };
 
@@ -2542,6 +2604,50 @@ export const RegisterDocument = {
     },
   ],
 } as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
+export const RequestPasswordResetDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RequestPasswordReset' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'RequestPasswordResetInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'requestPasswordReset' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'messageKey' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RequestPasswordResetMutation, RequestPasswordResetMutationVariables>;
 export const ResendVerificationDocument = {
   kind: 'Document',
   definitions: [
@@ -2585,6 +2691,50 @@ export const ResendVerificationDocument = {
     },
   ],
 } as unknown as DocumentNode<ResendVerificationMutation, ResendVerificationMutationVariables>;
+export const ResetPasswordDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ResetPassword' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ResetPasswordInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resetPassword' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'messageKey' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ResetPasswordMutation, ResetPasswordMutationVariables>;
 export const VerifyEmailDocument = {
   kind: 'Document',
   definitions: [

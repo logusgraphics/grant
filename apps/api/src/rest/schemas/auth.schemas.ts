@@ -138,3 +138,43 @@ export const resendVerificationResponseSchema = createSuccessResponseSchema(
   resendVerificationResultSchema,
   'Successfully resent verification email'
 );
+
+export const requestPasswordResetRequestSchema = z.object({
+  email: z.string().email('Invalid email address').openapi({
+    description: 'Email address to send password reset link to',
+    example: 'user@example.com',
+  }),
+});
+
+export const requestPasswordResetResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  messageKey: z.string(),
+});
+
+export const requestPasswordResetResponseSchema = createSuccessResponseSchema(
+  requestPasswordResetResultSchema,
+  'Successfully sent password reset email'
+);
+
+export const resetPasswordRequestSchema = z.object({
+  token: z.string().min(1, 'Token is required').openapi({
+    description: 'Password reset token from email',
+    example: 'abc123def456...',
+  }),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters').openapi({
+    description: 'New password for the account',
+    example: 'NewSecurePassword123!',
+  }),
+});
+
+export const resetPasswordResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  messageKey: z.string(),
+});
+
+export const resetPasswordResponseSchema = createSuccessResponseSchema(
+  resetPasswordResultSchema,
+  'Successfully reset password'
+);

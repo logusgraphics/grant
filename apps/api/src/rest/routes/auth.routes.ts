@@ -7,7 +7,9 @@ import {
   logoutRequestSchema,
   refreshSessionRequestSchema,
   registerRequestSchema,
+  requestPasswordResetRequestSchema,
   resendVerificationRequestSchema,
+  resetPasswordRequestSchema,
   verifyEmailRequestSchema,
 } from '@/rest/schemas';
 import { TypedRequest } from '@/rest/types';
@@ -43,6 +45,23 @@ export function createAuthRoutes(context: RequestContext) {
   router.post('/resend-verification', validateBody(resendVerificationRequestSchema), (req, res) =>
     authController.resendVerification(
       req as TypedRequest<{ body: typeof resendVerificationRequestSchema }>,
+      res
+    )
+  );
+
+  router.post(
+    '/request-password-reset',
+    validateBody(requestPasswordResetRequestSchema),
+    (req, res) =>
+      authController.requestPasswordReset(
+        req as TypedRequest<{ body: typeof requestPasswordResetRequestSchema }>,
+        res
+      )
+  );
+
+  router.post('/reset-password', validateBody(resetPasswordRequestSchema), (req, res) =>
+    authController.resetPassword(
+      req as TypedRequest<{ body: typeof resetPasswordRequestSchema }>,
       res
     )
   );

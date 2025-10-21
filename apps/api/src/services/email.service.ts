@@ -74,4 +74,16 @@ export class EmailService {
   }): Promise<void> {
     return this.emailAdapter.sendOtp(params);
   }
+
+  /**
+   * Send a password reset email
+   */
+  public async sendPasswordReset(params: {
+    to: string;
+    token: string;
+    validUntil: number;
+    locale?: string;
+  }): Promise<void> {
+    return this.emailAdapter.sendPasswordReset(params);
+  }
 }

@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto';
-
 import { DbSchema, userAuthenticationMethodsAuditLogs } from '@logusgraphics/grant-database';
 import {
   CreateUserAuthenticationMethodInput,
@@ -14,6 +12,7 @@ import { compareSync, hashSync } from 'bcrypt';
 
 import { config } from '@/config';
 import { BadRequestError, ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
+import { generateSecureToken, isTokenValid, type Token } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { Repositories } from '@/repositories';
 import { AuthenticatedUser } from '@/types';
@@ -42,10 +41,7 @@ interface ProcessedProvider {
   isVerified: boolean;
 }
 
-export interface Otp {
-  token: string;
-  validUntil: number;
-}
+export type Otp = Token;
 
 export class UserAuthenticationMethodService extends AuditService {
   constructor(
@@ -70,14 +66,14 @@ export class UserAuthenticationMethodService extends AuditService {
   public async getUserAuthenticationMethodByProvider(
     provider: UserAuthenticationMethodProvider,
     providerId: string,
-    providerData?: Record<string, unknown>,
+    requestedFields?: string[],
     transaction?: Transaction
   ): Promise<UserAuthenticationMethod | null> {
     const method =
       await this.repositories.userAuthenticationMethodRepository.findByProviderAndProviderId(
         provider,
         providerId,
-        providerData,
+        undefined,
         transaction
       );
 
@@ -421,9 +417,11 @@ export class UserAuthenticationMethodService extends AuditService {
   }
 
   public generateOtp(): Otp {
-    const token = randomBytes(32).toString('hex');
-    const validUntil = Date.now() + 1000 * 60 * config.auth.otpValidityMinutes;
-    return { token, validUntil };
+    return generateSecureToken(config.auth.otpValidityMinutes);
+  }
+
+  public generatePasswordResetOtp(): Otp {
+    return generateSecureToken(config.auth.passwordResetOtpValidityMinutes);
   }
 
   public hashPassword(password: string): string {
@@ -460,11 +458,11 @@ export class UserAuthenticationMethodService extends AuditService {
     const providerData = targetMethod.providerData as Record<string, unknown>;
     const otp = providerData.otp as Otp | undefined;
 
-    if (!otp || !otp.validUntil) {
+    if (!otp) {
       throw new BadRequestError('Invalid verification token', 'errors:auth.invalidToken');
     }
 
-    if (Date.now() > otp.validUntil) {
+    if (!isTokenValid(otp)) {
       throw new BadRequestError('Verification token has expired', 'errors:auth.tokenExpired');
     }
 
@@ -525,5 +523,108 @@ export class UserAuthenticationMethodService extends AuditService {
     );
 
     return otp;
+  }
+
+  public async requestPasswordReset(email: string, transaction?: Transaction): Promise<Otp | null> {
+    const method = await this.getUserAuthenticationMethodByProvider(
+      UserAuthenticationMethodProvider.Email,
+      email,
+      undefined,
+      transaction
+    );
+
+    if (!method) {
+      return null;
+    }
+
+    if (method.provider !== UserAuthenticationMethodProvider.Email) {
+      return null;
+    }
+
+    const otp = this.generatePasswordResetOtp();
+
+    const providerData = (method.providerData as Record<string, unknown>) || {};
+    providerData.passwordResetOtp = otp;
+
+    await this.repositories.userAuthenticationMethodRepository.updateUserAuthenticationMethod(
+      method.id,
+      {
+        id: method.id,
+        providerData,
+      },
+      transaction
+    );
+
+    return otp;
+  }
+
+  public async resetPassword(
+    token: string,
+    newPassword: string,
+    transaction?: Transaction
+  ): Promise<string | null> {
+    validateInput(passwordPolicySchema, newPassword, 'password');
+
+    const methods =
+      await this.repositories.userAuthenticationMethodRepository.getUserAuthenticationMethods(
+        {
+          provider: UserAuthenticationMethodProvider.Email,
+          requestedFields: ['id', 'userId', 'providerData'],
+        },
+        transaction
+      );
+
+    let targetMethod: UserAuthenticationMethod | null = null;
+    let targetUserId: string | null = null;
+
+    for (const method of methods) {
+      const providerData = method.providerData as Record<string, unknown>;
+      const otp = providerData?.passwordResetOtp as Otp | undefined;
+
+      if (otp && otp.token === token && isTokenValid(otp)) {
+        targetMethod = method;
+        targetUserId = method.userId;
+        break;
+      }
+    }
+
+    if (!targetMethod || !targetUserId) {
+      return null;
+    }
+
+    const hashedPassword = this.hashPassword(newPassword);
+
+    const providerData = (targetMethod.providerData as Record<string, unknown>) || {};
+    providerData.hashedPassword = hashedPassword;
+
+    delete providerData.passwordResetOtp;
+
+    await this.repositories.userAuthenticationMethodRepository.updateUserAuthenticationMethod(
+      targetMethod.id,
+      {
+        id: targetMethod.id,
+        providerData,
+      },
+      transaction
+    );
+
+    return targetUserId;
+  }
+
+  public async invalidateAllUserSessions(userId: string, transaction?: Transaction): Promise<void> {
+    const sessions = await this.repositories.userSessionRepository.getUserSessions(
+      {
+        userId,
+        requestedFields: ['id'],
+      },
+      transaction
+    );
+
+    for (const session of sessions.userSessions) {
+      await this.repositories.userSessionRepository.softDeleteUserSession(
+        { id: session.id },
+        transaction
+      );
+    }
   }
 }

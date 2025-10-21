@@ -19,6 +19,7 @@ export { FullPageLoader } from './FullPageLoader';
 export { Limit, type LimitProps } from './Limit';
 export { Logo } from './Logo';
 export { Pagination, type PaginationProps } from './Pagination';
+export { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 export { ScrollBadges, type BadgeItem } from './ScrollBadges';
 export { Search, type SearchProps } from './Search';
 export { Sorter, type SortInput, type SortableFieldConfig, type SorterProps } from './Sorter';

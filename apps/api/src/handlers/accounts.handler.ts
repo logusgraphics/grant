@@ -11,7 +11,9 @@ import {
   MutationUpdateAccountArgs,
   QueryAccountsArgs,
   RefreshSessionResponse,
+  RequestPasswordResetResponse,
   ResendVerificationResponse,
+  ResetPasswordResponse,
   SortOrder,
   UserAuthenticationMethodProvider,
   UserSessionSortableField,
@@ -344,6 +346,79 @@ export class AccountHandler extends ScopeHandler {
         success: true,
         message: translateStatic('common:success.verificationEmailSent', locale),
         messageKey: 'common:success.verificationEmailSent',
+      };
+    });
+  }
+
+  public async requestPasswordReset(
+    email: string,
+    locale?: SupportedLocale
+  ): Promise<RequestPasswordResetResponse> {
+    return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      const otp = await this.services.userAuthenticationMethods.requestPasswordReset(email, tx);
+
+      if (!otp) {
+        return {
+          success: true,
+          message: translateStatic('common:success.passwordResetEmailSent', locale),
+          messageKey: 'common:success.passwordResetEmailSent',
+        };
+      }
+
+      try {
+        await this.services.email.sendPasswordReset({
+          to: email,
+          token: otp.token,
+          validUntil: otp.validUntil,
+          locale,
+        });
+      } catch (error) {
+        console.error('Error sending password reset email', error);
+        throw new AuthenticationError(
+          'Failed to send password reset email',
+          'errors:auth.emailSendFailed'
+        );
+      }
+
+      return {
+        success: true,
+        message: translateStatic('common:success.passwordResetEmailSent', locale),
+        messageKey: 'common:success.passwordResetEmailSent',
+      };
+    });
+  }
+
+  public async resetPassword(
+    token: string,
+    newPassword: string,
+    locale?: SupportedLocale
+  ): Promise<ResetPasswordResponse> {
+    return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      const userId = await this.services.userAuthenticationMethods.resetPassword(
+        token,
+        newPassword,
+        tx
+      );
+
+      if (!userId) {
+        throw new AuthenticationError('Invalid or expired token', 'errors:auth.invalidToken');
+      }
+
+      await this.services.userAuthenticationMethods.invalidateAllUserSessions(userId, tx);
+
+      // Send password change confirmation email
+      try {
+        // TODO: Implement password change confirmation email
+        // await this.services.email.sendPasswordChangeConfirmation({ to: email, locale });
+      } catch (error) {
+        console.error('Error sending password change confirmation email', error);
+        // Don't throw - password reset succeeded, confirmation email is optional
+      }
+
+      return {
+        success: true,
+        message: translateStatic('common:success.passwordReset', locale),
+        messageKey: 'common:success.passwordReset',
       };
     });
   }

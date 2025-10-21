@@ -1,5 +1,3 @@
-import crypto from 'crypto';
-
 import { DbSchema } from '@logusgraphics/grant-database';
 import {
   AcceptInvitationInput,
@@ -15,6 +13,7 @@ import {
 
 import { config } from '@/config';
 import { BadRequestError, ConflictError, NotFoundError } from '@/lib/errors';
+import { generateSecureTokenMs } from '@/lib/token.lib';
 import { Transaction, TransactionManager } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 
@@ -101,8 +100,8 @@ export class OrganizationInvitationsHandler {
       const role = roles.roles[0];
 
       // 6. Create invitation
-      const token = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      const { token, validUntil } = generateSecureTokenMs(7 * 24 * 60 * 60 * 1000); // 7 days
+      const expiresAt = new Date(validUntil);
 
       const invitation = await this.services.organizationInvitations.createInvitation(
         {

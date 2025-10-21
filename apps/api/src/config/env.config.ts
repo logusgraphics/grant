@@ -153,6 +153,9 @@ export const AUTH_CONFIG = {
   /** OTP (One-Time Password) validity in minutes */
   otpValidityMinutes: getEnvNumber('AUTH_OTP_VALIDITY_MINUTES', 5),
 
+  /** Password reset OTP validity in minutes */
+  passwordResetOtpValidityMinutes: getEnvNumber('AUTH_PASSWORD_RESET_OTP_VALIDITY_MINUTES', 60),
+
   /** Maximum number of failed login attempts before lockout */
   maxFailedLoginAttempts: getEnvNumber('AUTH_MAX_FAILED_LOGIN_ATTEMPTS', 5),
 

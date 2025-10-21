@@ -6,7 +6,9 @@ import {
   logoutRequestSchema,
   refreshSessionRequestSchema,
   registerRequestSchema,
+  requestPasswordResetRequestSchema,
   resendVerificationRequestSchema,
+  resetPasswordRequestSchema,
   verifyEmailRequestSchema,
 } from '@/rest/schemas';
 import { TypedRequest } from '@/rest/types';
@@ -123,6 +125,42 @@ export class AuthController extends BaseController {
     const { email } = req.body;
 
     const result = await this.handlers.accounts.resendVerificationEmail(email, this.context.locale);
+
+    this.success(res, result);
+  }
+
+  /**
+   * Request password reset endpoint
+   * POST /api/auth/request-password-reset
+   * Body is validated by requestPasswordResetRequestSchema middleware
+   */
+  async requestPasswordReset(
+    req: TypedRequest<{ body: typeof requestPasswordResetRequestSchema }>,
+    res: Response
+  ) {
+    const { email } = req.body;
+
+    const result = await this.handlers.accounts.requestPasswordReset(email, this.context.locale);
+
+    this.success(res, result);
+  }
+
+  /**
+   * Reset password endpoint
+   * POST /api/auth/reset-password
+   * Body is validated by resetPasswordRequestSchema middleware
+   */
+  async resetPassword(
+    req: TypedRequest<{ body: typeof resetPasswordRequestSchema }>,
+    res: Response
+  ) {
+    const { token, newPassword } = req.body;
+
+    const result = await this.handlers.accounts.resetPassword(
+      token,
+      newPassword,
+      this.context.locale
+    );
 
     this.success(res, result);
   }

@@ -12,6 +12,7 @@ import {
   UserAuthenticationMethod,
 } from '@logusgraphics/grant-schema';
 
+import { BadRequestError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { SelectedFields } from '@/services/common';
 
@@ -42,15 +43,29 @@ export class UserAuthenticationMethodRepository extends EntityRepository<
     params: GetUserAuthenticationMethodsInput & SelectedFields<UserAuthenticationMethod>,
     transaction?: Transaction
   ): Promise<UserAuthenticationMethod[]> {
-    const { userId, requestedFields } = params;
+    const { userId, provider, requestedFields } = params;
 
-    const filters: FilterCondition<UserAuthenticationMethodModel>[] = [
-      {
+    const filters: FilterCondition<UserAuthenticationMethodModel>[] = [];
+
+    if (!userId && !provider) {
+      throw new BadRequestError('Either userId or provider must be provided');
+    }
+
+    if (userId) {
+      filters.push({
         field: 'userId',
         operator: 'eq',
         value: userId,
-      },
-    ];
+      });
+    }
+
+    if (provider) {
+      filters.push({
+        field: 'provider',
+        operator: 'eq',
+        value: provider,
+      });
+    }
 
     const result = await this.query(
       {

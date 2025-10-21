@@ -5,8 +5,12 @@ import {
   LoginDocument,
   LoginResponse,
   RegisterDocument,
+  RequestPasswordResetDocument,
+  RequestPasswordResetResponse,
   ResendVerificationDocument,
   ResendVerificationResponse,
+  ResetPasswordDocument,
+  ResetPasswordResponse,
   UserAuthenticationEmailProviderAction,
   UserAuthenticationMethodProvider,
   VerifyEmailDocument,
@@ -43,6 +47,12 @@ export function useAuthMutations() {
   const [resendVerificationMutation] = useMutation<{
     resendVerification: ResendVerificationResponse;
   }>(ResendVerificationDocument);
+  const [requestPasswordResetMutation] = useMutation<{
+    requestPasswordReset: RequestPasswordResetResponse;
+  }>(RequestPasswordResetDocument);
+  const [resetPasswordMutation] = useMutation<{
+    resetPassword: ResetPasswordResponse;
+  }>(ResetPasswordDocument);
 
   const handleLogin = async (input: LoginInput) => {
     try {
@@ -295,11 +305,70 @@ export function useAuthMutations() {
     }
   };
 
+  const handleRequestPasswordReset = async (email: string) => {
+    try {
+      const result = await requestPasswordResetMutation({
+        variables: {
+          input: {
+            email,
+          },
+        },
+      });
+
+      const requestData = result.data?.requestPasswordReset;
+
+      if (requestData?.success) {
+        toast.success(t('forgotPassword.emailSent'), {
+          description: requestData.message,
+        });
+      }
+
+      return requestData;
+    } catch (error) {
+      console.error('Error requesting password reset:', error);
+      toast.error(t('forgotPassword.error'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
+  const handleResetPassword = async (token: string, newPassword: string) => {
+    try {
+      const result = await resetPasswordMutation({
+        variables: {
+          input: {
+            token,
+            newPassword,
+          },
+        },
+      });
+
+      const resetData = result.data?.resetPassword;
+
+      if (resetData?.success) {
+        toast.success(t('resetPassword.success'), {
+          description: resetData.message,
+        });
+      }
+
+      return resetData;
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast.error(t('resetPassword.error'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
   return {
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,
     verifyEmail: handleVerifyEmail,
     resendVerification: handleResendVerification,
+    requestPasswordReset: handleRequestPasswordReset,
+    resetPassword: handleResetPassword,
   };
 }

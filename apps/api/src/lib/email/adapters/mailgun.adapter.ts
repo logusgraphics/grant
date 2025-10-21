@@ -3,7 +3,12 @@ import Mailgun from 'mailgun.js';
 
 import { ApiError } from '@/lib/errors';
 
-import { IEmailService, SendInvitationParams, SendOtpParams } from '../email.interface';
+import {
+  IEmailService,
+  SendInvitationParams,
+  SendOtpParams,
+  SendPasswordResetParams,
+} from '../email.interface';
 import {
   getInvitationEmailHtml,
   getInvitationEmailSubject,
@@ -11,6 +16,9 @@ import {
   getOtpEmailHtml,
   getOtpEmailSubject,
   getOtpEmailText,
+  getPasswordResetEmailHtml,
+  getPasswordResetEmailSubject,
+  getPasswordResetEmailText,
 } from '../templates';
 
 export interface MailgunConfig {
@@ -80,6 +88,31 @@ export class MailgunEmailAdapter implements IEmailService {
       console.error('Mailgun send error:', error);
       throw new ApiError(
         `Failed to send OTP email: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        {
+          statusCode: 500,
+          code: 'EMAIL_SEND_FAILED',
+          translationKey: 'errors:common.internalError',
+        }
+      );
+    }
+  }
+
+  async sendPasswordReset(params: SendPasswordResetParams): Promise<void> {
+    const subject = getPasswordResetEmailSubject(params);
+    const html = getPasswordResetEmailHtml(params);
+    const text = getPasswordResetEmailText(params);
+
+    try {
+      await this.client.messages.create(this.config.domain, {
+        from: this.from,
+        to: [params.to],
+        subject,
+        text,
+        html,
+      });
+    } catch (error) {
+      throw new ApiError(
+        `Failed to send password reset email: ${error instanceof Error ? error.message : 'Unknown error'}`,
         {
           statusCode: 500,
           code: 'EMAIL_SEND_FAILED',

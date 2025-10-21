@@ -1,9 +1,16 @@
-import { IEmailService, SendInvitationParams, SendOtpParams } from '../email.interface';
+import {
+  IEmailService,
+  SendInvitationParams,
+  SendOtpParams,
+  SendPasswordResetParams,
+} from '../email.interface';
 import {
   getInvitationEmailSubject,
   getInvitationEmailText,
   getOtpEmailSubject,
   getOtpEmailText,
+  getPasswordResetEmailSubject,
+  getPasswordResetEmailText,
 } from '../templates';
 
 /**
@@ -34,6 +41,21 @@ export class ConsoleEmailAdapter implements IEmailService {
 
     console.log('\n' + '='.repeat(80));
     console.log('📧 EMAIL (Console Adapter - Development Mode)');
+    console.log('='.repeat(80));
+    console.log(`From: ${this.from}`);
+    console.log(`To: ${params.to}`);
+    console.log(`Subject: ${subject}`);
+    console.log('-'.repeat(80));
+    console.log(text);
+    console.log('='.repeat(80) + '\n');
+  }
+
+  async sendPasswordReset(params: SendPasswordResetParams): Promise<void> {
+    const subject = getPasswordResetEmailSubject(params);
+    const text = getPasswordResetEmailText(params);
+
+    console.log('\n' + '='.repeat(80));
+    console.log('📧 PASSWORD RESET EMAIL (Console Adapter - Development Mode)');
     console.log('='.repeat(80));
     console.log(`From: ${this.from}`);
     console.log(`To: ${params.to}`);

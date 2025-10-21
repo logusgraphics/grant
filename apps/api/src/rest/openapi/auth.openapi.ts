@@ -12,6 +12,10 @@ import {
   refreshSessionResponseSchema,
   registerRequestSchema,
   registerResponseSchema,
+  requestPasswordResetRequestSchema,
+  requestPasswordResetResponseSchema,
+  resetPasswordRequestSchema,
+  resetPasswordResponseSchema,
   validationErrorResponseSchema,
 } from '@/rest/schemas';
 
@@ -230,6 +234,107 @@ export function registerAuthEndpoints(registry: OpenAPIRegistry) {
       },
       400: {
         description: 'Validation error',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/request-password-reset
+   * Request a password reset email
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/request-password-reset',
+    tags: ['Authentication'],
+    summary: 'Request password reset',
+    description: 'Request a password reset email to be sent to the specified email address',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: requestPasswordResetRequestSchema,
+            example: {
+              email: 'user@example.com',
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Password reset email sent successfully',
+        content: {
+          'application/json': {
+            schema: requestPasswordResetResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Validation error',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/reset-password
+   * Reset password using token from email
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/reset-password',
+    tags: ['Authentication'],
+    summary: 'Reset password',
+    description: 'Reset the password for an account using a token received via email',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: resetPasswordRequestSchema,
+            example: {
+              token: 'abc123def456...',
+              newPassword: 'NewSecurePassword123!',
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Password reset successfully',
+        content: {
+          'application/json': {
+            schema: resetPasswordResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Validation error or invalid/expired token',
         content: {
           'application/json': {
             schema: validationErrorResponseSchema,

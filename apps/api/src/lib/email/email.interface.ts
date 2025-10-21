@@ -13,6 +13,13 @@ export interface SendOtpParams {
   locale?: string;
 }
 
+export interface SendPasswordResetParams {
+  to: string;
+  token: string;
+  validUntil: number;
+  locale?: string;
+}
+
 export interface IEmailService {
   /**
    * Send an organization invitation email
@@ -23,4 +30,9 @@ export interface IEmailService {
    * Send a one-time password (OTP) for email verification
    */
   sendOtp(params: SendOtpParams): Promise<void>;
+
+  /**
+   * Send a password reset email with reset token
+   */
+  sendPasswordReset(params: SendPasswordResetParams): Promise<void>;
 }

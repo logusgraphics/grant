@@ -308,7 +308,8 @@ export type DeleteUserSessionInput = {
 };
 
 export type GetUserAuthenticationMethodsInput = {
-  userId: Scalars['ID']['input'];
+  provider?: InputMaybe<UserAuthenticationMethodProvider>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type GetUserSessionsInput = {
@@ -441,7 +442,9 @@ export type Mutation = {
   login: LoginResponse;
   refreshSession: RefreshSessionResponse;
   register: CreateAccountResult;
+  requestPasswordReset: RequestPasswordResetResponse;
   resendVerification: ResendVerificationResponse;
+  resetPassword: ResetPasswordResponse;
   revokeInvitation: OrganizationInvitation;
   updateAccount: Account;
   updateGroup: Group;
@@ -541,8 +544,16 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+export type MutationRequestPasswordResetArgs = {
+  input: RequestPasswordResetInput;
+};
+
 export type MutationResendVerificationArgs = {
   input: ResendVerificationInput;
+};
+
+export type MutationResetPasswordArgs = {
+  input: ResetPasswordInput;
 };
 
 export type MutationRevokeInvitationArgs = {
@@ -1133,6 +1144,17 @@ export type RemoveUserTagInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type RequestPasswordResetInput = {
+  email: Scalars['String']['input'];
+};
+
+export type RequestPasswordResetResponse = {
+  __typename?: 'RequestPasswordResetResponse';
+  message: Scalars['String']['output'];
+  messageKey: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type ResendVerificationInput = {
   email: Scalars['String']['input'];
 };
@@ -1141,6 +1163,18 @@ export type ResendVerificationResponse = {
   __typename?: 'ResendVerificationResponse';
   message: Scalars['String']['output'];
   messageKey?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type ResetPasswordInput = {
+  newPassword: Scalars['String']['input'];
+  token: Scalars['String']['input'];
+};
+
+export type ResetPasswordResponse = {
+  __typename?: 'ResetPasswordResponse';
+  message: Scalars['String']['output'];
+  messageKey: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
 };
 
@@ -1805,8 +1839,12 @@ export type ResolversTypes = ResolversObject<{
   RemoveRoleTagInput: RemoveRoleTagInput;
   RemoveUserRoleInput: RemoveUserRoleInput;
   RemoveUserTagInput: RemoveUserTagInput;
+  RequestPasswordResetInput: RequestPasswordResetInput;
+  RequestPasswordResetResponse: ResolverTypeWrapper<RequestPasswordResetResponse>;
   ResendVerificationInput: ResendVerificationInput;
   ResendVerificationResponse: ResolverTypeWrapper<ResendVerificationResponse>;
+  ResetPasswordInput: ResetPasswordInput;
+  ResetPasswordResponse: ResolverTypeWrapper<ResetPasswordResponse>;
   Role: ResolverTypeWrapper<Role>;
   RoleGroup: ResolverTypeWrapper<RoleGroup>;
   RolePage: ResolverTypeWrapper<RolePage>;
@@ -1965,8 +2003,12 @@ export type ResolversParentTypes = ResolversObject<{
   RemoveRoleTagInput: RemoveRoleTagInput;
   RemoveUserRoleInput: RemoveUserRoleInput;
   RemoveUserTagInput: RemoveUserTagInput;
+  RequestPasswordResetInput: RequestPasswordResetInput;
+  RequestPasswordResetResponse: RequestPasswordResetResponse;
   ResendVerificationInput: ResendVerificationInput;
   ResendVerificationResponse: ResendVerificationResponse;
+  ResetPasswordInput: ResetPasswordInput;
+  ResetPasswordResponse: ResetPasswordResponse;
   Role: Role;
   RoleGroup: RoleGroup;
   RolePage: RolePage;
@@ -2354,11 +2396,23 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRegisterArgs, 'input'>
   >;
+  requestPasswordReset?: Resolver<
+    ResolversTypes['RequestPasswordResetResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRequestPasswordResetArgs, 'input'>
+  >;
   resendVerification?: Resolver<
     ResolversTypes['ResendVerificationResponse'],
     ParentType,
     ContextType,
     RequireFields<MutationResendVerificationArgs, 'input'>
+  >;
+  resetPassword?: Resolver<
+    ResolversTypes['ResetPasswordResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationResetPasswordArgs, 'input'>
   >;
   revokeInvitation?: Resolver<
     ResolversTypes['OrganizationInvitation'],
@@ -2866,6 +2920,16 @@ export type RefreshSessionResponseResolvers<
   refreshToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
+export type RequestPasswordResetResponseResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['RequestPasswordResetResponse'] = ResolversParentTypes['RequestPasswordResetResponse'],
+> = ResolversObject<{
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  messageKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+}>;
+
 export type ResendVerificationResponseResolvers<
   ContextType = any,
   ParentType extends
@@ -2873,6 +2937,16 @@ export type ResendVerificationResponseResolvers<
 > = ResolversObject<{
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   messageKey?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+}>;
+
+export type ResetPasswordResponseResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ResetPasswordResponse'] = ResolversParentTypes['ResetPasswordResponse'],
+> = ResolversObject<{
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  messageKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
 }>;
 
@@ -3179,7 +3253,9 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   ProjectUser?: ProjectUserResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RefreshSessionResponse?: RefreshSessionResponseResolvers<ContextType>;
+  RequestPasswordResetResponse?: RequestPasswordResetResponseResolvers<ContextType>;
   ResendVerificationResponse?: ResendVerificationResponseResolvers<ContextType>;
+  ResetPasswordResponse?: ResetPasswordResponseResolvers<ContextType>;
   Role?: RoleResolvers<ContextType>;
   RoleGroup?: RoleGroupResolvers<ContextType>;
   RolePage?: RolePageResolvers<ContextType>;

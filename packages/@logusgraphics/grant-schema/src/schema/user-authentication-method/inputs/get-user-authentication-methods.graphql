@@ -1,3 +1,4 @@
 input GetUserAuthenticationMethodsInput {
-  userId: ID!
+  userId: ID
+  provider: UserAuthenticationMethodProvider
 }
