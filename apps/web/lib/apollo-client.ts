@@ -3,6 +3,7 @@
 import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, Observable } from '@apollo/client';
 import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
+import { DEFAULT_LOCALE, isSupportedLocale } from '@logusgraphics/grant-constants';
 
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -18,9 +19,9 @@ function getCurrentLocale(): string {
     const pathSegments = window.location.pathname.split('/');
     const locale = pathSegments[1];
     // Validate locale is supported
-    return ['en', 'de'].includes(locale) ? locale : 'en';
+    return isSupportedLocale(locale) ? locale : DEFAULT_LOCALE;
   }
-  return 'en';
+  return DEFAULT_LOCALE;
 }
 
 const authLink = new SetContextLink((prevContext, _operation) => {
@@ -45,7 +46,7 @@ const redirectToLogin = () => {
   if (typeof window !== 'undefined') {
     useAuthStore.getState().clearAuth();
     const currentPath = window.location.pathname;
-    const locale = currentPath.split('/')[1] || 'en';
+    const locale = currentPath.split('/')[1] || DEFAULT_LOCALE;
     window.location.href = `/${locale}/auth/login`;
   }
 };

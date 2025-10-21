@@ -1,5 +1,6 @@
 import { Request } from 'express';
 
+import { config } from '@/config';
 import { ApiError } from '@/lib/errors';
 
 import { defaultLocale, getFixedT, type SupportedLocale } from './config';
@@ -30,5 +31,5 @@ export function translateStatic(
 }
 
 export function isSupportedLocale(locale: string): locale is SupportedLocale {
-  return ['en', 'de'].includes(locale);
+  return config.i18n.supportedLocales.includes(locale as SupportedLocale);
 }

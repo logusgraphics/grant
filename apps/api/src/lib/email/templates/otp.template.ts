@@ -8,7 +8,10 @@ export function getOtpEmailSubject(params: SendOtpParams): string {
   return translateStatic('email:verification.subject', emailLocale);
 }
 
-export function getOtpEmailHtml(params: SendOtpParams, locale: SupportedLocale = 'en'): string {
+export function getOtpEmailHtml(
+  params: SendOtpParams,
+  locale: SupportedLocale = defaultLocale
+): string {
   const { token, validUntil, locale: paramsLocale } = params;
   const emailLocale = (paramsLocale || locale) as SupportedLocale;
   const verificationUrl = `${config.security.frontendUrl}/${emailLocale}/verify-email?token=${encodeURIComponent(token)}`;
@@ -140,7 +143,10 @@ export function getOtpEmailHtml(params: SendOtpParams, locale: SupportedLocale =
   `.trim();
 }
 
-export function getOtpEmailText(params: SendOtpParams, locale: SupportedLocale = 'en'): string {
+export function getOtpEmailText(
+  params: SendOtpParams,
+  locale: SupportedLocale = defaultLocale
+): string {
   const { token, validUntil, locale: paramsLocale } = params;
   const emailLocale = (paramsLocale || locale) as SupportedLocale;
   const verificationUrl = `${config.security.frontendUrl}/${emailLocale}/verify-email?token=${encodeURIComponent(token)}`;

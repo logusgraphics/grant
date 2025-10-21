@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { useParams } from 'next/navigation';
 
+import { AbstractIntlMessages } from 'next-intl';
+
 import { FullPageLoader } from '@/components/common';
 import { Header } from '@/components/layout/Header';
 import { MessagesProvider } from '@/components/providers/MessagesProvider';
@@ -15,7 +17,7 @@ interface LocaleLayoutProps {
 export default function LocaleLayout({ children }: LocaleLayoutProps) {
   const params = useParams();
   const locale = params.locale as string;
-  const [messages, setMessages] = useState<Record<string, unknown> | null>(null);
+  const [messages, setMessages] = useState<AbstractIntlMessages | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function LocaleLayout({ children }: LocaleLayoutProps) {
     loadMessages();
   }, [locale]);
 
-  if (loading) {
+  if (loading || !messages) {
     return <FullPageLoader />;
   }
 

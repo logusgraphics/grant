@@ -1,11 +1,3 @@
-/**
- * i18n Configuration and Initialization
- *
- * This module configures i18next for internationalization support across
- * the API. It provides automatic locale detection from Accept-Language headers
- * and fallback to the default locale.
- */
-
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -18,10 +10,10 @@ import { config } from '@/config';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const supportedLocales = ['en', 'de'] as const;
+export const supportedLocales = config.i18n.supportedLocales;
 export type SupportedLocale = (typeof supportedLocales)[number];
 
-export const defaultLocale: SupportedLocale = 'en';
+export const defaultLocale = config.i18n.defaultLocale;
 
 export const namespaces = ['common', 'errors', 'email'] as const;
 export type Namespace = (typeof namespaces)[number];

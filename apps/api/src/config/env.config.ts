@@ -14,6 +14,7 @@
  * - NODE_ENV - Standard Node.js environment variable (no prefix)
  */
 
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@logusgraphics/grant-constants';
 import * as dotenv from 'dotenv';
 
 import { BadRequestError } from '@/lib/errors';
@@ -309,10 +310,10 @@ export const SWAGGER_CONFIG = {
 
 export const I18N_CONFIG = {
   /** Supported locales */
-  supportedLocales: ['en', 'de'] as const,
+  supportedLocales: SUPPORTED_LOCALES,
 
   /** Default locale */
-  defaultLocale: getEnvEnum('I18N_DEFAULT_LOCALE', ['en', 'de'] as const, 'en'),
+  defaultLocale: getEnvEnum('I18N_DEFAULT_LOCALE', SUPPORTED_LOCALES, DEFAULT_LOCALE),
 
   /** Enable i18n debug mode */
   debug: getEnvBoolean('I18N_DEBUG', APP_CONFIG.isDevelopment),
