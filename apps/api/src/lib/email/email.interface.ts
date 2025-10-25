@@ -4,6 +4,8 @@ export interface SendInvitationParams {
   inviterName: string;
   invitationUrl: string;
   roleName: string;
+  expiresInDays?: number;
+  locale?: string;
 }
 
 export interface SendOtpParams {

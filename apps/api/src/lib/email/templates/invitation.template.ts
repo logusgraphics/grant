@@ -1,141 +1,127 @@
-import { SendInvitationParams } from '../email.interface';
+import { defaultLocale, translateStatic, type SupportedLocale } from '@/i18n';
 
-export function getInvitationEmailSubject(params: SendInvitationParams): string {
-  return `You've been invited to join ${params.organizationName}`;
+import { createAlternativeLink, createButton, renderBaseEmailTemplate } from './base.mjml';
+
+import type { SendInvitationParams } from '../email.interface';
+
+export function getInvitationEmailSubject(
+  params: SendInvitationParams,
+  locale: SupportedLocale = defaultLocale
+): string {
+  const emailLocale = (params.locale || locale) as SupportedLocale;
+  return translateStatic('email:invitation.subject', emailLocale, {
+    organizationName: params.organizationName,
+  });
 }
 
-export function getInvitationEmailHtml(params: SendInvitationParams): string {
-  const { organizationName, inviterName, invitationUrl, roleName } = params;
+export function getInvitationEmailHtml(
+  params: SendInvitationParams,
+  locale: SupportedLocale = defaultLocale
+): string {
+  const {
+    organizationName,
+    inviterName,
+    invitationUrl,
+    roleName,
+    expiresInDays = 7,
+    locale: paramsLocale,
+  } = params;
+  const emailLocale = (paramsLocale || locale) as SupportedLocale;
 
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Organization Invitation</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f4f4f4;
-    }
-    .container {
-      background-color: #ffffff;
-      border-radius: 8px;
-      padding: 40px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: #2563eb;
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: #1f2937;
-    }
-    p {
-      margin-bottom: 15px;
-      color: #4b5563;
-    }
-    .button {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #2563eb;
-      color: #ffffff !important;
-      text-decoration: none;
-      border-radius: 6px;
-      margin: 20px 0;
-      font-weight: 500;
-    }
-    .button:hover {
-      background-color: #1d4ed8;
-    }
-    .info-box {
-      background-color: #f3f4f6;
-      border-left: 4px solid #2563eb;
-      padding: 15px;
-      margin: 20px 0;
-    }
-    .footer {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-      font-size: 14px;
-      color: #6b7280;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">Grant Platform</div>
-    </div>
-    
-    <h1>You've been invited!</h1>
-    
-    <p>Hi there,</p>
-    
-    <p><strong>${inviterName}</strong> has invited you to join <strong>${organizationName}</strong> as a <strong>${roleName}</strong>.</p>
-    
-    <div class="info-box">
-      <p style="margin: 0;"><strong>Organization:</strong> ${organizationName}</p>
-      <p style="margin: 10px 0 0 0;"><strong>Role:</strong> ${roleName}</p>
-    </div>
-    
-    <p>Click the button below to accept the invitation and join the organization:</p>
-    
-    <div style="text-align: center;">
-      <a href="${invitationUrl}" class="button">Accept Invitation</a>
-    </div>
-    
-    <p style="font-size: 14px; color: #6b7280;">
-      If you're unable to click the button, copy and paste this URL into your browser:<br>
-      <a href="${invitationUrl}" style="color: #2563eb; word-break: break-all;">${invitationUrl}</a>
-    </p>
-    
-    <div class="footer">
-      <p>This invitation will expire in 7 days.</p>
-      <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const subject = translateStatic('email:invitation.subject', emailLocale, {
+    organizationName,
+  });
+
+  const content = `
+    <mj-text font-size="24px" font-weight="700" color="#1F2937" align="center" padding="0 0 20px 0">
+      ${subject}
+    </mj-text>
+
+    <mj-text>
+      ${translateStatic('email:invitation.greeting', emailLocale)}
+    </mj-text>
+
+    <mj-text>
+      ${translateStatic('email:invitation.message', emailLocale, {
+        inviterName,
+        organizationName,
+        roleName,
+      })}
+    </mj-text>
+
+    <mj-text background-color="#F9FAFB" padding="15px" border-radius="6px">
+      <strong style="color: #1F2937;">Organization:</strong>
+      <span style="color: #4B5563;">${organizationName}</span><br/>
+      <strong style="color: #1F2937;">Role:</strong>
+      <span style="color: #4B5563;">${roleName}</span>
+    </mj-text>
+
+    ${createButton(invitationUrl, translateStatic('email:invitation.button', emailLocale))}
+
+    <mj-text align="center" font-size="14px" color="#6B7280" padding="10px 0 20px 0">
+      ${translateStatic('email:invitation.expiresIn', emailLocale, {
+        days: expiresInDays,
+      })}
+    </mj-text>
+
+    ${createAlternativeLink(invitationUrl, emailLocale)}
+  `;
+
+  return renderBaseEmailTemplate({
+    locale: emailLocale,
+    subject,
+    children: content,
+  });
 }
 
-export function getInvitationEmailText(params: SendInvitationParams): string {
-  const { organizationName, inviterName, invitationUrl, roleName } = params;
+export function getInvitationEmailText(
+  params: SendInvitationParams,
+  locale: SupportedLocale = defaultLocale
+): string {
+  const {
+    organizationName,
+    inviterName,
+    invitationUrl,
+    roleName,
+    expiresInDays = 7,
+    locale: paramsLocale,
+  } = params;
+  const emailLocale = (paramsLocale || locale) as SupportedLocale;
+
+  const t = {
+    subject: translateStatic('email:invitation.subject', emailLocale, {
+      organizationName,
+    }),
+    greeting: translateStatic('email:invitation.greeting', emailLocale),
+    message: translateStatic('email:invitation.message', emailLocale, {
+      inviterName,
+      organizationName,
+      roleName,
+    }),
+    expiresIn: translateStatic('email:invitation.expiresIn', emailLocale, {
+      days: expiresInDays,
+    }),
+    footerNoRequest: translateStatic('email:invitation.footer.noRequest', emailLocale),
+    signature: translateStatic('email:common.signature', emailLocale),
+  };
 
   return `
-You've been invited to join ${organizationName}
+${t.subject}
 
-Hi there,
+${t.greeting}
 
-${inviterName} has invited you to join ${organizationName} as a ${roleName}.
+${t.message}
 
 Organization: ${organizationName}
 Role: ${roleName}
 
-Click the link below to accept the invitation:
 ${invitationUrl}
 
-This invitation will expire in 7 days.
+${t.expiresIn}
 
-If you didn't expect this invitation, you can safely ignore this email.
+${t.footerNoRequest}
 
 ---
-Grant Platform
+${t.signature}
   `.trim();
 }

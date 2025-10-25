@@ -26,26 +26,20 @@ export function getPasswordResetEmailHtml(
       ${subject}
     </mj-text>
 
-    <mj-text>
+    <mj-text padding="10px 0">
       ${translateStatic('email:passwordReset.greeting', emailLocale)}
     </mj-text>
 
-    <mj-text>
+    <mj-text padding="10px 0">
       ${translateStatic('email:passwordReset.message', emailLocale)}
     </mj-text>
 
-    <mj-text align="center" padding="30px 0">
-      ${createButton(resetUrl, translateStatic('email:passwordReset.button', emailLocale))}
-    </mj-text>
+    ${createButton(resetUrl, translateStatic('email:passwordReset.button', emailLocale))}
 
-    <mj-text align="center" font-size="14px" color="#6B7280">
+    <mj-text align="center" font-size="14px" color="#6B7280" padding="10px 0 20px 0">
       ${translateStatic('email:passwordReset.expiresIn', emailLocale, {
         minutes: expirationMinutes,
       })}
-    </mj-text>
-
-    <mj-text>
-      ${translateStatic('email:passwordReset.warning', emailLocale)}
     </mj-text>
 
     ${createAlternativeLink(resetUrl, emailLocale)}
@@ -55,6 +49,7 @@ export function getPasswordResetEmailHtml(
     locale: emailLocale,
     subject,
     children: content,
+    footerWarning: translateStatic('email:passwordReset.warning', emailLocale),
   });
 }
 

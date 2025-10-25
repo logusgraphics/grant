@@ -200,8 +200,36 @@
       "title": "Identitätszugriff zurücksetzen",
       "description": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen sicheren Link zum Zurücksetzen Ihres Identitätszugriffs über alle verbundenen Systeme.",
       "submit": "Link senden",
+      "submitting": "Wird gesendet...",
+      "emailSent": "Zurücksetzungslink gesendet",
+      "emailSentDescription": "Überprüfen Sie Ihre E-Mail auf einen Link zum Zurücksetzen Ihres Passworts.",
+      "error": "Fehler beim Senden des Zurücksetzungslinks",
       "rememberPassword": "Anmeldedaten wieder eingefallen?",
-      "backToLogin": "Zurück zur Anmeldung"
+      "backToLogin": "Zurück zur Anmeldung",
+      "sendAnother": "Einen weiteren Zurücksetzungslink senden"
+    },
+    "resetPassword": {
+      "title": "Neues Passwort erstellen",
+      "description": "Geben Sie unten Ihr neues Passwort ein. Stellen Sie sicher, dass es stark und sicher ist.",
+      "submit": "Passwort zurücksetzen",
+      "submitting": "Passwort wird zurückgesetzt...",
+      "rememberPassword": "Passwort wieder eingefallen?",
+      "backToLogin": "Zurück zur Anmeldung",
+      "success": {
+        "title": "Passwort erfolgreich zurückgesetzt",
+        "description": "Ihr Passwort wurde zurückgesetzt. Sie können sich jetzt mit Ihrem neuen Passwort anmelden."
+      },
+      "error": {
+        "title": "Passwort-Zurücksetzung fehlgeschlagen",
+        "description": "Wir konnten Ihr Passwort nicht zurücksetzen. Bitte versuchen Sie es erneut."
+      },
+      "invalidToken": {
+        "title": "Ungültiger Zurücksetzungslink",
+        "description": "Dieser Passwort-Zurücksetzungslink ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen an."
+      },
+      "requestNewLink": "Neuen Zurücksetzungslink anfordern",
+      "continueToLogin": "Weiter zur Anmeldung",
+      "tryAgain": "Erneut versuchen"
     },
     "verifyEmail": {
       "title": "E-Mail-Verifizierung",

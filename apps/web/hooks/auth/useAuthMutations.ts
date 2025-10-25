@@ -319,7 +319,7 @@ export function useAuthMutations() {
 
       if (requestData?.success) {
         toast.success(t('forgotPassword.emailSent'), {
-          description: requestData.message,
+          description: t('forgotPassword.emailSentDescription'),
         });
       }
 
@@ -347,16 +347,16 @@ export function useAuthMutations() {
       const resetData = result.data?.resetPassword;
 
       if (resetData?.success) {
-        toast.success(t('resetPassword.success'), {
-          description: resetData.message,
+        toast.success(t('resetPassword.success.title'), {
+          description: t('resetPassword.success.description'),
         });
       }
 
       return resetData;
     } catch (error) {
       console.error('Error resetting password:', error);
-      toast.error(t('resetPassword.error'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      toast.error(t('resetPassword.error.title'), {
+        description: error instanceof Error ? error.message : t('resetPassword.error.description'),
       });
       throw error;
     }

@@ -1,10 +1,14 @@
 'use client';
 
+import { useState } from 'react';
+
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CheckCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -15,12 +19,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { usePageTitle } from '@/hooks';
+import { useAuthMutations, usePageTitle } from '@/hooks';
 import { Link } from '@/i18n/navigation';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
+  const { requestPasswordReset } = useAuthMutations();
   usePageTitle('auth.forgotPassword');
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const formSchema = z.object({
     email: z.string().email(t('validation.email')),
@@ -34,9 +42,47 @@ export default function ForgotPasswordPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // TODO: Implement password recovery logic
-    console.log(values);
+    setIsSubmitting(true);
+    try {
+      await requestPasswordReset(values.email);
+      setIsSuccess(true);
+    } catch {
+      // Error is already handled in the mutation hook
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="mx-auto max-w-md space-y-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold tracking-tight">{t('forgotPassword.title')}</h2>
+          <p className="text-muted-foreground mt-2">{t('forgotPassword.description')}</p>
+        </div>
+        <Alert variant="success">
+          <CheckCircle2 />
+          <AlertTitle>{t('forgotPassword.emailSent')}</AlertTitle>
+          <AlertDescription>{t('forgotPassword.emailSentDescription')}</AlertDescription>
+        </Alert>
+        <div className="space-y-2">
+          <Link href="/auth/login" className="block">
+            <Button className="w-full">{t('forgotPassword.backToLogin')}</Button>
+          </Link>
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={() => {
+              setIsSuccess(false);
+              form.reset();
+            }}
+          >
+            {t('forgotPassword.sendAnother')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -58,8 +104,8 @@ export default function ForgotPasswordPage() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          {t('forgotPassword.submit')}
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? t('forgotPassword.submitting') : t('forgotPassword.submit')}
         </Button>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {t('forgotPassword.rememberPassword')}{' '}

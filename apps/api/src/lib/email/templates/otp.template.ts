@@ -34,11 +34,9 @@ export function getOtpEmailHtml(
       ${translateStatic('email:verification.message', emailLocale)}
     </mj-text>
 
-    <mj-text align="center" padding="30px 0">
-      ${createButton(verificationUrl, translateStatic('email:verification.button', emailLocale))}
-    </mj-text>
+    ${createButton(verificationUrl, translateStatic('email:verification.button', emailLocale))}
 
-    <mj-text align="center" font-size="14px" color="#6B7280">
+    <mj-text align="center" font-size="14px" color="#6B7280" padding="10px 0 20px 0">
       ${translateStatic('email:verification.expiresIn', emailLocale, {
         minutes: expirationMinutes,
       })}

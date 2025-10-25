@@ -12,6 +12,14 @@
     },
     "signature": "Grant Platform"
   },
+  "passwordReset": {
+    "subject": "Reset Your Password",
+    "greeting": "Hi there,",
+    "message": "We received a request to reset your password. Click the button below to create a new password:",
+    "button": "Reset Password",
+    "expiresIn": "This link will expire in {{minutes}} minutes.",
+    "warning": "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged."
+  },
   "invitation": {
     "subject": "You've been invited to {{organizationName}}",
     "greeting": "Hi there,",
@@ -22,5 +30,13 @@
       "noRequest": "If you don't recognize this invitation, you can safely ignore this email."
     },
     "signature": "Grant Platform"
+  },
+  "common": {
+    "alternativeText": "If the button doesn't work, copy and paste this link:",
+    "footer": {
+      "noRequest": "If you didn't request this action, you can safely ignore this email.",
+      "typo": "Someone else might have entered your email address by mistake."
+    },
+    "signature": "Grant Platform Team"
   }
 }

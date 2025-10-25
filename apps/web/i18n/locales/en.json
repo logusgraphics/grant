@@ -200,8 +200,36 @@
       "title": "Reset Password",
       "description": "Enter your email address and we'll send you a secure link to reset your password.",
       "submit": "Send Reset Link",
+      "submitting": "Sending...",
+      "emailSent": "Reset Link Sent",
+      "emailSentDescription": "Check your email for a link to reset your password.",
+      "error": "Failed to Send Reset Link",
       "rememberPassword": "Remember your credentials?",
-      "backToLogin": "Back to login"
+      "backToLogin": "Back to login",
+      "sendAnother": "Send another reset link"
+    },
+    "resetPassword": {
+      "title": "Create New Password",
+      "description": "Enter your new password below. Make sure it's strong and secure.",
+      "submit": "Reset Password",
+      "submitting": "Resetting Password...",
+      "rememberPassword": "Remember your password?",
+      "backToLogin": "Back to login",
+      "success": {
+        "title": "Password Reset Successfully",
+        "description": "Your password has been reset. You can now log in with your new password."
+      },
+      "error": {
+        "title": "Password Reset Failed",
+        "description": "We couldn't reset your password. Please try again."
+      },
+      "invalidToken": {
+        "title": "Invalid Reset Link",
+        "description": "This password reset link is invalid or has expired. Please request a new one."
+      },
+      "requestNewLink": "Request New Reset Link",
+      "continueToLogin": "Continue to Login",
+      "tryAgain": "Try Again"
     },
     "verifyEmail": {
       "title": "Email Verification",
