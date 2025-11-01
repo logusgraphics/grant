@@ -6,6 +6,7 @@ import { Services } from '@/services';
 import { AccountHandler } from './accounts.handler';
 import { GroupHandler } from './groups.handler';
 import { OrganizationInvitationsHandler } from './organization-invitations.handler';
+import { OrganizationMembersHandler } from './organization-members.handler';
 import { OrganizationHandler } from './organizations.handler';
 import { PermissionHandler } from './permissions.handler';
 import { ProjectHandler } from './projects.handler';
@@ -19,6 +20,7 @@ export function createHandlers(scopeCache: IEntityCacheAdapter, services: Servic
   return {
     accounts: new AccountHandler(scopeCache, services, db),
     organizationInvitations: new OrganizationInvitationsHandler(services, db),
+    organizationMembers: new OrganizationMembersHandler(services),
     organizations: new OrganizationHandler(scopeCache, services, db),
     projects: new ProjectHandler(scopeCache, services, db),
     users: new UserHandler(scopeCache, services, db),

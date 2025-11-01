@@ -1,0 +1,11 @@
+type OrganizationMember {
+  id: ID!
+  name: String!
+  email: String
+  type: MemberType!
+  role: Role!
+  status: OrganizationInvitationStatus # Only for INVITATION type
+  user: User # Only for MEMBER type
+  invitation: OrganizationInvitation # Only for INVITATION type
+  createdAt: Date!
+}

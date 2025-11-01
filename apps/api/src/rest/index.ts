@@ -4,6 +4,7 @@ import { createAccountsRoutes } from '@/rest/routes/accounts.routes';
 import { createAuthRoutes } from '@/rest/routes/auth.routes';
 import { createGroupsRouter } from '@/rest/routes/groups.routes';
 import { createOrganizationInvitationsRoutes } from '@/rest/routes/organization-invitations.routes';
+import { createOrganizationMembersRoutes } from '@/rest/routes/organization-members.routes';
 import { createOrganizationRoutes } from '@/rest/routes/organizations.routes';
 import { createPermissionsRouter } from '@/rest/routes/permissions.routes';
 import { createProjectsRouter } from '@/rest/routes/projects.routes';
@@ -22,6 +23,7 @@ export function createRestRouter(context: RequestContext): Router {
   router.use('/permissions', createPermissionsRouter(context));
   router.use('/organizations', createOrganizationRoutes(context));
   router.use('/organization-invitations', createOrganizationInvitationsRoutes(context));
+  router.use('/organization-members', createOrganizationMembersRoutes(context));
   router.use('/projects', createProjectsRouter(context));
   router.use('/tags', createTagsRouter(context));
   router.use('/accounts', createAccountsRoutes(context));

@@ -1,4 +1,8 @@
-import { OrganizationInvitationStatus } from '@logusgraphics/grant-schema';
+import {
+  OrganizationInvitationStatus,
+  QueryOrganizationInvitationsArgs,
+  SortOrder,
+} from '@logusgraphics/grant-schema';
 import { Response } from 'express';
 
 import { AuthenticationError, NotFoundError } from '@/lib/errors';
@@ -82,18 +86,32 @@ export class OrganizationInvitationsController extends BaseController {
 
   /**
    * GET /api/organization-invitations
-   * List organization invitations with optional status filtering
+   * List organization invitations with optional status filtering, pagination, search, and sorting
    */
   async getOrganizationInvitations(
     req: TypedRequest<{ query: typeof getOrganizationInvitationsQuerySchema }>,
     res: Response
   ) {
-    const { organizationId, status } = req.query;
+    const { organizationId, status, page, limit, search, sortField, sortOrder, ids } = req.query;
 
-    const result = await this.context.handlers.organizationInvitations.getOrganizationInvitations(
+    const params = {
       organizationId,
-      status as OrganizationInvitationStatus | undefined
-    );
+      status: status as OrganizationInvitationStatus | undefined,
+      page: page ?? undefined,
+      limit: limit ?? undefined,
+      search: search ?? undefined,
+      sort:
+        sortField && sortOrder
+          ? {
+              field: sortField,
+              order: sortOrder.toUpperCase() as SortOrder,
+            }
+          : undefined,
+      ids: ids ?? undefined,
+    } as QueryOrganizationInvitationsArgs;
+
+    const result =
+      await this.context.handlers.organizationInvitations.getOrganizationInvitations(params);
 
     return this.success(res, {
       items: result.invitations,

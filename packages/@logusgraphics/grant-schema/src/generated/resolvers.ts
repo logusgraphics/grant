@@ -419,6 +419,11 @@ export type LoginResponse = {
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
 };
 
+export enum MemberType {
+  Invitation = 'invitation',
+  Member = 'member',
+}
+
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
@@ -657,11 +662,64 @@ export type OrganizationInvitationPage = {
   totalCount: Scalars['Int']['output'];
 };
 
+export enum OrganizationInvitationSearchableField {
+  Email = 'email',
+}
+
+export type OrganizationInvitationSortInput = {
+  field: OrganizationInvitationSortableField;
+  order: SortOrder;
+};
+
+export enum OrganizationInvitationSortableField {
+  CreatedAt = 'createdAt',
+  Email = 'email',
+  ExpiresAt = 'expiresAt',
+  Status = 'status',
+}
+
 export enum OrganizationInvitationStatus {
   Accepted = 'accepted',
   Expired = 'expired',
   Pending = 'pending',
   Revoked = 'revoked',
+}
+
+export type OrganizationMember = {
+  __typename?: 'OrganizationMember';
+  createdAt: Scalars['Date']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  invitation?: Maybe<OrganizationInvitation>;
+  name: Scalars['String']['output'];
+  role: Role;
+  status?: Maybe<OrganizationInvitationStatus>;
+  type: MemberType;
+  user?: Maybe<User>;
+};
+
+export type OrganizationMemberPage = {
+  __typename?: 'OrganizationMemberPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  members: Array<OrganizationMember>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export enum OrganizationMemberSearchableField {
+  Email = 'email',
+  Name = 'name',
+}
+
+export type OrganizationMemberSortInput = {
+  field: OrganizationMemberSortableField;
+  order: SortOrder;
+};
+
+export enum OrganizationMemberSortableField {
+  CreatedAt = 'createdAt',
+  Email = 'email',
+  Name = 'name',
+  Role = 'role',
 }
 
 export type OrganizationPage = PaginatedResults & {
@@ -938,6 +996,7 @@ export type Query = {
   groups: GroupPage;
   invitation?: Maybe<OrganizationInvitation>;
   organizationInvitations: OrganizationInvitationPage;
+  organizationMembers: OrganizationMemberPage;
   organizations: OrganizationPage;
   permissions: PermissionPage;
   projects: ProjectPage;
@@ -973,7 +1032,21 @@ export type QueryInvitationArgs = {
 };
 
 export type QueryOrganizationInvitationsArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
   organizationId: Scalars['ID']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<OrganizationInvitationSortInput>;
+  status?: InputMaybe<OrganizationInvitationStatus>;
+};
+
+export type QueryOrganizationMembersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  organizationId: Scalars['ID']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<OrganizationMemberSortInput>;
   status?: InputMaybe<OrganizationInvitationStatus>;
 };
 
@@ -1783,12 +1856,21 @@ export type ResolversTypes = ResolversObject<{
   JSON: ResolverTypeWrapper<Scalars['JSON']['output']>;
   LoginInput: LoginInput;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
+  MemberType: MemberType;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Organization: ResolverTypeWrapper<Organization>;
   OrganizationGroup: ResolverTypeWrapper<OrganizationGroup>;
   OrganizationInvitation: ResolverTypeWrapper<OrganizationInvitation>;
   OrganizationInvitationPage: ResolverTypeWrapper<OrganizationInvitationPage>;
+  OrganizationInvitationSearchableField: OrganizationInvitationSearchableField;
+  OrganizationInvitationSortInput: OrganizationInvitationSortInput;
+  OrganizationInvitationSortableField: OrganizationInvitationSortableField;
   OrganizationInvitationStatus: OrganizationInvitationStatus;
+  OrganizationMember: ResolverTypeWrapper<OrganizationMember>;
+  OrganizationMemberPage: ResolverTypeWrapper<OrganizationMemberPage>;
+  OrganizationMemberSearchableField: OrganizationMemberSearchableField;
+  OrganizationMemberSortInput: OrganizationMemberSortInput;
+  OrganizationMemberSortableField: OrganizationMemberSortableField;
   OrganizationPage: ResolverTypeWrapper<OrganizationPage>;
   OrganizationPermission: ResolverTypeWrapper<OrganizationPermission>;
   OrganizationProject: ResolverTypeWrapper<OrganizationProject>;
@@ -1961,6 +2043,10 @@ export type ResolversParentTypes = ResolversObject<{
   OrganizationGroup: OrganizationGroup;
   OrganizationInvitation: OrganizationInvitation;
   OrganizationInvitationPage: OrganizationInvitationPage;
+  OrganizationInvitationSortInput: OrganizationInvitationSortInput;
+  OrganizationMember: OrganizationMember;
+  OrganizationMemberPage: OrganizationMemberPage;
+  OrganizationMemberSortInput: OrganizationMemberSortInput;
   OrganizationPage: OrganizationPage;
   OrganizationPermission: OrganizationPermission;
   OrganizationProject: OrganizationProject;
@@ -2543,6 +2629,32 @@ export type OrganizationInvitationPageResolvers<
   totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
 }>;
 
+export type OrganizationMemberResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['OrganizationMember'] = ResolversParentTypes['OrganizationMember'],
+> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  invitation?: Resolver<Maybe<ResolversTypes['OrganizationInvitation']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  role?: Resolver<ResolversTypes['Role'], ParentType, ContextType>;
+  status?: Resolver<Maybe<ResolversTypes['OrganizationInvitationStatus']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['MemberType'], ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+}>;
+
+export type OrganizationMemberPageResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['OrganizationMemberPage'] = ResolversParentTypes['OrganizationMemberPage'],
+> = ResolversObject<{
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  members?: Resolver<Array<ResolversTypes['OrganizationMember']>, ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+}>;
+
 export type OrganizationPageResolvers<
   ContextType = any,
   ParentType extends
@@ -2872,6 +2984,12 @@ export type QueryResolvers<
     ParentType,
     ContextType,
     RequireFields<QueryOrganizationInvitationsArgs, 'organizationId'>
+  >;
+  organizationMembers?: Resolver<
+    ResolversTypes['OrganizationMemberPage'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryOrganizationMembersArgs, 'organizationId'>
   >;
   organizations?: Resolver<
     ResolversTypes['OrganizationPage'],
@@ -3234,6 +3352,8 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   OrganizationGroup?: OrganizationGroupResolvers<ContextType>;
   OrganizationInvitation?: OrganizationInvitationResolvers<ContextType>;
   OrganizationInvitationPage?: OrganizationInvitationPageResolvers<ContextType>;
+  OrganizationMember?: OrganizationMemberResolvers<ContextType>;
+  OrganizationMemberPage?: OrganizationMemberPageResolvers<ContextType>;
   OrganizationPage?: OrganizationPageResolvers<ContextType>;
   OrganizationPermission?: OrganizationPermissionResolvers<ContextType>;
   OrganizationProject?: OrganizationProjectResolvers<ContextType>;

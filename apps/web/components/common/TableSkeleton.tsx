@@ -15,6 +15,7 @@ export type ColumnType =
   | 'text'
   | 'button'
   | 'list'
+  | 'badge'
   | 'actions'
   | 'audit';
 
@@ -87,6 +88,9 @@ export function TableSkeleton({
             <div className="h-5 w-18 bg-muted rounded animate-pulse" />
           </div>
         );
+
+      case 'badge':
+        return <div className="h-6 w-20 bg-muted rounded-full animate-pulse" />;
 
       case 'actions':
         return (

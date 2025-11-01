@@ -1,0 +1,43 @@
+query GetOrganizationMembers(
+  $organizationId: ID!
+  $page: Int
+  $limit: Int
+  $search: String
+  $sort: OrganizationMemberSortInput
+  $status: OrganizationInvitationStatus
+) {
+  organizationMembers(
+    organizationId: $organizationId
+    page: $page
+    limit: $limit
+    search: $search
+    sort: $sort
+    status: $status
+  ) {
+    members {
+      id
+      name
+      email
+      type
+      role {
+        id
+        name
+        description
+      }
+      status
+      user {
+        id
+        name
+      }
+      invitation {
+        id
+        email
+        status
+        expiresAt
+      }
+      createdAt
+    }
+    totalCount
+    hasNextPage
+  }
+}

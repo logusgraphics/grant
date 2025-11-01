@@ -8,8 +8,8 @@ import {
 import {
   OrganizationInvitation,
   OrganizationInvitationPage,
+  OrganizationInvitationSearchableField,
   QueryOrganizationInvitationsArgs,
-  SortOrder,
 } from '@logusgraphics/grant-schema';
 import { and, eq, isNull } from 'drizzle-orm';
 
@@ -39,7 +39,9 @@ export class OrganizationInvitationRepository extends EntityRepository<
 > {
   protected table = organizationInvitations;
   protected schemaName = 'organizationInvitations' as const;
-  protected searchFields: Array<keyof OrganizationInvitationModel> = ['email'];
+  protected searchFields: Array<keyof OrganizationInvitationModel> = Object.values(
+    OrganizationInvitationSearchableField
+  ) as Array<keyof OrganizationInvitationModel>;
   protected defaultSortField: keyof OrganizationInvitationModel = 'createdAt';
   protected relations: RelationsConfig<OrganizationInvitation> = {
     organization: {
@@ -124,12 +126,12 @@ export class OrganizationInvitationRepository extends EntityRepository<
 
     const result = await this.query(
       {
+        ids: params.ids,
+        search: params.search,
+        page: params.page,
+        limit: params.limit,
+        sort: params.sort,
         filters,
-        limit: -1,
-        sort: {
-          field: 'createdAt',
-          order: SortOrder.Desc,
-        },
       },
       transaction
     );

@@ -1,5 +1,9 @@
 import { DbSchema, organizationInvitationsAuditLogs } from '@logusgraphics/grant-database';
-import { OrganizationInvitation } from '@logusgraphics/grant-schema';
+import {
+  OrganizationInvitation,
+  OrganizationInvitationPage,
+  QueryOrganizationInvitationsArgs,
+} from '@logusgraphics/grant-schema';
 
 import { NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -10,7 +14,14 @@ import {
 } from '@/repositories/organization-invitations.repository';
 import { AuthenticatedUser } from '@/types';
 
-import { AuditService, createDynamicSingleSchema, validateInput, validateOutput } from './common';
+import {
+  AuditService,
+  SelectedFields,
+  createDynamicPaginatedSchema,
+  createDynamicSingleSchema,
+  validateInput,
+  validateOutput,
+} from './common';
 import {
   checkPendingInvitationParamsSchema,
   createInvitationParamsSchema,
@@ -92,14 +103,13 @@ export class OrganizationInvitationService extends AuditService {
   }
 
   public async getInvitationsByOrganization(
-    organizationId: string,
-    status?: string,
+    params: QueryOrganizationInvitationsArgs & SelectedFields<OrganizationInvitation>,
     transaction?: Transaction
-  ): Promise<OrganizationInvitation[]> {
+  ): Promise<OrganizationInvitationPage> {
     const context = 'OrganizationInvitationService.getInvitationsByOrganization';
     const validatedParams = validateInput(
       getInvitationsByOrganizationParamsSchema,
-      { organizationId, status },
+      params,
       context
     );
 
@@ -109,11 +119,19 @@ export class OrganizationInvitationService extends AuditService {
         transaction
       );
 
-    return validateOutput(
-      createDynamicSingleSchema(organizationInvitationSchema).array(),
-      result.invitations,
+    const transformedResult = {
+      items: result.invitations,
+      totalCount: result.totalCount,
+      hasNextPage: result.hasNextPage,
+    };
+
+    validateOutput(
+      createDynamicPaginatedSchema(organizationInvitationSchema, params.requestedFields),
+      transformedResult,
       context
     );
+
+    return result;
   }
 
   public async checkPendingInvitation(

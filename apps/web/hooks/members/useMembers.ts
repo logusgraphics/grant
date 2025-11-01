@@ -1,15 +1,18 @@
 import { useMemo } from 'react';
 
+import { ApolloClient } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import {
-  GetOrganizationInvitationsDocument,
-  GetUsersDocument,
-  OrganizationInvitationPage,
+  GetOrganizationMembersDocument,
+  MemberType,
   OrganizationInvitationStatus,
-  QueryOrganizationInvitationsArgs,
-  QueryUsersArgs,
+  OrganizationMember,
+  OrganizationMemberPage,
+  OrganizationMemberSortableField,
+  QueryOrganizationMembersArgs,
+  Role,
+  SortOrder,
   User,
-  UserPage,
 } from '@logusgraphics/grant-schema';
 
 /**
@@ -24,7 +27,21 @@ export interface MemberWithInvitation {
   roleId?: string;
   invitedAt?: Date;
   expiresAt?: Date;
-  user?: User;
+  createdAt: Date;
+  updatedAt: Date;
+  user?: User | null;
+  role?: Role | null;
+}
+
+interface UseMembersParams {
+  organizationId: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: {
+    field: OrganizationMemberSortableField;
+    order: SortOrder;
+  };
 }
 
 interface UseMembersResult {
@@ -32,89 +49,76 @@ interface UseMembersResult {
   loading: boolean;
   error: Error | undefined;
   totalCount: number;
-  refetch: () => Promise<void>;
+  refetch: (
+    variables?: Partial<QueryOrganizationMembersArgs>
+  ) => Promise<ApolloClient.QueryResult<{ organizationMembers: OrganizationMemberPage }>>;
 }
 
 /**
- * Hook to fetch organization members (users) and pending invitations
+ * Hook to fetch organization members (unified users and invitations)
  */
-export function useMembers(organizationId: string): UseMembersResult {
+export function useMembers({
+  organizationId,
+  page,
+  limit,
+  search,
+  sort,
+}: UseMembersParams): UseMembersResult {
   const skip = useMemo(() => !organizationId, [organizationId]);
 
-  // Fetch organization users (existing members)
-  const {
-    data: usersData,
-    loading: usersLoading,
-    error: usersError,
-    refetch: refetchUsers,
-  } = useQuery<{ users: UserPage }>(GetUsersDocument, {
-    variables: {
-      scope: {
-        tenant: 'organization',
-        id: organizationId,
-      },
-    } as QueryUsersArgs,
+  const variables = useMemo(
+    () => ({
+      organizationId,
+      page,
+      limit,
+      search,
+      sort: sort
+        ? {
+            field: sort.field,
+            order: sort.order,
+          }
+        : undefined,
+      status: OrganizationInvitationStatus.Pending, // Default to pending invitations
+    }),
+    [organizationId, page, limit, search, sort]
+  );
+
+  const { data, loading, error, refetch } = useQuery<{
+    organizationMembers: OrganizationMemberPage;
+  }>(GetOrganizationMembersDocument, {
+    variables: variables as QueryOrganizationMembersArgs,
     skip,
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
 
-  // Fetch pending invitations
-  const {
-    data: invitationsData,
-    loading: invitationsLoading,
-    error: invitationsError,
-    refetch: refetchInvitations,
-  } = useQuery<{ organizationInvitations: OrganizationInvitationPage }>(
-    GetOrganizationInvitationsDocument,
-    {
-      variables: {
-        organizationId,
-        status: OrganizationInvitationStatus.Pending,
-      } as QueryOrganizationInvitationsArgs,
-      skip,
-      fetchPolicy: 'cache-and-network',
-      notifyOnNetworkStatusChange: true,
-    }
-  );
-
-  // Combine members and invitations
+  // Transform OrganizationMember to MemberWithInvitation format
   const members = useMemo(() => {
-    const userMembers: MemberWithInvitation[] =
-      usersData?.users?.users?.map((user) => ({
-        id: user.id,
-        name: user.name,
-        type: 'member' as const,
-        user,
-      })) ?? [];
+    return (
+      data?.organizationMembers?.members?.map((member: OrganizationMember) => ({
+        id: member.id,
+        name: member.name,
+        email: member.email || undefined,
+        type: member.type === MemberType.Member ? ('member' as const) : ('invitation' as const),
+        status: member.status || undefined,
+        roleId: member.role?.id || undefined,
+        invitedAt:
+          member.type === MemberType.Invitation && member.invitation?.createdAt
+            ? new Date(member.invitation.createdAt)
+            : undefined,
+        expiresAt:
+          member.type === MemberType.Invitation && member.invitation?.expiresAt
+            ? new Date(member.invitation.expiresAt)
+            : undefined,
+        createdAt: new Date(member.createdAt),
+        updatedAt: new Date(member.createdAt), // Use createdAt as fallback since OrganizationMember doesn't have updatedAt
+        user: member.user || undefined,
+        role: member.role || undefined,
+      })) ?? []
+    );
+  }, [data]);
 
-    const pendingInvitations: MemberWithInvitation[] =
-      invitationsData?.organizationInvitations?.invitations?.map((invitation) => ({
-        id: invitation.id,
-        name: invitation.email,
-        email: invitation.email,
-        type: 'invitation' as const,
-        status: invitation.status,
-        roleId: invitation.roleId,
-        invitedAt: invitation.createdAt ? new Date(invitation.createdAt) : undefined,
-        expiresAt: invitation.expiresAt ? new Date(invitation.expiresAt) : undefined,
-      })) ?? [];
-
-    return [...userMembers, ...pendingInvitations];
-  }, [usersData, invitationsData]);
-
-  const totalCount = useMemo(() => {
-    const usersCount = usersData?.users?.totalCount ?? 0;
-    const invitationsCount = invitationsData?.organizationInvitations?.totalCount ?? 0;
-    return usersCount + invitationsCount;
-  }, [usersData, invitationsData]);
-
-  const loading = usersLoading || invitationsLoading;
-  const error = usersError || invitationsError;
-
-  const refetch = async () => {
-    await Promise.all([refetchUsers(), refetchInvitations()]);
-  };
+  const totalCount = data?.organizationMembers?.totalCount ?? 0;
 
   return {
     members,

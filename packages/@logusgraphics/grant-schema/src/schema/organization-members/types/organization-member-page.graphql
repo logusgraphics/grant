@@ -1,0 +1,5 @@
+type OrganizationMemberPage {
+  members: [OrganizationMember!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}

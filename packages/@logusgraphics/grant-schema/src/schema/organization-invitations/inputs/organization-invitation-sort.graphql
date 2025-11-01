@@ -1,0 +1,4 @@
+input OrganizationInvitationSortInput {
+  field: OrganizationInvitationSortableField!
+  order: SortOrder!
+}

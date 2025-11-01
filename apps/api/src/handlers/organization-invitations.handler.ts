@@ -7,7 +7,7 @@ import {
   InviteMemberInput,
   OrganizationInvitation,
   OrganizationInvitationPage,
-  OrganizationInvitationStatus,
+  QueryOrganizationInvitationsArgs,
   UserAuthenticationMethodProvider,
 } from '@logusgraphics/grant-schema';
 
@@ -290,19 +290,9 @@ export class OrganizationInvitationsHandler {
    * Get organization invitations
    */
   public async getOrganizationInvitations(
-    organizationId: string,
-    status?: OrganizationInvitationStatus
+    params: QueryOrganizationInvitationsArgs
   ): Promise<OrganizationInvitationPage> {
-    const invitations = await this.services.organizationInvitations.getInvitationsByOrganization(
-      organizationId,
-      status
-    );
-
-    return {
-      invitations: invitations as OrganizationInvitation[],
-      totalCount: invitations.length,
-      hasNextPage: false,
-    };
+    return await this.services.organizationInvitations.getInvitationsByOrganization(params);
   }
 
   /**

@@ -418,6 +418,11 @@ export type LoginResponse = {
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
 };
 
+export enum MemberType {
+  Invitation = 'invitation',
+  Member = 'member',
+}
+
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
@@ -656,11 +661,64 @@ export type OrganizationInvitationPage = {
   totalCount: Scalars['Int']['output'];
 };
 
+export enum OrganizationInvitationSearchableField {
+  Email = 'email',
+}
+
+export type OrganizationInvitationSortInput = {
+  field: OrganizationInvitationSortableField;
+  order: SortOrder;
+};
+
+export enum OrganizationInvitationSortableField {
+  CreatedAt = 'createdAt',
+  Email = 'email',
+  ExpiresAt = 'expiresAt',
+  Status = 'status',
+}
+
 export enum OrganizationInvitationStatus {
   Accepted = 'accepted',
   Expired = 'expired',
   Pending = 'pending',
   Revoked = 'revoked',
+}
+
+export type OrganizationMember = {
+  __typename?: 'OrganizationMember';
+  createdAt: Scalars['Date']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  invitation?: Maybe<OrganizationInvitation>;
+  name: Scalars['String']['output'];
+  role: Role;
+  status?: Maybe<OrganizationInvitationStatus>;
+  type: MemberType;
+  user?: Maybe<User>;
+};
+
+export type OrganizationMemberPage = {
+  __typename?: 'OrganizationMemberPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  members: Array<OrganizationMember>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export enum OrganizationMemberSearchableField {
+  Email = 'email',
+  Name = 'name',
+}
+
+export type OrganizationMemberSortInput = {
+  field: OrganizationMemberSortableField;
+  order: SortOrder;
+};
+
+export enum OrganizationMemberSortableField {
+  CreatedAt = 'createdAt',
+  Email = 'email',
+  Name = 'name',
+  Role = 'role',
 }
 
 export type OrganizationPage = PaginatedResults & {
@@ -937,6 +995,7 @@ export type Query = {
   groups: GroupPage;
   invitation?: Maybe<OrganizationInvitation>;
   organizationInvitations: OrganizationInvitationPage;
+  organizationMembers: OrganizationMemberPage;
   organizations: OrganizationPage;
   permissions: PermissionPage;
   projects: ProjectPage;
@@ -972,7 +1031,21 @@ export type QueryInvitationArgs = {
 };
 
 export type QueryOrganizationInvitationsArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
   organizationId: Scalars['ID']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<OrganizationInvitationSortInput>;
+  status?: InputMaybe<OrganizationInvitationStatus>;
+};
+
+export type QueryOrganizationMembersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  organizationId: Scalars['ID']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<OrganizationMemberSortInput>;
   status?: InputMaybe<OrganizationInvitationStatus>;
 };
 
@@ -1881,6 +1954,42 @@ export type RevokeInvitationMutation = {
     email: string;
     status: OrganizationInvitationStatus;
     deletedAt?: Date | null;
+  };
+};
+
+export type GetOrganizationMembersQueryVariables = Exact<{
+  organizationId: Scalars['ID']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<OrganizationMemberSortInput>;
+  status?: InputMaybe<OrganizationInvitationStatus>;
+}>;
+
+export type GetOrganizationMembersQuery = {
+  __typename?: 'Query';
+  organizationMembers: {
+    __typename?: 'OrganizationMemberPage';
+    totalCount: number;
+    hasNextPage: boolean;
+    members: Array<{
+      __typename?: 'OrganizationMember';
+      id: string;
+      name: string;
+      email?: string | null;
+      type: MemberType;
+      status?: OrganizationInvitationStatus | null;
+      createdAt: Date;
+      role: { __typename?: 'Role'; id: string; name: string; description?: string | null };
+      user?: { __typename?: 'User'; id: string; name: string } | null;
+      invitation?: {
+        __typename?: 'OrganizationInvitation';
+        id: string;
+        email: string;
+        status: OrganizationInvitationStatus;
+        expiresAt: Date;
+      } | null;
+    }>;
   };
 };
 
@@ -3407,6 +3516,153 @@ export const RevokeInvitationDocument = {
     },
   ],
 } as unknown as DocumentNode<RevokeInvitationMutation, RevokeInvitationMutationVariables>;
+export const GetOrganizationMembersDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetOrganizationMembers' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'organizationId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'OrganizationMemberSortInput' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'status' } },
+          type: {
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'OrganizationInvitationStatus' },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'organizationMembers' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'organizationId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'organizationId' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'page' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'search' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sort' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'status' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'status' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'members' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'role' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                          ],
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'user' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'invitation' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+                          ],
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetOrganizationMembersQuery, GetOrganizationMembersQueryVariables>;
 export const CreateOrganizationDocument = {
   kind: 'Document',
   definitions: [

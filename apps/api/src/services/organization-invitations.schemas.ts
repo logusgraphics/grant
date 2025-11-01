@@ -1,7 +1,10 @@
-import { OrganizationInvitationStatus } from '@logusgraphics/grant-schema';
+import {
+  OrganizationInvitationSortableField,
+  OrganizationInvitationStatus,
+} from '@logusgraphics/grant-schema';
 import { z } from 'zod';
 
-import { emailSchema, idSchema } from './common/schemas';
+import { emailSchema, idSchema, queryParamsSchema, sortOrderSchema } from './common/schemas';
 
 export const createInvitationParamsSchema = z.object({
   organizationId: idSchema,
@@ -24,7 +27,19 @@ export const getInvitationByTokenParamsSchema = z.object({
   token: z.string().min(1),
 });
 
-export const getInvitationsByOrganizationParamsSchema = z.object({
+export const organizationInvitationSortableFieldSchema = z.enum(
+  Object.values(OrganizationInvitationSortableField) as [
+    OrganizationInvitationSortableField,
+    ...OrganizationInvitationSortableField[],
+  ]
+);
+
+export const organizationInvitationSortInputSchema = z.object({
+  field: organizationInvitationSortableFieldSchema,
+  order: sortOrderSchema,
+});
+
+export const getInvitationsByOrganizationParamsSchema = queryParamsSchema.extend({
   organizationId: idSchema,
   status: z
     .enum(
@@ -34,6 +49,7 @@ export const getInvitationsByOrganizationParamsSchema = z.object({
       ]
     )
     .optional(),
+  sort: organizationInvitationSortInputSchema.nullable().optional(),
 });
 
 export const checkPendingInvitationParamsSchema = z.object({

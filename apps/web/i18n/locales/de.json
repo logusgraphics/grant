@@ -1187,8 +1187,14 @@
       "title": "Noch keine Mitglieder",
       "description": "Laden Sie Mitglieder ein, Ihrer Organisation beizutreten"
     },
+    "noSearchResults": {
+      "title": "Keine Mitglieder gefunden",
+      "description": "Versuchen Sie, Ihre Suchbegriffe anzupassen"
+    },
     "table": {
       "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
       "status": "Status",
       "actions": "Aktionen"
     },
@@ -1202,6 +1208,21 @@
     "actions": {
       "revoke": "Widerrufen",
       "resend": "Erneut senden"
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "name": "Name",
+      "email": "E-Mail",
+      "createdAt": "Erstellt",
+      "role": "Rolle"
+    },
+    "limit": "Einträge pro Seite",
+    "search": {
+      "placeholder": "Mitglieder suchen..."
+    },
+    "view": {
+      "card": "Kartenansicht",
+      "table": "Tabellenansicht"
     },
     "inviteDialog": {
       "title": "Mitglied einladen",

@@ -1,4 +1,7 @@
-import { OrganizationInvitationStatus } from '@logusgraphics/grant-schema';
+import {
+  OrganizationInvitationSortableField,
+  OrganizationInvitationStatus,
+} from '@logusgraphics/grant-schema';
 
 import { z } from '@/lib/zod-openapi.lib';
 import { createSuccessResponseSchema } from '@/rest/schemas/common.schemas';
@@ -83,6 +86,44 @@ export const getOrganizationInvitationsQuerySchema = z.object({
     .openapi({
       description: 'Filter invitations by status (pending, accepted, expired, revoked)',
       example: 'pending',
+    }),
+  page: z.number().int().min(1).optional().openapi({
+    description: 'Page number (1-indexed)',
+    example: 1,
+  }),
+  limit: z.number().int().min(-1).max(100).optional().openapi({
+    description: 'Number of items per page (-1 for all)',
+    example: 50,
+  }),
+  search: z.string().min(2, 'Search term must be at least 2 characters').optional().openapi({
+    description: 'Search term to filter invitations by email',
+    example: 'john@example.com',
+  }),
+  sortField: z
+    .enum(
+      Object.values(OrganizationInvitationSortableField) as [
+        OrganizationInvitationSortableField,
+        ...OrganizationInvitationSortableField[],
+      ]
+    )
+    .optional()
+    .openapi({
+      description: 'Field to sort by',
+      example: 'createdAt',
+    }),
+  sortOrder: z
+    .enum(['asc', 'desc'] as const)
+    .optional()
+    .openapi({
+      description: 'Sort order',
+      example: 'desc',
+    }),
+  ids: z
+    .array(z.string().uuid())
+    .optional()
+    .openapi({
+      description: 'Filter by specific invitation IDs',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
     }),
 });
 

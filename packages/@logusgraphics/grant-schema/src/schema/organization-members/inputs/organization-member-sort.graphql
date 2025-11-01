@@ -1,0 +1,4 @@
+input OrganizationMemberSortInput {
+  field: OrganizationMemberSortableField!
+  order: SortOrder!
+}

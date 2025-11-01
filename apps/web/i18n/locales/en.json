@@ -1187,8 +1187,14 @@
       "title": "No members yet",
       "description": "Invite members to join your organization"
     },
+    "noSearchResults": {
+      "title": "No members found",
+      "description": "Try adjusting your search terms"
+    },
     "table": {
       "name": "Name",
+      "email": "Email",
+      "role": "Role",
       "status": "Status",
       "actions": "Actions"
     },
@@ -1202,6 +1208,21 @@
     "actions": {
       "revoke": "Revoke",
       "resend": "Resend"
+    },
+    "sort": {
+      "label": "Sort by",
+      "name": "Name",
+      "email": "Email",
+      "createdAt": "Created",
+      "role": "Role"
+    },
+    "limit": "Items per page",
+    "search": {
+      "placeholder": "Search members..."
+    },
+    "view": {
+      "card": "Card View",
+      "table": "Table View"
     },
     "inviteDialog": {
       "title": "Invite Member",
