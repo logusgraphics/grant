@@ -253,11 +253,4 @@ export default withMermaid({
       edgeLabelBackground: 'transparent',
     },
   },
-
-  // Vite configuration
-  vite: {
-    optimizeDeps: {
-      exclude: ['debug'], // Exclude debug from optimization to avoid resolution issues
-    },
-  },
 });
