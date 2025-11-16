@@ -48,10 +48,10 @@ export default withMermaid({
     // Navigation
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Guide', link: '/guide/' },
-      { text: 'API', link: '/api/' },
-      { text: 'Self-Hosting', link: '/self-hosting/' },
-      { text: 'SaaS', link: '/saas/' },
+      { text: 'Getting Started', link: '/getting-started/introduction' },
+      { text: 'API Reference', link: '/api-reference/rest-api' },
+      { text: 'Self-Hosting', link: '/self-hosting/README' },
+      { text: 'SaaS', link: '/saas/README' },
       { text: 'GitHub', link: 'https://github.com/logusgraphics/grant-platform' },
     ],
 
@@ -251,6 +251,13 @@ export default withMermaid({
 
       // Edge colors
       edgeLabelBackground: 'transparent',
+    },
+  },
+
+  // Vite configuration
+  vite: {
+    optimizeDeps: {
+      exclude: ['debug'], // Exclude debug from optimization to avoid resolution issues
     },
   },
 });
