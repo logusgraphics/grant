@@ -52,6 +52,8 @@ export function AccountDropdown() {
   };
 
   const userDisplayName = currentAccount?.owner?.name || email || 'User';
+  const userPictureUrl = currentAccount?.owner?.pictureUrl;
+  const userUpdatedAt = currentAccount?.owner?.updatedAt;
   const initials = userDisplayName
     .split(' ')
     .map((n) => n[0])
@@ -64,9 +66,19 @@ export function AccountDropdown() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="h-9 w-9 rounded-full p-0 bg-primary/10 hover:bg-primary/20 focus-visible:bg-primary/20 transition-colors font-medium text-primary border-border"
+          className="h-9 w-9 rounded-full p-0 bg-primary/10 hover:bg-primary/20 focus-visible:bg-primary/20 transition-colors font-medium text-primary border-border overflow-hidden"
         >
-          {initials}
+          {userPictureUrl ? (
+            <Avatar
+              initial={initials}
+              imageUrl={userPictureUrl}
+              cacheBuster={userUpdatedAt}
+              size="md"
+              className="h-9 w-9"
+            />
+          ) : (
+            <span>{initials}</span>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-64">
@@ -74,7 +86,12 @@ export function AccountDropdown() {
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <Avatar initial={initials} size="lg" />
+              <Avatar
+                initial={initials}
+                imageUrl={userPictureUrl}
+                cacheBuster={userUpdatedAt}
+                size="lg"
+              />
               <div className="flex flex-col">
                 <span className="text-sm font-semibold">{userDisplayName}</span>
                 {email && (

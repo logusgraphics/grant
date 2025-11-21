@@ -50,6 +50,7 @@ export function useAccountsSync() {
           account.id !== prevAccount.id ||
           account.owner?.name !== prevAccount.owner?.name ||
           account.owner?.id !== prevAccount.owner?.id ||
+          account.owner?.pictureUrl !== prevAccount.owner?.pictureUrl ||
           account.name !== prevAccount.name ||
           account.slug !== prevAccount.slug
         );

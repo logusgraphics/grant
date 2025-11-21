@@ -13,6 +13,8 @@ mutation Login($input: LoginInput!) {
       owner {
         id
         name
+        pictureUrl
+        updatedAt
       }
     }
   }

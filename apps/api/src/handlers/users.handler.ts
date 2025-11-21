@@ -213,4 +213,37 @@ export class UserHandler extends ScopeHandler {
     }
     return [];
   }
+
+  public async uploadUserPicture(params: {
+    userId: string;
+    file: Buffer;
+    contentType: string;
+    filename: string;
+  }): Promise<{ url: string; path: string }> {
+    return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      const { userId, file, contentType, filename } = params;
+
+      const ext = filename.split('.').pop()?.toLowerCase() || 'jpg';
+      const sanitizedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext) ? ext : 'jpg';
+      const storagePath = `users/${userId}/picture.${sanitizedExt}`;
+
+      const result = await this.services.fileStorage.upload(file, storagePath, {
+        contentType,
+        public: true,
+      });
+
+      await this.services.users.updateUser(
+        {
+          id: userId,
+          input: { pictureUrl: result.url },
+        },
+        tx
+      );
+
+      return {
+        url: result.url,
+        path: result.path,
+      };
+    });
+  }
 }

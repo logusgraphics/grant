@@ -474,6 +474,7 @@ export type Mutation = {
   updateRole: Role;
   updateTag: Tag;
   updateUser: User;
+  uploadUserPicture: UploadUserPictureResult;
   verifyEmail: VerifyEmailResponse;
 };
 
@@ -636,6 +637,10 @@ export type MutationUpdateTagArgs = {
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
   input: UpdateUserInput;
+};
+
+export type MutationUploadUserPictureArgs = {
+  input: UploadUserPictureInput;
 };
 
 export type MutationVerifyEmailArgs = {
@@ -1511,6 +1516,7 @@ export type UpdateUserAuthenticationMethodInput = {
 
 export type UpdateUserInput = {
   name?: InputMaybe<Scalars['String']['input']>;
+  pictureUrl?: InputMaybe<Scalars['String']['input']>;
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   roleIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
@@ -1529,6 +1535,19 @@ export type UpdateUserTagInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type UploadUserPictureInput = {
+  contentType: Scalars['String']['input'];
+  file: Scalars['String']['input'];
+  filename: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+export type UploadUserPictureResult = {
+  __typename?: 'UploadUserPictureResult';
+  path: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
 export type User = Auditable & {
   __typename?: 'User';
   accounts?: Maybe<Array<Account>>;
@@ -1537,6 +1556,7 @@ export type User = Auditable & {
   deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  pictureUrl?: Maybe<Scalars['String']['output']>;
   roles?: Maybe<Array<Role>>;
   tags?: Maybe<Array<Tag>>;
   updatedAt: Scalars['Date']['output'];
@@ -2007,6 +2027,8 @@ export type ResolversTypes = ResolversObject<{
   UpdateUserInput: UpdateUserInput;
   UpdateUserSessionInput: UpdateUserSessionInput;
   UpdateUserTagInput: UpdateUserTagInput;
+  UploadUserPictureInput: UploadUserPictureInput;
+  UploadUserPictureResult: ResolverTypeWrapper<UploadUserPictureResult>;
   User: ResolverTypeWrapper<User>;
   UserAuthenticationEmailProviderAction: UserAuthenticationEmailProviderAction;
   UserAuthenticationMethod: ResolverTypeWrapper<UserAuthenticationMethod>;
@@ -2173,6 +2195,8 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateUserInput: UpdateUserInput;
   UpdateUserSessionInput: UpdateUserSessionInput;
   UpdateUserTagInput: UpdateUserTagInput;
+  UploadUserPictureInput: UploadUserPictureInput;
+  UploadUserPictureResult: UploadUserPictureResult;
   User: User;
   UserAuthenticationMethod: UserAuthenticationMethod;
   UserPage: UserPage;
@@ -2637,6 +2661,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateUserArgs, 'id' | 'input'>
+  >;
+  uploadUserPicture?: Resolver<
+    ResolversTypes['UploadUserPictureResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUploadUserPictureArgs, 'input'>
   >;
   verifyEmail?: Resolver<
     ResolversTypes['VerifyEmailResponse'],
@@ -3260,6 +3290,15 @@ export type TagPageResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type UploadUserPictureResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['UploadUserPictureResult'] = ResolversParentTypes['UploadUserPictureResult'],
+> = ResolversObject<{
+  path?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
 export type UserResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User'],
@@ -3274,6 +3313,7 @@ export type UserResolvers<
   deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  pictureUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   roles?: Resolver<Maybe<Array<ResolversTypes['Role']>>, ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
@@ -3469,6 +3509,7 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   Searchable?: SearchableResolvers<ContextType>;
   Tag?: TagResolvers<ContextType>;
   TagPage?: TagPageResolvers<ContextType>;
+  UploadUserPictureResult?: UploadUserPictureResultResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserAuthenticationMethod?: UserAuthenticationMethodResolvers<ContextType>;
   UserPage?: UserPageResolvers<ContextType>;

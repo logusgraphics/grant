@@ -1,7 +1,8 @@
 import { SortOrder, User, UserSortableField, UserSortInput } from '@logusgraphics/grant-schema';
 import { Response } from 'express';
 
-import { NotFoundError } from '@/lib/errors';
+import { config } from '@/config';
+import { BadRequestError, NotFoundError } from '@/lib/errors';
 import { parseRelations } from '@/lib/field-selection.lib';
 import { TypedRequest } from '@/rest/types';
 import { RequestContext } from '@/types';
@@ -11,6 +12,7 @@ import {
   deleteUserQuerySchema,
   getUsersQuerySchema,
   updateUserRequestSchema,
+  uploadUserPictureRequestSchema,
   userParamsSchema,
 } from '../schemas/users.schemas';
 
@@ -153,5 +155,80 @@ export class UsersController extends BaseController {
     });
 
     return this.success(res, user);
+  }
+
+  /**
+   * POST /api/users/:id/picture
+   * Upload a user profile picture
+   */
+  async uploadPicture(
+    req: TypedRequest<{
+      params: typeof userParamsSchema;
+      body: typeof uploadUserPictureRequestSchema;
+    }>,
+    res: Response
+  ) {
+    const { id } = req.params;
+    const { file, filename, contentType } = req.body;
+
+    if (!this.user || this.user.id !== id) {
+      throw new NotFoundError(
+        'You can only upload pictures for your own account',
+        'errors:auth.unauthorized'
+      );
+    }
+
+    if (
+      !config.storage.upload.allowedTypes.includes(
+        contentType as (typeof config.storage.upload.allowedTypes)[number]
+      )
+    ) {
+      throw new BadRequestError(
+        `Invalid file type. Allowed types: ${config.storage.upload.allowedTypes.join(', ')}`,
+        'errors:validation.invalid',
+        { field: 'contentType' }
+      );
+    }
+
+    const fileExtension = filename.split('.').pop()?.toLowerCase();
+    if (
+      !fileExtension ||
+      !config.storage.upload.allowedExtensions.includes(
+        fileExtension as (typeof config.storage.upload.allowedExtensions)[number]
+      )
+    ) {
+      throw new BadRequestError(
+        `Invalid file extension. Allowed extensions: ${config.storage.upload.allowedExtensions.join(', ')}`,
+        'errors:validation.invalid',
+        { field: 'filename' }
+      );
+    }
+
+    let fileBuffer: Buffer;
+    try {
+      const base64Data = file.replace(/^data:.*,/, '');
+      fileBuffer = Buffer.from(base64Data, 'base64');
+    } catch {
+      throw new BadRequestError('Invalid base64 file data', 'errors:validation.invalid', {
+        field: 'file',
+      });
+    }
+
+    if (fileBuffer.length > config.storage.upload.maxFileSize) {
+      throw new BadRequestError(
+        `File size exceeds maximum of ${config.storage.upload.maxFileSize / 1024 / 1024}MB`,
+        'errors:validation.invalid',
+        { field: 'file' }
+      );
+    }
+
+    const result = await this.context.handlers.users.uploadUserPicture({
+      userId: id,
+      file: fileBuffer,
+      contentType,
+      filename,
+    });
+
+    return this.success(res, result, 201);
   }
 }

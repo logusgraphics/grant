@@ -142,3 +142,32 @@ export const deleteUserResponseSchema = createSuccessResponseSchema(
   userSchema,
   'Successfully deleted user'
 );
+
+export const uploadUserPictureRequestSchema = z.object({
+  file: z.string().min(1, 'File is required').openapi({
+    description: 'Base64-encoded file data (with optional data URI prefix)',
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
+  }),
+  filename: z.string().min(1, 'Filename is required').openapi({
+    description: 'Original filename with extension',
+    example: 'profile.jpg',
+  }),
+  contentType: z.string().min(1, 'Content type is required').openapi({
+    description: 'MIME type of the file',
+    example: 'image/jpeg',
+  }),
+});
+
+export const uploadUserPictureResponseSchema = createSuccessResponseSchema(
+  z.object({
+    url: z.string().openapi({
+      description: 'Public URL of the uploaded file',
+      example: '/storage/users/123/picture.jpg',
+    }),
+    path: z.string().openapi({
+      description: 'Storage path of the uploaded file',
+      example: 'users/123/picture.jpg',
+    }),
+  }),
+  'Successfully uploaded user picture'
+);

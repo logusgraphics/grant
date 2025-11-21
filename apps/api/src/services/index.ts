@@ -6,6 +6,7 @@ import { AuthenticatedUser } from '@/types';
 import { AccountProjectService } from './account-projects.service';
 import { AccountService } from './accounts.service';
 import { EmailService } from './email.service';
+import { FileStorageService } from './file-storage.service';
 import { GroupPermissionService } from './group-permissions.service';
 import { GroupTagService } from './group-tags.service';
 import { GroupService } from './groups.service';
@@ -47,6 +48,7 @@ export function createServices(
     accounts: new AccountService(repositories, user, db),
     accountProjects: new AccountProjectService(repositories, user, db),
     email: new EmailService(),
+    fileStorage: new FileStorageService(),
     users: new UserService(repositories, user, db),
     userAuthenticationMethods: new UserAuthenticationMethodService(repositories, user, db),
     userSessions: new UserSessionService(repositories, user, db),

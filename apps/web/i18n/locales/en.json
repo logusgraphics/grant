@@ -69,7 +69,8 @@
       "delete": "Delete",
       "create": "Create",
       "creating": "Creating...",
-      "update": "Update"
+      "update": "Update",
+      "uploading": "Uploading..."
     },
     "emptyElements": "No {title} to display",
     "loading": "Loading...",
@@ -369,6 +370,8 @@
       "updateError": "Failed to update user",
       "deleteSuccess": "User deleted",
       "deleteError": "Failed to delete user",
+      "uploadPictureSuccess": "Profile picture uploaded",
+      "uploadPictureError": "Failed to upload profile picture",
       "roleAddedSuccess": "Role added to user",
       "roleAddedError": "Failed to add role to user",
       "roleRemovedSuccess": "Role removed from user",
@@ -1420,7 +1423,27 @@
         "title": "Profile Picture",
         "description": "Upload a profile picture to personalize your account",
         "comingSoon": "Profile picture support is coming soon! You'll be able to upload a custom avatar to personalize your account.",
-        "uploadButton": "Upload Picture"
+        "uploadButton": "Upload Picture",
+        "changeButton": "Change Picture"
+      },
+      "upload": {
+        "title": "Upload Profile Picture",
+        "description": "Select an image, crop it to your liking, and upload it as your profile picture",
+        "dropzone": {
+          "idle": "Drag and drop an image here, or click to browse",
+          "active": "Drop the image here",
+          "hint": "Supported formats: JPG, PNG, GIF, WebP (max 5MB)",
+          "browse": "Browse Files"
+        },
+        "zoom": "Zoom",
+        "changeImage": "Change Image",
+        "upload": "Upload",
+        "errors": {
+          "invalidType": "Invalid file type. Please use JPG, PNG, GIF, or WebP.",
+          "fileTooLarge": "File is too large. Maximum size is {maxSize}MB.",
+          "readFailed": "Failed to read the file. Please try again.",
+          "uploadFailed": "Failed to upload the image. Please try again."
+        }
       },
       "notifications": {
         "updateSuccess": "Profile updated successfully",

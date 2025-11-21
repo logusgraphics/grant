@@ -26,6 +26,7 @@ export const createUserInputSchema = z.object({
 
 export const updateUserInputSchema = z.object({
   name: nonEmptyNameSchema.nullable().optional(),
+  pictureUrl: z.string().max(500).nullable().optional(),
 });
 
 export const createUserArgsSchema = z.object({

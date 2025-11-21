@@ -15,7 +15,7 @@ export default function ProfileSettingsPage() {
   const t = useTranslations('settings.profile');
   usePageTitle('settings.profile');
 
-  const { updateUser } = useUserMutations();
+  const { updateUser, uploadUserPicture } = useUserMutations();
   const { currentAccount } = useAuthStore();
   const apolloClient = useApolloClient();
 
@@ -41,6 +41,20 @@ export default function ProfileSettingsPage() {
     evictAccountsCache(apolloClient.cache);
   };
 
+  const handleUploadPicture = async (file: string, filename: string, contentType: string) => {
+    if (!userData) {
+      return;
+    }
+
+    await uploadUserPicture({
+      userId: userData.id,
+      file,
+      filename,
+      contentType,
+    });
+    evictAccountsCache(apolloClient.cache);
+  };
+
   if (!userData) {
     return (
       <DashboardPageLayout title={t('title')} variant="simple">
@@ -53,7 +67,13 @@ export default function ProfileSettingsPage() {
 
   return (
     <DashboardPageLayout title={t('title')} variant="simple">
-      <ProfileInformationForm defaultValues={defaultValues} onSubmit={handleProfileUpdate} />
+      <ProfileInformationForm
+        defaultValues={defaultValues}
+        onSubmit={handleProfileUpdate}
+        onUploadPicture={handleUploadPicture}
+        currentPictureUrl={userData.pictureUrl || undefined}
+        currentPictureUpdatedAt={userData.updatedAt || undefined}
+      />
     </DashboardPageLayout>
   );
 }

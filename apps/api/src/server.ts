@@ -1,4 +1,5 @@
 import http from 'http';
+import * as path from 'path';
 
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -74,8 +75,42 @@ async function startServer() {
 
   app.use(cors<cors.CorsRequest>(config.cors));
   app.use(helmet(config.helmet));
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
   app.use(i18nMiddleware);
+
+  if (config.storage.provider === 'local') {
+    const storagePath = path.resolve(config.storage.local.basePath);
+    app.use(
+      '/storage',
+      express.static(storagePath, {
+        dotfiles: 'deny',
+        etag: true,
+        lastModified: true,
+        maxAge: 31536000,
+        setHeaders: (res, filePath) => {
+          const ext = path.extname(filePath).toLowerCase();
+          const contentTypes: Record<string, string> = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.svg': 'image/svg+xml',
+            '.pdf': 'application/pdf',
+          };
+          if (contentTypes[ext]) {
+            res.setHeader('Content-Type', contentTypes[ext]);
+          }
+        },
+      })
+    );
+    logger.info({
+      msg: 'Static file serving enabled for local storage',
+      path: '/storage',
+      basePath: storagePath,
+    });
+  }
+
   app.use(authMiddleware);
   app.use(contextMiddleware(db, scopeCache));
   app.use(requestLoggingMiddleware);

@@ -7,6 +7,8 @@ import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 
+import { Avatar } from '@/components/common/Avatar';
+import { ImageUploadDialog } from '@/components/settings/ImageUploadDialog';
 import { SettingsCard } from '@/components/settings/SettingsCard';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,12 +26,22 @@ import { ProfileSettingsFormValues, profileSettingsSchema } from '@/lib/schemas/
 interface ProfileInformationFormProps {
   defaultValues: ProfileSettingsFormValues;
   onSubmit: (values: ProfileSettingsFormValues) => Promise<void>;
+  onUploadPicture: (file: string, filename: string, contentType: string) => Promise<void>;
+  currentPictureUrl?: string;
+  currentPictureUpdatedAt?: string;
 }
 
-export function ProfileInformationForm({ defaultValues, onSubmit }: ProfileInformationFormProps) {
+export function ProfileInformationForm({
+  defaultValues,
+  onSubmit,
+  onUploadPicture,
+  currentPictureUrl,
+  currentPictureUpdatedAt,
+}: ProfileInformationFormProps) {
   const t = useTranslations('settings.profile');
   const tCommon = useTranslations('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   const form = useForm<ProfileSettingsFormValues>({
     resolver: zodResolver(profileSettingsSchema),
@@ -104,17 +116,33 @@ export function ProfileInformationForm({ defaultValues, onSubmit }: ProfileInfor
 
       <SettingsCard title={t('avatar.title')} description={t('avatar.description')}>
         <div className="flex items-center gap-6">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-            <User className="h-12 w-12 text-muted-foreground" />
-          </div>
+          {currentPictureUrl ? (
+            <Avatar
+              initial={defaultValues.name || 'U'}
+              imageUrl={currentPictureUrl}
+              cacheBuster={currentPictureUpdatedAt}
+              size="lg"
+              className="h-24 w-24"
+            />
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
+              <User className="h-12 w-12 text-muted-foreground" />
+            </div>
+          )}
           <div className="flex-1 space-y-2">
-            <p className="text-sm text-muted-foreground">{t('avatar.comingSoon')}</p>
-            <Button variant="outline" size="sm" disabled>
-              {t('avatar.uploadButton')}
+            <Button variant="outline" size="sm" onClick={() => setIsUploadDialogOpen(true)}>
+              {currentPictureUrl ? t('avatar.changeButton') : t('avatar.uploadButton')}
             </Button>
           </div>
         </div>
       </SettingsCard>
+
+      <ImageUploadDialog
+        open={isUploadDialogOpen}
+        onOpenChange={setIsUploadDialogOpen}
+        onUpload={onUploadPicture}
+        currentImageUrl={currentPictureUrl}
+      />
     </div>
   );
 }

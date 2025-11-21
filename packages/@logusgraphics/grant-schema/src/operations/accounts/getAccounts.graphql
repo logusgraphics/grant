@@ -9,6 +9,8 @@ query GetAccounts($page: Int, $limit: Int, $sort: AccountSortInput, $search: Str
       owner {
         id
         name
+        pictureUrl
+        updatedAt
       }
       createdAt
       updatedAt

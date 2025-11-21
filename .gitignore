@@ -49,3 +49,6 @@ coverage/
 
 # Audit reports
 audit-reports/
+
+# File storage
+apps/api/storage/

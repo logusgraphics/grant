@@ -68,7 +68,9 @@
       "edit": "Bearbeiten",
       "delete": "Löschen",
       "create": "Erstellen",
-      "update": "Aktualisieren"
+      "creating": "Wird erstellt...",
+      "update": "Aktualisieren",
+      "uploading": "Wird hochgeladen..."
     },
     "emptyElements": "Keine {title} zum Anzeigen",
     "loading": "Wird geladen...",
@@ -368,6 +370,8 @@
       "updateError": "Benutzer konnte nicht aktualisiert werden",
       "deleteSuccess": "Benutzer gelöscht",
       "deleteError": "Benutzer konnte nicht gelöscht werden",
+      "uploadPictureSuccess": "Profilbild hochgeladen",
+      "uploadPictureError": "Profilbild konnte nicht hochgeladen werden",
       "roleAddedSuccess": "Rolle zum Benutzer hinzugefügt",
       "roleAddedError": "Rolle konnte nicht zum Benutzer hinzugefügt werden",
       "roleRemovedSuccess": "Rolle vom Benutzer entfernt",
@@ -1409,7 +1413,27 @@
         "title": "Profilbild",
         "description": "Laden Sie ein Profilbild hoch, um Ihr Konto zu personalisieren",
         "comingSoon": "Profilbild-Unterstützung kommt bald! Sie werden in der Lage sein, einen benutzerdefinierten Avatar hochzuladen, um Ihr Konto zu personalisieren.",
-        "uploadButton": "Bild hochladen"
+        "uploadButton": "Bild hochladen",
+        "changeButton": "Bild ändern"
+      },
+      "upload": {
+        "title": "Profilbild hochladen",
+        "description": "Wählen Sie ein Bild aus, schneiden Sie es nach Ihren Wünschen zu und laden Sie es als Ihr Profilbild hoch",
+        "dropzone": {
+          "idle": "Ziehen Sie ein Bild hierher oder klicken Sie zum Durchsuchen",
+          "active": "Lassen Sie das Bild hier los",
+          "hint": "Unterstützte Formate: JPG, PNG, GIF, WebP (max. 5MB)",
+          "browse": "Dateien durchsuchen"
+        },
+        "zoom": "Zoom",
+        "changeImage": "Bild ändern",
+        "upload": "Hochladen",
+        "errors": {
+          "invalidType": "Ungültiger Dateityp. Bitte verwenden Sie JPG, PNG, GIF oder WebP.",
+          "fileTooLarge": "Datei ist zu groß. Maximale Größe ist {maxSize}MB.",
+          "readFailed": "Datei konnte nicht gelesen werden. Bitte versuchen Sie es erneut.",
+          "uploadFailed": "Bild konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut."
+        }
       },
       "notifications": {
         "updateSuccess": "Profil erfolgreich aktualisiert",

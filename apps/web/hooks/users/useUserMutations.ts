@@ -7,6 +7,9 @@ import {
   MutationDeleteUserArgs,
   UpdateUserDocument,
   UpdateUserInput,
+  UploadUserPictureDocument,
+  UploadUserPictureInput,
+  UploadUserPictureResult,
   User,
 } from '@logusgraphics/grant-schema';
 import { useTranslations } from 'next-intl';
@@ -32,6 +35,13 @@ export function useUserMutations() {
   const [deleteUser] = useMutation<{ deleteUser: User }>(DeleteUserDocument, {
     update,
   });
+
+  const [uploadUserPicture] = useMutation<{ uploadUserPicture: UploadUserPictureResult }>(
+    UploadUserPictureDocument,
+    {
+      update,
+    }
+  );
 
   const handleCreateUser = async (input: CreateUserInput) => {
     try {
@@ -87,9 +97,27 @@ export function useUserMutations() {
     }
   };
 
+  const handleUploadUserPicture = async (input: UploadUserPictureInput) => {
+    try {
+      const result = await uploadUserPicture({
+        variables: { input },
+      });
+
+      toast.success(t('notifications.uploadPictureSuccess'));
+      return result.data?.uploadUserPicture;
+    } catch (error) {
+      console.error('Error uploading user picture:', error);
+      toast.error(t('notifications.uploadPictureError'), {
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+      });
+      throw error;
+    }
+  };
+
   return {
     createUser: handleCreateUser,
     updateUser: handleUpdateUser,
     deleteUser: handleDeleteUser,
+    uploadUserPicture: handleUploadUserPicture,
   };
 }

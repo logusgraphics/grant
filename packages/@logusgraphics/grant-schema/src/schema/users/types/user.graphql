@@ -1,6 +1,7 @@
 type User implements Auditable {
   id: ID!
   name: String!
+  pictureUrl: String
   roles: [Role!]
   tags: [Tag!]
   authenticationMethods: [UserAuthenticationMethod!]

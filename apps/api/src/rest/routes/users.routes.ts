@@ -7,6 +7,7 @@ import {
   deleteUserQuerySchema,
   getUsersQuerySchema,
   updateUserRequestSchema,
+  uploadUserPictureRequestSchema,
   userParamsSchema,
 } from '@/rest/schemas/users.schemas';
 import { TypedRequest } from '@/rest/types';
@@ -78,6 +79,23 @@ export function createUserRoutes(context: RequestContext) {
         req as TypedRequest<{
           params: typeof userParamsSchema;
           query: typeof deleteUserQuerySchema;
+        }>,
+        res
+      )
+  );
+
+  /**
+   * POST /api/users/:id/picture
+   * Upload a user profile picture
+   */
+  router.post(
+    '/:id/picture',
+    validate({ params: userParamsSchema, body: uploadUserPictureRequestSchema }),
+    (req, res) =>
+      usersController.uploadPicture(
+        req as TypedRequest<{
+          params: typeof userParamsSchema;
+          body: typeof uploadUserPictureRequestSchema;
         }>,
         res
       )

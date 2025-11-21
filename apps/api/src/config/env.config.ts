@@ -379,6 +379,47 @@ export const LOGGING_CONFIG = {
 } as const;
 
 // ============================================================================
+// File Storage Configuration
+// ============================================================================
+
+export const STORAGE_CONFIG = {
+  /** Storage provider: 'local' | 's3' */
+  provider: getEnvEnum('STORAGE_PROVIDER', ['local', 's3'] as const, 'local'),
+
+  /** Local storage configuration (works for bare metal, Docker volumes, or any filesystem mount) */
+  local: {
+    /** Base path for local file storage (can be local directory, Docker volume mount, etc.) */
+    basePath: getEnv('STORAGE_LOCAL_BASE_PATH', './storage'),
+  },
+
+  /** S3 storage configuration */
+  s3: {
+    /** S3 bucket name */
+    bucket: getEnv('STORAGE_S3_BUCKET', ''),
+    /** AWS region */
+    region: getEnv('STORAGE_S3_REGION', 'us-east-1'),
+    /** AWS access key ID */
+    accessKeyId: getEnv('STORAGE_S3_ACCESS_KEY_ID', ''),
+    /** AWS secret access key */
+    secretAccessKey: getEnv('STORAGE_S3_SECRET_ACCESS_KEY', ''),
+    /** Custom S3 endpoint (for S3-compatible services like MinIO) */
+    endpoint: process.env.STORAGE_S3_ENDPOINT || undefined,
+    /** Public URL base (e.g., CloudFront distribution URL) */
+    publicUrl: process.env.STORAGE_S3_PUBLIC_URL || undefined,
+  },
+
+  /** File upload validation configuration */
+  upload: {
+    /** Maximum file size in bytes (default: 5MB) */
+    maxFileSize: getEnvNumber('STORAGE_UPLOAD_MAX_FILE_SIZE', 5 * 1024 * 1024),
+    /** Allowed MIME types for file uploads */
+    allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const,
+    /** Allowed file extensions */
+    allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] as const,
+  },
+} as const;
+
+// ============================================================================
 // System Constants (Not Configurable via ENV)
 // ============================================================================
 
@@ -457,6 +498,19 @@ export function validateConfig(): void {
           );
         }
         break;
+    }
+  }
+
+  // Validate storage configuration
+  if (STORAGE_CONFIG.provider === 's3') {
+    if (!STORAGE_CONFIG.s3.bucket) {
+      errors.push('STORAGE_S3_BUCKET is required when using s3 provider');
+    }
+    if (!STORAGE_CONFIG.s3.accessKeyId) {
+      errors.push('STORAGE_S3_ACCESS_KEY_ID is required when using s3 provider');
+    }
+    if (!STORAGE_CONFIG.s3.secretAccessKey) {
+      errors.push('STORAGE_S3_SECRET_ACCESS_KEY is required when using s3 provider');
     }
   }
 
@@ -553,6 +607,7 @@ export const config = {
   email: EMAIL_CONFIG,
   i18n: I18N_CONFIG,
   logging: LOGGING_CONFIG,
+  storage: STORAGE_CONFIG,
   system: SYSTEM_CONSTANTS,
   cors: CORS_CONFIG,
   helmet: HELMET_CONFIG,

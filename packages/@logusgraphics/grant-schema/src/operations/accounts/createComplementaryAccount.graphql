@@ -9,6 +9,8 @@ mutation CreateComplementaryAccount($input: CreateComplementaryAccountInput!) {
       owner {
         id
         name
+        pictureUrl
+        updatedAt
       }
       createdAt
       updatedAt
@@ -22,6 +24,8 @@ mutation CreateComplementaryAccount($input: CreateComplementaryAccountInput!) {
       owner {
         id
         name
+        pictureUrl
+        updatedAt
       }
       createdAt
       updatedAt

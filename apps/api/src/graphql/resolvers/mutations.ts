@@ -23,6 +23,7 @@ export const Mutation = {
   createUser: userMutations.createUser,
   updateUser: userMutations.updateUser,
   deleteUser: userMutations.deleteUser,
+  uploadUserPicture: userMutations.uploadUserPicture,
   createRole: roleMutations.createRole,
   deleteRole: roleMutations.deleteRole,
   updateRole: roleMutations.updateRole,

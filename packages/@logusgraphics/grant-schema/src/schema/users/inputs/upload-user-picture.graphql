@@ -1,0 +1,6 @@
+input UploadUserPictureInput {
+  userId: ID!
+  file: String!
+  filename: String!
+  contentType: String!
+}

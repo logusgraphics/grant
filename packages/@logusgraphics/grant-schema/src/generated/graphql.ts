@@ -473,6 +473,7 @@ export type Mutation = {
   updateRole: Role;
   updateTag: Tag;
   updateUser: User;
+  uploadUserPicture: UploadUserPictureResult;
   verifyEmail: VerifyEmailResponse;
 };
 
@@ -635,6 +636,10 @@ export type MutationUpdateTagArgs = {
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
   input: UpdateUserInput;
+};
+
+export type MutationUploadUserPictureArgs = {
+  input: UploadUserPictureInput;
 };
 
 export type MutationVerifyEmailArgs = {
@@ -1510,6 +1515,7 @@ export type UpdateUserAuthenticationMethodInput = {
 
 export type UpdateUserInput = {
   name?: InputMaybe<Scalars['String']['input']>;
+  pictureUrl?: InputMaybe<Scalars['String']['input']>;
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   roleIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
@@ -1528,6 +1534,19 @@ export type UpdateUserTagInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type UploadUserPictureInput = {
+  contentType: Scalars['String']['input'];
+  file: Scalars['String']['input'];
+  filename: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+export type UploadUserPictureResult = {
+  __typename?: 'UploadUserPictureResult';
+  path: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
 export type User = Auditable & {
   __typename?: 'User';
   accounts?: Maybe<Array<Account>>;
@@ -1536,6 +1555,7 @@ export type User = Auditable & {
   deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  pictureUrl?: Maybe<Scalars['String']['output']>;
   roles?: Maybe<Array<Role>>;
   tags?: Maybe<Array<Tag>>;
   updatedAt: Scalars['Date']['output'];
@@ -1717,7 +1737,13 @@ export type CreateComplementaryAccountMutation = {
       ownerId: string;
       createdAt: Date;
       updatedAt: Date;
-      owner: { __typename?: 'User'; id: string; name: string };
+      owner: {
+        __typename?: 'User';
+        id: string;
+        name: string;
+        pictureUrl?: string | null;
+        updatedAt: Date;
+      };
     };
     accounts: Array<{
       __typename?: 'Account';
@@ -1728,7 +1754,13 @@ export type CreateComplementaryAccountMutation = {
       ownerId: string;
       createdAt: Date;
       updatedAt: Date;
-      owner: { __typename?: 'User'; id: string; name: string };
+      owner: {
+        __typename?: 'User';
+        id: string;
+        name: string;
+        pictureUrl?: string | null;
+        updatedAt: Date;
+      };
     }>;
   };
 };
@@ -1756,7 +1788,13 @@ export type GetAccountsQuery = {
       ownerId: string;
       createdAt: Date;
       updatedAt: Date;
-      owner: { __typename?: 'User'; id: string; name: string };
+      owner: {
+        __typename?: 'User';
+        id: string;
+        name: string;
+        pictureUrl?: string | null;
+        updatedAt: Date;
+      };
     }>;
   };
 };
@@ -1799,7 +1837,13 @@ export type LoginMutation = {
       name: string;
       slug: string;
       type: AccountType;
-      owner: { __typename?: 'User'; id: string; name: string };
+      owner: {
+        __typename?: 'User';
+        id: string;
+        name: string;
+        pictureUrl?: string | null;
+        updatedAt: Date;
+      };
     }>;
   };
 };
@@ -1837,7 +1881,13 @@ export type RegisterMutation = {
       name: string;
       slug: string;
       type: AccountType;
-      owner: { __typename?: 'User'; id: string; name: string };
+      owner: {
+        __typename?: 'User';
+        id: string;
+        name: string;
+        pictureUrl?: string | null;
+        updatedAt: Date;
+      };
     };
   };
 };
@@ -2710,6 +2760,15 @@ export type UpdateUserMutation = {
   updateUser: { __typename?: 'User'; id: string; name: string; createdAt: Date; updatedAt: Date };
 };
 
+export type UploadUserPictureMutationVariables = Exact<{
+  input: UploadUserPictureInput;
+}>;
+
+export type UploadUserPictureMutation = {
+  __typename?: 'Mutation';
+  uploadUserPicture: { __typename?: 'UploadUserPictureResult'; url: string; path: string };
+};
+
 export const CheckUsernameDocument = {
   kind: 'Document',
   definitions: [
@@ -2808,6 +2867,8 @@ export const CreateComplementaryAccountDocument = {
                           selections: [
                             { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                             { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'pictureUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                           ],
                         },
                       },
@@ -2835,6 +2896,8 @@ export const CreateComplementaryAccountDocument = {
                           selections: [
                             { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                             { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'pictureUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                           ],
                         },
                       },
@@ -2949,6 +3012,8 @@ export const GetAccountsDocument = {
                           selections: [
                             { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                             { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'pictureUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                           ],
                         },
                       },
@@ -3084,6 +3149,8 @@ export const LoginDocument = {
                           selections: [
                             { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                             { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'pictureUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                           ],
                         },
                       },
@@ -3210,6 +3277,8 @@ export const RegisterDocument = {
                           selections: [
                             { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                             { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'pictureUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                           ],
                         },
                       },
@@ -6291,3 +6360,46 @@ export const UpdateUserDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdateUserMutation, UpdateUserMutationVariables>;
+export const UploadUserPictureDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UploadUserPicture' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UploadUserPictureInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadUserPicture' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UploadUserPictureMutation, UploadUserPictureMutationVariables>;

@@ -12,6 +12,8 @@ import {
   notFoundErrorResponseSchema,
   updateUserRequestSchema,
   updateUserResponseSchema,
+  uploadUserPictureRequestSchema,
+  uploadUserPictureResponseSchema,
   userParamsSchema,
   userSchema,
   userWithRelationsSchema,
@@ -26,6 +28,8 @@ export function registerUserEndpoints(registry: OpenAPIRegistry) {
   registry.register('GetUsersResponse', getUsersResponseSchema);
   registry.register('GetUserResponse', createSuccessResponseSchema(userWithRelationsSchema));
   registry.register('UserParams', userParamsSchema);
+  registry.register('UploadUserPictureRequest', uploadUserPictureRequestSchema);
+  registry.register('UploadUserPictureResponse', uploadUserPictureResponseSchema);
 
   /**
    * GET /api/users
@@ -293,6 +297,101 @@ You must provide the scope context:
         content: {
           'application/json': {
             schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'User not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/users/:id/picture
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/users/{id}/picture',
+    tags: ['Users'],
+    summary: 'Upload user profile picture',
+    description: `
+Upload a profile picture for a user.
+
+### Authentication
+You can only upload pictures for your own account. The \`id\` parameter must match your authenticated user ID.
+
+### File Format
+- **Content Types**: \`image/jpeg\`, \`image/png\`, \`image/gif\`, \`image/webp\`
+- **File Extensions**: \`.jpg\`, \`.jpeg\`, \`.png\`, \`.gif\`, \`.webp\`
+- **Max Size**: 5MB (configurable via \`STORAGE_UPLOAD_MAX_FILE_SIZE\`)
+
+### File Encoding
+The file must be provided as a base64-encoded string. You can include the data URI prefix:
+\`\`\`
+data:image/jpeg;base64,/9j/4AAQSkZJRg...
+\`\`\`
+
+Or just the base64 data:
+\`\`\`
+/9j/4AAQSkZJRg...
+\`\`\`
+
+### Response
+Returns the public URL and storage path of the uploaded file. The user's \`pictureUrl\` field is automatically updated.
+    `.trim(),
+    request: {
+      params: userParamsSchema,
+      body: {
+        content: {
+          'application/json': {
+            schema: uploadUserPictureRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: 'Picture uploaded successfully',
+        content: {
+          'application/json': {
+            schema: uploadUserPictureResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request body or file validation failed',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - You can only upload pictures for your own account',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
           },
         },
       },

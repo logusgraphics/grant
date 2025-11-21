@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
       allowedOrigins: ['localhost:3000'],
     },
   },
+  async rewrites() {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_GRAPHQL_URL?.replace('/graphql', '') || 'http://localhost:4000';
+    return [
+      {
+        source: '/storage/:path*',
+        destination: `${apiUrl}/storage/:path*`,
+      },
+    ];
+  },
 };
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');

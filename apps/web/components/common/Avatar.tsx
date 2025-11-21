@@ -1,11 +1,13 @@
 'use client';
 
 import { AvatarFallback, AvatarImage, Avatar as UIAvatar } from '@/components/ui/avatar';
+import { addImageCacheBuster } from '@/lib/utils/image-url';
 import { cn } from '@/lib/utils';
 
 export interface AvatarProps {
   initial: string;
   imageUrl?: string;
+  cacheBuster?: string | Date | null;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   fallbackClassName?: string;
@@ -20,13 +22,16 @@ const sizeClasses = {
 export function Avatar({
   initial,
   imageUrl,
+  cacheBuster,
   size = 'md',
   className,
   fallbackClassName,
 }: AvatarProps) {
+  const cachedImageUrl = addImageCacheBuster(imageUrl, cacheBuster);
+
   return (
     <UIAvatar className={cn('bg-primary/10', sizeClasses[size], className)}>
-      {imageUrl && <AvatarImage src={imageUrl} alt={initial} />}
+      {cachedImageUrl && <AvatarImage src={cachedImageUrl} alt={initial} />}
       <AvatarFallback className={cn('font-medium', fallbackClassName)}>
         {initial.toUpperCase()}
       </AvatarFallback>
