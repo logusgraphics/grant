@@ -1717,6 +1717,7 @@ export type CreateComplementaryAccountMutation = {
       ownerId: string;
       createdAt: Date;
       updatedAt: Date;
+      owner: { __typename?: 'User'; id: string; name: string };
     };
     accounts: Array<{
       __typename?: 'Account';
@@ -1727,6 +1728,7 @@ export type CreateComplementaryAccountMutation = {
       ownerId: string;
       createdAt: Date;
       updatedAt: Date;
+      owner: { __typename?: 'User'; id: string; name: string };
     }>;
   };
 };
@@ -1754,6 +1756,7 @@ export type GetAccountsQuery = {
       ownerId: string;
       createdAt: Date;
       updatedAt: Date;
+      owner: { __typename?: 'User'; id: string; name: string };
     }>;
   };
 };
@@ -1796,6 +1799,7 @@ export type LoginMutation = {
       name: string;
       slug: string;
       type: AccountType;
+      owner: { __typename?: 'User'; id: string; name: string };
     }>;
   };
 };
@@ -1827,7 +1831,14 @@ export type RegisterMutation = {
     requiresEmailVerification?: boolean | null;
     verificationExpiry?: Date | null;
     email?: string | null;
-    account: { __typename?: 'Account'; id: string; name: string; slug: string; type: AccountType };
+    account: {
+      __typename?: 'Account';
+      id: string;
+      name: string;
+      slug: string;
+      type: AccountType;
+      owner: { __typename?: 'User'; id: string; name: string };
+    };
   };
 };
 
@@ -2789,6 +2800,17 @@ export const CreateComplementaryAccountDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'type' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'ownerId' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                     ],
@@ -2805,6 +2827,17 @@ export const CreateComplementaryAccountDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'type' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'ownerId' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                     ],
@@ -2908,6 +2941,17 @@ export const GetAccountsDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'type' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'ownerId' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                     ],
@@ -3032,6 +3076,17 @@ export const LoginDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -3147,6 +3202,17 @@ export const RegisterDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },

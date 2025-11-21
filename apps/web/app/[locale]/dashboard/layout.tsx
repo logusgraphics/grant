@@ -5,6 +5,7 @@ import { ReactNode, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 
 import { EmailVerificationBanner } from '@/components/common';
+import { useAccountsSync } from '@/hooks/accounts';
 import { useAuthStore } from '@/stores/auth.store';
 
 interface DashboardLayoutProps {
@@ -21,6 +22,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     verificationExpiry,
   } = useAuthStore();
   const locale = useLocale();
+
+  useAccountsSync();
 
   useEffect(() => {
     if (loading) return;

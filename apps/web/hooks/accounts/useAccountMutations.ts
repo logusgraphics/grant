@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 
 import { useAuthStore } from '@/stores/auth.store';
 
+import { evictAccountsCache } from './cache';
+
 interface UpdateAccountParams {
   id: string;
   input: UpdateAccountInput;
@@ -15,10 +17,8 @@ export function useAccountMutations() {
   const t = useTranslations('settings.account');
   const { accounts, setAccounts, currentAccount, setCurrentAccount } = useAuthStore();
 
-  // Clear any cached account data when mutations occur
   const update = (cache: ApolloCache) => {
-    cache.evict({ fieldName: 'accounts' });
-    cache.gc();
+    evictAccountsCache(cache);
   };
 
   const [updateAccountMutation] = useMutation<{ updateAccount: Account }>(UpdateAccountDocument, {
@@ -34,13 +34,11 @@ export function useAccountMutations() {
       const updatedAccount = result.data?.updateAccount;
 
       if (updatedAccount) {
-        // Update the account in the auth store
         const updatedAccounts = accounts.map((account) =>
           account.id === updatedAccount.id ? updatedAccount : account
         );
         setAccounts(updatedAccounts);
 
-        // Update current account if it's the one being updated
         if (currentAccount?.id === updatedAccount.id) {
           setCurrentAccount(updatedAccount);
         }

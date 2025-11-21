@@ -1410,6 +1410,11 @@
         "description": "Laden Sie ein Profilbild hoch, um Ihr Konto zu personalisieren",
         "comingSoon": "Profilbild-Unterstützung kommt bald! Sie werden in der Lage sein, einen benutzerdefinierten Avatar hochzuladen, um Ihr Konto zu personalisieren.",
         "uploadButton": "Bild hochladen"
+      },
+      "notifications": {
+        "updateSuccess": "Profil erfolgreich aktualisiert",
+        "updateError": "Profil konnte nicht aktualisiert werden",
+        "userNotFound": "Benutzer nicht gefunden"
       }
     },
     "security": {

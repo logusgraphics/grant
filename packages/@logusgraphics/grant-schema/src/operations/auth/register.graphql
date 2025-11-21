@@ -10,6 +10,10 @@ mutation Register($input: RegisterInput!) {
       name
       slug
       type
+      owner {
+        id
+        name
+      }
     }
   }
 }

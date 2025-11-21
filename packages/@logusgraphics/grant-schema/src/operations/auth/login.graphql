@@ -10,6 +10,10 @@ mutation Login($input: LoginInput!) {
       name
       slug
       type
+      owner {
+        id
+        name
+      }
     }
   }
 }

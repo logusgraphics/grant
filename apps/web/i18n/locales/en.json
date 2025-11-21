@@ -1421,6 +1421,11 @@
         "description": "Upload a profile picture to personalize your account",
         "comingSoon": "Profile picture support is coming soon! You'll be able to upload a custom avatar to personalize your account.",
         "uploadButton": "Upload Picture"
+      },
+      "notifications": {
+        "updateSuccess": "Profile updated successfully",
+        "updateError": "Failed to update profile",
+        "userNotFound": "User not found"
       }
     },
     "security": {

@@ -41,7 +41,6 @@ export function AccountDropdown() {
 
   const handleAccountSwitch = (accountId: string) => {
     switchAccount(accountId);
-    // Optionally redirect based on account type
     const account = accounts.find((acc) => acc.id === accountId);
     if (account) {
       if (account.type === AccountType.Organization) {
@@ -52,8 +51,8 @@ export function AccountDropdown() {
     }
   };
 
-  const displayName = currentAccount?.name || email || 'User';
-  const initials = displayName
+  const userDisplayName = currentAccount?.owner?.name || email || 'User';
+  const initials = userDisplayName
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -77,7 +76,7 @@ export function AccountDropdown() {
             <div className="flex items-center gap-2">
               <Avatar initial={initials} size="lg" />
               <div className="flex flex-col">
-                <span className="text-sm font-semibold">{displayName}</span>
+                <span className="text-sm font-semibold">{userDisplayName}</span>
                 {email && (
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Mail className="h-3 w-3" />
@@ -108,16 +107,12 @@ export function AccountDropdown() {
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {account.type === AccountType.Organization ? (
-                        <Building2 className="h-4 w-4 flex-shrink-0" />
+                        <Building2 className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                       ) : (
-                        <User className="h-4 w-4 flex-shrink-0" />
+                        <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                       )}
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-sm">
-                          {account.type === AccountType.Organization
-                            ? t('accountTypes.organization')
-                            : t('accountTypes.personal')}
-                        </span>
+                        <span className="text-sm font-medium truncate">{account.name}</span>
                         {account.slug && (
                           <span className="text-xs text-muted-foreground truncate">
                             @{account.slug}
@@ -148,11 +143,7 @@ export function AccountDropdown() {
                   <User className="h-4 w-4 flex-shrink-0" />
                 )}
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-sm">
-                    {currentAccount?.type === AccountType.Organization
-                      ? t('accountTypes.organization')
-                      : t('accountTypes.personal')}
-                  </span>
+                  <span className="text-sm font-medium truncate">{currentAccount?.name}</span>
                   {currentAccount?.slug && (
                     <span className="text-xs text-muted-foreground truncate">
                       @{currentAccount.slug}
