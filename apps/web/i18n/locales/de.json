@@ -72,6 +72,7 @@
       "update": "Aktualisieren",
       "uploading": "Wird hochgeladen..."
     },
+    "saving": "Wird gespeichert...",
     "emptyElements": "Keine {title} zum Anzeigen",
     "loading": "Wird geladen...",
     "redirecting": "Wird weitergeleitet...",
@@ -372,6 +373,10 @@
       "deleteError": "Benutzer konnte nicht gelöscht werden",
       "uploadPictureSuccess": "Profilbild hochgeladen",
       "uploadPictureError": "Profilbild konnte nicht hochgeladen werden",
+      "changePasswordSuccess": "Passwort erfolgreich geändert",
+      "changePasswordError": "Passwort konnte nicht geändert werden",
+      "revokeSessionSuccess": "Sitzung erfolgreich widerrufen",
+      "revokeSessionError": "Sitzung konnte nicht widerrufen werden",
       "roleAddedSuccess": "Rolle zum Benutzer hinzugefügt",
       "roleAddedError": "Rolle konnte nicht zum Benutzer hinzugefügt werden",
       "roleRemovedSuccess": "Rolle vom Benutzer entfernt",
@@ -1338,6 +1343,11 @@
     "account": {
       "title": "Kontoinformationen",
       "description": "Verwalten Sie Ihre Kontoeinstellungen und Informationen",
+      "details": {
+        "title": "Konto",
+        "titlePlural": "Konten",
+        "description": "Verwalten Sie Ihre Kontodetails und wechseln Sie zwischen Konten"
+      },
       "information": {
         "title": "Kontodetails",
         "description": "Aktualisieren Sie Ihren Kontonamen und Benutzernamen",
@@ -1360,8 +1370,7 @@
       "type": {
         "title": "Kontotyp",
         "description": "Ihr Kontotyp bestimmt die verfügbaren Funktionen",
-        "current": "Aktueller Kontotyp",
-        "currentDescription": "Dieser Kontotyp kann nach der Erstellung nicht mehr geändert werden",
+        "currentAccount": "Aktuelles Konto",
         "features": {
           "personal": {
             "title": "Funktionen des persönlichen Kontos",
@@ -1378,13 +1387,12 @@
         },
         "complementary": {
           "title": "Erstellen Sie ein ergänzendes Konto",
-          "description": "Sie können auch ein {type}-Konto erstellen, um auf zusätzliche Funktionen zuzugreifen.",
-          "action": "{type}-Konto erstellen"
+          "description": "Sie können auch ein {type} Konto erstellen, um auf zusätzliche Funktionen zuzugreifen.",
+          "action": "{type} Konto erstellen",
+          "dialogTitle": "{type} Konto erstellen",
+          "dialogDescription": "Geben Sie die Details für Ihr neues {type} Konto ein. Dieses Konto wird von Ihrem aktuellen Konto getrennt sein."
         },
-        "multipleAccounts": {
-          "description": "Sie haben sowohl ein persönliches als auch ein Organisationskonto.",
-          "switchInstruction": "Verwenden Sie den Kontowechsler im Header, um zwischen Ihren Konten zu wechseln."
-        },
+        "switchAccount": "Konto wechseln",
         "immutable": {
           "title": "Hinweis:",
           "description": "Der Kontotyp kann aus Sicherheits- und Abrechnungsgründen nach der Erstellung nicht mehr geändert werden."
@@ -1392,7 +1400,14 @@
       },
       "notifications": {
         "updateSuccess": "Konto erfolgreich aktualisiert",
-        "updateError": "Fehler beim Aktualisieren des Kontos"
+        "updateError": "Fehler beim Aktualisieren des Kontos",
+        "createComplementaryAccountSuccess": "Konto erfolgreich erstellt",
+        "createComplementaryAccountSuccessDescription": "Ihr neues {type} Konto wurde erstellt. Sie können zwischen Konten mit dem Kontowechsler wechseln.",
+        "createComplementaryAccountError": "Konto konnte nicht erstellt werden"
+      },
+      "selection": {
+        "title": "Konto auswählen",
+        "description": "Wählen Sie aus, welches Konto Sie verwalten möchten"
       }
     },
     "profile": {
@@ -1443,7 +1458,49 @@
     },
     "security": {
       "title": "Anmeldung & Sicherheit",
-      "description": "Verwalten Sie Ihre Authentifizierungsmethoden und Sicherheitseinstellungen"
+      "description": "Verwalten Sie Ihre Authentifizierungsmethoden und Sicherheitseinstellungen",
+      "userNotFound": "Benutzer nicht gefunden",
+      "authenticationMethods": {
+        "title": "Authentifizierungsmethoden",
+        "description": "Verwalten Sie, wie Sie sich bei Ihrem Konto anmelden",
+        "empty": "Keine Authentifizierungsmethoden gefunden",
+        "providers": {
+          "email": "E-Mail",
+          "google": "Google",
+          "github": "GitHub"
+        },
+        "primary": "Primär",
+        "verified": "Verifiziert",
+        "unverified": "Nicht verifiziert",
+        "lastUsed": "Zuletzt verwendet",
+        "changePassword": "Passwort ändern",
+        "connect": "Verbinden"
+      },
+      "changePassword": {
+        "title": "Passwort ändern",
+        "description": "Aktualisieren Sie Ihr Passwort, um Ihr Konto sicher zu halten",
+        "currentPassword": "Aktuelles Passwort",
+        "newPassword": "Neues Passwort",
+        "confirmPassword": "Passwort bestätigen",
+        "submit": "Passwort ändern"
+      },
+      "activeSessions": {
+        "title": "Aktive Sitzungen",
+        "description": "Verwalten Sie Ihre aktiven Anmeldesitzungen auf allen Geräten",
+        "empty": "Keine aktiven Sitzungen gefunden",
+        "currentSession": "Aktuelle Sitzung",
+        "expired": "Abgelaufen",
+        "ipAddress": "IP-Adresse",
+        "lastUsed": "Zuletzt verwendet",
+        "expiresAt": "Läuft ab um",
+        "revoke": "Widerrufen",
+        "revokeConfirmTitle": "Sitzung widerrufen?",
+        "revokeConfirmDescription": "Sind Sie sicher, dass Sie diese Sitzung widerrufen möchten? Der Benutzer muss sich auf diesem Gerät erneut anmelden.",
+        "revokeCurrentSessionTitle": "Aktuelle Sitzung widerrufen?",
+        "revokeCurrentSessionDescription": "Sind Sie sicher, dass Sie Ihre aktuelle Sitzung widerrufen möchten? Sie werden sofort abgemeldet und zur Anmeldeseite weitergeleitet. Sie müssen sich erneut anmelden, um fortzufahren.",
+        "cancel": "Abbrechen",
+        "expiredSessionsCount": "{count} abgelaufene Sitzung(en) sind ausgeblendet"
+      }
     },
     "preferences": {
       "title": "Einstellungen",
