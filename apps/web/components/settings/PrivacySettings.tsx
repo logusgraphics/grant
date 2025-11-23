@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { AlertTriangle, Download, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -23,17 +23,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePrivacySettings } from '@/hooks/privacy';
+import { getCurrentUserId } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 export function PrivacySettings() {
   const t = useTranslations('settings.privacy');
   const tCommon = useTranslations('common');
   const { isExporting, isDeleting, handleExportData, handleDeleteAccount } = usePrivacySettings();
-  const { getCurrentUserId } = useAuthStore();
+  const { accessToken } = useAuthStore();
   const [deleteUserId, setDeleteUserId] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const currentUserId = getCurrentUserId();
+  const currentUserId = useMemo(() => getCurrentUserId(accessToken!), [accessToken]);
 
   const onDeleteAccount = async () => {
     if (!deleteUserId) {

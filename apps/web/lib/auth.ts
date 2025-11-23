@@ -62,14 +62,19 @@ export function getRedirectPath(
   }
 }
 
-export function getCurrentSessionId(): string | null {
+export function getCurrentSessionId(accessToken: string): string | null {
   try {
-    const accessToken = Cookies.get(AUTH_ACCESS_TOKEN_KEY);
-    if (!accessToken) {
-      return null;
-    }
     const decoded = jwtDecode<JWTPayload>(accessToken);
-    return decoded.jti || null;
+    return decoded.jti as string | null;
+  } catch {
+    return null;
+  }
+}
+
+export function getCurrentUserId(accessToken: string): string | null {
+  try {
+    const decoded = jwtDecode<JWTPayload>(accessToken);
+    return decoded.sub as string | null;
   } catch {
     return null;
   }

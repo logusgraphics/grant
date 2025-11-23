@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+
+import { useLocale, useTranslations } from 'next-intl';
 
 import { DashboardPageLayout } from '@/components/common/dashboard/DashboardPageLayout';
 import { ActiveSessionsList } from '@/components/settings/ActiveSessionsList';
@@ -18,27 +20,26 @@ export default function SecuritySettingsPage() {
   const t = useTranslations('settings.security');
   usePageTitle('settings.security');
 
-  const { currentAccount, accessToken } = useAuthStore();
+  const { currentAccount, accessToken, clearAuth } = useAuthStore();
   const { changePassword, revokeUserSession } = useUserMutations();
   const [showChangePassword, setShowChangePassword] = useState(false);
-
+  const router = useRouter();
+  const locale = useLocale();
   const userId = currentAccount?.owner?.id;
 
-  const {
-    authenticationMethods,
-    loading: authMethodsLoading,
-    refetch: refetchAuthMethods,
-  } = useUserAuthenticationMethods(userId || '', undefined);
+  const { authenticationMethods, loading: authMethodsLoading } = useUserAuthenticationMethods(
+    userId!
+  );
 
   const {
     sessions,
     loading: sessionsLoading,
     refetch: refetchSessions,
-  } = useUserSessions(userId || '', {
+  } = useUserSessions(userId!, {
     limit: 50,
   });
 
-  const currentSessionId = useMemo(() => getCurrentSessionId(), [accessToken]);
+  const currentSessionId = useMemo(() => getCurrentSessionId(accessToken!), [accessToken]);
 
   const emailMethod = authenticationMethods.find((method) => method.provider === 'email');
 
@@ -57,7 +58,12 @@ export default function SecuritySettingsPage() {
 
   const handleRevokeSession = async (sessionId: string) => {
     await revokeUserSession(sessionId);
-    refetchSessions();
+    if (currentSessionId === sessionId) {
+      clearAuth();
+      router.push(`/${locale}/auth/login`);
+    } else {
+      refetchSessions();
+    }
   };
 
   if (!userId) {

@@ -1,5 +1,4 @@
 import { Account, AccountType } from '@logusgraphics/grant-schema';
-import { jwtDecode } from 'jwt-decode';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
@@ -46,7 +45,6 @@ interface AuthState {
 
   // Computed
   isAuthenticated: () => boolean;
-  getCurrentUserId: () => string | null;
   getCurrentPersonalAccount: () => Account | null;
   getCurrentOrganizationAccount: () => Account | null;
   hasMultipleAccounts: () => boolean;
@@ -132,20 +130,6 @@ export const useAuthStore = create<AuthState>()(
             requiresEmailVerification: requiresEmailVerification ?? false,
             verificationExpiry: verificationExpiry ?? null,
           });
-        },
-
-        // Computed getters
-        getCurrentUserId: () => {
-          try {
-            const { accessToken } = get();
-            if (!accessToken) {
-              return null;
-            }
-            const decoded = jwtDecode<JWTPayload>(accessToken);
-            return decoded.sub || null;
-          } catch {
-            return null;
-          }
         },
 
         getCurrentPersonalAccount: () => {

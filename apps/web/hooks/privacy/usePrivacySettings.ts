@@ -12,12 +12,13 @@ import {
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { getCurrentUserId } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 export function usePrivacySettings() {
   const t = useTranslations('settings.privacy');
   const router = useRouter();
-  const { clearAuth, getCurrentUserId } = useAuthStore();
+  const { clearAuth, accessToken } = useAuthStore();
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -26,7 +27,7 @@ export function usePrivacySettings() {
   const [deleteAccountMutation] = useMutation(DeleteAccountDocument);
 
   const handleExportData = async () => {
-    const userId = getCurrentUserId();
+    const userId = getCurrentUserId(accessToken!);
     if (!userId) {
       toast.error(t('dataExport.error'), {
         description: 'You must be logged in to export your data',
@@ -68,7 +69,7 @@ export function usePrivacySettings() {
   };
 
   const handleDeleteAccount = async (confirmedUserId: string) => {
-    const userId = getCurrentUserId();
+    const userId = getCurrentUserId(accessToken!);
     if (!userId) {
       toast.error(t('accountDeletion.error'), {
         description: 'You must be logged in to delete your account',

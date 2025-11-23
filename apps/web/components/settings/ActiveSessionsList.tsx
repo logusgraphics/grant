@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 
+import { UserSession } from '@logusgraphics/grant-schema';
 import { AlertCircle, LogOut, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { SettingsCard } from '@/components/settings/SettingsCard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +19,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { UserSession } from '@logusgraphics/grant-schema';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ActiveSessionsListProps {
   sessions: UserSession[];
