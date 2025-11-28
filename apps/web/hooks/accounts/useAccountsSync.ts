@@ -7,10 +7,11 @@ import { useAccounts } from './useAccounts';
 export function useAccountsSync() {
   const {
     accounts: storeAccounts,
-    currentAccount,
+    getCurrentAccount,
     updateAccountsAndSwitch,
     isAuthenticated,
   } = useAuthStore();
+  const currentAccount = getCurrentAccount();
 
   const accountIds = useMemo(() => {
     if (storeAccounts.length === 0) {

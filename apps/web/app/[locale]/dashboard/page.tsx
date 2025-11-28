@@ -9,7 +9,8 @@ import { getRedirectPath } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function DashboardPage() {
-  const { currentAccount, clearAuth, loading } = useAuthStore();
+  const { getCurrentAccount, clearAuth, loading } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const locale = useLocale();
 
   useEffect(() => {

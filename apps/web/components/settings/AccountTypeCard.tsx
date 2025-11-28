@@ -28,17 +28,15 @@ export function AccountTypeCard({
   const tCommon = useTranslations('common.accountTypes');
   const tAccountTypes = useTranslations('common.accountTypes');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { accounts, currentAccount, setCurrentAccount } = useAuthStore();
+  const { accounts, getCurrentAccount, setCurrentAccount } = useAuthStore();
+  const currentAccount = getCurrentAccount();
 
   const complementaryType =
     accountType === 'personal' ? AccountType.Organization : AccountType.Personal;
   const canCreateComplementary = accountCount < 2 && !hasComplementaryAccount;
 
   const handleAccountSwitch = (accountId: string) => {
-    const account = accounts.find((acc) => acc.id === accountId);
-    if (account) {
-      setCurrentAccount(account);
-    }
+    setCurrentAccount(accountId);
   };
 
   return (

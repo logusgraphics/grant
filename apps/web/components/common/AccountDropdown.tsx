@@ -27,8 +27,9 @@ export function AccountDropdown() {
   const dashboardT = useTranslations('dashboard.navigation');
   const locale = useLocale();
   const router = useRouter();
-  const { currentAccount, accounts, email, isAuthenticated, switchAccount, clearAuth } =
+  const { getCurrentAccount, accounts, email, isAuthenticated, switchAccount, clearAuth } =
     useAuthStore();
+  const currentAccount = getCurrentAccount();
 
   if (!isAuthenticated()) {
     return null;

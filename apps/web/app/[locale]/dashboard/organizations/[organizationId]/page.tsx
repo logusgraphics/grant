@@ -11,7 +11,8 @@ import { FullPageLoader } from '@/components/common';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function OrganizationPage() {
-  const { currentAccount, loading, clearAuth } = useAuthStore();
+  const { getCurrentAccount, loading, clearAuth } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const locale = useLocale();
   const params = useParams();
 

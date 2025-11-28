@@ -11,7 +11,8 @@ import { FullPageLoader } from '@/components/common';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function AccountPage() {
-  const { currentAccount, loading } = useAuthStore();
+  const { getCurrentAccount, loading } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const currentLocale = useLocale();
   const params = useParams();
 

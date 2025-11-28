@@ -48,7 +48,8 @@ export function AccountDetailsCard({
   const tCommon = useTranslations('common');
   const tAccountTypes = useTranslations('common.accountTypes');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { accounts, currentAccount, setCurrentAccount } = useAuthStore();
+  const { accounts, getCurrentAccount, setCurrentAccount } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     isChecking,
@@ -85,10 +86,7 @@ export function AccountDetailsCard({
   }, [isAvailable, currentUsername, defaultValues.slug, form]);
 
   const handleAccountSwitch = (accountId: string) => {
-    const account = accounts.find((acc) => acc.id === accountId);
-    if (account) {
-      setCurrentAccount(account);
-    }
+    setCurrentAccount(accountId);
   };
 
   const handleUsernameChange = (value: string) => {

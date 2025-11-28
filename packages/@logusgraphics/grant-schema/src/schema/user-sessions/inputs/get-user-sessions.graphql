@@ -6,5 +6,8 @@ input GetUserSessionsInput {
   ids: [ID!]
   userId: ID
   audience: String
+  expiresAtMin: Date
+  userAgent: String
+  ipAddress: String
   requestedFields: [String!]
 }

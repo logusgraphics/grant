@@ -361,12 +361,15 @@ export type GetUserAuthenticationMethodsInput = {
 
 export type GetUserSessionsInput = {
   audience?: InputMaybe<Scalars['String']['input']>;
+  expiresAtMin?: InputMaybe<Scalars['Date']['input']>;
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  ipAddress?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
   requestedFields?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<UserSessionSortInput>;
+  userAgent?: InputMaybe<Scalars['String']['input']>;
   userId?: InputMaybe<Scalars['ID']['input']>;
 };
 

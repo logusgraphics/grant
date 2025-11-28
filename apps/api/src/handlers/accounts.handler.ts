@@ -160,7 +160,10 @@ export class AccountHandler extends ScopeHandler {
         {
           userId: user.id,
           audience,
-          limit: 100, // Get more sessions to find matching one
+          expiresAtMin: new Date(),
+          userAgent: userAgent || null,
+          ipAddress: ipAddress || null,
+          limit: 1,
           sort: {
             field: UserSessionSortableField.LastUsedAt,
             order: SortOrder.Desc,
@@ -169,13 +172,7 @@ export class AccountHandler extends ScopeHandler {
         tx
       );
 
-      // Find matching session by userAgent and ipAddress
-      const matchingSession = userSessionsResult.userSessions.find(
-        (session) =>
-          session.expiresAt > new Date() &&
-          session.userAgent === (userAgent || null) &&
-          session.ipAddress === (ipAddress || null)
-      );
+      const matchingSession = userSessionsResult.userSessions[0];
 
       if (matchingSession) {
         await this.services.userSessions.refreshSessionLastUsed(matchingSession.id, tx);

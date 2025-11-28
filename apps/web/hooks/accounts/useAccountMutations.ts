@@ -15,7 +15,8 @@ interface UpdateAccountParams {
 
 export function useAccountMutations() {
   const t = useTranslations('settings.account');
-  const { accounts, setAccounts, currentAccount, setCurrentAccount } = useAuthStore();
+  const { accounts, setAccounts, getCurrentAccount, setCurrentAccount } = useAuthStore();
+  const currentAccount = getCurrentAccount();
 
   const update = (cache: ApolloCache) => {
     evictAccountsCache(cache);
@@ -40,7 +41,7 @@ export function useAccountMutations() {
         setAccounts(updatedAccounts);
 
         if (currentAccount?.id === updatedAccount.id) {
-          setCurrentAccount(updatedAccount);
+          setCurrentAccount(updatedAccount.id);
         }
       }
 

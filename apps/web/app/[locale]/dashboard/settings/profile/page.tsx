@@ -16,7 +16,8 @@ export default function ProfileSettingsPage() {
   usePageTitle('settings.profile');
 
   const { updateUser, uploadUserPicture } = useUserMutations();
-  const { currentAccount } = useAuthStore();
+  const { getCurrentAccount } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const apolloClient = useApolloClient();
 
   const userData = useMemo(() => {

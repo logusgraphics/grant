@@ -15,7 +15,8 @@ import { usePageTitle } from '@/hooks';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function DashboardPage() {
-  const { currentAccount, loading } = useAuthStore();
+  const { getCurrentAccount, loading } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const locale = useLocale();
   const t = useTranslations('organizations');
   usePageTitle('organizations');

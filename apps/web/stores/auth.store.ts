@@ -4,20 +4,13 @@ import { devtools, persist } from 'zustand/middleware';
 
 import { removeStoredTokens, setStoredTokens } from '@/lib/auth';
 
-interface JWTPayload {
-  sub: string;
-  exp?: number;
-  iat?: number;
-  [key: string]: unknown;
-}
-
 interface AuthState {
   // Authentication state
   loading: boolean;
 
   // Account state
   accounts: Account[];
-  currentAccount: Account | null;
+  currentAccountId: string | null;
   accessToken: string | null;
   refreshToken: string | null;
 
@@ -29,7 +22,7 @@ interface AuthState {
   // Actions
   setLoading: (loading: boolean) => void;
   setAccounts: (accounts: Account[]) => void;
-  setCurrentAccount: (account: Account | null) => void;
+  setCurrentAccount: (accountId: string | null) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   clearAuth: () => void;
   switchAccount: (accountId: string) => void;
@@ -45,6 +38,7 @@ interface AuthState {
 
   // Computed
   isAuthenticated: () => boolean;
+  getCurrentAccount: () => Account | null;
   getCurrentPersonalAccount: () => Account | null;
   getCurrentOrganizationAccount: () => Account | null;
   hasMultipleAccounts: () => boolean;
@@ -59,7 +53,7 @@ export const useAuthStore = create<AuthState>()(
 
         // Account state
         accounts: [],
-        currentAccount: null,
+        currentAccountId: null,
         accessToken: null,
         refreshToken: null,
 
@@ -71,7 +65,7 @@ export const useAuthStore = create<AuthState>()(
         // Actions
         setLoading: (loading) => set({ loading }),
         setAccounts: (accounts) => set({ accounts }),
-        setCurrentAccount: (currentAccount) => set({ currentAccount }),
+        setCurrentAccount: (accountId) => set({ currentAccountId: accountId }),
         setTokens: (accessToken, refreshToken) => {
           setStoredTokens(accessToken, refreshToken);
           set({ accessToken, refreshToken });
@@ -81,7 +75,8 @@ export const useAuthStore = create<AuthState>()(
           removeStoredTokens();
           set({
             accounts: [],
-            currentAccount: null,
+            // Keep currentAccountId persisted after logout so user can resume with last account
+            // currentAccountId: null, // Don't clear this
             accessToken: null,
             refreshToken: null,
             email: null,
@@ -93,18 +88,20 @@ export const useAuthStore = create<AuthState>()(
           const currentAccounts = get().accounts;
           const targetAccount = currentAccounts.find((account) => account.id === accountId);
           if (targetAccount) {
-            set({ currentAccount: targetAccount });
+            set({ currentAccountId: accountId });
           }
         },
 
         updateAccountsAndSwitch: (accounts: Account[], accountId?: string) => {
-          const targetAccount = accountId
-            ? accounts.find((account) => account.id === accountId)
-            : accounts.find((account) => account.type === AccountType.Organization) || accounts[0];
+          const targetAccountId = accountId
+            ? accountId
+            : accounts.find((account) => account.type === AccountType.Organization)?.id ||
+              accounts[0]?.id ||
+              null;
 
           set({
             accounts,
-            currentAccount: targetAccount || null,
+            currentAccountId: targetAccountId,
           });
         },
 
@@ -117,19 +114,35 @@ export const useAuthStore = create<AuthState>()(
             requiresEmailVerification,
             verificationExpiry,
           } = data;
-          const currentAccount = accounts.length > 0 ? accounts[0] : null;
+
+          // Try to use persisted currentAccountId if it exists in the new accounts
+          const persistedAccountId = get().currentAccountId;
+          const targetAccountId =
+            persistedAccountId && accounts.some((account) => account.id === persistedAccountId)
+              ? persistedAccountId
+              : accounts.find((account) => account.type === AccountType.Organization)?.id ||
+                accounts[0]?.id ||
+                null;
 
           setStoredTokens(accessToken, refreshToken);
 
           set({
             accounts,
-            currentAccount,
+            currentAccountId: targetAccountId,
             accessToken,
             refreshToken,
             email: email ?? null,
             requiresEmailVerification: requiresEmailVerification ?? false,
             verificationExpiry: verificationExpiry ?? null,
           });
+        },
+
+        getCurrentAccount: () => {
+          const { accounts, currentAccountId } = get();
+          if (!currentAccountId) {
+            return null;
+          }
+          return accounts.find((account) => account.id === currentAccountId) || null;
         },
 
         getCurrentPersonalAccount: () => {
@@ -157,7 +170,7 @@ export const useAuthStore = create<AuthState>()(
         // Only persist auth-related data, not loading states
         partialize: (state) => ({
           accounts: state.accounts,
-          currentAccount: state.currentAccount,
+          currentAccountId: state.currentAccountId,
           accessToken: state.accessToken,
           refreshToken: state.refreshToken,
           email: state.email,

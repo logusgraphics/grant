@@ -68,6 +68,30 @@ export class UserSessionRepository extends EntityRepository<UserSessionModel, Us
       });
     }
 
+    if (params.expiresAtMin) {
+      filters.push({
+        field: 'expiresAt',
+        operator: 'gte',
+        value: params.expiresAtMin,
+      });
+    }
+
+    if (params.userAgent !== undefined) {
+      filters.push({
+        field: 'userAgent',
+        operator: 'eq',
+        value: params.userAgent,
+      });
+    }
+
+    if (params.ipAddress !== undefined) {
+      filters.push({
+        field: 'ipAddress',
+        operator: 'eq',
+        value: params.ipAddress,
+      });
+    }
+
     const result = await this.query(
       {
         limit: params.limit,

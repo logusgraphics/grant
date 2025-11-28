@@ -14,7 +14,8 @@ export default function AccountSettingsPage() {
   const t = useTranslations('settings.account');
   usePageTitle('settings.account');
 
-  const { currentAccount, accounts } = useAuthStore();
+  const { getCurrentAccount, accounts } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const { updateAccount } = useAccountMutations();
 
   // Get account data from the current account in the auth store

@@ -11,17 +11,15 @@ import { useAuthStore } from '@/stores/auth.store';
 export function AccountSelectionCard() {
   const t = useTranslations('settings.account');
   const tAccountTypes = useTranslations('common.accountTypes');
-  const { accounts, currentAccount, setCurrentAccount } = useAuthStore();
+  const { accounts, getCurrentAccount, setCurrentAccount } = useAuthStore();
+  const currentAccount = getCurrentAccount();
 
   if (accounts.length <= 1) {
     return null;
   }
 
   const handleAccountSwitch = (accountId: string) => {
-    const account = accounts.find((acc) => acc.id === accountId);
-    if (account) {
-      setCurrentAccount(account);
-    }
+    setCurrentAccount(accountId);
   };
 
   return (

@@ -20,7 +20,8 @@ export default function SecuritySettingsPage() {
   const t = useTranslations('settings.security');
   usePageTitle('settings.security');
 
-  const { currentAccount, accessToken, clearAuth } = useAuthStore();
+  const { getCurrentAccount, accessToken, clearAuth } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const { changePassword, revokeUserSession } = useUserMutations();
   const [showChangePassword, setShowChangePassword] = useState(false);
   const router = useRouter();

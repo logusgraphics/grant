@@ -13,7 +13,8 @@ interface OrganizationLayoutProps {
 }
 
 export default function OrganizationLayout({ children }: OrganizationLayoutProps) {
-  const { currentAccount, loading } = useAuthStore();
+  const { getCurrentAccount, loading } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const locale = useLocale();
 
   useEffect(() => {

@@ -17,7 +17,8 @@ interface AuthLayoutProps {
 const REDIRECT_STORAGE_KEY = 'auth_redirect_url';
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
-  const { loading, currentAccount } = useAuthStore();
+  const { loading, getCurrentAccount } = useAuthStore();
+  const currentAccount = getCurrentAccount();
   const locale = useLocale();
   const searchParams = useSearchParams();
   const hasStoredRedirect = useRef(false);
