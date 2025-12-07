@@ -113,7 +113,7 @@ export class UserSessionRepository extends EntityRepository<UserSessionModel, Us
   }
 
   public async createUserSession(
-    session: CreateUserSessionInput,
+    session: CreateUserSessionInput & { audience: string },
     transaction?: Transaction
   ): Promise<UserSession> {
     return this.create(session, transaction);

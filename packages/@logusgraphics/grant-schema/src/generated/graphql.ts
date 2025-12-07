@@ -320,7 +320,6 @@ export type CreateUserInput = {
 };
 
 export type CreateUserSessionInput = {
-  audience: Scalars['String']['input'];
   expiresAt: Scalars['Date']['input'];
   ipAddress?: InputMaybe<Scalars['String']['input']>;
   lastUsedAt: Scalars['Date']['input'];
