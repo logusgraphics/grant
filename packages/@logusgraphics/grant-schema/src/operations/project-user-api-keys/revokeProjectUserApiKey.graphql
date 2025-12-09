@@ -1,0 +1,19 @@
+mutation RevokeProjectUserApiKey($input: RevokeProjectUserApiKeyInput!) {
+  revokeProjectUserApiKey(input: $input) {
+    id
+    projectId
+    userId
+    clientId
+    name
+    description
+    expiresAt
+    lastUsedAt
+    isRevoked
+    revokedAt
+    revokedBy
+    createdBy
+    createdAt
+    updatedAt
+    deletedAt
+  }
+}

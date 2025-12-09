@@ -22,7 +22,7 @@ export const projectUserApiKeys = pgTable(
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
-    clientId: varchar('client_id', { length: 255 }).notNull().unique(),
+    clientId: varchar('client_id', { length: 255 }).notNull(),
     clientSecretHash: varchar('client_secret_hash', { length: 255 }).notNull(),
     name: varchar('name', { length: 255 }),
     description: varchar('description', { length: 1000 }),
@@ -39,12 +39,13 @@ export const projectUserApiKeys = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
+    uniqueIndex('project_user_api_keys_client_id_unique').on(table.clientId),
     uniqueIndex('project_user_api_keys_project_user_unique')
       .on(table.projectId, table.userId)
       .where(sql`${table.deletedAt} IS NULL AND ${table.isRevoked} = false`),
+    uniqueIndex('project_user_api_keys_deleted_at_idx').on(table.deletedAt),
     index('project_user_api_keys_project_id_idx').on(table.projectId),
     index('project_user_api_keys_user_id_idx').on(table.userId),
-    index('project_user_api_keys_deleted_at_idx').on(table.deletedAt),
     index('project_user_api_keys_is_revoked_idx').on(table.isRevoked),
   ]
 );

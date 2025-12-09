@@ -6,6 +6,7 @@ export * from './members';
 export * from './organizations';
 export * from './permissions';
 export * from './privacy';
+export * from './project-user-api-keys';
 export * from './projects';
 export * from './roles';
 export * from './tags';

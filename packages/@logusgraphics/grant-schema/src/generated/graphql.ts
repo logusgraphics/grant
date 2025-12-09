@@ -2635,6 +2635,127 @@ export type UpdatePermissionMutation = {
   };
 };
 
+export type CreateProjectUserApiKeyMutationVariables = Exact<{
+  input: CreateProjectUserApiKeyInput;
+}>;
+
+export type CreateProjectUserApiKeyMutation = {
+  __typename?: 'Mutation';
+  createProjectUserApiKey: {
+    __typename?: 'CreateProjectUserApiKeyResult';
+    id: string;
+    clientId: string;
+    clientSecret: string;
+    name?: string | null;
+    description?: string | null;
+    expiresAt?: Date | null;
+    createdAt: Date;
+  };
+};
+
+export type DeleteProjectUserApiKeyMutationVariables = Exact<{
+  input: DeleteProjectUserApiKeyInput;
+}>;
+
+export type DeleteProjectUserApiKeyMutation = {
+  __typename?: 'Mutation';
+  deleteProjectUserApiKey: {
+    __typename?: 'ProjectUserApiKey';
+    id: string;
+    projectId: string;
+    userId: string;
+    clientId: string;
+    name?: string | null;
+    description?: string | null;
+    expiresAt?: Date | null;
+    lastUsedAt?: Date | null;
+    isRevoked: boolean;
+    revokedAt?: Date | null;
+    revokedBy?: string | null;
+    createdBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt?: Date | null;
+  };
+};
+
+export type ExchangeProjectUserApiKeyMutationVariables = Exact<{
+  input: ExchangeProjectUserApiKeyInput;
+}>;
+
+export type ExchangeProjectUserApiKeyMutation = {
+  __typename?: 'Mutation';
+  exchangeProjectUserApiKey: {
+    __typename?: 'ExchangeProjectUserApiKeyResult';
+    accessToken: string;
+    expiresIn: number;
+  };
+};
+
+export type GetProjectUserApiKeysQueryVariables = Exact<{
+  projectId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+  page?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ProjectUserApiKeySortInput>;
+}>;
+
+export type GetProjectUserApiKeysQuery = {
+  __typename?: 'Query';
+  projectUserApiKeys: {
+    __typename?: 'ProjectUserApiKeyPage';
+    totalCount: number;
+    hasNextPage: boolean;
+    projectUserApiKeys: Array<{
+      __typename?: 'ProjectUserApiKey';
+      id: string;
+      projectId: string;
+      userId: string;
+      clientId: string;
+      name?: string | null;
+      description?: string | null;
+      expiresAt?: Date | null;
+      lastUsedAt?: Date | null;
+      isRevoked: boolean;
+      revokedAt?: Date | null;
+      revokedBy?: string | null;
+      createdBy: string;
+      createdAt: Date;
+      updatedAt: Date;
+      deletedAt?: Date | null;
+      project?: { __typename?: 'Project'; id: string; name: string } | null;
+      user?: { __typename?: 'User'; id: string; name: string } | null;
+    }>;
+  };
+};
+
+export type RevokeProjectUserApiKeyMutationVariables = Exact<{
+  input: RevokeProjectUserApiKeyInput;
+}>;
+
+export type RevokeProjectUserApiKeyMutation = {
+  __typename?: 'Mutation';
+  revokeProjectUserApiKey: {
+    __typename?: 'ProjectUserApiKey';
+    id: string;
+    projectId: string;
+    userId: string;
+    clientId: string;
+    name?: string | null;
+    description?: string | null;
+    expiresAt?: Date | null;
+    lastUsedAt?: Date | null;
+    isRevoked: boolean;
+    revokedAt?: Date | null;
+    revokedBy?: string | null;
+    createdBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt?: Date | null;
+  };
+};
+
 export type CreateProjectMutationVariables = Exact<{
   input: CreateProjectInput;
 }>;
@@ -5495,6 +5616,375 @@ export const UpdatePermissionDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdatePermissionMutation, UpdatePermissionMutationVariables>;
+export const CreateProjectUserApiKeyDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateProjectUserApiKey' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateProjectUserApiKeyInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createProjectUserApiKey' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientSecret' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateProjectUserApiKeyMutation,
+  CreateProjectUserApiKeyMutationVariables
+>;
+export const DeleteProjectUserApiKeyDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteProjectUserApiKey' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DeleteProjectUserApiKeyInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteProjectUserApiKey' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRevoked' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'revokedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'revokedBy' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdBy' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deletedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteProjectUserApiKeyMutation,
+  DeleteProjectUserApiKeyMutationVariables
+>;
+export const ExchangeProjectUserApiKeyDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ExchangeProjectUserApiKey' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ExchangeProjectUserApiKeyInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'exchangeProjectUserApiKey' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'expiresIn' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ExchangeProjectUserApiKeyMutation,
+  ExchangeProjectUserApiKeyMutationVariables
+>;
+export const GetProjectUserApiKeysDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetProjectUserApiKeys' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'projectId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'userId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ProjectUserApiKeySortInput' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectUserApiKeys' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'projectId' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'userId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'userId' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'page' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'search' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sort' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'projectUserApiKeys' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'clientId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isRevoked' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'revokedAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'revokedBy' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'createdBy' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'deletedAt' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'project' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'user' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetProjectUserApiKeysQuery, GetProjectUserApiKeysQueryVariables>;
+export const RevokeProjectUserApiKeyDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RevokeProjectUserApiKey' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RevokeProjectUserApiKeyInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'revokeProjectUserApiKey' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isRevoked' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'revokedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'revokedBy' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdBy' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deletedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RevokeProjectUserApiKeyMutation,
+  RevokeProjectUserApiKeyMutationVariables
+>;
 export const CreateProjectDocument = {
   kind: 'Document',
   definitions: [
