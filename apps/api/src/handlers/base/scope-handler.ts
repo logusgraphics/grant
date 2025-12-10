@@ -431,14 +431,10 @@ export class ScopeHandler {
   }
 
   async addApiKeyIdToScopeCache(scope: Scope, apiKeyId: string): Promise<void> {
-    if (this.cache.apiKeys) {
-      await this.addIdToCache(this.cache.apiKeys, scope, apiKeyId);
-    }
+    await this.addIdToCache(this.cache.apiKeys, scope, apiKeyId);
   }
 
   async removeApiKeyIdFromScopeCache(scope: Scope, apiKeyId: string): Promise<void> {
-    if (this.cache.apiKeys) {
-      await this.removeIdFromCache(this.cache.apiKeys, scope, apiKeyId);
-    }
+    await this.removeIdFromCache(this.cache.apiKeys, scope, apiKeyId);
   }
 }

@@ -488,10 +488,77 @@
     "apiKeys": {
       "title": "API-Schlüssel",
       "empty": "Keine API-Schlüssel gefunden",
+      "emptyDescription": "Erstellen Sie Ihren ersten API-Schlüssel",
       "loading": "API-Schlüssel werden geladen...",
       "error": "Fehler beim Laden der API-Schlüssel",
       "active": "Aktiv",
-      "revoked": "Widerrufen"
+      "revoked": "Widerrufen",
+      "never": "Nie",
+      "noDescription": "Keine Beschreibung",
+      "search": {
+        "placeholder": "API-Schlüssel suchen..."
+      },
+      "sort": {
+        "label": "Sortieren nach",
+        "name": "Name",
+        "createdAt": "Erstellungsdatum",
+        "expiresAt": "Ablaufdatum",
+        "lastUsedAt": "Zuletzt verwendet"
+      },
+      "table": {
+        "name": "Name",
+        "clientId": "Client-ID",
+        "description": "Beschreibung",
+        "status": "Status",
+        "expiresAt": "Läuft ab am",
+        "lastUsedAt": "Zuletzt verwendet",
+        "createdAt": "Erstellt am"
+      },
+      "status": {
+        "active": "Aktiv",
+        "revoked": "Widerrufen",
+        "expired": "Abgelaufen"
+      },
+      "form": {
+        "name": "Name",
+        "namePlaceholder": "API-Schlüssel-Name eingeben",
+        "description": "Beschreibung",
+        "descriptionPlaceholder": "API-Schlüssel-Beschreibung eingeben",
+        "expiresAt": "Ablaufdatum",
+        "expiresAtPlaceholder": "JJJJ-MM-TT (optional)"
+      },
+      "createDialog": {
+        "title": "Neuen API-Schlüssel erstellen",
+        "description": "Erstellen Sie einen neuen API-Schlüssel für diesen Benutzer",
+        "trigger": "API-Schlüssel erstellen",
+        "confirm": "Erstellen",
+        "cancel": "Abbrechen",
+        "submitting": "Wird erstellt..."
+      },
+      "actions": {
+        "revoke": "Widerrufen",
+        "delete": "Löschen"
+      },
+      "revokeDialog": {
+        "title": "API-Schlüssel widerrufen",
+        "description": "Sind Sie sicher, dass Sie den API-Schlüssel \"{name}\" widerrufen möchten? Diese Aktion kann nicht rückgängig gemacht werden und der Schlüssel ist nicht mehr verwendbar.",
+        "cancel": "Abbrechen",
+        "confirm": "Widerrufen"
+      },
+      "deleteDialog": {
+        "title": "API-Schlüssel löschen",
+        "description": "Sind Sie sicher, dass Sie den API-Schlüssel \"{name}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "cancel": "Abbrechen",
+        "confirm": "Löschen"
+      },
+      "secretDialog": {
+        "title": "API-Schlüssel erstellt",
+        "description": "Speichern Sie Ihre API-Schlüssel-Anmeldedaten. Dies ist das einzige Mal, dass Sie das Client-Geheimnis einsehen können.",
+        "warning": "Dies ist das letzte Mal, dass Sie das Client-Geheimnis einsehen können. Stellen Sie sicher, dass Sie es jetzt kopieren und sicher aufbewahren.",
+        "clientId": "Client-ID",
+        "clientSecret": "Client-Geheimnis",
+        "close": "Ich habe meine Anmeldedaten gespeichert"
+      }
     },
     "groups": {
       "title": "Gruppen",
@@ -1769,6 +1836,17 @@
       "email": "E-Mail",
       "createdAt": "Eingeladen am",
       "expiresAt": "Läuft ab am"
+    }
+  },
+  "apiKeys": {
+    "notifications": {
+      "createSuccess": "API-Schlüssel erstellt",
+      "createError": "Fehler beim Erstellen des API-Schlüssels",
+      "deleteSuccess": "API-Schlüssel gelöscht",
+      "deleteError": "Fehler beim Löschen des API-Schlüssels",
+      "revokeSuccess": "API-Schlüssel widerrufen",
+      "revokeError": "Fehler beim Widerrufen des API-Schlüssels",
+      "exchangeError": "Fehler beim Austauschen des API-Schlüssels"
     }
   }
 }

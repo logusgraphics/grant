@@ -229,6 +229,7 @@ export type ApiKeyPage = PaginatedResults & {
 
 export enum ApiKeySearchableField {
   ClientId = 'clientId',
+  Description = 'description',
   Name = 'name',
 }
 
@@ -404,6 +405,7 @@ export type DeleteAccountInput = {
 export type DeleteApiKeyInput = {
   hardDelete?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['ID']['input'];
+  scope: Scope;
 };
 
 export type DeleteUserAuthenticationMethodInput = {
@@ -1505,6 +1507,7 @@ export type ResetPasswordResponse = {
 
 export type RevokeApiKeyInput = {
   id: Scalars['ID']['input'];
+  scope: Scope;
 };
 
 export type RevokeUserSessionResult = {

@@ -18,6 +18,14 @@ export class ProjectUserApiKeyRepository extends PivotRepository<
   protected parentIdField: keyof ProjectUserApiKeyModel = 'projectId';
   protected relatedIdField: keyof ProjectUserApiKeyModel = 'userId';
 
+  /**
+   * Override to include all three pivot fields that form the unique constraint:
+   * apiKeyId, projectId, and userId
+   */
+  protected getUniquePivotFields(): Array<keyof ProjectUserApiKeyModel> {
+    return ['apiKeyId', 'projectId', 'userId'];
+  }
+
   protected toEntity(dbPivot: ProjectUserApiKeyModel): ProjectUserApiKey {
     return {
       id: dbPivot.id,
@@ -42,7 +50,7 @@ export class ProjectUserApiKeyRepository extends PivotRepository<
     return this.query(baseParams, transaction);
   }
 
-  public async attachApiKey(
+  public async addApiKey(
     params: {
       apiKeyId: string;
       projectId: string;
@@ -59,16 +67,19 @@ export class ProjectUserApiKeyRepository extends PivotRepository<
     return this.add(baseParams, transaction);
   }
 
-  public async detachApiKey(
+  public async removeApiKey(
     params: {
       projectId: string;
       userId: string;
+      apiKeyId: string;
     },
     transaction?: Transaction
   ): Promise<ProjectUserApiKey> {
-    const baseParams: BasePivotRemoveArgs = {
+    // Include all unique pivot fields (apiKeyId, projectId, userId) for proper matching
+    const baseParams: BasePivotRemoveArgs & { apiKeyId: string } = {
       parentId: params.projectId,
       relatedId: params.userId,
+      apiKeyId: params.apiKeyId,
     };
 
     return this.softDelete(baseParams, transaction);
@@ -78,12 +89,15 @@ export class ProjectUserApiKeyRepository extends PivotRepository<
     params: {
       projectId: string;
       userId: string;
+      apiKeyId: string;
     },
     transaction?: Transaction
   ): Promise<ProjectUserApiKey> {
-    const baseParams: BasePivotRemoveArgs = {
+    // Include all unique pivot fields (apiKeyId, projectId, userId) for proper matching
+    const baseParams: BasePivotRemoveArgs & { apiKeyId: string } = {
       parentId: params.projectId,
       relatedId: params.userId,
+      apiKeyId: params.apiKeyId,
     };
 
     return this.hardDelete(baseParams, transaction);

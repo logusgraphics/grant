@@ -1,4 +1,5 @@
 enum ApiKeySearchableField {
   clientId
   name
+  description
 }

@@ -55,7 +55,7 @@ export function UserDetailViewer() {
         <UserRoles userId={user.id} user={user} />
         <UserTags userId={user.id} />
       </div>
-      <UserApiKeys userId={user.id} />
+      <UserApiKeys />
       <UserGroups userId={user.id} />
       <UserPermissions userId={user.id} />
     </div>

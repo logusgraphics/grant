@@ -116,20 +116,23 @@ export class ApiKeysHandler extends ScopeHandler {
   public async revokeApiKey(params: MutationRevokeApiKeyArgs): Promise<ApiKey> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
       const { input } = params;
-      return await this.services.apiKeys.revokeApiKey(input, tx);
+      const apiKey = await this.services.apiKeys.revokeApiKey(input, tx);
+      return apiKey;
     });
   }
 
   public async deleteApiKey(params: MutationDeleteApiKeyArgs): Promise<ApiKey> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
       const { input } = params;
-      return await this.services.apiKeys.deleteApiKey(
+      const apiKey = await this.services.apiKeys.deleteApiKey(
         {
           id: input.id,
           hardDelete: input.hardDelete ?? undefined,
         },
         tx
       );
+      await this.removeApiKeyIdFromScopeCache(input.scope, apiKey.id);
+      return apiKey;
     });
   }
 }

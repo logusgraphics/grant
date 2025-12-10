@@ -181,8 +181,10 @@ export function UserRoles({ userId, user }: UserRolesProps) {
                 onSearchChange={handleSearchChange}
                 show={totalPages > 1}
               />,
-              <UserRoleSorter key="sorter" sort={sort} onSortChange={handleSortChange} />,
-            ]}
+              totalCount > 0 && (
+                <UserRoleSorter key="sorter" sort={sort} onSortChange={handleSortChange} />
+              ),
+            ].filter(Boolean)}
           />
         </div>
         <DataTable

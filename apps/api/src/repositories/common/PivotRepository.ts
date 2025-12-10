@@ -1,5 +1,5 @@
 import { DbSchema } from '@logusgraphics/grant-database';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 
 import { NotFoundError } from '@/lib/errors';
 import { createModuleLogger } from '@/lib/logger';
@@ -51,30 +51,40 @@ export abstract class PivotRepository<
 
   constructor(protected db: DbSchema) {}
 
-  private where(
-    table: any,
-    parentIdField: keyof TPivotModel,
-    relatedIdField: keyof TPivotModel,
-    parentId?: string,
-    relatedId?: string
+  protected getUniquePivotFields(): Array<keyof TPivotModel> {
+    return [this.parentIdField, this.relatedIdField];
+  }
+
+  protected whereUnique(
+    params: BasePivotAddArgs | BasePivotRemoveArgs | Record<string, unknown>
   ): any {
-    const conditions = [isNull(table.deletedAt)];
+    const uniqueFields = this.getUniquePivotFields();
+    const conditions = uniqueFields.map((field) => {
+      const fieldKey = field as string;
+      const fieldValue = (params as Record<string, unknown>)[fieldKey];
+      return eq(this.table[fieldKey], fieldValue);
+    });
+    return conditions.length === 1 ? conditions[0] : and(...conditions);
+  }
+
+  private where({ parentId, relatedId }: BasePivotQueryArgs): any {
+    const conditions = [isNull(this.table.deletedAt)];
 
     if (relatedId && parentId) {
       const relationCondition = and(
-        eq(table[parentIdField], parentId),
-        eq(table[relatedIdField], relatedId)
+        eq(this.table[this.parentIdField], parentId),
+        eq(this.table[this.relatedIdField], relatedId)
       );
       if (relationCondition) {
         conditions.push(relationCondition);
       }
     } else if (parentId) {
-      const parentCondition = eq(table[parentIdField], parentId);
+      const parentCondition = eq(this.table[this.parentIdField], parentId);
       if (parentCondition) {
         conditions.push(parentCondition);
       }
     } else if (relatedId) {
-      const relatedCondition = eq(table[relatedIdField], relatedId);
+      const relatedCondition = eq(this.table[this.relatedIdField], relatedId);
       if (relatedCondition) {
         conditions.push(relatedCondition);
       }
@@ -90,14 +100,25 @@ export abstract class PivotRepository<
     relatedId: string,
     rest: Record<string, unknown>
   ): Record<string, unknown> {
-    return {
+    const uniqueFields = this.getUniquePivotFields();
+    const baseValues: Record<string, unknown> = {
       ...rest,
-      [parentIdField]: parentId,
-      [relatedIdField]: relatedId,
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,
     };
+
+    uniqueFields.forEach((field) => {
+      const fieldValue = rest[field as string];
+      if (fieldValue !== undefined) {
+        baseValues[field as string] = fieldValue;
+      }
+    });
+
+    baseValues[parentIdField as string] = parentId;
+    baseValues[relatedIdField as string] = relatedId;
+
+    return baseValues;
   }
 
   protected first<T>(result: T | T[]): T {
@@ -111,13 +132,7 @@ export abstract class PivotRepository<
     const dbInstance = transaction || this.db;
 
     try {
-      const whereClause = this.where(
-        this.table,
-        this.parentIdField,
-        this.relatedIdField,
-        params.parentId,
-        params.relatedId
-      );
+      const whereClause = this.where(params);
 
       const result = await dbInstance.select().from(this.table).where(whereClause);
 
@@ -151,10 +166,8 @@ export abstract class PivotRepository<
     const dbInstance = transaction || this.db;
     const { parentId, relatedId, ...rest } = params;
     try {
-      const softDeletedWhereClause = and(
-        eq(this.table[this.parentIdField as string], parentId),
-        eq(this.table[this.relatedIdField as string], relatedId)
-      );
+      const uniqueWhereClause = this.whereUnique(params);
+      const softDeletedWhereClause = and(uniqueWhereClause, isNotNull(this.table.deletedAt));
 
       const existingSoftDeleted = await dbInstance
         .select()
@@ -176,15 +189,12 @@ export abstract class PivotRepository<
         return this.toEntity(reactivatedItem as TPivotModel);
       }
 
-      const whereClause = this.where(
-        this.table,
-        this.parentIdField,
-        this.relatedIdField,
-        params.parentId,
-        params.relatedId
-      );
-
-      const existingPivot = await dbInstance.select().from(this.table).where(whereClause).limit(1);
+      const activeWhereClause = and(uniqueWhereClause, isNull(this.table.deletedAt));
+      const existingPivot = await dbInstance
+        .select()
+        .from(this.table)
+        .where(activeWhereClause)
+        .limit(1);
 
       if (existingPivot.length > 0) {
         return this.toEntity(existingPivot[0]);
@@ -217,15 +227,25 @@ export abstract class PivotRepository<
     transaction?: Transaction
   ): Promise<TPivotEntity> {
     const dbInstance = transaction || this.db;
+    const uniqueFields = this.getUniquePivotFields();
+    const whereConditions = uniqueFields.map((field) => {
+      let fieldValue: unknown = update[field];
+
+      if (fieldValue === undefined) {
+        if (field === this.parentIdField) {
+          fieldValue = parentId;
+        } else if (field === this.relatedIdField) {
+          fieldValue = relatedId;
+        }
+      }
+
+      return eq(this.table[field as string], fieldValue);
+    });
+
     const updatedItem = await dbInstance
       .update(this.table)
       .set(update)
-      .where(
-        and(
-          eq(this.table[this.parentIdField], parentId),
-          eq(this.table[this.relatedIdField], relatedId)
-        )
-      )
+      .where(and(...whereConditions))
       .returning();
     return this.toEntity(updatedItem[0] as TPivotModel);
   }
@@ -237,13 +257,8 @@ export abstract class PivotRepository<
     const dbInstance = transaction || this.db;
 
     try {
-      const whereClause = this.where(
-        this.table,
-        this.parentIdField,
-        this.relatedIdField,
-        params.parentId,
-        params.relatedId
-      );
+      const uniqueWhereClause = this.whereUnique(params);
+      const whereClause = and(uniqueWhereClause, isNull(this.table.deletedAt));
 
       const result = await dbInstance
         .update(this.table)
@@ -276,13 +291,8 @@ export abstract class PivotRepository<
     const dbInstance = transaction || this.db;
 
     try {
-      const whereClause = this.where(
-        this.table,
-        this.parentIdField,
-        this.relatedIdField,
-        params.parentId,
-        params.relatedId
-      );
+      const uniqueWhereClause = this.whereUnique(params);
+      const whereClause = uniqueWhereClause;
 
       const result = await dbInstance.delete(this.table).where(whereClause).returning();
 

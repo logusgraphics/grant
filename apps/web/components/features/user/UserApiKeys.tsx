@@ -1,22 +1,42 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useParams } from 'next/navigation';
 
-import { Tenant } from '@logusgraphics/grant-schema';
+import {
+  ApiKey,
+  ApiKeySortableField,
+  ApiKeySortInput,
+  SortOrder,
+  Tenant,
+} from '@logusgraphics/grant-schema';
+import { format } from 'date-fns';
+import { Key } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { CopyToClipboard, Pagination, Toolbar } from '@/components/common';
+import { DataTable, type ColumnConfig } from '@/components/common/DataTable';
+import { type ColumnConfig as SkeletonColumnConfig } from '@/components/common/TableSkeleton';
 import { useApiKeys } from '@/hooks/api-keys';
 
-interface UserApiKeysProps {
-  userId: string;
-}
+import { ApiKeyActions } from './ApiKeyActions';
+import { CreateApiKeyDialog } from './CreateApiKeyDialog';
+import { UserApiKeySearch } from './UserApiKeySearch';
+import { UserApiKeySorter } from './UserApiKeySorter';
 
-export function UserApiKeys({ userId }: UserApiKeysProps) {
+export function UserApiKeys() {
   const t = useTranslations('user.apiKeys');
   const params = useParams();
   const projectId = params.projectId as string;
+  const userId = params.userId as string;
+  const [page, setPage] = useState(1);
+  const [limit] = useState(2);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<ApiKeySortInput | undefined>({
+    field: ApiKeySortableField.CreatedAt,
+    order: SortOrder.Desc,
+  });
 
   const scope = useMemo(
     () => ({
@@ -26,16 +46,138 @@ export function UserApiKeys({ userId }: UserApiKeysProps) {
     [projectId, userId]
   );
 
-  const { apiKeys, loading, error } = useApiKeys({ scope });
+  const { apiKeys, loading, error, totalCount } = useApiKeys({
+    scope: scope!,
+    page,
+    limit,
+    search,
+    sort,
+  });
 
-  if (loading) {
-    return (
-      <div className="rounded-lg border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4">{t('title')}</h3>
-        <p className="text-sm text-muted-foreground">{t('loading')}</p>
-      </div>
-    );
-  }
+  const totalPages = Math.ceil(totalCount / limit);
+
+  const handleSortChange = (field: ApiKeySortableField, order: SortOrder) => {
+    setSort({ field, order });
+    setPage(1);
+  };
+
+  const handleSearchChange = (newSearch: string) => {
+    setSearch(newSearch);
+    setPage(1);
+  };
+
+  const formatDate = (date: string | Date | null | undefined): string => {
+    if (!date) return t('never');
+    try {
+      const dateObj = date instanceof Date ? date : new Date(date as string);
+      if (isNaN(dateObj.getTime())) return t('never');
+      return format(dateObj, 'MMM d, yyyy');
+    } catch {
+      return t('never');
+    }
+  };
+
+  const columns: ColumnConfig<ApiKey>[] = [
+    {
+      key: 'icon',
+      header: '',
+      width: '50px',
+      render: () => (
+        <div className="flex items-center justify-center">
+          <Key className="h-4 w-4 text-muted-foreground" />
+        </div>
+      ),
+    },
+    {
+      key: 'name',
+      header: t('table.name'),
+      width: '200px',
+      render: (apiKey: ApiKey) => (
+        <span className="text-sm font-medium">{apiKey.name || apiKey.clientId}</span>
+      ),
+    },
+    {
+      key: 'clientId',
+      header: t('table.clientId'),
+      width: '300px',
+      render: (apiKey: ApiKey) => (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground font-mono">{apiKey.clientId}</span>
+          <CopyToClipboard text={apiKey.clientId} size="sm" variant="ghost" />
+        </div>
+      ),
+    },
+    {
+      key: 'description',
+      header: t('table.description'),
+      width: '250px',
+      render: (apiKey: ApiKey) => (
+        <span className="text-sm text-muted-foreground">
+          {apiKey.description || t('noDescription')}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: t('table.status'),
+      width: '120px',
+      render: (apiKey: ApiKey) => (
+        <span
+          className={`text-sm ${
+            apiKey.isRevoked
+              ? 'text-destructive'
+              : apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()
+                ? 'text-orange-500'
+                : 'text-green-600'
+          }`}
+        >
+          {apiKey.isRevoked
+            ? t('status.revoked')
+            : apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()
+              ? t('status.expired')
+              : t('status.active')}
+        </span>
+      ),
+    },
+    {
+      key: 'expiresAt',
+      header: t('table.expiresAt'),
+      width: '150px',
+      render: (apiKey: ApiKey) => (
+        <span className="text-sm text-muted-foreground">{formatDate(apiKey.expiresAt)}</span>
+      ),
+    },
+    {
+      key: 'lastUsedAt',
+      header: t('table.lastUsedAt'),
+      width: '150px',
+      render: (apiKey: ApiKey) => (
+        <span className="text-sm text-muted-foreground">{formatDate(apiKey.lastUsedAt)}</span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: t('table.createdAt'),
+      width: '150px',
+      render: (apiKey: ApiKey) => (
+        <span className="text-sm text-muted-foreground">{formatDate(apiKey.createdAt)}</span>
+      ),
+    },
+  ];
+
+  const skeletonConfig: { columns: SkeletonColumnConfig[]; rowCount?: number } = {
+    columns: [
+      { key: 'icon', type: 'text' },
+      { key: 'name', type: 'text' },
+      { key: 'clientId', type: 'text' },
+      { key: 'description', type: 'text' },
+      { key: 'status', type: 'text' },
+      { key: 'expiresAt', type: 'text' },
+      { key: 'lastUsedAt', type: 'text' },
+      { key: 'createdAt', type: 'text' },
+    ],
+    rowCount: 5,
+  };
 
   if (error) {
     return (
@@ -47,24 +189,46 @@ export function UserApiKeys({ userId }: UserApiKeysProps) {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold mb-4">{t('title')}</h3>
-      {apiKeys.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('empty')}</p>
-      ) : (
-        <div className="space-y-2">
-          {apiKeys.map((apiKey) => (
-            <div key={apiKey.id} className="flex items-center justify-between p-3 border rounded">
-              <div>
-                <p className="font-medium">{apiKey.name || apiKey.clientId}</p>
-                <p className="text-sm text-muted-foreground">
-                  {apiKey.isRevoked ? t('revoked') : t('active')}
-                </p>
-              </div>
-            </div>
-          ))}
+    <>
+      <div className="rounded-lg border bg-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">{t('title')}</h3>
+          <Toolbar
+            items={[
+              <UserApiKeySearch
+                key="search"
+                search={search}
+                onSearchChange={handleSearchChange}
+                show={totalPages > 1 || search.length > 0}
+              />,
+              totalCount > 0 && (
+                <UserApiKeySorter key="sorter" sort={sort} onSortChange={handleSortChange} />
+              ),
+              <CreateApiKeyDialog key="create" />,
+            ].filter(Boolean)}
+          />
         </div>
-      )}
-    </div>
+        <DataTable
+          data={apiKeys}
+          columns={columns}
+          loading={loading}
+          emptyState={{
+            icon: <Key className="h-12 w-12" />,
+            title: t('empty'),
+            description: t('emptyDescription'),
+            action: <CreateApiKeyDialog />,
+          }}
+          actionsColumn={{
+            render: (apiKey: ApiKey) => <ApiKeyActions apiKey={apiKey} scope={scope!} />,
+          }}
+          skeletonConfig={skeletonConfig}
+        />
+        {totalPages > 1 && (
+          <div className="mt-4 border-t">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
+      </div>
+    </>
   );
 }

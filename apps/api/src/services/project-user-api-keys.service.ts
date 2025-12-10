@@ -104,7 +104,7 @@ export class ProjectUserApiKeyService extends AuditService {
       );
     }
 
-    const pivot = await this.repositories.projectUserApiKeyRepository.attachApiKey(
+    const pivot = await this.repositories.projectUserApiKeyRepository.addApiKey(
       {
         apiKeyId,
         projectId,
@@ -154,11 +154,11 @@ export class ProjectUserApiKeyService extends AuditService {
 
     const pivot = isHardDelete
       ? await this.repositories.projectUserApiKeyRepository.hardDetachApiKey(
-          { projectId, userId },
+          { projectId, userId, apiKeyId },
           transaction
         )
-      : await this.repositories.projectUserApiKeyRepository.detachApiKey(
-          { projectId, userId },
+      : await this.repositories.projectUserApiKeyRepository.removeApiKey(
+          { projectId, userId, apiKeyId },
           transaction
         );
 
