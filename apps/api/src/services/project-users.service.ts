@@ -73,13 +73,15 @@ export class ProjectUserService extends AuditService {
   }
 
   public async getProjectUsers(
-    params: { projectId: string },
+    params: { projectId?: string; userId?: string },
     transaction?: Transaction
   ): Promise<ProjectUser[]> {
     const context = 'ProjectUserService.getProjectUsers';
     const validatedParams = validateInput(getProjectUsersParamsSchema, params, context);
 
-    await this.projectExists(validatedParams.projectId, transaction);
+    if (validatedParams.projectId) {
+      await this.projectExists(validatedParams.projectId, transaction);
+    }
 
     const result = await this.repositories.projectUserRepository.getProjectUsers(
       validatedParams,
@@ -184,10 +186,6 @@ export class ProjectUserService extends AuditService {
     return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
   }
 
-  /**
-   * Get user's project memberships with roles
-   * Returns projects the user belongs to along with their role in each project
-   */
   public async getUserProjectMemberships(
     userId: string,
     transaction?: Transaction
@@ -199,7 +197,7 @@ export class ProjectUserService extends AuditService {
       joinedAt: Date;
     }>
   > {
-    const memberships = await this.repositories.projectUserRepository.getUserProjectMemberships(
+    const memberships = await this.repositories.projectUserRepository.getProjectUserMemberships(
       userId,
       transaction
     );

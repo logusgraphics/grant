@@ -9,6 +9,7 @@ import { ScrollBadges } from '@/components/common';
 import { Avatar } from '@/components/common/Avatar';
 import { DataTable, type ColumnConfig } from '@/components/common/DataTable';
 import { type ColumnConfig as SkeletonColumnConfig } from '@/components/common/TableSkeleton';
+import { getInitials } from '@/lib/utils';
 import { transformTagsToBadges } from '@/lib/tag-utils';
 import { cn } from '@/lib/utils';
 import { useUsersStore } from '@/stores/users.store';
@@ -16,6 +17,7 @@ import { useUsersStore } from '@/stores/users.store';
 import { CreateUserDialog } from './CreateUserDialog';
 import { UserActions } from './UserActions';
 import { UserAudit } from './UserAudit';
+import { UserNavigationButton } from './UserNavigationButton';
 
 export function UserTable() {
   const t = useTranslations('users');
@@ -43,7 +45,9 @@ export function UserTable() {
       className: 'pl-4',
       render: (user: User) => (
         <Avatar
-          initial={user.name.charAt(0)}
+          initial={getInitials(user.name)}
+          imageUrl={user.pictureUrl || undefined}
+          cacheBuster={user.updatedAt}
           size="md"
           className={
             user.tags?.find((tag: Tag) => tag.isPrimary)?.color
@@ -84,6 +88,12 @@ export function UserTable() {
       width: '200px',
       render: (user: User) => <UserAudit user={user} />,
     },
+    {
+      key: 'navigation',
+      header: '',
+      width: '60px',
+      render: (user: User) => <UserNavigationButton user={user} size="sm" round={false} />,
+    },
   ];
 
   const skeletonConfig: { columns: SkeletonColumnConfig[]; rowCount?: number } = {
@@ -93,6 +103,7 @@ export function UserTable() {
       { key: 'roles', type: 'list' },
       { key: 'tags', type: 'list' },
       { key: 'audit', type: 'audit' },
+      { key: 'navigation', type: 'icon' },
     ],
     rowCount: limit,
   };

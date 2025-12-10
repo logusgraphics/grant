@@ -1,0 +1,5 @@
+input DeleteApiKeyInput {
+  id: ID!
+  scope: Scope!
+  hardDelete: Boolean
+}

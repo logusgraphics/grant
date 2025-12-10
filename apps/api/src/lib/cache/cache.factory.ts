@@ -16,6 +16,17 @@ export interface CacheConfig {
   };
 }
 
+const entityTypes = [
+  'roles',
+  'users',
+  'groups',
+  'permissions',
+  'tags',
+  'projects',
+  'apiKeys',
+  'oauth',
+] as const;
+
 /**
  * Cache factory - creates the appropriate cache adapter based on configuration
  * Implements the Strategy Pattern for swappable cache backends
@@ -27,16 +38,6 @@ export class CacheFactory {
    * @returns IEntityCacheAdapter with all entity-specific adapters
    */
   static createEntityCache(config: CacheConfig): IEntityCacheAdapter {
-    const entityTypes = [
-      'roles',
-      'users',
-      'groups',
-      'permissions',
-      'tags',
-      'projects',
-      'oauth',
-    ] as const;
-
     const cache: Partial<IEntityCacheAdapter> = {};
 
     for (const entityType of entityTypes) {
@@ -78,14 +79,6 @@ export class CacheFactory {
    * @param cache - Entity cache adapter to cleanup
    */
   static async disconnect(cache: IEntityCacheAdapter): Promise<void> {
-    await Promise.all([
-      cache.roles.disconnect(),
-      cache.users.disconnect(),
-      cache.groups.disconnect(),
-      cache.permissions.disconnect(),
-      cache.tags.disconnect(),
-      cache.projects.disconnect(),
-      cache.oauth.disconnect(),
-    ]);
+    await Promise.all(entityTypes.map((entityType) => cache[entityType].disconnect()));
   }
 }

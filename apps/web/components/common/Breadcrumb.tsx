@@ -2,22 +2,22 @@
 
 import React from 'react';
 
-import { usePathname, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 import { useTranslations } from 'next-intl';
 
 import {
-  Breadcrumb as BreadcrumbRoot,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
+  Breadcrumb as BreadcrumbRoot,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { useProjectScope } from '@/hooks/common/useProjectScope';
-import { useOrganizations } from '@/hooks/organizations';
-import { useProjects } from '@/hooks/projects';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
+import { useOrganizationsStore } from '@/stores/organizations.store';
+import { useProjectsStore } from '@/stores/projects.store';
+import { useUsersStore } from '@/stores/users.store';
 
 interface BreadcrumbItem {
   label: string;
@@ -28,19 +28,11 @@ export function Breadcrumb() {
   const t = useTranslations('common');
   const dashboardT = useTranslations('dashboard.navigation');
   const pathname = usePathname();
-  const scope = useProjectScope();
   const params = useParams();
 
-  const { organizations: [organization] = [] } = useOrganizations({
-    ids: params.organizationId ? [params.organizationId as string] : undefined,
-    limit: 1,
-  });
-
-  const { projects: [project] = [] } = useProjects({
-    scope: scope!,
-    ids: params.projectId ? [params.projectId as string] : undefined,
-    limit: 1,
-  });
+  const currentOrganization = useOrganizationsStore((state) => state.currentOrganization);
+  const currentProject = useProjectsStore((state) => state.currentProject);
+  const currentUser = useUsersStore((state) => state.currentUser);
 
   if (pathname === '/' || pathname.startsWith('/auth')) {
     return null;
@@ -77,7 +69,8 @@ export function Breadcrumb() {
       }
 
       if (params.organizationId && segment === params.organizationId) {
-        const orgLabel = organization?.name || t('organizations.organization');
+        const orgLabel =
+          currentOrganization?.name || params.organizationId || t('organizations.organization');
         breadcrumbs.push({
           label: orgLabel,
           href: `/dashboard/organizations/${segment}`,
@@ -86,18 +79,24 @@ export function Breadcrumb() {
       }
 
       if (segment === 'projects') {
+        const basePath = params.organizationId
+          ? `/dashboard/organizations/${params.organizationId}`
+          : `/dashboard/accounts/${params.accountId}`;
         breadcrumbs.push({
           label: t('projects.title'),
-          href: `/dashboard/organizations/${params.organizationId}/projects`,
+          href: `${basePath}/projects`,
         });
         return;
       }
 
       if (params.projectId && segment === params.projectId) {
-        const projectLabel = project?.name || t('projects.project');
+        const projectLabel = currentProject?.name || params.projectId || t('projects.project');
+        const basePath = params.organizationId
+          ? `/dashboard/organizations/${params.organizationId}`
+          : `/dashboard/accounts/${params.accountId}`;
         breadcrumbs.push({
           label: projectLabel,
-          href: `/dashboard/organizations/${params.organizationId}/projects/${segment}`,
+          href: `${basePath}/projects/${segment}`,
         });
         return;
       }
@@ -118,6 +117,38 @@ export function Breadcrumb() {
         breadcrumbs.push({
           label,
           href: currentPath,
+        });
+        return;
+      }
+
+      if (params.userId && segment === params.userId) {
+        // Always show "Users" before the user name when on a user detail page
+        const basePath = params.organizationId
+          ? `/dashboard/organizations/${params.organizationId}`
+          : `/dashboard/accounts/${params.accountId}`;
+
+        // Check if "Users" breadcrumb is already added, if not add it
+        const hasUsersBreadcrumb = breadcrumbs.some((crumb) => crumb.label === dashboardT('users'));
+        if (!hasUsersBreadcrumb) {
+          breadcrumbs.push({
+            label: dashboardT('users'),
+            href: `${basePath}/projects/${params.projectId}/users`,
+          });
+        }
+
+        // Show user name, userId, or "Loading" based on availability
+        let userLabel: string;
+        if (currentUser?.name) {
+          userLabel = currentUser.name;
+        } else if (params.userId) {
+          userLabel = params.userId;
+        } else {
+          userLabel = t('loading');
+        }
+
+        breadcrumbs.push({
+          label: userLabel,
+          href: `${basePath}/projects/${params.projectId}/users/${segment}`,
         });
         return;
       }

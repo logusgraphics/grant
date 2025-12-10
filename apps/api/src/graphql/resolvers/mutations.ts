@@ -5,6 +5,7 @@ import * as organizationInvitationMutations from './organization-invitations/mut
 import * as organizationMemberMutations from './organization-members/mutations';
 import * as organizationMutations from './organizations/mutations';
 import * as permissionMutations from './permissions/mutations';
+import * as apiKeyMutations from './api-keys/mutations';
 import * as projectMutations from './projects/mutations';
 import * as roleMutations from './roles/mutations';
 import * as tagMutations from './tags/mutations';
@@ -54,4 +55,8 @@ export const Mutation = {
   updateTag: tagMutations.updateTag,
   deleteTag: tagMutations.deleteTag,
   revokeUserSession: userSessionMutations.revokeUserSession,
+  createApiKey: apiKeyMutations.createApiKey,
+  exchangeApiKey: apiKeyMutations.exchangeApiKey,
+  revokeApiKey: apiKeyMutations.revokeApiKey,
+  deleteApiKey: apiKeyMutations.deleteApiKey,
 } as const;

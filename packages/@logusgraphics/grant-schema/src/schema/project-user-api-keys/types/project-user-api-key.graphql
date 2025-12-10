@@ -1,0 +1,12 @@
+type ProjectUserApiKey implements Auditable {
+  id: ID!
+  projectId: ID!
+  userId: ID!
+  apiKeyId: ID!
+  apiKey: ApiKey
+  project: Project
+  user: User
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
+}

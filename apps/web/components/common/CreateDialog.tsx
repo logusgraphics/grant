@@ -9,6 +9,7 @@ import { DefaultValues, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,7 @@ export interface CreateDialogField {
   name: string;
   label: string;
   placeholder?: string;
-  type: 'text' | 'email' | 'textarea';
+  type: 'text' | 'email' | 'textarea' | 'date';
   validation?: z.ZodString;
   required?: boolean;
 }
@@ -169,6 +170,14 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
                   className="resize-none"
                   disabled={isSubmitting}
                   {...formField}
+                />
+              ) : field.type === 'date' ? (
+                <DatePicker
+                  date={formField.value as Date | undefined}
+                  onDateChange={(date) => formField.onChange(date)}
+                  placeholder={field.placeholder ? t(field.placeholder) : t(field.label)}
+                  disabled={isSubmitting}
+                  className={hasError ? 'border-red-500' : ''}
                 />
               ) : (
                 <Input

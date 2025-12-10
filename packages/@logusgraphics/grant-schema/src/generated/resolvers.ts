@@ -169,6 +169,12 @@ export type AddProjectTagInput = {
   tagId: Scalars['ID']['input'];
 };
 
+export type AddProjectUserApiKeyInput = {
+  apiKeyId: Scalars['ID']['input'];
+  projectId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
 export type AddProjectUserInput = {
   projectId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
@@ -195,6 +201,50 @@ export type AddUserTagInput = {
   tagId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
+
+export type ApiKey = Auditable & {
+  __typename?: 'ApiKey';
+  clientId: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  createdBy: Scalars['ID']['output'];
+  createdByUser?: Maybe<User>;
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  expiresAt?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  isRevoked: Scalars['Boolean']['output'];
+  lastUsedAt?: Maybe<Scalars['Date']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  revokedAt?: Maybe<Scalars['Date']['output']>;
+  revokedBy?: Maybe<Scalars['ID']['output']>;
+  revokedByUser?: Maybe<User>;
+  updatedAt: Scalars['Date']['output'];
+};
+
+export type ApiKeyPage = PaginatedResults & {
+  __typename?: 'ApiKeyPage';
+  apiKeys: Array<ApiKey>;
+  hasNextPage: Scalars['Boolean']['output'];
+  totalCount: Scalars['Int']['output'];
+};
+
+export enum ApiKeySearchableField {
+  ClientId = 'clientId',
+  Description = 'description',
+  Name = 'name',
+}
+
+export type ApiKeySortInput = {
+  field: ApiKeySortableField;
+  order: SortOrder;
+};
+
+export enum ApiKeySortableField {
+  CreatedAt = 'createdAt',
+  ExpiresAt = 'expiresAt',
+  LastUsedAt = 'lastUsedAt',
+  Name = 'name',
+}
 
 export type Auditable = {
   createdAt: Scalars['Date']['output'];
@@ -248,6 +298,24 @@ export type CreateAccountResult = {
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
 };
 
+export type CreateApiKeyInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  expiresAt?: InputMaybe<Scalars['Date']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  scope: Scope;
+};
+
+export type CreateApiKeyResult = {
+  __typename?: 'CreateApiKeyResult';
+  clientId: Scalars['String']['output'];
+  clientSecret: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  expiresAt?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+};
+
 export type CreateComplementaryAccountInput = {
   _unused?: InputMaybe<Scalars['String']['input']>;
 };
@@ -269,6 +337,16 @@ export type CreateGroupInput = {
 
 export type CreateOrganizationInput = {
   name: Scalars['String']['input'];
+};
+
+export type CreateOrganizationInvitationInput = {
+  email: Scalars['String']['input'];
+  expiresAt: Scalars['Date']['input'];
+  invitedBy: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
+  roleId: Scalars['ID']['input'];
+  status?: InputMaybe<OrganizationInvitationStatus>;
+  token: Scalars['String']['input'];
 };
 
 export type CreatePermissionInput = {
@@ -335,12 +413,30 @@ export type DeleteAccountInput = {
   userId: Scalars['ID']['input'];
 };
 
+export type DeleteApiKeyInput = {
+  hardDelete?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
+  scope: Scope;
+};
+
 export type DeleteUserAuthenticationMethodInput = {
   id: Scalars['ID']['input'];
 };
 
 export type DeleteUserSessionInput = {
   id: Scalars['ID']['input'];
+};
+
+export type ExchangeApiKeyInput = {
+  clientId: Scalars['String']['input'];
+  clientSecret: Scalars['String']['input'];
+  scope: Scope;
+};
+
+export type ExchangeApiKeyResult = {
+  __typename?: 'ExchangeApiKeyResult';
+  accessToken: Scalars['String']['output'];
+  expiresIn: Scalars['Int']['output'];
 };
 
 export type GetUserAuthenticationMethodsInput = {
@@ -476,6 +572,7 @@ export type Mutation = {
   _empty?: Maybe<Scalars['String']['output']>;
   acceptInvitation: AcceptInvitationResult;
   changePassword: ChangePasswordResult;
+  createApiKey: CreateApiKeyResult;
   createComplementaryAccount: CreateComplementaryAccountResult;
   createGroup: Group;
   createOrganization: Organization;
@@ -486,6 +583,7 @@ export type Mutation = {
   createUser: User;
   createUserAuthenticationMethod: UserAuthenticationMethod;
   deleteAccount: User;
+  deleteApiKey: ApiKey;
   deleteGroup: Group;
   deleteOrganization: Organization;
   deletePermission: Permission;
@@ -494,6 +592,7 @@ export type Mutation = {
   deleteTag: Tag;
   deleteUser: User;
   deleteUserAuthenticationMethod: UserAuthenticationMethod;
+  exchangeApiKey: ExchangeApiKeyResult;
   inviteMember: OrganizationInvitation;
   login: LoginResponse;
   refreshSession: RefreshSessionResponse;
@@ -503,6 +602,7 @@ export type Mutation = {
   resendInvitationEmail: OrganizationInvitation;
   resendVerification: ResendVerificationResponse;
   resetPassword: ResetPasswordResponse;
+  revokeApiKey: ApiKey;
   revokeInvitation: OrganizationInvitation;
   revokeUserSession: RevokeUserSessionResult;
   setPrimaryAuthenticationMethod: UserAuthenticationMethod;
@@ -524,6 +624,10 @@ export type MutationAcceptInvitationArgs = {
 
 export type MutationChangePasswordArgs = {
   input: ChangePasswordInput;
+};
+
+export type MutationCreateApiKeyArgs = {
+  input: CreateApiKeyInput;
 };
 
 export type MutationCreateComplementaryAccountArgs = {
@@ -566,6 +670,10 @@ export type MutationDeleteAccountArgs = {
   input: DeleteAccountInput;
 };
 
+export type MutationDeleteApiKeyArgs = {
+  input: DeleteApiKeyInput;
+};
+
 export type MutationDeleteGroupArgs = {
   id: Scalars['ID']['input'];
   scope: Scope;
@@ -604,6 +712,10 @@ export type MutationDeleteUserAuthenticationMethodArgs = {
   input: DeleteUserAuthenticationMethodInput;
 };
 
+export type MutationExchangeApiKeyArgs = {
+  input: ExchangeApiKeyInput;
+};
+
 export type MutationInviteMemberArgs = {
   input: InviteMemberInput;
 };
@@ -639,6 +751,10 @@ export type MutationResendVerificationArgs = {
 
 export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
+};
+
+export type MutationRevokeApiKeyArgs = {
+  input: RevokeApiKeyInput;
 };
 
 export type MutationRevokeInvitationArgs = {
@@ -1098,10 +1214,25 @@ export type ProjectUserProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
+export type ProjectUserApiKey = Auditable & {
+  __typename?: 'ProjectUserApiKey';
+  apiKey?: Maybe<ApiKey>;
+  apiKeyId: Scalars['ID']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  project?: Maybe<Project>;
+  projectId: Scalars['ID']['output'];
+  updatedAt: Scalars['Date']['output'];
+  user?: Maybe<User>;
+  userId: Scalars['ID']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
   accounts: AccountPage;
+  apiKeys: ApiKeyPage;
   exportUserData: UserDataExport;
   groups: GroupPage;
   invitation?: Maybe<OrganizationInvitation>;
@@ -1124,6 +1255,15 @@ export type QueryAccountsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<AccountSortInput>;
+};
+
+export type QueryApiKeysArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  scope: Scope;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ApiKeySortInput>;
 };
 
 export type QueryGroupsArgs = {
@@ -1224,6 +1364,99 @@ export type QueryUsersArgs = {
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
+export type QueryAccountProjectInput = {
+  projectId: Scalars['ID']['input'];
+};
+
+export type QueryAccountProjectsInput = {
+  accountId: Scalars['ID']['input'];
+};
+
+export type QueryGroupPermissionsInput = {
+  groupId: Scalars['ID']['input'];
+};
+
+export type QueryGroupTagsInput = {
+  groupId?: InputMaybe<Scalars['ID']['input']>;
+  tagId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryOrganizationGroupsInput = {
+  organizationId: Scalars['ID']['input'];
+};
+
+export type QueryOrganizationPermissionsInput = {
+  organizationId: Scalars['ID']['input'];
+};
+
+export type QueryOrganizationProjectsInput = {
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryOrganizationRolesInput = {
+  organizationId: Scalars['ID']['input'];
+};
+
+export type QueryOrganizationTagsInput = {
+  organizationId: Scalars['ID']['input'];
+};
+
+export type QueryOrganizationUsersInput = {
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryPermissionTagsInput = {
+  permissionId?: InputMaybe<Scalars['ID']['input']>;
+  tagId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryProjectGroupsInput = {
+  projectId: Scalars['ID']['input'];
+};
+
+export type QueryProjectPermissionsInput = {
+  projectId: Scalars['ID']['input'];
+};
+
+export type QueryProjectRolesInput = {
+  projectId: Scalars['ID']['input'];
+};
+
+export type QueryProjectTagsInput = {
+  projectId: Scalars['ID']['input'];
+  tagId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryProjectUserApiKeysInput = {
+  projectId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+export type QueryProjectUsersInput = {
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryRoleGroupsInput = {
+  roleId: Scalars['ID']['input'];
+};
+
+export type QueryRoleTagsInput = {
+  roleId?: InputMaybe<Scalars['ID']['input']>;
+  tagId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryUserRolesInput = {
+  userId: Scalars['ID']['input'];
+};
+
+export type QueryUserTagsInput = {
+  tagId?: InputMaybe<Scalars['ID']['input']>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type RefreshSessionResponse = {
   __typename?: 'RefreshSessionResponse';
   accessToken: Scalars['String']['output'];
@@ -1312,6 +1545,12 @@ export type RemoveProjectTagInput = {
   tagId: Scalars['ID']['input'];
 };
 
+export type RemoveProjectUserApiKeyInput = {
+  apiKeyId: Scalars['ID']['input'];
+  projectId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
 export type RemoveProjectUserInput = {
   projectId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
@@ -1369,6 +1608,11 @@ export type ResetPasswordResponse = {
   message: Scalars['String']['output'];
   messageKey: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
+};
+
+export type RevokeApiKeyInput = {
+  id: Scalars['ID']['input'];
+  scope: Scope;
 };
 
 export type RevokeUserSessionResult = {
@@ -1513,8 +1757,10 @@ export type TagSortInput = {
 
 export enum Tenant {
   Account = 'account',
+  AccountProject = 'accountProject',
   Organization = 'organization',
-  Project = 'project',
+  OrganizationProject = 'organizationProject',
+  ProjectUser = 'projectUser',
 }
 
 export type UpdateGroupInput = {
@@ -1533,6 +1779,11 @@ export type UpdateGroupTagInput = {
 
 export type UpdateOrganizationInput = {
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateOrganizationInvitationInput = {
+  acceptedAt?: InputMaybe<Scalars['Date']['input']>;
+  status?: InputMaybe<OrganizationInvitationStatus>;
 };
 
 export type UpdateOrganizationMemberInput = {
@@ -1915,6 +2166,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
   Auditable:
     | Account
     | AccountProject
+    | ApiKey
     | Group
     | GroupPermission
     | GroupTag
@@ -1934,6 +2186,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
     | ProjectRole
     | ProjectTag
     | ProjectUser
+    | ProjectUserApiKey
     | Role
     | RoleGroup
     | RoleTag
@@ -1946,6 +2199,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
   Creatable: never;
   PaginatedResults:
     | AccountPage
+    | ApiKeyPage
     | GroupPage
     | OrganizationPage
     | PermissionPage
@@ -1983,11 +2237,17 @@ export type ResolversTypes = ResolversObject<{
   AddProjectPermissionInput: AddProjectPermissionInput;
   AddProjectRoleInput: AddProjectRoleInput;
   AddProjectTagInput: AddProjectTagInput;
+  AddProjectUserApiKeyInput: AddProjectUserApiKeyInput;
   AddProjectUserInput: AddProjectUserInput;
   AddRoleGroupInput: AddRoleGroupInput;
   AddRoleTagInput: AddRoleTagInput;
   AddUserRoleInput: AddUserRoleInput;
   AddUserTagInput: AddUserTagInput;
+  ApiKey: ResolverTypeWrapper<ApiKey>;
+  ApiKeyPage: ResolverTypeWrapper<ApiKeyPage>;
+  ApiKeySearchableField: ApiKeySearchableField;
+  ApiKeySortInput: ApiKeySortInput;
+  ApiKeySortableField: ApiKeySortableField;
   Auditable: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Auditable']>;
   AuthenticationMethodExportData: ResolverTypeWrapper<AuthenticationMethodExportData>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
@@ -1996,10 +2256,13 @@ export type ResolversTypes = ResolversObject<{
   Creatable: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Creatable']>;
   CreateAccountInput: CreateAccountInput;
   CreateAccountResult: ResolverTypeWrapper<CreateAccountResult>;
+  CreateApiKeyInput: CreateApiKeyInput;
+  CreateApiKeyResult: ResolverTypeWrapper<CreateApiKeyResult>;
   CreateComplementaryAccountInput: CreateComplementaryAccountInput;
   CreateComplementaryAccountResult: ResolverTypeWrapper<CreateComplementaryAccountResult>;
   CreateGroupInput: CreateGroupInput;
   CreateOrganizationInput: CreateOrganizationInput;
+  CreateOrganizationInvitationInput: CreateOrganizationInvitationInput;
   CreatePermissionInput: CreatePermissionInput;
   CreateProjectInput: CreateProjectInput;
   CreateRoleInput: CreateRoleInput;
@@ -2009,8 +2272,11 @@ export type ResolversTypes = ResolversObject<{
   CreateUserSessionInput: CreateUserSessionInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   DeleteAccountInput: DeleteAccountInput;
+  DeleteApiKeyInput: DeleteApiKeyInput;
   DeleteUserAuthenticationMethodInput: DeleteUserAuthenticationMethodInput;
   DeleteUserSessionInput: DeleteUserSessionInput;
+  ExchangeApiKeyInput: ExchangeApiKeyInput;
+  ExchangeApiKeyResult: ResolverTypeWrapper<ExchangeApiKeyResult>;
   GetUserAuthenticationMethodsInput: GetUserAuthenticationMethodsInput;
   GetUserSessionsInput: GetUserSessionsInput;
   Group: ResolverTypeWrapper<Group>;
@@ -2072,7 +2338,29 @@ export type ResolversTypes = ResolversObject<{
   ProjectSortableField: ProjectSortableField;
   ProjectTag: ResolverTypeWrapper<ProjectTag>;
   ProjectUser: ResolverTypeWrapper<ProjectUser>;
+  ProjectUserApiKey: ResolverTypeWrapper<ProjectUserApiKey>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  QueryAccountProjectInput: QueryAccountProjectInput;
+  QueryAccountProjectsInput: QueryAccountProjectsInput;
+  QueryGroupPermissionsInput: QueryGroupPermissionsInput;
+  QueryGroupTagsInput: QueryGroupTagsInput;
+  QueryOrganizationGroupsInput: QueryOrganizationGroupsInput;
+  QueryOrganizationPermissionsInput: QueryOrganizationPermissionsInput;
+  QueryOrganizationProjectsInput: QueryOrganizationProjectsInput;
+  QueryOrganizationRolesInput: QueryOrganizationRolesInput;
+  QueryOrganizationTagsInput: QueryOrganizationTagsInput;
+  QueryOrganizationUsersInput: QueryOrganizationUsersInput;
+  QueryPermissionTagsInput: QueryPermissionTagsInput;
+  QueryProjectGroupsInput: QueryProjectGroupsInput;
+  QueryProjectPermissionsInput: QueryProjectPermissionsInput;
+  QueryProjectRolesInput: QueryProjectRolesInput;
+  QueryProjectTagsInput: QueryProjectTagsInput;
+  QueryProjectUserApiKeysInput: QueryProjectUserApiKeysInput;
+  QueryProjectUsersInput: QueryProjectUsersInput;
+  QueryRoleGroupsInput: QueryRoleGroupsInput;
+  QueryRoleTagsInput: QueryRoleTagsInput;
+  QueryUserRolesInput: QueryUserRolesInput;
+  QueryUserTagsInput: QueryUserTagsInput;
   RefreshSessionResponse: ResolverTypeWrapper<RefreshSessionResponse>;
   RegisterInput: RegisterInput;
   RemoveAccountProjectInput: RemoveAccountProjectInput;
@@ -2090,6 +2378,7 @@ export type ResolversTypes = ResolversObject<{
   RemoveProjectPermissionInput: RemoveProjectPermissionInput;
   RemoveProjectRoleInput: RemoveProjectRoleInput;
   RemoveProjectTagInput: RemoveProjectTagInput;
+  RemoveProjectUserApiKeyInput: RemoveProjectUserApiKeyInput;
   RemoveProjectUserInput: RemoveProjectUserInput;
   RemoveRoleGroupInput: RemoveRoleGroupInput;
   RemoveRoleTagInput: RemoveRoleTagInput;
@@ -2101,6 +2390,7 @@ export type ResolversTypes = ResolversObject<{
   ResendVerificationResponse: ResolverTypeWrapper<ResendVerificationResponse>;
   ResetPasswordInput: ResetPasswordInput;
   ResetPasswordResponse: ResolverTypeWrapper<ResetPasswordResponse>;
+  RevokeApiKeyInput: RevokeApiKeyInput;
   RevokeUserSessionResult: ResolverTypeWrapper<RevokeUserSessionResult>;
   Role: ResolverTypeWrapper<Role>;
   RoleGroup: ResolverTypeWrapper<RoleGroup>;
@@ -2123,6 +2413,7 @@ export type ResolversTypes = ResolversObject<{
   UpdateGroupInput: UpdateGroupInput;
   UpdateGroupTagInput: UpdateGroupTagInput;
   UpdateOrganizationInput: UpdateOrganizationInput;
+  UpdateOrganizationInvitationInput: UpdateOrganizationInvitationInput;
   UpdateOrganizationMemberInput: UpdateOrganizationMemberInput;
   UpdateOrganizationTagInput: UpdateOrganizationTagInput;
   UpdatePermissionInput: UpdatePermissionInput;
@@ -2183,11 +2474,15 @@ export type ResolversParentTypes = ResolversObject<{
   AddProjectPermissionInput: AddProjectPermissionInput;
   AddProjectRoleInput: AddProjectRoleInput;
   AddProjectTagInput: AddProjectTagInput;
+  AddProjectUserApiKeyInput: AddProjectUserApiKeyInput;
   AddProjectUserInput: AddProjectUserInput;
   AddRoleGroupInput: AddRoleGroupInput;
   AddRoleTagInput: AddRoleTagInput;
   AddUserRoleInput: AddUserRoleInput;
   AddUserTagInput: AddUserTagInput;
+  ApiKey: ApiKey;
+  ApiKeyPage: ApiKeyPage;
+  ApiKeySortInput: ApiKeySortInput;
   Auditable: ResolversInterfaceTypes<ResolversParentTypes>['Auditable'];
   AuthenticationMethodExportData: AuthenticationMethodExportData;
   Boolean: Scalars['Boolean']['output'];
@@ -2196,10 +2491,13 @@ export type ResolversParentTypes = ResolversObject<{
   Creatable: ResolversInterfaceTypes<ResolversParentTypes>['Creatable'];
   CreateAccountInput: CreateAccountInput;
   CreateAccountResult: CreateAccountResult;
+  CreateApiKeyInput: CreateApiKeyInput;
+  CreateApiKeyResult: CreateApiKeyResult;
   CreateComplementaryAccountInput: CreateComplementaryAccountInput;
   CreateComplementaryAccountResult: CreateComplementaryAccountResult;
   CreateGroupInput: CreateGroupInput;
   CreateOrganizationInput: CreateOrganizationInput;
+  CreateOrganizationInvitationInput: CreateOrganizationInvitationInput;
   CreatePermissionInput: CreatePermissionInput;
   CreateProjectInput: CreateProjectInput;
   CreateRoleInput: CreateRoleInput;
@@ -2209,8 +2507,11 @@ export type ResolversParentTypes = ResolversObject<{
   CreateUserSessionInput: CreateUserSessionInput;
   Date: Scalars['Date']['output'];
   DeleteAccountInput: DeleteAccountInput;
+  DeleteApiKeyInput: DeleteApiKeyInput;
   DeleteUserAuthenticationMethodInput: DeleteUserAuthenticationMethodInput;
   DeleteUserSessionInput: DeleteUserSessionInput;
+  ExchangeApiKeyInput: ExchangeApiKeyInput;
+  ExchangeApiKeyResult: ExchangeApiKeyResult;
   GetUserAuthenticationMethodsInput: GetUserAuthenticationMethodsInput;
   GetUserSessionsInput: GetUserSessionsInput;
   Group: Group;
@@ -2256,7 +2557,29 @@ export type ResolversParentTypes = ResolversObject<{
   ProjectSortInput: ProjectSortInput;
   ProjectTag: ProjectTag;
   ProjectUser: ProjectUser;
+  ProjectUserApiKey: ProjectUserApiKey;
   Query: Record<PropertyKey, never>;
+  QueryAccountProjectInput: QueryAccountProjectInput;
+  QueryAccountProjectsInput: QueryAccountProjectsInput;
+  QueryGroupPermissionsInput: QueryGroupPermissionsInput;
+  QueryGroupTagsInput: QueryGroupTagsInput;
+  QueryOrganizationGroupsInput: QueryOrganizationGroupsInput;
+  QueryOrganizationPermissionsInput: QueryOrganizationPermissionsInput;
+  QueryOrganizationProjectsInput: QueryOrganizationProjectsInput;
+  QueryOrganizationRolesInput: QueryOrganizationRolesInput;
+  QueryOrganizationTagsInput: QueryOrganizationTagsInput;
+  QueryOrganizationUsersInput: QueryOrganizationUsersInput;
+  QueryPermissionTagsInput: QueryPermissionTagsInput;
+  QueryProjectGroupsInput: QueryProjectGroupsInput;
+  QueryProjectPermissionsInput: QueryProjectPermissionsInput;
+  QueryProjectRolesInput: QueryProjectRolesInput;
+  QueryProjectTagsInput: QueryProjectTagsInput;
+  QueryProjectUserApiKeysInput: QueryProjectUserApiKeysInput;
+  QueryProjectUsersInput: QueryProjectUsersInput;
+  QueryRoleGroupsInput: QueryRoleGroupsInput;
+  QueryRoleTagsInput: QueryRoleTagsInput;
+  QueryUserRolesInput: QueryUserRolesInput;
+  QueryUserTagsInput: QueryUserTagsInput;
   RefreshSessionResponse: RefreshSessionResponse;
   RegisterInput: RegisterInput;
   RemoveAccountProjectInput: RemoveAccountProjectInput;
@@ -2274,6 +2597,7 @@ export type ResolversParentTypes = ResolversObject<{
   RemoveProjectPermissionInput: RemoveProjectPermissionInput;
   RemoveProjectRoleInput: RemoveProjectRoleInput;
   RemoveProjectTagInput: RemoveProjectTagInput;
+  RemoveProjectUserApiKeyInput: RemoveProjectUserApiKeyInput;
   RemoveProjectUserInput: RemoveProjectUserInput;
   RemoveRoleGroupInput: RemoveRoleGroupInput;
   RemoveRoleTagInput: RemoveRoleTagInput;
@@ -2285,6 +2609,7 @@ export type ResolversParentTypes = ResolversObject<{
   ResendVerificationResponse: ResendVerificationResponse;
   ResetPasswordInput: ResetPasswordInput;
   ResetPasswordResponse: ResetPasswordResponse;
+  RevokeApiKeyInput: RevokeApiKeyInput;
   RevokeUserSessionResult: RevokeUserSessionResult;
   Role: Role;
   RoleGroup: RoleGroup;
@@ -2301,6 +2626,7 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateGroupInput: UpdateGroupInput;
   UpdateGroupTagInput: UpdateGroupTagInput;
   UpdateOrganizationInput: UpdateOrganizationInput;
+  UpdateOrganizationInvitationInput: UpdateOrganizationInvitationInput;
   UpdateOrganizationMemberInput: UpdateOrganizationMemberInput;
   UpdateOrganizationTagInput: UpdateOrganizationTagInput;
   UpdatePermissionInput: UpdatePermissionInput;
@@ -2396,6 +2722,38 @@ export type AccountProjectResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type ApiKeyResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ApiKey'] = ResolversParentTypes['ApiKey'],
+> = ResolversObject<{
+  clientId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  createdBy?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  createdByUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  expiresAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isRevoked?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  lastUsedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  revokedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  revokedBy?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  revokedByUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ApiKeyPageResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ApiKeyPage'] = ResolversParentTypes['ApiKeyPage'],
+> = ResolversObject<{
+  apiKeys?: Resolver<Array<ResolversTypes['ApiKey']>, ParentType, ContextType>;
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type AuditableResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Auditable'] = ResolversParentTypes['Auditable'],
@@ -2403,6 +2761,7 @@ export type AuditableResolvers<
   __resolveType: TypeResolveFn<
     | 'Account'
     | 'AccountProject'
+    | 'ApiKey'
     | 'Group'
     | 'GroupPermission'
     | 'GroupTag'
@@ -2422,6 +2781,7 @@ export type AuditableResolvers<
     | 'ProjectRole'
     | 'ProjectTag'
     | 'ProjectUser'
+    | 'ProjectUserApiKey'
     | 'Role'
     | 'RoleGroup'
     | 'RoleTag'
@@ -2478,6 +2838,20 @@ export type CreateAccountResultResolvers<
   verificationExpiry?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
 }>;
 
+export type CreateApiKeyResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['CreateApiKeyResult'] = ResolversParentTypes['CreateApiKeyResult'],
+> = ResolversObject<{
+  clientId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  clientSecret?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  expiresAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+}>;
+
 export type CreateComplementaryAccountResultResolvers<
   ContextType = any,
   ParentType extends
@@ -2490,6 +2864,15 @@ export type CreateComplementaryAccountResultResolvers<
 export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
   name: 'Date';
 }
+
+export type ExchangeApiKeyResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ExchangeApiKeyResult'] = ResolversParentTypes['ExchangeApiKeyResult'],
+> = ResolversObject<{
+  accessToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  expiresIn?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+}>;
 
 export type GroupResolvers<
   ContextType = any,
@@ -2611,6 +2994,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationChangePasswordArgs, 'input'>
   >;
+  createApiKey?: Resolver<
+    ResolversTypes['CreateApiKeyResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateApiKeyArgs, 'input'>
+  >;
   createComplementaryAccount?: Resolver<
     ResolversTypes['CreateComplementaryAccountResult'],
     ParentType,
@@ -2671,6 +3060,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationDeleteAccountArgs, 'input'>
   >;
+  deleteApiKey?: Resolver<
+    ResolversTypes['ApiKey'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteApiKeyArgs, 'input'>
+  >;
   deleteGroup?: Resolver<
     ResolversTypes['Group'],
     ParentType,
@@ -2718,6 +3113,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteUserAuthenticationMethodArgs, 'input'>
+  >;
+  exchangeApiKey?: Resolver<
+    ResolversTypes['ExchangeApiKeyResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationExchangeApiKeyArgs, 'input'>
   >;
   inviteMember?: Resolver<
     ResolversTypes['OrganizationInvitation'],
@@ -2772,6 +3173,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationResetPasswordArgs, 'input'>
+  >;
+  revokeApiKey?: Resolver<
+    ResolversTypes['ApiKey'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRevokeApiKeyArgs, 'input'>
   >;
   revokeInvitation?: Resolver<
     ResolversTypes['OrganizationInvitation'],
@@ -3057,6 +3464,7 @@ export type PaginatedResultsResolvers<
 > = ResolversObject<{
   __resolveType: TypeResolveFn<
     | 'AccountPage'
+    | 'ApiKeyPage'
     | 'GroupPage'
     | 'OrganizationPage'
     | 'PermissionPage'
@@ -3264,6 +3672,24 @@ export type ProjectUserResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type ProjectUserApiKeyResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ProjectUserApiKey'] = ResolversParentTypes['ProjectUserApiKey'],
+> = ResolversObject<{
+  apiKey?: Resolver<Maybe<ResolversTypes['ApiKey']>, ParentType, ContextType>;
+  apiKeyId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
+  projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type QueryResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query'],
@@ -3274,6 +3700,12 @@ export type QueryResolvers<
     ParentType,
     ContextType,
     Partial<QueryAccountsArgs>
+  >;
+  apiKeys?: Resolver<
+    ResolversTypes['ApiKeyPage'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryApiKeysArgs, 'scope'>
   >;
   exportUserData?: Resolver<ResolversTypes['UserDataExport'], ParentType, ContextType>;
   groups?: Resolver<
@@ -3719,13 +4151,17 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   AccountExportData?: AccountExportDataResolvers<ContextType>;
   AccountPage?: AccountPageResolvers<ContextType>;
   AccountProject?: AccountProjectResolvers<ContextType>;
+  ApiKey?: ApiKeyResolvers<ContextType>;
+  ApiKeyPage?: ApiKeyPageResolvers<ContextType>;
   Auditable?: AuditableResolvers<ContextType>;
   AuthenticationMethodExportData?: AuthenticationMethodExportDataResolvers<ContextType>;
   ChangePasswordResult?: ChangePasswordResultResolvers<ContextType>;
   Creatable?: CreatableResolvers<ContextType>;
   CreateAccountResult?: CreateAccountResultResolvers<ContextType>;
+  CreateApiKeyResult?: CreateApiKeyResultResolvers<ContextType>;
   CreateComplementaryAccountResult?: CreateComplementaryAccountResultResolvers<ContextType>;
   Date?: GraphQLScalarType;
+  ExchangeApiKeyResult?: ExchangeApiKeyResultResolvers<ContextType>;
   Group?: GroupResolvers<ContextType>;
   GroupPage?: GroupPageResolvers<ContextType>;
   GroupPermission?: GroupPermissionResolvers<ContextType>;
@@ -3759,6 +4195,7 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   ProjectRole?: ProjectRoleResolvers<ContextType>;
   ProjectTag?: ProjectTagResolvers<ContextType>;
   ProjectUser?: ProjectUserResolvers<ContextType>;
+  ProjectUserApiKey?: ProjectUserApiKeyResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RefreshSessionResponse?: RefreshSessionResponseResolvers<ContextType>;
   RequestPasswordResetResponse?: RequestPasswordResetResponseResolvers<ContextType>;

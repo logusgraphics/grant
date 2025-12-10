@@ -1,0 +1,4 @@
+input RevokeApiKeyInput {
+  id: ID!
+  scope: Scope!
+}

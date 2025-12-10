@@ -91,6 +91,10 @@
       "title": "Projects",
       "project": "Project"
     },
+    "users": {
+      "title": "Users",
+      "user": "User"
+    },
     "view": {
       "card": "Card View",
       "table": "Table View"
@@ -325,6 +329,7 @@
       "create": "Create User",
       "edit": "Edit",
       "delete": "Delete",
+      "view": "View",
       "cancel": "Cancel",
       "updating": "Updating...",
       "label": "Show/Hide Actions"
@@ -424,6 +429,154 @@
       "updated": "Updated",
       "actions": "Actions",
       "loading": "Loading users..."
+    }
+  },
+  "user": {
+    "detail": {
+      "title": "User Details"
+    },
+    "info": {
+      "title": "User Information",
+      "userId": "User ID",
+      "created": "Created",
+      "updated": "Updated"
+    },
+    "roles": {
+      "title": "Roles",
+      "empty": "No roles assigned",
+      "emptyDescription": "This user has no roles assigned in this project",
+      "loading": "Loading roles...",
+      "error": "Error loading roles",
+      "addButton": "Add Role",
+      "search": {
+        "placeholder": "Search roles..."
+      },
+      "sort": {
+        "label": "Sort by",
+        "name": "Name"
+      },
+      "table": {
+        "name": "Name",
+        "description": "Description",
+        "groups": "Groups",
+        "tags": "Tags",
+        "audit": "Audit"
+      },
+      "noDescription": "No description",
+      "actions": {
+        "remove": "Remove"
+      },
+      "removeDialog": {
+        "title": "Remove Role",
+        "description": "Are you sure you want to remove the role \"{name}\" from this user?",
+        "confirm": "Remove",
+        "cancel": "Cancel",
+        "removing": "Removing..."
+      },
+      "addDropdown": {
+        "title": "Add Role",
+        "loading": "Loading roles...",
+        "noRolesAvailable": "No roles available to add"
+      }
+    },
+    "tags": {
+      "title": "Tags",
+      "empty": "No tags assigned",
+      "loading": "Loading tags...",
+      "error": "Error loading tags"
+    },
+    "apiKeys": {
+      "title": "API Keys",
+      "empty": "No API keys found",
+      "emptyDescription": "Get started by creating your first API key",
+      "loading": "Loading API keys...",
+      "error": "Error loading API keys",
+      "active": "Active",
+      "revoked": "Revoked",
+      "never": "Never",
+      "noDescription": "No description",
+      "search": {
+        "placeholder": "Search API keys..."
+      },
+      "sort": {
+        "label": "Sort by",
+        "name": "Name",
+        "createdAt": "Created Date",
+        "expiresAt": "Expiration Date",
+        "lastUsedAt": "Last Used"
+      },
+      "table": {
+        "name": "Name",
+        "clientId": "Client ID",
+        "description": "Description",
+        "status": "Status",
+        "expiresAt": "Expires At",
+        "lastUsedAt": "Last Used",
+        "createdAt": "Created At"
+      },
+      "status": {
+        "active": "Active",
+        "revoked": "Revoked",
+        "expired": "Expired"
+      },
+      "form": {
+        "name": "Name",
+        "namePlaceholder": "Enter API key name",
+        "description": "Description",
+        "descriptionPlaceholder": "Enter API key description",
+        "expiresAt": "Expiration Date",
+        "expiresAtPlaceholder": "YYYY-MM-DD (optional)"
+      },
+      "createDialog": {
+        "title": "Create New API Key",
+        "description": "Create a new API key for this user",
+        "trigger": "Create API Key",
+        "confirm": "Create",
+        "cancel": "Cancel",
+        "submitting": "Creating..."
+      },
+      "actions": {
+        "revoke": "Revoke",
+        "delete": "Delete"
+      },
+      "revokeDialog": {
+        "title": "Revoke API Key",
+        "description": "Are you sure you want to revoke the API key \"{name}\"? This action cannot be undone and the key will no longer be usable.",
+        "cancel": "Cancel",
+        "confirm": "Revoke"
+      },
+      "deleteDialog": {
+        "title": "Delete API Key",
+        "description": "Are you sure you want to delete the API key \"{name}\"? This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      },
+      "secretDialog": {
+        "title": "API Key Created",
+        "description": "Save your API key credentials. This is the only time you'll be able to view the client secret.",
+        "warning": "This is the last time you'll be able to view the client secret. Make sure to copy it now and store it securely.",
+        "clientId": "Client ID",
+        "clientSecret": "Client Secret",
+        "close": "I've Saved My Credentials"
+      }
+    },
+    "groups": {
+      "title": "Groups",
+      "empty": "No groups assigned",
+      "loading": "Loading groups...",
+      "error": "Error loading groups",
+      "description": "Groups for user (through roles)"
+    },
+    "permissions": {
+      "title": "Permissions",
+      "empty": "No permissions assigned",
+      "loading": "Loading permissions...",
+      "error": "Error loading permissions",
+      "description": "Permissions for user (through groups)"
+    },
+    "loading": {
+      "title": "Loading user...",
+      "error": "Error loading user"
     }
   },
   "roles": {
@@ -1684,6 +1837,17 @@
       "email": "Email",
       "createdAt": "Invited On",
       "expiresAt": "Expires On"
+    }
+  },
+  "apiKeys": {
+    "notifications": {
+      "createSuccess": "API key created",
+      "createError": "Failed to create API key",
+      "deleteSuccess": "API key deleted",
+      "deleteError": "Failed to delete API key",
+      "revokeSuccess": "API key revoked",
+      "revokeError": "Failed to revoke API key",
+      "exchangeError": "Failed to exchange API key"
     }
   }
 }

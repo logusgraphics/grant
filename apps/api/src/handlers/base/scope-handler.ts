@@ -107,11 +107,39 @@ export class ScopeHandler {
         break;
       }
 
-      case Tenant.Project: {
+      case Tenant.OrganizationProject:
+      case Tenant.AccountProject: {
         const projectRoles = await this.services.projectRoles.getProjectRoles({
           projectId: scope.id,
         });
         roleIds = projectRoles.map((pr) => pr.roleId);
+        break;
+      }
+
+      case Tenant.ProjectUser: {
+        // Parse projectUser scope: id format is "projectId:userId"
+        const [projectId, userId] = scope.id.split(':');
+        if (!projectId || !userId) {
+          throw new BadRequestError(
+            'Invalid projectUser scope: id must be in format "projectId:userId"',
+            'errors:validation.invalid',
+            { field: 'scope.id' }
+          );
+        }
+
+        // Get user roles and project roles, then find intersection
+        const [userRoles, projectRoles] = await Promise.all([
+          this.services.userRoles.getUserRoles({ userId }),
+          this.services.projectRoles.getProjectRoles({ projectId }),
+        ]);
+
+        const userRoleIds = new Set(userRoles.map((ur) => ur.roleId));
+        const projectRoleIds = projectRoles.map((pr) => pr.roleId);
+
+        // Return roles that are both assigned to the user AND available in the project
+        // Note: We filter project roles by user roles to ensure we only return roles
+        // that the user actually has, and that exist in the project
+        roleIds = projectRoleIds.filter((roleId) => userRoleIds.has(roleId));
         break;
       }
 
@@ -152,7 +180,8 @@ export class ScopeHandler {
         break;
       }
 
-      case Tenant.Project: {
+      case Tenant.OrganizationProject:
+      case Tenant.AccountProject: {
         const projectUsers = await this.services.projectUsers.getProjectUsers({
           projectId: scope.id,
         });
@@ -197,7 +226,8 @@ export class ScopeHandler {
         break;
       }
 
-      case Tenant.Project: {
+      case Tenant.OrganizationProject:
+      case Tenant.AccountProject: {
         const projectGroups = await this.services.projectGroups.getProjectGroups({
           projectId: scope.id,
         });
@@ -243,7 +273,8 @@ export class ScopeHandler {
         break;
       }
 
-      case Tenant.Project: {
+      case Tenant.OrganizationProject:
+      case Tenant.AccountProject: {
         const projectPermissions = await this.services.projectPermissions.getProjectPermissions({
           projectId: scope.id,
         });
@@ -288,7 +319,8 @@ export class ScopeHandler {
         break;
       }
 
-      case Tenant.Project: {
+      case Tenant.OrganizationProject:
+      case Tenant.AccountProject: {
         const projectTags = await this.services.projectTags.getProjectTags({
           projectId: scope.id,
         });
@@ -306,6 +338,48 @@ export class ScopeHandler {
 
     await this.cache.tags.set(cacheKey, new Set(tagIds));
     return tagIds;
+  }
+
+  async getScopedApiKeyIds(scope: Scope): Promise<string[]> {
+    const cacheKey = this.createCacheKey(scope);
+
+    const cachedApiKeys = await this.cache.apiKeys?.get(cacheKey);
+    if (cachedApiKeys) {
+      return Array.from(cachedApiKeys.values());
+    }
+
+    let apiKeyIds: string[];
+    switch (scope.tenant) {
+      case Tenant.ProjectUser: {
+        // Parse projectUser scope: id format is "projectId:userId"
+        const [projectId, userId] = scope.id.split(':');
+        if (!projectId || !userId) {
+          throw new BadRequestError(
+            'Invalid projectUser scope: id must be in format "projectId:userId"',
+            'errors:validation.invalid',
+            { field: 'scope.id' }
+          );
+        }
+        const projectUserApiKeys = await this.services.projectUserApiKeys.getProjectUserApiKeys({
+          projectId,
+          userId,
+        });
+        apiKeyIds = projectUserApiKeys.map((pivot) => pivot.apiKeyId);
+        break;
+      }
+
+      default:
+        throw new BadRequestError(
+          `Unsupported tenant type: ${scope.tenant}`,
+          'errors:validation.invalid',
+          { field: 'tenant' }
+        );
+    }
+
+    if (this.cache.apiKeys) {
+      await this.cache.apiKeys.set(cacheKey, new Set(apiKeyIds));
+    }
+    return apiKeyIds;
   }
 
   async addTagIdToScopeCache(scope: Scope, tagId: string): Promise<void> {
@@ -354,5 +428,13 @@ export class ScopeHandler {
 
   async removeProjectIdFromScopeCache(scope: Scope, projectId: string): Promise<void> {
     await this.removeIdFromCache(this.cache.projects, scope, projectId);
+  }
+
+  async addApiKeyIdToScopeCache(scope: Scope, apiKeyId: string): Promise<void> {
+    await this.addIdToCache(this.cache.apiKeys, scope, apiKeyId);
+  }
+
+  async removeApiKeyIdFromScopeCache(scope: Scope, apiKeyId: string): Promise<void> {
+    await this.removeIdFromCache(this.cache.apiKeys, scope, apiKeyId);
   }
 }

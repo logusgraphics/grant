@@ -1,5 +1,11 @@
 import { accountProjects, accountProjectsRelations } from './account-projects.schema';
 import { accounts, accountsRelations } from './accounts.schema';
+import {
+  apiKeys,
+  apiKeysRelations,
+  apiKeyAuditLogs,
+  apiKeyAuditLogsRelations,
+} from './api-keys.schema';
 import { groupPermissions, groupPermissionsRelations } from './group-permissions.schema';
 import { groupTags, groupTagsRelations } from './group-tags.schema';
 import { groups, groupsRelations } from './groups.schema';
@@ -26,6 +32,12 @@ import { projectGroups, projectGroupsRelations } from './project-groups.schema';
 import { projectPermissions, projectPermissionsRelations } from './project-permissions.schema';
 import { projectRoles, projectRolesRelations } from './project-roles.schema';
 import { projectTags, projectTagsRelations } from './project-tags.schema';
+import {
+  projectUserApiKeys,
+  projectUserApiKeysRelations,
+  projectUserApiKeyAuditLogs,
+  projectUserApiKeyAuditLogsRelations,
+} from './project-user-api-keys.schema';
 import { projectUsers, projectUsersRelations } from './project-users.schema';
 import { projects, projectsRelations } from './projects.schema';
 import { roleGroups, roleGroupsRelations } from './role-groups.schema';
@@ -46,6 +58,8 @@ import { users, usersRelations } from './users.schema';
 export const schema = {
   accountProjects,
   accounts,
+  apiKeys,
+  apiKeyAuditLogs,
   groupPermissions,
   groupTags,
   groups,
@@ -63,6 +77,8 @@ export const schema = {
   projectPermissions,
   projectRoles,
   projectTags,
+  projectUserApiKeys,
+  projectUserApiKeyAuditLogs,
   projectUsers,
   projects,
   roleGroups,
@@ -91,7 +107,11 @@ export const schema = {
   projectPermissionsRelations,
   projectRolesRelations,
   projectTagsRelations,
+  projectUserApiKeysRelations,
+  projectUserApiKeyAuditLogsRelations,
   projectUsersRelations,
+  apiKeysRelations,
+  apiKeyAuditLogsRelations,
   projectsRelations,
   roleGroupsRelations,
   roleTagsRelations,
