@@ -7,7 +7,7 @@ import { redirect, useParams } from 'next/navigation';
 
 import { OrganizationSortableField, SortOrder } from '@logusgraphics/grant-schema';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +30,7 @@ interface OrganizationSwitcherProps {
 
 export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
   const t = useTranslations('common');
+  const locale = useLocale();
   const pathname = usePathname();
   const params = useParams();
   const [open, setOpen] = React.useState(false);
@@ -60,7 +61,7 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
   const handleOrganizationSelect = (organizationId: string) => {
     setOpen(false);
 
-    const newPath = `/dashboard/organizations/${organizationId}/projects`;
+    const newPath = `/${locale}/dashboard/organizations/${organizationId}/projects`;
     if (pathname !== newPath) {
       redirect(newPath);
     }

@@ -7,7 +7,7 @@ import { redirect, useParams } from 'next/navigation';
 
 import { ProjectSortableField, SortOrder, Tenant } from '@logusgraphics/grant-schema';
 import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +31,7 @@ interface ProjectSwitcherProps {
 
 export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
   const t = useTranslations('common');
+  const locale = useLocale();
   const pathname = usePathname();
   const scope = useProjectScope();
   const params = useParams();
@@ -70,10 +71,10 @@ export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
     let newPath;
     switch (scope!.tenant) {
       case Tenant.Account:
-        newPath = `/dashboard/accounts/${scope!.id}/projects/${projectId}`;
+        newPath = `/${locale}/dashboard/accounts/${scope!.id}/projects/${projectId}`;
         break;
       case Tenant.Organization:
-        newPath = `/dashboard/organizations/${scope!.id}/projects/${projectId}`;
+        newPath = `/${locale}/dashboard/organizations/${scope!.id}/projects/${projectId}`;
         break;
       default:
         throw new Error('Invalid scope');
