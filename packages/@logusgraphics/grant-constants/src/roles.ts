@@ -1,32 +1,26 @@
-/**
- * Standard organization role names
- */
 export enum StandardRoleName {
-  Owner = 'owner',
-  Admin = 'admin',
-  Dev = 'dev',
-  Viewer = 'viewer',
+  Owner = 'roles.names.owner',
+  Admin = 'roles.names.admin',
+  Dev = 'roles.names.dev',
+  Viewer = 'roles.names.viewer',
 }
 
-/**
- * Standard organization roles with descriptions
- */
 export const STANDARD_ROLES = [
   {
     name: StandardRoleName.Owner,
-    description: 'Full control over the organization and all its resources',
+    description: 'roles.descriptions.owner',
   },
   {
     name: StandardRoleName.Admin,
-    description: 'Administrative access to manage organization settings and members',
+    description: 'roles.descriptions.admin',
   },
   {
     name: StandardRoleName.Dev,
-    description: 'Developer access to manage projects and resources',
+    description: 'roles.descriptions.dev',
   },
   {
     name: StandardRoleName.Viewer,
-    description: 'Read-only access to organization resources',
+    description: 'roles.descriptions.viewer',
   },
 ] as const;
 

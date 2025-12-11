@@ -12,5 +12,19 @@
     "delete": "Löschen",
     "view": "Anzeigen",
     "list": "Liste"
+  },
+  "roles": {
+    "names": {
+      "owner": "Eigentümer",
+      "admin": "Administrator",
+      "dev": "Entwickler",
+      "viewer": "Betrachter"
+    },
+    "descriptions": {
+      "owner": "Vollständige Kontrolle über die Organisation und alle ihre Ressourcen",
+      "admin": "Administrativer Zugriff zur Verwaltung von Organisationseinstellungen und Mitgliedern",
+      "dev": "Entwicklerzugriff zur Verwaltung von Projekten und Ressourcen",
+      "viewer": "Nur-Lese-Zugriff auf Organisationsressourcen"
+    }
   }
 }

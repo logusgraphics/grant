@@ -119,7 +119,7 @@ export function UpdateMemberRoleDialog({
                 <div className="text-sm text-muted-foreground">
                   {t('updateRoleDialog.currentRole')}
                 </div>
-                <div className="mt-1 font-medium">{member.role.name}</div>
+                <div className="mt-1 font-medium">{t(member.role?.name as string)}</div>
               </div>
             )}
 
@@ -139,7 +139,9 @@ export function UpdateMemberRoleDialog({
                           className="w-full justify-between"
                           disabled={form.formState.isSubmitting || rolesLoading}
                         >
-                          {selectedRole ? selectedRole.name : t('updateRoleDialog.rolePlaceholder')}
+                          {selectedRole
+                            ? t(selectedRole.name as string)
+                            : t('updateRoleDialog.rolePlaceholder')}
                           <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
@@ -157,18 +159,18 @@ export function UpdateMemberRoleDialog({
                           {t('updateRoleDialog.noRolesAvailable')}
                         </DropdownMenuItem>
                       ) : (
-                        roles.map((role: Role) => (
-                          <DropdownMenuItem key={role.id} onClick={() => field.onChange(role.id)}>
-                            <div className="flex flex-col">
-                              <span>{role.name}</span>
-                              {role.description && (
+                        roles.map((role: Role) => {
+                          return (
+                            <DropdownMenuItem key={role.id} onClick={() => field.onChange(role.id)}>
+                              <div className="flex flex-col">
+                                <span>{t(role.name as string)}</span>
                                 <span className="text-xs text-muted-foreground">
-                                  {role.description}
+                                  {t(role.description as string)}
                                 </span>
-                              )}
-                            </div>
-                          </DropdownMenuItem>
-                        ))
+                              </div>
+                            </DropdownMenuItem>
+                          );
+                        })
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>

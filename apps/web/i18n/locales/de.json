@@ -1376,6 +1376,20 @@
     "title": "Mitglieder",
     "description": "Organisationsmitglieder und Einladungen verwalten",
     "inviteButton": "Mitglied einladen",
+    "roles": {
+      "names": {
+        "owner": "Eigentümer",
+        "admin": "Administrator",
+        "dev": "Entwickler",
+        "viewer": "Betrachter"
+      },
+      "descriptions": {
+        "owner": "Vollständige Kontrolle über die Organisation und alle ihre Ressourcen",
+        "admin": "Administrativer Zugriff zur Verwaltung von Organisationseinstellungen und Mitgliedern",
+        "dev": "Entwicklerzugriff zur Verwaltung von Projekten und Ressourcen",
+        "viewer": "Nur-Lese-Zugriff auf Organisationsressourcen"
+      }
+    },
     "empty": {
       "title": "Noch keine Mitglieder",
       "description": "Laden Sie Mitglieder ein, Ihrer Organisation beizutreten"

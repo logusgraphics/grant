@@ -134,7 +134,9 @@ export function InviteMemberDialog({
                           className="w-full justify-between"
                           disabled={form.formState.isSubmitting || rolesLoading}
                         >
-                          {selectedRole ? selectedRole.name : t('form.rolePlaceholder')}
+                          {selectedRole
+                            ? t(selectedRole.name as string)
+                            : t('form.rolePlaceholder')}
                           <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
@@ -148,18 +150,18 @@ export function InviteMemberDialog({
                       ) : roles.length === 0 ? (
                         <DropdownMenuItem disabled>{t('form.noRolesAvailable')}</DropdownMenuItem>
                       ) : (
-                        roles.map((role: Role) => (
-                          <DropdownMenuItem key={role.id} onClick={() => field.onChange(role.id)}>
-                            <div className="flex flex-col">
-                              <span>{role.name}</span>
-                              {role.description && (
+                        roles.map((role: Role) => {
+                          return (
+                            <DropdownMenuItem key={role.id} onClick={() => field.onChange(role.id)}>
+                              <div className="flex flex-col">
+                                <span>{t(role.name)}</span>
                                 <span className="text-xs text-muted-foreground">
-                                  {role.description}
+                                  {t(role.description as string)}
                                 </span>
-                              )}
-                            </div>
-                          </DropdownMenuItem>
-                        ))
+                              </div>
+                            </DropdownMenuItem>
+                          );
+                        })
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>

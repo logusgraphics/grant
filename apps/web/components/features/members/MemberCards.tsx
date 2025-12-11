@@ -1,7 +1,7 @@
 'use client';
 
 import { OrganizationInvitationStatus } from '@logusgraphics/grant-schema';
-import { Ban, Mail, MailCheck, UserCheck } from 'lucide-react';
+import { UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { CardGrid, CardHeader } from '@/components/common';
@@ -26,35 +26,26 @@ export function MemberCards() {
 
     const config = {
       [OrganizationInvitationStatus.Pending]: {
-        variant: 'secondary' as const,
-        icon: Mail,
+        color: 'text-muted-foreground',
         label: t('status.pending'),
       },
       [OrganizationInvitationStatus.Accepted]: {
-        variant: 'default' as const,
-        icon: MailCheck,
+        color: 'text-green-600',
         label: t('status.accepted'),
       },
       [OrganizationInvitationStatus.Expired]: {
-        variant: 'destructive' as const,
-        icon: Ban,
+        color: 'text-orange-500',
         label: t('status.expired'),
       },
       [OrganizationInvitationStatus.Revoked]: {
-        variant: 'outline' as const,
-        icon: Ban,
+        color: 'text-destructive',
         label: t('status.revoked'),
       },
     };
 
-    const { variant, icon: Icon, label } = config[status];
+    const { color, label } = config[status];
 
-    return (
-      <Badge variant={variant}>
-        <Icon className="mr-1 h-3 w-3" />
-        {label}
-      </Badge>
-    );
+    return <span className={`text-sm ${color} flex items-center gap-1`}>{label}</span>;
   };
 
   return (
@@ -86,16 +77,13 @@ export function MemberCards() {
           {member.role && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{t('table.role')}:</span>
-              <Badge variant="outline">{member.role.name}</Badge>
+              <Badge variant="outline">{t(member.role?.name as string)}</Badge>
             </div>
           )}
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{t('table.status')}:</span>
             {member.type === 'member' ? (
-              <Badge variant="default">
-                <UserCheck className="mr-1 h-3 w-3" />
-                {t('status.active')}
-              </Badge>
+              <span className="text-sm text-green-600">{t('status.active')}</span>
             ) : (
               getStatusBadge(member.status)
             )}

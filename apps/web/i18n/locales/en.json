@@ -1376,6 +1376,20 @@
     "title": "Members",
     "description": "Manage organization members and invitations",
     "inviteButton": "Invite Member",
+    "roles": {
+      "names": {
+        "owner": "Owner",
+        "admin": "Administrator",
+        "dev": "Developer",
+        "viewer": "Viewer"
+      },
+      "descriptions": {
+        "owner": "Full control over the organization and all its resources",
+        "admin": "Administrative access to manage organization settings and members",
+        "dev": "Developer access to manage projects and resources",
+        "viewer": "Read-only access to organization resources"
+      }
+    },
     "empty": {
       "title": "No members yet",
       "description": "Invite members to join your organization"

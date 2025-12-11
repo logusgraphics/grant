@@ -135,7 +135,15 @@ export function ResendInvitationDialog({
                           disabled={form.formState.isSubmitting || rolesLoading}
                         >
                           {selectedRole
-                            ? selectedRole.name
+                            ? selectedRole.name?.startsWith('members.roles.names.')
+                              ? t(
+                                  selectedRole.name.replace('members.roles.', '') as
+                                    | 'names.owner'
+                                    | 'names.admin'
+                                    | 'names.dev'
+                                    | 'names.viewer'
+                                )
+                              : selectedRole.name
                             : t('resendInvitationDialog.rolePlaceholder')}
                           <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
@@ -154,18 +162,48 @@ export function ResendInvitationDialog({
                           {t('resendInvitationDialog.noRolesAvailable')}
                         </DropdownMenuItem>
                       ) : (
-                        roles.map((role: Role) => (
-                          <DropdownMenuItem key={role.id} onClick={() => field.onChange(role.id)}>
-                            <div className="flex flex-col">
-                              <span>{role.name}</span>
-                              {role.description && (
-                                <span className="text-xs text-muted-foreground">
-                                  {role.description}
-                                </span>
-                              )}
-                            </div>
-                          </DropdownMenuItem>
-                        ))
+                        roles.map((role: Role) => {
+                          const nameKey = role.name?.startsWith('members.roles.names.')
+                            ? role.name.replace('members.roles.', '')
+                            : undefined;
+                          const translatedName = nameKey
+                            ? t(
+                                nameKey as
+                                  | 'names.owner'
+                                  | 'names.admin'
+                                  | 'names.dev'
+                                  | 'names.viewer'
+                              )
+                            : role.name;
+
+                          const descriptionKey = role.description?.startsWith(
+                            'members.roles.descriptions.'
+                          )
+                            ? role.description.replace('members.', '')
+                            : undefined;
+                          const translatedDescription = descriptionKey
+                            ? t(
+                                descriptionKey as
+                                  | 'roles.descriptions.owner'
+                                  | 'roles.descriptions.admin'
+                                  | 'roles.descriptions.dev'
+                                  | 'roles.descriptions.viewer'
+                              )
+                            : role.description;
+
+                          return (
+                            <DropdownMenuItem key={role.id} onClick={() => field.onChange(role.id)}>
+                              <div className="flex flex-col">
+                                <span>{translatedName}</span>
+                                {translatedDescription && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {translatedDescription}
+                                  </span>
+                                )}
+                              </div>
+                            </DropdownMenuItem>
+                          );
+                        })
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
