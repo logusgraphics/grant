@@ -3,10 +3,11 @@ import { BadRequestError } from '@/lib/errors';
 import { ConsoleEmailAdapter } from './adapters/console.adapter';
 import { MailgunConfig, MailgunEmailAdapter } from './adapters/mailgun.adapter';
 import { MailjetConfig, MailjetEmailAdapter } from './adapters/mailjet.adapter';
+import { SesConfig, SesEmailAdapter } from './adapters/ses.adapter';
 import { SmtpConfig, SmtpEmailAdapter } from './adapters/smtp.adapter';
 import { IEmailService } from './email.interface';
 
-export type EmailProvider = 'console' | 'mailgun' | 'mailjet' | 'smtp';
+export type EmailProvider = 'console' | 'mailgun' | 'mailjet' | 'ses' | 'smtp';
 
 export interface EmailFactoryConfig {
   provider: EmailProvider;
@@ -14,6 +15,7 @@ export interface EmailFactoryConfig {
   fromName?: string;
   mailgun?: Omit<MailgunConfig, 'from' | 'fromName'>;
   mailjet?: Omit<MailjetConfig, 'from' | 'fromName'>;
+  ses?: Omit<SesConfig, 'from' | 'fromName'>;
   smtp?: Omit<SmtpConfig, 'from' | 'fromName'>;
 }
 
@@ -50,6 +52,20 @@ export class EmailFactory {
         }
         return new MailjetEmailAdapter({
           ...config.mailjet,
+          from: config.from,
+          fromName: config.fromName,
+        });
+
+      case 'ses':
+        if (!config.ses) {
+          throw new BadRequestError(
+            'AWS SES configuration is required when using SES adapter',
+            'errors:validation.required',
+            { field: 'ses' }
+          );
+        }
+        return new SesEmailAdapter({
+          ...config.ses,
           from: config.from,
           fromName: config.fromName,
         });

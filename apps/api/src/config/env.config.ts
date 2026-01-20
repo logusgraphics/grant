@@ -363,7 +363,7 @@ export const EMAIL_CONFIG = {
   /** Email provider */
   provider: getEnvEnum(
     'EMAIL_PROVIDER',
-    ['console', 'mailgun', 'mailjet', 'smtp'] as const,
+    ['console', 'mailgun', 'mailjet', 'ses', 'smtp'] as const,
     'console'
   ),
 
@@ -383,6 +383,13 @@ export const EMAIL_CONFIG = {
   mailjet: {
     apiKey: process.env.MAILJET_API_KEY || '',
     secretKey: process.env.MAILJET_SECRET_KEY || '',
+  },
+
+  /** AWS SES configuration */
+  ses: {
+    clientId: process.env.EMAIL_SES_CLIENT_ID || '',
+    clientSecret: process.env.EMAIL_SES_CLIENT_SECRET || '',
+    region: process.env.EMAIL_SES_REGION || 'us-east-1',
   },
 
   /** SMTP configuration */
@@ -603,6 +610,13 @@ export function validateConfig(): void {
         if (!EMAIL_CONFIG.mailjet.apiKey || !EMAIL_CONFIG.mailjet.secretKey) {
           errors.push(
             'MAILJET_API_KEY and MAILJET_SECRET_KEY are required when using mailjet provider'
+          );
+        }
+        break;
+      case 'ses':
+        if (!EMAIL_CONFIG.ses.clientId || !EMAIL_CONFIG.ses.clientSecret) {
+          errors.push(
+            'EMAIL_SES_CLIENT_ID and EMAIL_SES_CLIENT_SECRET are required when using ses provider'
           );
         }
         break;
