@@ -28,6 +28,14 @@ export class EmailService {
               secretKey: config.email.mailjet.secretKey,
             }
           : undefined,
+      ses:
+        config.email.provider === 'ses'
+          ? {
+              clientId: config.email.ses.clientId,
+              clientSecret: config.email.ses.clientSecret,
+              region: config.email.ses.region,
+            }
+          : undefined,
       smtp:
         config.email.provider === 'smtp'
           ? {
