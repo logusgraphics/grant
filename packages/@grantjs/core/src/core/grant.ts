@@ -51,9 +51,17 @@ export class Grant {
       throw new TokenValidationError('Token validation failed');
     }
 
-    const { sub: userId, scope, type, exp: expiresAt, jti: tokenId } = claims;
+    const { sub: userId, scope, type, exp: expiresAt, jti: tokenId, isVerified } = claims;
 
-    return { userId, scope, type, expiresAt, tokenId };
+    return {
+      userId,
+      scope,
+      type,
+      expiresAt,
+      tokenId,
+      // API keys are always considered verified; session tokens use the claim
+      isVerified: type === TokenType.ApiKey ? true : isVerified,
+    };
   }
 
   public authenticate(authorizationHeader: string | null) {

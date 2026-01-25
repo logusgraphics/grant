@@ -6,6 +6,7 @@ import { Organization, Tag, Tenant } from '@grantjs/schema';
 import { DefaultValues } from 'react-hook-form';
 
 import { DialogField, EditDialog } from '@/components/common';
+import { useEmailVerified } from '@/hooks/auth';
 import { useOrganizationMutations } from '@/hooks/organizations';
 import { useOrganizationsStore } from '@/stores/organizations.store';
 
@@ -24,8 +25,9 @@ export function OrganizationEditDialog() {
 
   // Hook automatically waits for scope to become valid when provided
   const canUpdate = useGrant(ResourceSlug.Organization, ResourceAction.Update, { scope });
-  
-  if (!scope || !canUpdate) {
+  const isEmailVerified = useEmailVerified();
+
+  if (!scope || !canUpdate || !isEmailVerified) {
     return null;
   }
 

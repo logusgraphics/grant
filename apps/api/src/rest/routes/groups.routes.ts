@@ -8,7 +8,7 @@ import {
 import { GroupSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createGroupRequestSchema,
@@ -61,6 +61,7 @@ export function createGroupsRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createGroupRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Group,
       action: ResourceAction.Create,
@@ -78,7 +79,12 @@ export function createGroupsRouter(context: RequestContext): Router {
 
   router.patch(
     '/:id',
-    validate({ params: groupParamsSchema, body: updateGroupRequestSchema, query: deleteGroupQuerySchema }),
+    validate({
+      params: groupParamsSchema,
+      body: updateGroupRequestSchema,
+      query: deleteGroupQuerySchema,
+    }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Group,
       action: ResourceAction.Update,
@@ -111,6 +117,7 @@ export function createGroupsRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: groupParamsSchema, query: deleteGroupQuerySchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Group,
       action: ResourceAction.Delete,

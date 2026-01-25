@@ -9,6 +9,7 @@ import { Ban, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Actions, type ActionItem } from '@/components/common';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 
 import { UserApiKeyDeleteDialog } from './user-api-key-delete-dialog';
 import { UserApiKeyRevokeDialog } from './user-api-key-revoke-dialog';
@@ -26,9 +27,10 @@ export function UserApiKeyActions({ apiKey, scope }: UserApiKeyActionsProps) {
   // Check permissions using the Grant client
   const canRevoke = useGrant(ResourceSlug.ApiKey, ResourceAction.Revoke, { scope });
   const canDelete = useGrant(ResourceSlug.ApiKey, ResourceAction.Delete, { scope });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  // If user has no permissions, don't render the actions menu
-  if (!canRevoke && !canDelete) {
+  // If user has no permissions or email verification is required, don't render the actions menu
+  if ((!canRevoke && !canDelete) || requiresEmailVerification) {
     return null;
   }
 

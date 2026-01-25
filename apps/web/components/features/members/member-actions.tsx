@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { ActionItem, Actions } from '@/components/common';
+import { useEmailVerified } from '@/hooks/auth';
 import { MemberWithInvitation, useMemberMutations } from '@/hooks/members';
 import { useAuthStore } from '@/stores/auth.store';
 import { useMembersStore } from '@/stores/members.store';
@@ -46,21 +47,17 @@ export function MemberActions({ member }: MemberActionsProps) {
   const canRemoveMember = useGrant(ResourceSlug.OrganizationMember, ResourceAction.Remove, {
     scope,
   });
-  const canRevokeInvitation = useGrant(
-    ResourceSlug.OrganizationInvitation,
-    ResourceAction.Revoke,
-    { scope }
-  );
+  const canRevokeInvitation = useGrant(ResourceSlug.OrganizationInvitation, ResourceAction.Revoke, {
+    scope,
+  });
   const canResendInvitationEmail = useGrant(
     ResourceSlug.OrganizationInvitation,
     ResourceAction.ResendEmail,
     { scope }
   );
-  const canRenewInvitation = useGrant(
-    ResourceSlug.OrganizationInvitation,
-    ResourceAction.Renew,
-    { scope }
-  );
+  const canRenewInvitation = useGrant(ResourceSlug.OrganizationInvitation, ResourceAction.Renew, {
+    scope,
+  });
 
   const currentUserRole = useMemo(() => {
     const ownerId = currentAccount?.ownerId;
@@ -239,7 +236,10 @@ export function MemberActions({ member }: MemberActionsProps) {
     canRenewInvitation,
   ]);
 
-  if (actions.length === 0 || isCurrentUser || !canManageMember) {
+  const isEmailVerified = useEmailVerified();
+
+  // Block all member actions if email not verified (organization context requires verification)
+  if (actions.length === 0 || isCurrentUser || !canManageMember || !isEmailVerified) {
     return null;
   }
 

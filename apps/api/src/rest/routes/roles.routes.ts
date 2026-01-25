@@ -8,7 +8,7 @@ import {
 import { RoleSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createRoleRequestSchema,
@@ -61,6 +61,7 @@ export function createRolesRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createRoleRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Role,
       action: ResourceAction.Create,
@@ -78,7 +79,12 @@ export function createRolesRouter(context: RequestContext): Router {
 
   router.patch(
     '/:id',
-    validate({ params: roleParamsSchema, body: updateRoleRequestSchema, query: deleteRoleQuerySchema }),
+    validate({
+      params: roleParamsSchema,
+      body: updateRoleRequestSchema,
+      query: deleteRoleQuerySchema,
+    }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Role,
       action: ResourceAction.Update,
@@ -111,6 +117,7 @@ export function createRolesRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: roleParamsSchema, query: deleteRoleQuerySchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Role,
       action: ResourceAction.Delete,

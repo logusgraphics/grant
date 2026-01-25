@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { SettingCard } from '@/components/features/settings';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useEmailVerified } from '@/hooks/auth';
 import { useMyMutations } from '@/hooks/me';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -27,6 +28,7 @@ export function SettingAccountDetailsCard({
   const { accounts, getCurrentAccount, setCurrentAccount } = useAuthStore();
   const { createMySecondaryAccount } = useMyMutations();
   const currentAccount = getCurrentAccount();
+  const isEmailVerified = useEmailVerified();
 
   const complementaryType =
     accountType === 'personal' ? AccountType.Organization : AccountType.Personal;
@@ -144,7 +146,7 @@ export function SettingAccountDetailsCard({
                 variant="outline"
                 size="sm"
                 onClick={handleCreateComplementary}
-                disabled={isCreating}
+                disabled={isCreating || !isEmailVerified}
               >
                 {isCreating
                   ? tCommon('actions.creating')

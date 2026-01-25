@@ -14,6 +14,7 @@ import {
   TagCheckboxList,
   TagCheckboxListProps,
 } from '@/components/common';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useTagMutations, useTags } from '@/hooks/tags';
 import { useTagsStore } from '@/stores/tags.store';
@@ -31,8 +32,9 @@ export function TagEditDialog() {
   const canUpdate = useGrant(ResourceSlug.Tag, ResourceAction.Update, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canUpdate) {
+  if (!scope || !canUpdate || requiresEmailVerification) {
     return null;
   }
 

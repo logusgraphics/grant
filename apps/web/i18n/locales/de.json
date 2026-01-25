@@ -316,7 +316,78 @@
       "verificationExpired": "Ihre E-Mail-Verifizierung ist abgelaufen. Bitte fordern Sie eine neue Verifizierungs-E-Mail an.",
       "userNotVerified": "E-Mail-Verifizierung erforderlich",
       "sessionExpired": "Sitzung abgelaufen",
-      "sessionExpiredDescription": "Ihre Sitzung ist abgelaufen oder wurde widerrufen. Weiterleitung zur Anmeldung..."
+      "sessionExpiredDescription": "Ihre Sitzung ist abgelaufen oder wurde widerrufen. Weiterleitung zur Anmeldung...",
+      "sending": "Wird gesendet...",
+      "resendEmail": "E-Mail erneut senden"
+    },
+    "featureGating": {
+      "title": "E-Mail-Verifizierung erforderlich",
+      "description": "Einige Funktionen sind eingeschränkt, bis Sie Ihre E-Mail-Adresse verifizieren. Unten finden Sie eine Übersicht der verfügbaren Funktionen.",
+      "viewFeatures": "Einschränkungen anzeigen",
+      "legend": {
+        "allowed": "Erlaubt",
+        "blocked": "Bis zur Verifizierung gesperrt"
+      },
+      "table": {
+        "feature": "Funktion",
+        "personal": "Persönlich",
+        "organization": "Organisation"
+      },
+      "categories": {
+        "projects": "Projekte",
+        "users": "Benutzer",
+        "roles": "Rollen",
+        "groups": "Gruppen",
+        "permissions": "Berechtigungen",
+        "resources": "Ressourcen",
+        "tags": "Tags",
+        "apiKeys": "API-Schlüssel",
+        "organizations": "Organisationen",
+        "members": "Mitglieder",
+        "settings": "Kontoeinstellungen"
+      },
+      "features": {
+        "createProject": "Projekt erstellen",
+        "editProject": "Projekt bearbeiten",
+        "deleteProject": "Projekt löschen",
+        "createUser": "Benutzer erstellen",
+        "editUser": "Benutzer bearbeiten",
+        "deleteUser": "Benutzer löschen",
+        "createRole": "Rolle erstellen",
+        "editRole": "Rolle bearbeiten",
+        "deleteRole": "Rolle löschen",
+        "createGroup": "Gruppe erstellen",
+        "editGroup": "Gruppe bearbeiten",
+        "deleteGroup": "Gruppe löschen",
+        "createPermission": "Berechtigung erstellen",
+        "editPermission": "Berechtigung bearbeiten",
+        "deletePermission": "Berechtigung löschen",
+        "createResource": "Ressource erstellen",
+        "editResource": "Ressource bearbeiten",
+        "deleteResource": "Ressource löschen",
+        "createTag": "Tag erstellen",
+        "editTag": "Tag bearbeiten",
+        "deleteTag": "Tag löschen",
+        "createApiKey": "API-Schlüssel erstellen",
+        "revokeApiKey": "API-Schlüssel widerrufen",
+        "deleteApiKey": "API-Schlüssel löschen",
+        "createOrganization": "Organisation erstellen",
+        "editOrganization": "Organisation bearbeiten",
+        "deleteOrganization": "Organisation löschen",
+        "inviteMember": "Mitglied einladen",
+        "updateMemberRole": "Mitgliedsrolle aktualisieren",
+        "removeMember": "Mitglied entfernen",
+        "resendInvitation": "Einladung erneut senden",
+        "revokeInvitation": "Einladung widerrufen",
+        "updateProfile": "Profil aktualisieren",
+        "changePassword": "Passwort ändern",
+        "deleteAccount": "Konto löschen",
+        "createSecondaryAccount": "Sekundäres Konto erstellen"
+      },
+      "note": {
+        "title": "Hinweis:",
+        "description": "Funktionen für persönliche Konten bleiben auch ohne E-Mail-Verifizierung zugänglich. Funktionen auf Organisationsebene und Kontoeinstellungen erfordern aus Sicherheitsgründen eine verifizierte E-Mail."
+      }
     },
     "validation": {
       "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",

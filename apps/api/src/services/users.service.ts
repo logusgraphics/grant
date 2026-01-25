@@ -6,6 +6,7 @@ import {
   QueryUsersArgs,
   UpdateUserInput,
   User,
+  UserAuthenticationMethodProvider,
   UserPage,
 } from '@grantjs/schema';
 
@@ -193,5 +194,39 @@ export class UserService extends AuditService {
     }
 
     return this.deleteUser({ id, hardDelete }, transaction);
+  }
+
+  public async getEmailVerificationStatus(
+    userId: string,
+    transaction?: Transaction
+  ): Promise<boolean> {
+    const usersResult = await this.repositories.userRepository.getUsers(
+      {
+        ids: [userId],
+        limit: 1,
+        requestedFields: ['authenticationMethods'],
+      },
+      transaction
+    );
+
+    const user = usersResult.users[0];
+    if (!user) {
+      return true; // Default to verified if user not found
+    }
+
+    const allAuthMethods = Array.isArray(user.authenticationMethods)
+      ? user.authenticationMethods
+      : [];
+
+    const emailAuthMethod = allAuthMethods.find(
+      (method) => method.provider === UserAuthenticationMethodProvider.Email
+    );
+
+    // OAuth users (GitHub, etc.) are always considered verified
+    if (!emailAuthMethod) {
+      return true;
+    }
+
+    return emailAuthMethod.isVerified;
   }
 }

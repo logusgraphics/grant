@@ -8,7 +8,7 @@ import {
 } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   getOrganizationMembersQuerySchema,
@@ -70,6 +70,7 @@ export function createOrganizationMembersRoutes(context: RequestContext) {
       params: updateOrganizationMemberParamsSchema,
       body: updateOrganizationMemberBodySchema,
     }),
+    requireEmailVerificationRest({ allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.OrganizationMember,
       action: ResourceAction.Update,
@@ -99,6 +100,7 @@ export function createOrganizationMembersRoutes(context: RequestContext) {
       params: removeOrganizationMemberParamsSchema,
       body: removeOrganizationMemberBodySchema,
     }),
+    requireEmailVerificationRest({ allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.OrganizationMember,
       action: ResourceAction.Remove,

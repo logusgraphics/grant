@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useEmailVerified } from '@/hooks/auth';
 import { MemberWithInvitation, useMemberMutations } from '@/hooks/members';
 
 interface MemberRemoveDialogProps {
@@ -41,8 +42,9 @@ export function MemberRemoveDialog({
   const canRemove = useGrant(ResourceSlug.OrganizationMember, ResourceAction.Remove, {
     scope,
   });
+  const isEmailVerified = useEmailVerified();
 
-  if (!canRemove) {
+  if (!canRemove || !isEmailVerified) {
     return null;
   }
 

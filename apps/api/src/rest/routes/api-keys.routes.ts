@@ -2,7 +2,7 @@ import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { ApiKey, ApiKeySortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   apiKeyIdParamsSchema,
@@ -52,6 +52,7 @@ export function createApiKeysRoutes(context: RequestContext) {
   router.post(
     '/',
     validate({ body: createApiKeyRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ApiKey,
       action: ResourceAction.Create,
@@ -75,6 +76,7 @@ export function createApiKeysRoutes(context: RequestContext) {
   router.post(
     '/:id/revoke',
     validate({ params: apiKeyIdParamsSchema, body: revokeApiKeyRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ApiKey,
       action: ResourceAction.Revoke,
@@ -100,6 +102,7 @@ export function createApiKeysRoutes(context: RequestContext) {
   router.delete(
     '/:id',
     validate({ params: apiKeyIdParamsSchema, body: deleteApiKeyRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ApiKey,
       action: ResourceAction.Delete,

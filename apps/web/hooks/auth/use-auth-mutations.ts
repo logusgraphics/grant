@@ -4,6 +4,8 @@ import {
   CreateAccountResult,
   LoginDocument,
   LoginResponse,
+  RefreshSessionDocument,
+  RefreshSessionResponse,
   RegisterDocument,
   RequestPasswordResetDocument,
   RequestPasswordResetResponse,
@@ -51,6 +53,9 @@ export function useAuthMutations() {
   const [resetPasswordMutation] = useMutation<{
     resetPassword: ResetPasswordResponse;
   }>(ResetPasswordDocument);
+  const [refreshSessionMutation] = useMutation<{
+    refreshSession: RefreshSessionResponse;
+  }>(RefreshSessionDocument);
 
   const handleLogin = async (input: LoginInput) => {
     try {
@@ -222,9 +227,47 @@ export function useAuthMutations() {
       const verifyData = result.data?.verifyEmail;
 
       if (verifyData?.success) {
-        // Clear email verification requirement from auth store
         const currentState = authStore;
-        if (currentState.accounts.length > 0) {
+
+        // Refresh session to get a new token with isVerified: true
+        if (currentState.accessToken && currentState.refreshToken) {
+          try {
+            const refreshResult = await refreshSessionMutation({
+              variables: {
+                accessToken: currentState.accessToken,
+                refreshToken: currentState.refreshToken,
+              },
+            });
+
+            const refreshData = refreshResult.data?.refreshSession;
+
+            if (refreshData?.accessToken && refreshData?.refreshToken) {
+              // Update auth store with new tokens (containing isVerified: true)
+              setAuthData({
+                accounts: currentState.accounts,
+                accessToken: refreshData.accessToken,
+                refreshToken: refreshData.refreshToken,
+                email: currentState.email,
+                requiresEmailVerification: false,
+                verificationExpiry: null,
+              });
+            }
+          } catch (refreshError) {
+            // Session refresh failed - still update local state
+            console.warn('Session refresh after verification failed:', refreshError);
+            if (currentState.accounts.length > 0) {
+              setAuthData({
+                accounts: currentState.accounts,
+                accessToken: currentState.accessToken,
+                refreshToken: currentState.refreshToken,
+                email: currentState.email,
+                requiresEmailVerification: false,
+                verificationExpiry: null,
+              });
+            }
+          }
+        } else if (currentState.accounts.length > 0) {
+          // No tokens (e.g., user not logged in) - just update local state
           setAuthData({
             accounts: currentState.accounts,
             accessToken: currentState.accessToken || '',

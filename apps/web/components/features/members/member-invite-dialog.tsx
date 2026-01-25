@@ -35,6 +35,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useEmailVerified } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useMemberMutations } from '@/hooks/members';
 import { useRoles } from '@/hooks/roles';
@@ -77,8 +78,9 @@ export function MemberInviteDialog({ open, onOpenChange, onSuccess }: MemberInvi
   const canInvite = useGrant(ResourceSlug.OrganizationInvitation, ResourceAction.Create, {
     scope: scope!,
   });
+  const isEmailVerified = useEmailVerified();
 
-  if (!canInvite) {
+  if (!canInvite || !isEmailVerified) {
     return null;
   }
 

@@ -34,6 +34,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { useEmailVerified } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { MemberWithInvitation, useMemberMutations } from '@/hooks/members';
 import { useRoles } from '@/hooks/roles';
@@ -74,8 +75,9 @@ export function MemberInvitationResendDialog({
   const canResend = useGrant(ResourceSlug.OrganizationInvitation, ResourceAction.Create, {
     scope: scope!,
   });
+  const isEmailVerified = useEmailVerified();
 
-  if (!canResend) {
+  if (!canResend || !isEmailVerified) {
     return null;
   }
 

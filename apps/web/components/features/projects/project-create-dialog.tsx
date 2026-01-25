@@ -15,6 +15,7 @@ import {
   TagCheckboxListProps,
 } from '@/components/common';
 import { useProjectMutations } from '@/hooks';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useTags } from '@/hooks/tags';
 import { useProjectsStore } from '@/stores/projects.store';
@@ -31,8 +32,9 @@ export function ProjectCreateDialog() {
   const canCreate = useGrant(ResourceSlug.Project, ResourceAction.Create, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canCreate) {
+  if (!scope || !canCreate || requiresEmailVerification) {
     return null;
   }
 

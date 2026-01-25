@@ -6,6 +6,7 @@ import { Building2 } from 'lucide-react';
 import { DefaultValues } from 'react-hook-form';
 
 import { CreateDialog, DialogField } from '@/components/common';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useAccountScope } from '@/hooks/common/use-account-scope';
 import { useOrganizationMutations } from '@/hooks/organizations';
 import { useOrganizationsStore } from '@/stores/organizations.store';
@@ -19,11 +20,13 @@ export function OrganizationCreateDialog() {
   const canCreate = useGrant(ResourceSlug.Organization, ResourceAction.Create, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
   const isCreateDialogOpen = useOrganizationsStore((state) => state.isCreateDialogOpen);
   const setCreateDialogOpen = useOrganizationsStore((state) => state.setCreateDialogOpen);
 
-  if (!scope || !canCreate) {
+  // Block if user doesn't have permission OR email verification is required but not completed
+  if (!scope || !canCreate || requiresEmailVerification) {
     return null;
   }
 

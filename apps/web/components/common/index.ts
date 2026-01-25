@@ -18,6 +18,7 @@ export * from './delete-dialog';
 export * from './edit-dialog';
 export * from './editable-text';
 export * from './email-verification-banner';
+export * from './email-verification-features-dialog';
 export * from './empty-state';
 export * from './form-dialog';
 export * from './full-page-loader';

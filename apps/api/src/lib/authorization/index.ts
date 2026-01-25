@@ -7,4 +7,12 @@ export {
 } from './auth-guard';
 export { authorizeRestRoute, type RestGuardOptions } from './rest-guard';
 export { authorizeGraphQLResolver, type GraphQLGuardOptions } from './graphql-guard';
+export {
+  requireEmailVerificationRest,
+  type EmailVerificationRestGuardOptions,
+} from './email-verification-rest-guard';
+export {
+  requireEmailVerificationGraphQL,
+  type EmailVerificationGraphQLGuardOptions,
+} from './email-verification-graphql-guard';
 export type { ResourceResolver, ResourceResolverParams, ResourceResolverResult } from './types';

@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useApiKeyMutations } from '@/hooks/api-keys';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 
 interface UserApiKeyRevokeDialogProps {
   apiKey: ApiKey;
@@ -35,8 +36,9 @@ export function UserApiKeyRevokeDialog({
   const { revokeApiKey } = useApiKeyMutations();
 
   const canRevoke = useGrant(ResourceSlug.ApiKey, ResourceAction.Revoke, { scope });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!canRevoke) {
+  if (!canRevoke || requiresEmailVerification) {
     return null;
   }
 

@@ -34,6 +34,7 @@ export class TokenParser {
       jti: decoded.jti as string,
       type: decoded.type as TokenType, // Extract token type (TokenType.Session or TokenType.ApiKey)
       scope: decoded.scope as Scope | undefined, // Optional scope
+      isVerified: decoded.isVerified as boolean | undefined, // Email verification status (session tokens only)
     };
   }
 

@@ -2,7 +2,7 @@ import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Organization, OrganizationSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { AuthenticationError } from '@/lib/errors';
 import { validate } from '@/middleware/validation.middleware';
 import {
@@ -56,6 +56,7 @@ export function createOrganizationRoutes(context: RequestContext) {
   router.post(
     '/',
     validate({ body: createOrganizationRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.Organization,
       action: ResourceAction.Create,
@@ -82,6 +83,7 @@ export function createOrganizationRoutes(context: RequestContext) {
   router.patch(
     '/:id',
     validate({ params: organizationParamsSchema, body: updateOrganizationRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.Organization,
       action: ResourceAction.Update,
@@ -108,6 +110,7 @@ export function createOrganizationRoutes(context: RequestContext) {
   router.delete(
     '/:id',
     validate({ params: organizationParamsSchema, query: deleteOrganizationQuerySchema }),
+    requireEmailVerificationRest({ allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.Organization,
       action: ResourceAction.Delete,

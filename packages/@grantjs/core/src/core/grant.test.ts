@@ -19,7 +19,8 @@ describe('Grant', () => {
 
   const createValidToken = (
     type: TokenType = TokenType.Session,
-    scope?: { tenant: Tenant; id: string }
+    scope?: { tenant: Tenant; id: string },
+    isVerified?: boolean
   ) => {
     const payload = {
       sub: 'user-123',
@@ -30,6 +31,7 @@ describe('Grant', () => {
       jti: 'token-456',
       type,
       ...(scope && { scope }),
+      ...(isVerified !== undefined && { isVerified }),
     };
 
     return jwt.sign(payload, secret);
@@ -480,6 +482,91 @@ describe('Grant', () => {
       const invalidToken = jwt.sign(invalidPayload, secret);
 
       expect(() => grant.authenticate(`Bearer ${invalidToken}`)).toThrow(TokenValidationError);
+    });
+  });
+
+  describe('isVerified in GrantAuth', () => {
+    it('should set isVerified to true for session token with isVerified: true', () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant({
+        jwtSecret: secret,
+        grantService: mockService,
+      });
+
+      const token = createValidToken(TokenType.Session, undefined, true);
+      grant.authenticate(`Bearer ${token}`);
+
+      expect(grant.isAuthenticated()).toBe(true);
+      expect(grant.auth?.isVerified).toBe(true);
+    });
+
+    it('should set isVerified to false for session token with isVerified: false', () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant({
+        jwtSecret: secret,
+        grantService: mockService,
+      });
+
+      const token = createValidToken(TokenType.Session, undefined, false);
+      grant.authenticate(`Bearer ${token}`);
+
+      expect(grant.isAuthenticated()).toBe(true);
+      expect(grant.auth?.isVerified).toBe(false);
+    });
+
+    it('should set isVerified to undefined for session token without isVerified claim', () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant({
+        jwtSecret: secret,
+        grantService: mockService,
+      });
+
+      const token = createValidToken(TokenType.Session);
+      grant.authenticate(`Bearer ${token}`);
+
+      expect(grant.isAuthenticated()).toBe(true);
+      expect(grant.auth?.isVerified).toBeUndefined();
+    });
+
+    it('should set isVerified to true for API key token regardless of claim', () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant({
+        jwtSecret: secret,
+        grantService: mockService,
+      });
+
+      const scope = {
+        tenant: Tenant.OrganizationProject,
+        id: 'project-123',
+      };
+
+      // API key with isVerified: false should still result in isVerified: true
+      const token = createValidToken(TokenType.ApiKey, scope, false);
+      grant.authenticate(`Bearer ${token}`);
+
+      expect(grant.isAuthenticated()).toBe(true);
+      expect(grant.auth?.type).toBe(TokenType.ApiKey);
+      expect(grant.auth?.isVerified).toBe(true);
+    });
+
+    it('should set isVerified to true for API key token without isVerified claim', () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant({
+        jwtSecret: secret,
+        grantService: mockService,
+      });
+
+      const scope = {
+        tenant: Tenant.OrganizationProject,
+        id: 'project-123',
+      };
+
+      const token = createValidToken(TokenType.ApiKey, scope);
+      grant.authenticate(`Bearer ${token}`);
+
+      expect(grant.isAuthenticated()).toBe(true);
+      expect(grant.auth?.type).toBe(TokenType.ApiKey);
+      expect(grant.auth?.isVerified).toBe(true);
     });
   });
 });

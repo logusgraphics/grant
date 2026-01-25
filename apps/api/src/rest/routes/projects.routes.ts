@@ -8,7 +8,7 @@ import {
 import { ProjectSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createProjectRequestSchema,
@@ -61,6 +61,7 @@ export function createProjectsRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createProjectRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
       action: ResourceAction.Create,
@@ -79,6 +80,7 @@ export function createProjectsRouter(context: RequestContext): Router {
   router.patch(
     '/:id',
     validate({ params: projectParamsSchema, body: updateProjectRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
       action: ResourceAction.Update,
@@ -107,6 +109,7 @@ export function createProjectsRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: projectParamsSchema, query: deleteProjectQuerySchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
       action: ResourceAction.Delete,

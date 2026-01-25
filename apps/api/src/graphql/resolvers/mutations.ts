@@ -1,6 +1,11 @@
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 
-import { authenticateGraphQLResolver, authorizeGraphQLResolver } from '@/lib/authorization';
+import {
+  authenticateGraphQLResolver,
+  authorizeGraphQLResolver,
+  requireEmailVerificationGraphQL,
+  type EmailVerificationGraphQLGuardOptions,
+} from '@/lib/authorization';
 
 import * as apiKeyMutations from './api-keys/mutations';
 import * as authMutations from './auth/mutations';
@@ -15,8 +20,12 @@ import * as resourceMutations from './resources/mutations';
 import * as roleMutations from './roles/mutations';
 import * as tagMutations from './tags/mutations';
 import * as userMutations from './users/mutations';
+
+const ALLOW_PERSONAL: EmailVerificationGraphQLGuardOptions = { allowPersonalContext: true };
+const BLOCK_UNVERIFIED: EmailVerificationGraphQLGuardOptions = { allowPersonalContext: false };
+
 export const Mutation = {
-  // Auth (public)
+  // Auth (public - no guards needed)
   login: authMutations.login,
   register: authMutations.register,
   refreshSession: authMutations.refreshSession,
@@ -24,7 +33,10 @@ export const Mutation = {
   resendVerification: authMutations.resendVerification,
   requestPasswordReset: authMutations.requestPasswordReset,
   resetPassword: authMutations.resetPassword,
-  // Me (private)
+
+  // Me (private - own account operations, always allowed)
+  logoutMyUser: authenticateGraphQLResolver(meMutations.logoutMyUser!),
+  revokeMyUserSession: authenticateGraphQLResolver(meMutations.revokeMyUserSession!),
   deleteMyAccounts: authenticateGraphQLResolver(meMutations.deleteMyAccounts!),
   createMySecondaryAccount: authenticateGraphQLResolver(meMutations.createMySecondaryAccount!),
   changeMyPassword: authenticateGraphQLResolver(meMutations.changeMyPassword!),
@@ -37,163 +49,288 @@ export const Mutation = {
   setMyPrimaryAuthenticationMethod: authenticateGraphQLResolver(
     meMutations.setMyPrimaryAuthenticationMethod!
   ),
-  revokeMyUserSession: authenticateGraphQLResolver(meMutations.revokeMyUserSession!),
   uploadMyUserPicture: authenticateGraphQLResolver(meMutations.uploadMyUserPicture!),
   updateMyUser: authenticateGraphQLResolver(meMutations.updateMyUser!),
-  logoutMyUser: authenticateGraphQLResolver(meMutations.logoutMyUser!),
-  // Users (scoped)
-  createUser: authorizeGraphQLResolver(
-    { resource: ResourceSlug.User, action: ResourceAction.Create },
-    userMutations.createUser!
+
+  // Users (scoped - allow personal context)
+  createUser: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.User, action: ResourceAction.Create },
+      userMutations.createUser!
+    )
   ),
-  updateUser: authorizeGraphQLResolver(
-    { resource: ResourceSlug.User, action: ResourceAction.Update },
-    userMutations.updateUser!
+  updateUser: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.User, action: ResourceAction.Update },
+      userMutations.updateUser!
+    )
   ),
-  deleteUser: authorizeGraphQLResolver(
-    { resource: ResourceSlug.User, action: ResourceAction.Delete },
-    userMutations.deleteUser!
+  deleteUser: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.User, action: ResourceAction.Delete },
+      userMutations.deleteUser!
+    )
   ),
-  uploadUserPicture: authorizeGraphQLResolver(
-    { resource: ResourceSlug.User, action: ResourceAction.UploadPicture },
-    userMutations.uploadUserPicture!
+  uploadUserPicture: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.User, action: ResourceAction.UploadPicture },
+      userMutations.uploadUserPicture!
+    )
   ),
-  // Roles (scoped)
-  createRole: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Role, action: ResourceAction.Create },
-    roleMutations.createRole!
+
+  // Roles (scoped - allow personal context)
+  createRole: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Role, action: ResourceAction.Create },
+      roleMutations.createRole!
+    )
   ),
-  deleteRole: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Role, action: ResourceAction.Delete },
-    roleMutations.deleteRole!
+  deleteRole: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Role, action: ResourceAction.Delete },
+      roleMutations.deleteRole!
+    )
   ),
-  updateRole: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Role, action: ResourceAction.Update },
-    roleMutations.updateRole!
+  updateRole: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Role, action: ResourceAction.Update },
+      roleMutations.updateRole!
+    )
   ),
-  // Groups (scoped)
-  createGroup: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Group, action: ResourceAction.Create },
-    groupMutations.createGroup!
+
+  // Groups (scoped - allow personal context)
+  createGroup: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Group, action: ResourceAction.Create },
+      groupMutations.createGroup!
+    )
   ),
-  deleteGroup: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Group, action: ResourceAction.Delete },
-    groupMutations.deleteGroup!
+  deleteGroup: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Group, action: ResourceAction.Delete },
+      groupMutations.deleteGroup!
+    )
   ),
-  updateGroup: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Group, action: ResourceAction.Update },
-    groupMutations.updateGroup!
+  updateGroup: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Group, action: ResourceAction.Update },
+      groupMutations.updateGroup!
+    )
   ),
-  // Organizations (scoped)
-  createOrganization: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Organization, action: ResourceAction.Create },
-    organizationMutations.createOrganization!
+
+  // Organizations (scoped - block for unverified users)
+  createOrganization: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Organization, action: ResourceAction.Create },
+      organizationMutations.createOrganization!
+    )
   ),
-  updateOrganization: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Organization, action: ResourceAction.Update },
-    organizationMutations.updateOrganization!
+  updateOrganization: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Organization, action: ResourceAction.Update },
+      organizationMutations.updateOrganization!
+    )
   ),
-  deleteOrganization: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Organization, action: ResourceAction.Delete },
-    organizationMutations.deleteOrganization!
+  deleteOrganization: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Organization, action: ResourceAction.Delete },
+      organizationMutations.deleteOrganization!
+    )
   ),
-  // Organization Invitations (scoped)
-  inviteMember: authorizeGraphQLResolver(
-    { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Create },
-    organizationInvitationMutations.inviteMember!
+
+  // Organization Invitations (scoped - block for unverified users)
+  inviteMember: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Create },
+      organizationInvitationMutations.inviteMember!
+    )
   ),
-  acceptInvitation: authorizeGraphQLResolver(
-    { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Accept },
-    organizationInvitationMutations.acceptInvitation!
+  acceptInvitation: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Accept },
+      organizationInvitationMutations.acceptInvitation!
+    )
   ),
-  resendInvitationEmail: authorizeGraphQLResolver(
-    { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.ResendEmail },
-    organizationInvitationMutations.resendInvitationEmail!
+  resendInvitationEmail: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.ResendEmail },
+      organizationInvitationMutations.resendInvitationEmail!
+    )
   ),
-  renewInvitation: authorizeGraphQLResolver(
-    { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Renew },
-    organizationInvitationMutations.renewInvitation!
+  renewInvitation: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Renew },
+      organizationInvitationMutations.renewInvitation!
+    )
   ),
-  revokeInvitation: authorizeGraphQLResolver(
-    { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Revoke },
-    organizationInvitationMutations.revokeInvitation!
+  revokeInvitation: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Revoke },
+      organizationInvitationMutations.revokeInvitation!
+    )
   ),
-  // Organization Members (scoped)
-  updateOrganizationMember: authorizeGraphQLResolver(
-    { resource: ResourceSlug.OrganizationMember, action: ResourceAction.Update },
-    organizationMemberMutations.updateOrganizationMember!
+
+  // Organization Members (scoped - block for unverified users)
+  updateOrganizationMember: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.OrganizationMember, action: ResourceAction.Update },
+      organizationMemberMutations.updateOrganizationMember!
+    )
   ),
-  removeOrganizationMember: authorizeGraphQLResolver(
-    { resource: ResourceSlug.OrganizationMember, action: ResourceAction.Remove },
-    organizationMemberMutations.removeOrganizationMember!
+  removeOrganizationMember: requireEmailVerificationGraphQL(
+    BLOCK_UNVERIFIED,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.OrganizationMember, action: ResourceAction.Remove },
+      organizationMemberMutations.removeOrganizationMember!
+    )
   ),
-  // Projects (scoped)
-  createProject: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Project, action: ResourceAction.Create },
-    projectMutations.createProject!
+
+  // Projects (scoped - allow personal context)
+  createProject: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Project, action: ResourceAction.Create },
+      projectMutations.createProject!
+    )
   ),
-  updateProject: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Project, action: ResourceAction.Update, resourceResolver: 'project' },
-    projectMutations.updateProject!
+  updateProject: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      {
+        resource: ResourceSlug.Project,
+        action: ResourceAction.Update,
+        resourceResolver: 'project',
+      },
+      projectMutations.updateProject!
+    )
   ),
-  deleteProject: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Project, action: ResourceAction.Delete, resourceResolver: 'project' },
-    projectMutations.deleteProject!
+  deleteProject: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      {
+        resource: ResourceSlug.Project,
+        action: ResourceAction.Delete,
+        resourceResolver: 'project',
+      },
+      projectMutations.deleteProject!
+    )
   ),
-  // Permissions (scoped)
-  createPermission: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Permission, action: ResourceAction.Create },
-    permissionMutations.createPermission!
+
+  // Permissions (scoped - allow personal context)
+  createPermission: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Permission, action: ResourceAction.Create },
+      permissionMutations.createPermission!
+    )
   ),
-  deletePermission: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Permission, action: ResourceAction.Delete },
-    permissionMutations.deletePermission!
+  deletePermission: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Permission, action: ResourceAction.Delete },
+      permissionMutations.deletePermission!
+    )
   ),
-  updatePermission: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Permission, action: ResourceAction.Update },
-    permissionMutations.updatePermission!
+  updatePermission: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Permission, action: ResourceAction.Update },
+      permissionMutations.updatePermission!
+    )
   ),
-  // Resources (scoped)
-  createResource: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Resource, action: ResourceAction.Create },
-    resourceMutations.createResource!
+
+  // Resources (scoped - allow personal context)
+  createResource: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Resource, action: ResourceAction.Create },
+      resourceMutations.createResource!
+    )
   ),
-  deleteResource: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Resource, action: ResourceAction.Delete },
-    resourceMutations.deleteResource!
+  deleteResource: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Resource, action: ResourceAction.Delete },
+      resourceMutations.deleteResource!
+    )
   ),
-  updateResource: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Resource, action: ResourceAction.Update },
-    resourceMutations.updateResource!
+  updateResource: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Resource, action: ResourceAction.Update },
+      resourceMutations.updateResource!
+    )
   ),
-  // Tags (scoped)
-  createTag: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Tag, action: ResourceAction.Create },
-    tagMutations.createTag!
+
+  // Tags (scoped - allow personal context)
+  createTag: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Tag, action: ResourceAction.Create },
+      tagMutations.createTag!
+    )
   ),
-  updateTag: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Tag, action: ResourceAction.Update },
-    tagMutations.updateTag!
+  updateTag: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Tag, action: ResourceAction.Update },
+      tagMutations.updateTag!
+    )
   ),
-  deleteTag: authorizeGraphQLResolver(
-    { resource: ResourceSlug.Tag, action: ResourceAction.Delete },
-    tagMutations.deleteTag!
+  deleteTag: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.Tag, action: ResourceAction.Delete },
+      tagMutations.deleteTag!
+    )
   ),
-  // Api Keys (scoped)
-  createApiKey: authorizeGraphQLResolver(
-    { resource: ResourceSlug.ApiKey, action: ResourceAction.Create },
-    apiKeyMutations.createApiKey!
+
+  // Api Keys (scoped - allow personal context)
+  createApiKey: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.ApiKey, action: ResourceAction.Create },
+      apiKeyMutations.createApiKey!
+    )
   ),
-  exchangeApiKey: authorizeGraphQLResolver(
-    { resource: ResourceSlug.ApiKey, action: ResourceAction.Exchange },
-    apiKeyMutations.exchangeApiKey!
+  exchangeApiKey: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.ApiKey, action: ResourceAction.Exchange },
+      apiKeyMutations.exchangeApiKey!
+    )
   ),
-  revokeApiKey: authorizeGraphQLResolver(
-    { resource: ResourceSlug.ApiKey, action: ResourceAction.Revoke },
-    apiKeyMutations.revokeApiKey!
+  revokeApiKey: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.ApiKey, action: ResourceAction.Revoke },
+      apiKeyMutations.revokeApiKey!
+    )
   ),
-  deleteApiKey: authorizeGraphQLResolver(
-    { resource: ResourceSlug.ApiKey, action: ResourceAction.Delete },
-    apiKeyMutations.deleteApiKey!
+  deleteApiKey: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.ApiKey, action: ResourceAction.Delete },
+      apiKeyMutations.deleteApiKey!
+    )
   ),
 } as const;

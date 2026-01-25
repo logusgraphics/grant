@@ -16,6 +16,7 @@ import {
   TagCheckboxList,
   TagCheckboxListProps,
 } from '@/components/common';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useGroupMutations } from '@/hooks/groups';
 import { usePermissions } from '@/hooks/permissions';
@@ -35,8 +36,9 @@ export function GroupEditDialog() {
   const canUpdate = useGrant(ResourceSlug.Group, ResourceAction.Update, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canUpdate) {
+  if (!scope || !canUpdate || requiresEmailVerification) {
     return null;
   }
 

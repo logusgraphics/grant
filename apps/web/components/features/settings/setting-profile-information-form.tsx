@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useEmailVerified } from '@/hooks/auth';
 
 import { profileSettingsSchema } from './setting-schemas';
 import { SettingProfileFormValues, SettingProfileInformationFormProps } from './setting-types';
@@ -35,6 +36,7 @@ export function SettingProfileInformationForm({
   const tCommon = useTranslations('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const isEmailVerified = useEmailVerified();
 
   const form = useForm<SettingProfileFormValues>({
     resolver: zodResolver(profileSettingsSchema),
@@ -72,7 +74,7 @@ export function SettingProfileInformationForm({
             <Button
               type="submit"
               form="profile-information-form"
-              disabled={!form.formState.isDirty || isSubmitting}
+              disabled={!form.formState.isDirty || isSubmitting || !isEmailVerified}
             >
               {isSubmitting ? tCommon('actions.saving') : tCommon('actions.save')}
             </Button>
@@ -123,7 +125,12 @@ export function SettingProfileInformationForm({
             </div>
           )}
           <div className="flex-1 space-y-2">
-            <Button variant="outline" size="sm" onClick={() => setIsUploadDialogOpen(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsUploadDialogOpen(true)}
+              disabled={!isEmailVerified}
+            >
               {currentPictureUrl ? t('avatar.changeButton') : t('avatar.uploadButton')}
             </Button>
           </div>

@@ -116,7 +116,10 @@ export class UserSessionService extends AuditService {
     return this.repositories.userSessionRepository.getUserSessions(params, transaction);
   }
 
-  public async signSession(session: UserSession): Promise<CreateSessionResult> {
+  public async signSession(
+    session: UserSession,
+    isVerified: boolean = true
+  ): Promise<CreateSessionResult> {
     const context = 'UserSessionService.signSession';
     const validatedSession = validateInput(userSessionSchema, session, context);
     const { userId } = validatedSession;
@@ -137,6 +140,7 @@ export class UserSessionService extends AuditService {
       iat,
       jti,
       type: TokenType.Session, // Token type: Session (enum value: 'session')
+      isVerified, // Email verification status
       // No scope - will be passed per request
     };
 
@@ -147,7 +151,9 @@ export class UserSessionService extends AuditService {
   }
 
   public async createSession(
-    params: Omit<CreateUserSessionInput, 'expiresAt' | 'token' | 'lastUsedAt'>,
+    params: Omit<CreateUserSessionInput, 'expiresAt' | 'token' | 'lastUsedAt'> & {
+      isVerified?: boolean;
+    },
     transaction?: Transaction
   ): Promise<CreateSessionResult> {
     const context = 'UserSessionService.createSession';
@@ -173,7 +179,7 @@ export class UserSessionService extends AuditService {
       transaction
     );
 
-    return this.signSession(session);
+    return this.signSession(session, params.isVerified ?? true);
   }
 
   public async validateAccessToken(accessToken: string): Promise<boolean> {
@@ -200,7 +206,8 @@ export class UserSessionService extends AuditService {
     refreshToken: string,
     transaction?: Transaction,
     userAgent?: string | null,
-    ipAddress?: string | null
+    ipAddress?: string | null,
+    isVerified?: boolean
   ): Promise<CreateSessionResult | null> {
     const context = 'UserSessionService.refreshSession';
     validateInput(refreshSessionSchema, { accessToken, refreshToken }, context);
@@ -223,7 +230,7 @@ export class UserSessionService extends AuditService {
       transaction
     );
 
-    return this.signSession(refreshedSession);
+    return this.signSession(refreshedSession, isVerified ?? true);
   }
 
   public async revokeSession(id: string, transaction?: Transaction): Promise<UserSession> {

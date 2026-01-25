@@ -4,6 +4,7 @@ import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 
 import { DeleteDialog } from '@/components/common';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useTagMutations } from '@/hooks/tags';
 import { useTagsStore } from '@/stores/tags.store';
@@ -17,8 +18,9 @@ export function TagDeleteDialog() {
   const canDelete = useGrant(ResourceSlug.Tag, ResourceAction.Delete, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canDelete) {
+  if (!scope || !canDelete || requiresEmailVerification) {
     return null;
   }
 

@@ -24,6 +24,7 @@ export interface TokenClaims extends JwtPayload {
   jti: string; // JWT ID (API key ID or session ID)
   type: TokenType; // Token type: TokenType.Session or TokenType.ApiKey
   scope?: Scope; // Optional: Required for API key tokens, optional for user session tokens
+  isVerified?: boolean; // Optional: Email verification status (session tokens only)
 }
 
 /**
@@ -184,4 +185,5 @@ export interface GrantAuth {
   expiresAt: number;
   type: TokenType; // Token type: TokenType.Session or TokenType.ApiKey
   scope?: Scope; // Required for API key tokens, optional for session tokens
+  isVerified?: boolean; // Email verification status (session tokens only, always true for API keys)
 }

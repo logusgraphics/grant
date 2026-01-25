@@ -34,6 +34,66 @@ describe('TokenParser', () => {
       expect(claims.scope).toBeUndefined();
     });
 
+    it('should parse session token with isVerified: true', () => {
+      const payload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        iat: Math.floor(Date.now() / 1000),
+        jti: 'session-456',
+        type: TokenType.Session,
+        isVerified: true,
+      };
+
+      const token = jwt.sign(payload, secret);
+      const claims = parser.parse(token, secret);
+
+      expect(claims.sub).toBe('user-123');
+      expect(claims.type).toBe(TokenType.Session);
+      expect(claims.isVerified).toBe(true);
+    });
+
+    it('should parse session token with isVerified: false', () => {
+      const payload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        iat: Math.floor(Date.now() / 1000),
+        jti: 'session-456',
+        type: TokenType.Session,
+        isVerified: false,
+      };
+
+      const token = jwt.sign(payload, secret);
+      const claims = parser.parse(token, secret);
+
+      expect(claims.sub).toBe('user-123');
+      expect(claims.type).toBe(TokenType.Session);
+      expect(claims.isVerified).toBe(false);
+    });
+
+    it('should parse session token without isVerified (undefined)', () => {
+      const payload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        iat: Math.floor(Date.now() / 1000),
+        jti: 'session-456',
+        type: TokenType.Session,
+        // No isVerified claim
+      };
+
+      const token = jwt.sign(payload, secret);
+      const claims = parser.parse(token, secret);
+
+      expect(claims.sub).toBe('user-123');
+      expect(claims.type).toBe(TokenType.Session);
+      expect(claims.isVerified).toBeUndefined();
+    });
+
     it('should parse valid API key token with scope', () => {
       const payload = {
         sub: 'user-123',

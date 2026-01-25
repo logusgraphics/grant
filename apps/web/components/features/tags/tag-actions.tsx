@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useTagsStore } from '@/stores/tags.store';
 
@@ -35,8 +36,9 @@ export function TagActions({ tag }: TagActionsProps) {
   const canDelete = useGrant(ResourceSlug.Tag, ResourceAction.Delete, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || (!canUpdate && !canDelete)) {
+  if (!scope || (!canUpdate && !canDelete) || requiresEmailVerification) {
     return null;
   }
 

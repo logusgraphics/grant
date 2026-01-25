@@ -7,6 +7,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { ActionItem, Actions } from '@/components/common';
+import { useEmailVerified } from '@/hooks/auth';
 import { useOrganizationsStore } from '@/stores/organizations.store';
 
 interface OrganizationActionsProps {
@@ -20,17 +21,16 @@ export function OrganizationActions({ organization }: OrganizationActionsProps) 
   const setOrganizationToDelete = useOrganizationsStore((state) => state.setOrganizationToDelete);
 
   // Scope permissions to this organization
-  const scope = organization.id
-    ? { tenant: Tenant.Organization, id: organization.id }
-    : null;
+  const scope = organization.id ? { tenant: Tenant.Organization, id: organization.id } : null;
 
   // Check permissions using the Grant client
   // Hook automatically waits for scope to become valid when provided
   const canUpdate = useGrant(ResourceSlug.Organization, ResourceAction.Update, { scope });
   const canDelete = useGrant(ResourceSlug.Organization, ResourceAction.Delete, { scope });
+  const isEmailVerified = useEmailVerified();
 
-  // If user has no permissions, don't render the actions menu
-  if (!canUpdate && !canDelete) {
+  // If user has no permissions or email not verified (organization context), don't render the actions menu
+  if ((!canUpdate && !canDelete) || !isEmailVerified) {
     return null;
   }
 

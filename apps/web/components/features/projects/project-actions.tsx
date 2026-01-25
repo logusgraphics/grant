@@ -7,6 +7,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Actions } from '@/components/common';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useProjectsStore } from '@/stores/projects.store';
 
@@ -29,8 +30,9 @@ export function ProjectActions({ project }: ProjectActionsProps) {
   const canDelete = useGrant(ResourceSlug.Project, ResourceAction.Delete, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || (!canUpdate && !canDelete)) {
+  if (!scope || (!canUpdate && !canDelete) || requiresEmailVerification) {
     return null;
   }
 

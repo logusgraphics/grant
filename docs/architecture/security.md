@@ -267,6 +267,242 @@ The platform uses multiple layers of CSRF protection:
 - **Duplicate Prevention** - System prevents multiple methods of the same provider per user
 - **Cross-User Validation** - Prevents linking OAuth accounts already connected to other users
 
+## Email Verification Feature Gating
+
+As a **security-first platform**, Grant enforces email verification for collaborative operations while allowing users to work freely in their personal space. This ensures identity verification for actions that affect multiple users.
+
+### Security Model: Personal vs Organization Context
+
+Different rules apply based on account context:
+
+| Context                       | Mutations                   | Read Operations |
+| ----------------------------- | --------------------------- | --------------- |
+| **Personal Account/Projects** | ✅ Allowed (unverified)     | ✅ Allowed      |
+| **Organization Context**      | ❌ Blocked (until verified) | ✅ Allowed      |
+| **Account Settings**          | ❌ Blocked (until verified) | ✅ Allowed      |
+
+**Rationale:**
+
+- **Personal Space**: Users own their personal workspace - lower security risk
+- **Organization Collaboration**: Multiple users involved - requires verified identity
+- **Account Settings**: Profile changes require verified identity to prevent account takeover
+
+### Verification States
+
+Users can be in one of three verification states:
+
+1. **Verified** (`isVerified: true`)
+   - Full access to all features
+   - No restrictions
+
+2. **Unverified (Within Expiry)** (`isVerified: false`, token not expired)
+   - Can verify with existing token
+   - Personal context: Mutations allowed
+   - Organization context: Mutations blocked
+
+3. **Unverified (Expired)** (`isVerified: false`, token expired)
+   - Must request new verification email
+   - Personal context: Mutations allowed
+   - Organization context: Mutations blocked
+
+### Features Blocked in Organization Context
+
+#### Create/Update/Delete Operations
+
+- **Projects**: Create, edit, delete organization projects
+- **Users**: Create, edit, delete users in organization projects
+- **Roles**: Create, edit, delete roles in organization/project
+- **Groups**: Create, edit, delete groups in organization/project
+- **Permissions**: Create, edit, delete permissions in organization/project
+- **Resources**: Create, edit, delete resources in organization/project
+- **Tags**: Create, edit, delete tags in organization/project
+- **API Keys**: Create, revoke, delete API keys in organization context
+
+#### Member Management
+
+- Invite members to organization
+- Update member roles
+- Remove members
+- Resend/revoke invitations
+
+#### Account Settings (All Contexts)
+
+- Update profile (name, picture)
+- Change password
+- Delete account
+- Create secondary accounts
+
+### Features Always Allowed
+
+- **All read operations** - View organizations, projects, users, roles, etc.
+- **Navigation** - Dashboard access, sidebar navigation
+- **Authentication** - Logout, email verification, resend verification
+- **Account switching** - Switch between accounts (read-only operation)
+
+### Token-Based Implementation
+
+Email verification status is embedded in the JWT token for efficient enforcement:
+
+```typescript
+interface TokenClaims {
+  sub: string; // User ID
+  aud: string; // API URL
+  iss: string; // Issuer
+  exp: number; // Expiration
+  iat: number; // Issued at
+  jti: string; // JWT ID (session/API key ID)
+  type: TokenType; // Session or ApiKey
+  scope?: Scope; // Tenant scope
+  isVerified?: boolean; // Email verification status (session tokens only)
+}
+```
+
+**Key Design Decisions:**
+
+1. **Session Tokens Only**: The `isVerified` claim only applies to session tokens. API keys are created when users are already verified (or in personal context) and have fixed scopes.
+
+2. **API Keys Always Verified**: API key tokens are always treated as verified (`isVerified: true`) regardless of the claim, since they are programmatically generated and have restricted scopes.
+
+3. **Zero Overhead for Common Cases**: Verified users and API key requests require no additional database lookups.
+
+4. **Token Refresh on Verification**: When a user verifies their email, the next session refresh updates the `isVerified` claim.
+
+### Backend Guards
+
+#### REST Guard
+
+```typescript
+import { requireEmailVerificationRest } from '@/lib/authorization/email-verification-rest-guard';
+
+router.post(
+  '/projects',
+  requireEmailVerificationRest({ allowPersonalContext: true }),
+  authorizeRestRoute({ resource: ResourceSlug.Project, action: ResourceAction.Create }),
+  async (req, res) => {
+    /* ... */
+  }
+);
+```
+
+#### GraphQL Guard
+
+```typescript
+import { requireEmailVerificationGraphQL } from '@/lib/authorization/email-verification-graphql-guard';
+
+const createProjectResolver = requireEmailVerificationGraphQL(
+  { allowPersonalContext: true },
+  authorizeGraphQLResolver(
+    { resource: ResourceSlug.Project, action: ResourceAction.Create },
+    async (parent, args, context) => {
+      /* ... */
+    }
+  )
+);
+```
+
+### Guard Configuration
+
+| Operation Type       | Personal Context | Organization Context | Config                            |
+| -------------------- | ---------------- | -------------------- | --------------------------------- |
+| Create/Update/Delete | Allow            | Block                | `{ allowPersonalContext: true }`  |
+| Member Management    | N/A              | Block                | `{ allowPersonalContext: false }` |
+| Settings Updates     | Block            | Block                | `{ allowPersonalContext: false }` |
+| Read/Query           | Allow            | Allow                | No guard needed                   |
+
+### Error Responses
+
+**REST (403 Forbidden):**
+
+```json
+{
+  "error": "Email verification required",
+  "code": "EMAIL_VERIFICATION_REQUIRED"
+}
+```
+
+**GraphQL:**
+
+```json
+{
+  "errors": [
+    {
+      "message": "Email verification required",
+      "extensions": {
+        "code": "EMAIL_VERIFICATION_REQUIRED",
+        "translationKey": "errors.auth.emailVerificationRequired"
+      }
+    }
+  ]
+}
+```
+
+### Frontend Implementation
+
+#### Hooks
+
+Three hooks are available for frontend enforcement:
+
+1. **`useRequiresEmailVerificationForMutation(scope)`** - Context-aware check (recommended)
+   - Returns `true` if verification is required and not completed
+   - Automatically allows personal context mutations
+   - Blocks organization context mutations for unverified users
+
+2. **`useEmailVerificationStatus()`** - Detailed status information
+   - Returns: `status`, `isVerified`, `isExpired`, `canVerify`, `verificationExpiry`
+
+3. **`useEmailVerified()`** - Simple boolean check
+   - Returns `true` if verified, `false` otherwise
+
+#### Usage Pattern
+
+```tsx
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
+
+function CreateDialog() {
+  const scope = useScopeFromParams();
+  const canCreate = useGrant(ResourceSlug.Project, ResourceAction.Create, { scope });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
+
+  // Block if permission check fails OR email verification is required
+  if (!scope || !canCreate || requiresEmailVerification) {
+    return null;
+  }
+
+  return <CreateDialogContent />;
+}
+```
+
+### UI Components
+
+#### Email Verification Banner
+
+Displayed in the dashboard when `requiresEmailVerification` is true:
+
+- Shows warning message with days remaining until token expiry
+- "View Restrictions" button opens the features dialog
+- "Resend Email" button to request new verification email
+- Dismissible by user
+
+#### Email Verification Features Dialog
+
+A comprehensive dialog showing which features require verification:
+
+- Categorized table of all platform features
+- Shows availability by account type (Personal vs Organization)
+- Visual indicators: ✓ (allowed) and 🔒 (blocked until verified)
+- Explanatory note about the verification policy
+
+### Performance
+
+| Scenario                                   | DB Lookups       |
+| ------------------------------------------ | ---------------- |
+| API key request                            | 0                |
+| Verified session                           | 0                |
+| Unverified + `allowPersonalContext: false` | 0                |
+| Unverified + `allowPersonalContext: true`  | 1 (scope lookup) |
+
+Zero overhead for the common case (verified users and API keys)
+
 ### Security Best Practices
 
 1. **HTTPS Only** - Tokens should only be transmitted over HTTPS

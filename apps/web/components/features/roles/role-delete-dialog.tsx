@@ -4,6 +4,7 @@ import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 
 import { DeleteDialog } from '@/components/common';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useRoleMutations } from '@/hooks/roles';
 import { useRolesStore } from '@/stores/roles.store';
@@ -17,8 +18,9 @@ export function RoleDeleteDialog() {
   const canDelete = useGrant(ResourceSlug.Role, ResourceAction.Delete, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canDelete) {
+  if (!scope || !canDelete || requiresEmailVerification) {
     return null;
   }
 

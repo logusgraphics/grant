@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useEmailVerified } from '@/hooks/auth';
 import { MemberWithInvitation, useMemberMutations } from '@/hooks/members';
 
 interface MemberInvitationRevokeDialogProps {
@@ -39,8 +40,9 @@ export function MemberInvitationRevokeDialog({
   const canRevoke = useGrant(ResourceSlug.OrganizationInvitation, ResourceAction.Revoke, {
     scope,
   });
+  const isEmailVerified = useEmailVerified();
 
-  if (!canRevoke) {
+  if (!canRevoke || !isEmailVerified) {
     return null;
   }
 

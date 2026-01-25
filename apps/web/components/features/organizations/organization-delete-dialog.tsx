@@ -5,6 +5,7 @@ import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Tenant } from '@grantjs/schema';
 
 import { DeleteDialog } from '@/components/common';
+import { useEmailVerified } from '@/hooks/auth';
 import { useOrganizationMutations } from '@/hooks/organizations';
 import { useOrganizationsStore } from '@/stores/organizations.store';
 
@@ -23,8 +24,9 @@ export function OrganizationDeleteDialog() {
     scope: scope ?? undefined,
     enabled: scope !== null, // Skip check when scope is not available
   });
+  const isEmailVerified = useEmailVerified();
 
-  if (!scope || !canDelete) {
+  if (!scope || !canDelete || !isEmailVerified) {
     return null;
   }
 

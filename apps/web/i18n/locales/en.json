@@ -316,7 +316,78 @@
       "verificationExpired": "Your email verification has expired. Please request a new verification email.",
       "userNotVerified": "Email verification required",
       "sessionExpired": "Session Expired",
-      "sessionExpiredDescription": "Your session has expired or been revoked. Redirecting to login..."
+      "sessionExpiredDescription": "Your session has expired or been revoked. Redirecting to login...",
+      "sending": "Sending...",
+      "resendEmail": "Resend Email"
+    },
+    "featureGating": {
+      "title": "Email Verification Required",
+      "description": "Some features are restricted until you verify your email address. Below is a summary of what's available.",
+      "viewFeatures": "View Restrictions",
+      "legend": {
+        "allowed": "Allowed",
+        "blocked": "Blocked until verified"
+      },
+      "table": {
+        "feature": "Feature",
+        "personal": "Personal",
+        "organization": "Organization"
+      },
+      "categories": {
+        "projects": "Projects",
+        "users": "Users",
+        "roles": "Roles",
+        "groups": "Groups",
+        "permissions": "Permissions",
+        "resources": "Resources",
+        "tags": "Tags",
+        "apiKeys": "API Keys",
+        "organizations": "Organizations",
+        "members": "Members",
+        "settings": "Account Settings"
+      },
+      "features": {
+        "createProject": "Create Project",
+        "editProject": "Edit Project",
+        "deleteProject": "Delete Project",
+        "createUser": "Create User",
+        "editUser": "Edit User",
+        "deleteUser": "Delete User",
+        "createRole": "Create Role",
+        "editRole": "Edit Role",
+        "deleteRole": "Delete Role",
+        "createGroup": "Create Group",
+        "editGroup": "Edit Group",
+        "deleteGroup": "Delete Group",
+        "createPermission": "Create Permission",
+        "editPermission": "Edit Permission",
+        "deletePermission": "Delete Permission",
+        "createResource": "Create Resource",
+        "editResource": "Edit Resource",
+        "deleteResource": "Delete Resource",
+        "createTag": "Create Tag",
+        "editTag": "Edit Tag",
+        "deleteTag": "Delete Tag",
+        "createApiKey": "Create API Key",
+        "revokeApiKey": "Revoke API Key",
+        "deleteApiKey": "Delete API Key",
+        "createOrganization": "Create Organization",
+        "editOrganization": "Edit Organization",
+        "deleteOrganization": "Delete Organization",
+        "inviteMember": "Invite Member",
+        "updateMemberRole": "Update Member Role",
+        "removeMember": "Remove Member",
+        "resendInvitation": "Resend Invitation",
+        "revokeInvitation": "Revoke Invitation",
+        "updateProfile": "Update Profile",
+        "changePassword": "Change Password",
+        "deleteAccount": "Delete Account",
+        "createSecondaryAccount": "Create Secondary Account"
+      },
+      "note": {
+        "title": "Note:",
+        "description": "Personal account features remain accessible even without email verification. Organization-level features and account settings require verified email for security reasons."
+      }
     },
     "validation": {
       "email": "Please enter a valid email address",

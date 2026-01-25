@@ -8,7 +8,7 @@ import {
 import { TagSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createTagRequestSchema,
@@ -57,6 +57,7 @@ export function createTagsRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createTagRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Tag,
       action: ResourceAction.Create,
@@ -74,7 +75,12 @@ export function createTagsRouter(context: RequestContext): Router {
 
   router.patch(
     '/:id',
-    validate({ params: tagParamsSchema, body: updateTagRequestSchema, query: deleteTagQuerySchema }),
+    validate({
+      params: tagParamsSchema,
+      body: updateTagRequestSchema,
+      query: deleteTagQuerySchema,
+    }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Tag,
       action: ResourceAction.Update,
@@ -107,6 +113,7 @@ export function createTagsRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: tagParamsSchema, query: deleteTagQuerySchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Tag,
       action: ResourceAction.Delete,

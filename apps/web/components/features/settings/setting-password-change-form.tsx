@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { useEmailVerified } from '@/hooks/auth';
 
 import { changePasswordSchema } from './setting-schemas';
 import { PasswordChangeFormProps, PasswordChangeFormValues } from './setting-types';
@@ -25,6 +26,7 @@ export function SettingPasswordChangeForm({ onSubmit, onCancel }: PasswordChange
   const t = useTranslations('settings.security.changePassword');
   const tCommon = useTranslations('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEmailVerified = useEmailVerified();
 
   const form = useForm<PasswordChangeFormValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -118,7 +120,7 @@ export function SettingPasswordChangeForm({ onSubmit, onCancel }: PasswordChange
                 {tCommon('actions.cancel')}
               </Button>
             )}
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !isEmailVerified}>
               {isSubmitting ? tCommon('saving') : t('submit')}
             </Button>
           </div>

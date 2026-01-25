@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useEmailVerified } from '@/hooks/auth';
 import { usePrivacySettings } from '@/hooks/privacy';
 import { getCurrentUserId } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
@@ -33,6 +34,7 @@ export function SettingPrivacy() {
   const { accessToken } = useAuthStore();
   const [deleteUserId, setDeleteUserId] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const isEmailVerified = useEmailVerified();
 
   const currentUserId = useMemo(() => getCurrentUserId(accessToken!), [accessToken]);
 
@@ -116,7 +118,11 @@ export function SettingPrivacy() {
 
           <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full sm:w-auto">
+              <Button
+                variant="destructive"
+                className="w-full sm:w-auto"
+                disabled={!isEmailVerified}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 {t('accountDeletion.deleteButton')}
               </Button>

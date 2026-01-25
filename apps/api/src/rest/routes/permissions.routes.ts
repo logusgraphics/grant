@@ -8,7 +8,7 @@ import {
 import { PermissionSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createPermissionRequestSchema,
@@ -61,6 +61,7 @@ export function createPermissionsRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createPermissionRequestSchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Permission,
       action: ResourceAction.Create,
@@ -78,7 +79,12 @@ export function createPermissionsRouter(context: RequestContext): Router {
 
   router.patch(
     '/:id',
-    validate({ params: permissionParamsSchema, body: updatePermissionRequestSchema, query: deletePermissionQuerySchema }),
+    validate({
+      params: permissionParamsSchema,
+      body: updatePermissionRequestSchema,
+      query: deletePermissionQuerySchema,
+    }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Permission,
       action: ResourceAction.Update,
@@ -111,6 +117,7 @@ export function createPermissionsRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: permissionParamsSchema, query: deletePermissionQuerySchema }),
+    requireEmailVerificationRest({ allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Permission,
       action: ResourceAction.Delete,

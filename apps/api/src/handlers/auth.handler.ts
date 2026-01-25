@@ -1,6 +1,7 @@
 import { SupportedLocale } from '@grantjs/constants';
 import { DbSchema } from '@grantjs/database';
 import {
+  AccountType,
   AuthorizationReason,
   AuthorizationResult,
   CreateAccountResult,
@@ -15,6 +16,7 @@ import {
   ResetPasswordResponse,
   Scope,
   SortOrder,
+  Tenant,
   UserAuthenticationEmailProviderAction,
   UserAuthenticationMethodProvider,
   UserSessionSortableField,
@@ -119,6 +121,7 @@ export class AuthHandler extends CacheHandler {
           userAuthenticationMethodId: userAuthenticationMethod.id,
           userAgent: userAgent || null,
           ipAddress: ipAddress || null,
+          isVerified,
         },
         tx
       );
@@ -254,8 +257,10 @@ export class AuthHandler extends CacheHandler {
       if (matchingSession) {
         await this.services.userSessions.refreshSessionLastUsed(matchingSession.id, tx);
 
-        const { accessToken, refreshToken } =
-          await this.services.userSessions.signSession(matchingSession);
+        const { accessToken, refreshToken } = await this.services.userSessions.signSession(
+          matchingSession,
+          userAuthenticationMethod.isVerified
+        );
         return {
           accessToken,
           refreshToken,
@@ -276,6 +281,7 @@ export class AuthHandler extends CacheHandler {
           userAuthenticationMethodId: userAuthenticationMethod.id,
           userAgent: userAgent || null,
           ipAddress: ipAddress || null,
+          isVerified: userAuthenticationMethod.isVerified,
         },
         tx
       );
@@ -298,15 +304,22 @@ export class AuthHandler extends CacheHandler {
   public async refreshSession(
     params: MutationRefreshSessionArgs,
     userAgent?: string | null,
-    ipAddress?: string | null
+    ipAddress?: string | null,
+    userId?: string
   ): Promise<RefreshSessionResponse> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      // Fetch current email verification status if userId is provided
+      const isVerified = userId
+        ? await this.services.users.getEmailVerificationStatus(userId, tx)
+        : undefined;
+
       const session = await this.services.userSessions.refreshSession(
         params.accessToken,
         params.refreshToken,
         tx,
         userAgent,
-        ipAddress
+        ipAddress,
+        isVerified
       );
 
       if (!session) {
@@ -553,6 +566,7 @@ export class AuthHandler extends CacheHandler {
           userAuthenticationMethodId: userAuthenticationMethod.id,
           userAgent: userAgent || null,
           ipAddress: ipAddress || null,
+          isVerified: true, // GitHub OAuth users are always verified
         },
         tx
       );
@@ -566,5 +580,30 @@ export class AuthHandler extends CacheHandler {
         email: null,
       };
     });
+  }
+
+  public async isPersonalScope(scope: Scope): Promise<boolean> {
+    let accountId: string | undefined;
+
+    if (scope.tenant === Tenant.Account) {
+      accountId = scope.id;
+    } else if (
+      scope.tenant === Tenant.AccountProject ||
+      scope.tenant === Tenant.AccountProjectUser
+    ) {
+      // AccountProject and AccountProjectUser scopes have format "accountId:projectId" or "accountId:projectId:userId"
+      accountId = scope.id.split(':')[0];
+    }
+
+    if (!accountId) {
+      return false;
+    }
+
+    const accountsResult = await this.services.accounts.getAccounts({
+      ids: [accountId],
+      limit: 1,
+    });
+
+    return accountsResult.accounts[0]?.type === AccountType.Personal;
   }
 }

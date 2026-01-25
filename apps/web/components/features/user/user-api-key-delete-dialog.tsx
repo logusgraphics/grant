@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useApiKeyMutations } from '@/hooks/api-keys';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 
 interface UserApiKeyDeleteDialogProps {
   apiKey: ApiKey;
@@ -35,8 +36,9 @@ export function UserApiKeyDeleteDialog({
   const { deleteApiKey } = useApiKeyMutations();
 
   const canDelete = useGrant(ResourceSlug.ApiKey, ResourceAction.Delete, { scope });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!canDelete) {
+  if (!canDelete || requiresEmailVerification) {
     return null;
   }
 

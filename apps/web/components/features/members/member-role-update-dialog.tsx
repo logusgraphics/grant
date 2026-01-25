@@ -37,6 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { useEmailVerified } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { MemberWithInvitation, useMemberMutations } from '@/hooks/members';
 import { useRoles } from '@/hooks/roles';
@@ -92,8 +93,9 @@ export function MemberRoleUpdateDialog({
   const canUpdate = useGrant(ResourceSlug.OrganizationMember, ResourceAction.Update, {
     scope: scope!,
   });
+  const isEmailVerified = useEmailVerified();
 
-  if (!canUpdate) {
+  if (!canUpdate || !isEmailVerified) {
     return null;
   }
 

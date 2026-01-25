@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { EmailVerificationFeaturesDialog } from '@/components/common/email-verification-features-dialog';
 import { Button } from '@/components/ui/button';
 import { useAuthMutations } from '@/hooks';
 
@@ -58,6 +59,7 @@ export function EmailVerificationBanner({ email, expiresAt }: EmailVerificationB
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <EmailVerificationFeaturesDialog />
             <Button
               onClick={handleResend}
               disabled={isSending}
@@ -65,7 +67,7 @@ export function EmailVerificationBanner({ email, expiresAt }: EmailVerificationB
               size="sm"
               className="h-8 bg-white dark:bg-amber-950 hover:bg-amber-100 dark:hover:bg-amber-900/50 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200"
             >
-              {isSending ? 'Sending...' : 'Resend Email'}
+              {isSending ? t('notifications.sending') : t('notifications.resendEmail')}
             </Button>
             <button
               onClick={() => setIsVisible(false)}

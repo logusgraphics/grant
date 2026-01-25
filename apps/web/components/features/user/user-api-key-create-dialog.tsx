@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import { CreateDialog, DialogField } from '@/components/common';
 import { useApiKeyMutations } from '@/hooks/api-keys';
+import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 
 export const createApiKeySchema = z.object({
@@ -49,8 +50,9 @@ export function UserApiKeyCreateDialog({
   const canCreate = useGrant(ResourceSlug.ApiKey, ResourceAction.Create, {
     scope: scope!,
   });
+  const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canCreate) {
+  if (!scope || !canCreate || requiresEmailVerification) {
     return null;
   }
 
