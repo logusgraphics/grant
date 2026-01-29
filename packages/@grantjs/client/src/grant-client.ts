@@ -83,8 +83,9 @@ export class GrantClient {
       // API expects: { permission: { resource, action }, context: { resource?: any }, scope?: { tenant, id } }
       // scope is optional - for session tokens it enables dynamic scope switching
       const scope = options?.scope;
-      const hasValidScope = scope && typeof scope === 'object' && 'tenant' in scope && 'id' in scope;
-      
+      const hasValidScope =
+        scope && typeof scope === 'object' && 'tenant' in scope && 'id' in scope;
+
       const response = await this.fetchWithAuth('/api/auth/is-authorized', {
         method: 'POST',
         body: JSON.stringify({

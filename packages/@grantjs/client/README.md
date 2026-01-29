@@ -219,6 +219,7 @@ grant.clearScopeCache(scope?): void
 Returns a boolean by default, or an object with `isGranted` and `isLoading` when `returnLoading: true`.
 
 **Default (boolean):**
+
 ```tsx
 import { useGrant } from '@grantjs/client/react';
 import { Tenant } from '@grantjs/schema';
@@ -227,14 +228,11 @@ const canEdit = useGrant('Document', 'Update', {
   scope: { tenant: Tenant.Organization, id: orgId },
 });
 
-return (
-  <div>
-    {canEdit && <EditButton />}
-  </div>
-);
+return <div>{canEdit && <EditButton />}</div>;
 ```
 
 **With loading state:**
+
 ```tsx
 const { isGranted, isLoading } = useGrant('Document', 'Update', {
   scope: { tenant: Tenant.Organization, id: orgId },

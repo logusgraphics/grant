@@ -5,7 +5,12 @@ import { GrantClient } from '../grant-client';
 import { extractScopeFromRequest } from '../utils/scope-extractor';
 import { extractTokenFromRequest } from '../utils/token-extractor';
 
-import type { ResourceResolver, ScopeResolver, AuthorizationResult, GrantServerConfig } from '../types';
+import type {
+  ResourceResolver,
+  ScopeResolver,
+  AuthorizationResult,
+  GrantServerConfig,
+} from '../types';
 
 /**
  * Extended Fastify Request with authorization result

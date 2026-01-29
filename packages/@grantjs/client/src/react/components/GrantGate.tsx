@@ -77,13 +77,13 @@ export function GrantGate({
     useCache,
     returnLoading: loading !== null,
   };
-  
+
   // Only add scope to options if it's explicitly null or a valid object
   // If scope is undefined, don't include it so hook treats it as optional
   if (scope !== undefined) {
     options.scope = scope;
   }
-  
+
   // Use loading state if loading prop is provided
   const result = useGrant(resource, action, options);
 

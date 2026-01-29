@@ -250,27 +250,17 @@ export class ResourceHandler extends CacheHandler {
       for (const permission of resourcePermissions) {
         const permissionId = permission.id;
 
-        const [
-          permissionTags,
-          groupPermissions,
-          organizationPermissions,
-          projectPermissions,
-        ] = await Promise.all([
-          this.services.permissionTags.getPermissionTags({ permissionId }, tx),
-          this.services.groupPermissions.getGroupPermissions({ permissionId }, tx),
-          this.services.organizationPermissions.getOrganizationPermissions(
-            { permissionId },
-            tx
-          ),
-          this.services.projectPermissions.getProjectPermissions({ permissionId }, tx),
-        ]);
+        const [permissionTags, groupPermissions, organizationPermissions, projectPermissions] =
+          await Promise.all([
+            this.services.permissionTags.getPermissionTags({ permissionId }, tx),
+            this.services.groupPermissions.getGroupPermissions({ permissionId }, tx),
+            this.services.organizationPermissions.getOrganizationPermissions({ permissionId }, tx),
+            this.services.projectPermissions.getProjectPermissions({ permissionId }, tx),
+          ]);
 
         await Promise.all([
           ...permissionTags.map((pt) =>
-            this.services.permissionTags.removePermissionTag(
-              { permissionId, tagId: pt.tagId },
-              tx
-            )
+            this.services.permissionTags.removePermissionTag({ permissionId, tagId: pt.tagId }, tx)
           ),
           ...groupPermissions.map((gp) =>
             this.services.groupPermissions.removeGroupPermission(

@@ -84,7 +84,7 @@ export function useGrant(
   // Check this once at the start - if scope key exists in options, it was provided
   // Note: { scope: undefined } has the key, { } does not have the key
   const scopeWasProvidedRef = useRef('scope' in options);
-  
+
   // Determine if we should wait for scope to become valid
   // If scope was provided but is falsy or invalid, wait for it to become truthy
   // Recalculate when scope changes
@@ -143,7 +143,7 @@ export function useGrant(
 
   useEffect(() => {
     isMounted.current = true;
-    
+
     // Clear data when scope becomes invalid (waiting for valid scope)
     if (!isEffectivelyEnabled && scopeWasProvidedRef.current) {
       setData(null);

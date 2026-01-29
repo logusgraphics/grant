@@ -25,9 +25,7 @@ import { useEmailVerificationStatus } from './use-email-verification-status';
  * }
  * ```
  */
-export function useRequiresEmailVerificationForMutation(
-  scope: Scope | null | undefined
-): boolean {
+export function useRequiresEmailVerificationForMutation(scope: Scope | null | undefined): boolean {
   const { isVerified } = useEmailVerificationStatus();
 
   // If verified, no verification required

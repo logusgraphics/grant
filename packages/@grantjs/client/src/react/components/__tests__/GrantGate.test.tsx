@@ -19,7 +19,9 @@ describe('GrantGate', () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <GrantProvider client={mockClient}>{children}</GrantProvider>
+    <GrantProvider config={{ apiUrl: 'https://test' }} client={mockClient}>
+      {children}
+    </GrantProvider>
   );
 
   it('should render children when authorized', async () => {
@@ -81,11 +83,7 @@ describe('GrantGate', () => {
     );
 
     render(
-      <GrantGate
-        resource="Document"
-        action="Update"
-        loading={<div>Checking permissions...</div>}
-      >
+      <GrantGate resource="Document" action="Update" loading={<div>Checking permissions...</div>}>
         <div>Edit Button</div>
       </GrantGate>,
       { wrapper }

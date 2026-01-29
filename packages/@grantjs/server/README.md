@@ -414,15 +414,15 @@ The server package (`@grantjs/server`) is designed for **server-side** Node.js a
 
 **Key Differences:**
 
-| Feature               | @grantjs/server                              | @grantjs/client             |
-| --------------------- | -------------------------------------------- | --------------------------- |
-| **Target**            | Node.js servers                              | Browser apps                |
-| **Caching**           | No (handled by API)                          | Yes (5min TTL)              |
-| **Token Source**      | Request object                               | Callback functions          |
+| Feature               | @grantjs/server                             | @grantjs/client             |
+| --------------------- | ------------------------------------------- | --------------------------- |
+| **Target**            | Node.js servers                             | Browser apps                |
+| **Caching**           | No (handled by API)                         | Yes (5min TTL)              |
+| **Token Source**      | Request object                              | Callback functions          |
 | **Framework Support** | Express, Fastify, NestJS, Next.js (planned) | React, Vue, Svelte, Angular |
-| **API**               | `grant()` middleware/hook                    | `useGrant()` hook           |
-| **Error Handling**    | HTTP status codes                            | Boolean returns             |
-| **Resource/Action**   | Plain strings (generic)                      | Plain strings (generic)     |
+| **API**               | `grant()` middleware/hook                   | `useGrant()` hook           |
+| **Error Handling**    | HTTP status codes                           | Boolean returns             |
+| **Resource/Action**   | Plain strings (generic)                     | Plain strings (generic)     |
 
 **When to Use:**
 

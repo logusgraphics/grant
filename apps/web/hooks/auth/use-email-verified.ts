@@ -17,9 +17,7 @@ import { useAuthStore } from '@/stores/auth.store';
  * ```
  */
 export function useEmailVerified(): boolean {
-  const requiresEmailVerification = useAuthStore(
-    (state) => state.requiresEmailVerification
-  );
+  const requiresEmailVerification = useAuthStore((state) => state.requiresEmailVerification);
 
   // Email is verified if requiresEmailVerification is false
   return !requiresEmailVerification;

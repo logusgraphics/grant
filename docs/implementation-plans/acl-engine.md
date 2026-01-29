@@ -1519,25 +1519,26 @@ app.patch(
 ```
 
 **Status**: ✅ Complete - `isGranted()` middleware factory, token/scope extraction, resource resolvers, error handling, full test coverage (8 tests).
-      const policy = await db.policies.findOne({ where: { id: policyId } });
-      return {
-        id: policy.id,
-        partnerId: policy.partnerId,
-        status: policy.status,
-        // ... other fields needed for condition evaluation
-      };
-    },
-    context: (req) => ({
-      scope: { tenant: 'project', id: req.projectId },
-    }),
-  }),
-  async (req, res) => {
-    // Request is authorized, proceed with handler
-    const policy = await db.policies.findOne({ where: { id: req.params.policyId } });
-    res.json(policy);
-  }
+const policy = await db.policies.findOne({ where: { id: policyId } });
+return {
+id: policy.id,
+partnerId: policy.partnerId,
+status: policy.status,
+// ... other fields needed for condition evaluation
+};
+},
+context: (req) => ({
+scope: { tenant: 'project', id: req.projectId },
+}),
+}),
+async (req, res) => {
+// Request is authorized, proceed with handler
+const policy = await db.policies.findOne({ where: { id: req.params.policyId } });
+res.json(policy);
+}
 );
-```
+
+````
 
 ### 3. Next.js Middleware
 
@@ -1569,7 +1570,7 @@ export function nextAuthorizationMiddleware(options: {
     return NextResponse.next();
   };
 }
-```
+````
 
 ### 4. Fastify Plugin ✅ COMPLETE
 
@@ -1585,14 +1586,18 @@ await fastify.register(grantPlugin, {
 });
 
 // Use preHandler hook
-fastify.get('/organizations', {
-  preHandler: isGranted(fastify.grant, {
-    resource: 'Organization',
-    action: 'Query',
-  }),
-}, async (request, reply) => {
-  return { organizations: [] };
-});
+fastify.get(
+  '/organizations',
+  {
+    preHandler: isGranted(fastify.grant, {
+      resource: 'Organization',
+      action: 'Query',
+    }),
+  },
+  async (request, reply) => {
+    return { organizations: [] };
+  }
+);
 ```
 
 **Status**: ✅ Complete - Plugin decorates `fastify.grant` with GrantClient, `isGranted` preHandler hook for route protection, full test coverage (8 tests).

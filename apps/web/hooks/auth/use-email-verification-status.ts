@@ -31,9 +31,7 @@ export function useEmailVerificationStatus(): {
   canVerify: boolean;
   verificationExpiry: Date | null;
 } {
-  const requiresEmailVerification = useAuthStore(
-    (state) => state.requiresEmailVerification
-  );
+  const requiresEmailVerification = useAuthStore((state) => state.requiresEmailVerification);
   const verificationExpiry = useAuthStore((state) => state.verificationExpiry);
 
   // If not requiring verification, user is verified

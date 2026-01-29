@@ -186,10 +186,9 @@ describe('useGrant', () => {
       authorized: true,
     });
 
-    const { result } = renderHook(
-      () => useGrant('Document', 'Update', { useCache: false }),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useGrant('Document', 'Update', { useCache: false }), {
+      wrapper,
+    });
 
     await waitFor(() => {
       expect(result.current).toBe(true);
@@ -225,10 +224,9 @@ describe('useGrant', () => {
 
   describe('scope handling', () => {
     it('should wait when scope is null and not make request', async () => {
-      const { result } = renderHook(
-        () => useGrant('Document', 'Update', { scope: null }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGrant('Document', 'Update', { scope: null }), {
+        wrapper,
+      });
 
       // Should return false and not make request
       expect(result.current).toBe(false);
@@ -240,10 +238,9 @@ describe('useGrant', () => {
     });
 
     it('should wait when scope is undefined (explicitly provided) and not make request', async () => {
-      const { result } = renderHook(
-        () => useGrant('Document', 'Update', { scope: undefined }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGrant('Document', 'Update', { scope: undefined }), {
+        wrapper,
+      });
 
       // Should return false and not make request
       expect(result.current).toBe(false);
@@ -335,7 +332,10 @@ describe('useGrant', () => {
 
     it('should wait when scope has null id', async () => {
       const { result } = renderHook(
-        () => useGrant('Document', 'Update', { scope: { tenant: 'organization', id: null as string | null } }),
+        () =>
+          useGrant('Document', 'Update', {
+            scope: { tenant: 'organization', id: null as string | null },
+          }),
         { wrapper }
       );
 
@@ -365,7 +365,10 @@ describe('useGrant', () => {
 
     it('should wait when scope is missing id property', async () => {
       const { result } = renderHook(
-        () => useGrant('Document', 'Update', { scope: { tenant: 'organization' } as { tenant: string } }),
+        () =>
+          useGrant('Document', 'Update', {
+            scope: { tenant: 'organization' } as { tenant: string },
+          }),
         { wrapper }
       );
 
@@ -435,10 +438,9 @@ describe('useGrant', () => {
         reason: null,
       });
 
-      const { result } = renderHook(
-        () => useGrant('Document', 'Update', { returnLoading: true }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGrant('Document', 'Update', { returnLoading: true }), {
+        wrapper,
+      });
 
       // Initially loading
       expect(result.current).toEqual({ isGranted: false, isLoading: true });
@@ -453,10 +455,9 @@ describe('useGrant', () => {
         () => new Promise(() => {}) // Never resolves
       );
 
-      const { result } = renderHook(
-        () => useGrant('Document', 'Update', { returnLoading: true }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGrant('Document', 'Update', { returnLoading: true }), {
+        wrapper,
+      });
 
       expect(result.current).toEqual({ isGranted: false, isLoading: true });
     });
@@ -467,10 +468,9 @@ describe('useGrant', () => {
         reason: 'Insufficient permissions',
       });
 
-      const { result } = renderHook(
-        () => useGrant('Document', 'Update', { returnLoading: true }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGrant('Document', 'Update', { returnLoading: true }), {
+        wrapper,
+      });
 
       await waitFor(() => {
         expect(result.current).toEqual({ isGranted: false, isLoading: false });

@@ -140,7 +140,7 @@ describe('grant Express Middleware', () => {
     await middleware(mockReq as Request, mockRes as Response, mockNext);
 
     expect(resourceResolver).toHaveBeenCalledWith({
-        resourceSlug: 'Organization',
+      resourceSlug: 'Organization',
       scope: { tenant: 'organization', id: 'org-123' },
       request: mockReq,
     });
