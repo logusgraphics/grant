@@ -27,8 +27,6 @@ describe('Fastify Grant Plugin', () => {
     mockRequest = {
       headers: {
         authorization: 'Bearer test-token',
-        'x-scope-tenant': 'organization',
-        'x-scope-id': 'org-123',
       },
       query: {},
     };
@@ -74,10 +72,7 @@ describe('Fastify Grant Plugin', () => {
     it('should return 401 when no token is present', async () => {
       const requestWithoutToken = {
         ...mockRequest,
-        headers: {
-          'x-scope-tenant': 'organization',
-          'x-scope-id': 'org-123',
-        },
+        headers: {},
       };
 
       const preHandler = grant(client, {
@@ -92,31 +87,6 @@ describe('Fastify Grant Plugin', () => {
         error: 'Unauthorized',
         code: 'UNAUTHENTICATED',
       });
-    });
-
-    it('should return 400 when scope is missing', async () => {
-      const requestWithoutScope = {
-        ...mockRequest,
-        headers: {
-          authorization: 'Bearer test-token',
-        },
-        query: {},
-      };
-
-      const preHandler = grant(client, {
-        resource: 'Organization',
-        action: 'Query',
-      });
-
-      await preHandler(requestWithoutScope as AuthorizedFastifyRequest, mockReply as FastifyReply);
-
-      expect(mockReply.status).toHaveBeenCalledWith(400);
-      expect(mockReply.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: 'Scope required',
-          code: 'SCOPE_REQUIRED',
-        })
-      );
     });
 
     it('should return 403 when not authorized', async () => {
@@ -165,7 +135,6 @@ describe('Fastify Grant Plugin', () => {
 
       expect(resourceResolver).toHaveBeenCalledWith({
         resourceSlug: 'Project',
-        scope: { tenant: 'organization', id: 'org-123' },
         request: mockRequest,
       });
     });
@@ -186,28 +155,6 @@ describe('Fastify Grant Plugin', () => {
         error: 'Resource not found',
         code: 'NOT_FOUND',
       });
-    });
-
-    it('should use custom scope resolver when provided', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true, data: { authorized: true } }),
-      });
-
-      const customScopeResolver = vi.fn().mockResolvedValue({
-        tenant: 'organization',
-        id: 'custom-org-id',
-      });
-
-      const preHandler = grant(client, {
-        resource: 'Organization',
-        action: 'Query',
-        scopeResolver: customScopeResolver,
-      });
-
-      await preHandler(mockRequest as AuthorizedFastifyRequest, mockReply as FastifyReply);
-
-      expect(customScopeResolver).toHaveBeenCalledWith(mockRequest);
     });
 
     it('should attach authorization result to request', async () => {

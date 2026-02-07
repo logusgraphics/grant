@@ -1,5 +1,3 @@
-import type { Scope } from '@grantjs/schema';
-
 // Re-export schema types for convenience
 export type { Scope, Tenant } from '@grantjs/schema';
 
@@ -25,24 +23,6 @@ export interface GrantServerConfig {
   getToken?: (request: unknown) => string | null | Promise<string | null>;
 
   /**
-   * Function to get the current refresh token
-   * Required for automatic token refresh on 401
-   */
-  getRefreshToken?: (request: unknown) => string | null | Promise<string | null>;
-
-  /**
-   * Callback when tokens are refreshed
-   * Use this to update your token storage
-   */
-  onTokenRefresh?: (tokens: AuthTokens, request: unknown) => void | Promise<void>;
-
-  /**
-   * Callback when authentication fails (after refresh attempt)
-   * Use this to handle unauthorized requests
-   */
-  onUnauthorized?: (request: unknown) => void | Promise<void>;
-
-  /**
    * Custom fetch implementation
    * Defaults to globalThis.fetch (Node.js 18+) or node-fetch
    */
@@ -53,14 +33,6 @@ export interface GrantServerConfig {
    * Defaults to 'include' for cookie support
    */
   credentials?: RequestCredentials;
-}
-
-/**
- * Auth tokens returned from refresh endpoint
- */
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
 }
 
 /**
@@ -79,8 +51,6 @@ export interface AuthorizationResult {
  * Options for permission checks
  */
 export interface PermissionCheckOptions {
-  /** Scope to check permissions in */
-  scope?: Scope;
   /** Resource context for condition evaluation */
   context?: {
     resource?: Record<string, unknown> | null;
@@ -126,7 +96,6 @@ export interface ApiError {
  */
 export interface ResourceResolverParams {
   resourceSlug: string;
-  scope: Scope;
   request: unknown;
   [key: string]: unknown;
 }
@@ -136,9 +105,3 @@ export type ResourceResolverResult<T = Record<string, unknown>> = T | null;
 export type ResourceResolver<TResult = Record<string, unknown>> = (
   params: ResourceResolverParams
 ) => Promise<ResourceResolverResult<TResult>>;
-
-/**
- * Scope resolver function type
- * Used to extract or compute scope from request
- */
-export type ScopeResolver = (request: unknown) => Scope | null | Promise<Scope | null>;

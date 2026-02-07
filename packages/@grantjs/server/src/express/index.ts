@@ -9,7 +9,6 @@ export type {
   PermissionCheckOptions,
   Scope,
   ResourceResolver,
-  ScopeResolver,
 } from '../types';
 
 // Re-export error classes

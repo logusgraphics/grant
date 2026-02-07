@@ -1,22 +1,16 @@
 import { extractTokenFromRequest } from './utils/token-extractor';
 
-import type {
-  GrantServerConfig,
-  AuthorizationResult,
-  PermissionCheckOptions,
-  AuthTokens,
-} from './types';
+import type { GrantServerConfig, AuthorizationResult, PermissionCheckOptions } from './types';
 
 /**
  * Grant Client for server-side applications
  *
  * Makes HTTP requests to the Grant API to check permissions.
- * Supports token-based and cookie-based authentication with automatic token refresh.
+ * Uses API-key exchanged tokens (scope in JWT claims); token-based and cookie-based extraction supported.
  * No caching - server-side caching is handled by grant-api.
  */
 export class GrantClient {
   public readonly config: Required<Pick<GrantServerConfig, 'apiUrl'>> & GrantServerConfig;
-  private refreshPromise: Promise<AuthTokens | null> | null = null;
 
   constructor(config: GrantServerConfig) {
     this.config = config;
@@ -78,8 +72,6 @@ export class GrantClient {
             context: {
               resource: options?.context?.resource || null,
             },
-            // Pass scope for dynamic scope override (only works with session tokens)
-            ...(options?.scope && { scope: options.scope }),
           }),
         },
         request
@@ -118,25 +110,14 @@ export class GrantClient {
   // ============================================================================
 
   /**
-   * Make an authenticated fetch request with automatic token refresh on 401
+   * Make an authenticated fetch request (token from request; no refresh).
    */
   private async fetchWithAuth(
     url: string,
     init?: RequestInit,
     request?: unknown
   ): Promise<Response> {
-    const response = await this.doFetch(url, init, request);
-
-    // If unauthorized and we have refresh capability, try to refresh and retry
-    if (response.status === 401 && this.config.onTokenRefresh && request) {
-      const refreshed = await this.tryRefreshToken(request);
-      if (refreshed) {
-        // Retry the original request with new token
-        return this.doFetch(url, init, request);
-      }
-    }
-
-    return response;
+    return this.doFetch(url, init, request);
   }
 
   /**
@@ -171,81 +152,5 @@ export class GrantClient {
       // Include cookies for same-origin requests (supports cookie-based auth)
       credentials: this.config.credentials ?? 'include',
     });
-  }
-
-  /**
-   * Attempt to refresh the access token
-   * Uses a shared promise to prevent multiple simultaneous refresh attempts
-   */
-  private async tryRefreshToken(request: unknown): Promise<boolean> {
-    // If already refreshing, wait for the existing promise
-    if (this.refreshPromise) {
-      const result = await this.refreshPromise;
-      return result !== null;
-    }
-
-    // Check if we have refresh capability
-    if (!this.config.onTokenRefresh || !this.config.getRefreshToken) {
-      return false;
-    }
-
-    const refreshToken = await this.config.getRefreshToken(request);
-    const accessToken = await extractTokenFromRequest(request, this.config);
-
-    if (!refreshToken || !accessToken) {
-      return false;
-    }
-
-    // Start refresh process
-    this.refreshPromise = this.performTokenRefresh(accessToken, refreshToken, request);
-
-    try {
-      const result = await this.refreshPromise;
-      return result !== null;
-    } finally {
-      this.refreshPromise = null;
-    }
-  }
-
-  /**
-   * Perform the token refresh API call
-   */
-  private async performTokenRefresh(
-    accessToken: string,
-    refreshToken: string,
-    request: unknown
-  ): Promise<AuthTokens | null> {
-    try {
-      const fetchFn = this.config.fetch ?? globalThis.fetch;
-      const response = await fetchFn(`${this.config.apiUrl}/api/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: this.config.credentials ?? 'include',
-        body: JSON.stringify({
-          accessToken,
-          refreshToken,
-        }),
-      });
-
-      if (!response.ok) {
-        // Refresh failed - trigger unauthorized handler
-        await this.config.onUnauthorized?.(request);
-        return null;
-      }
-
-      const json = await response.json();
-      const tokens: AuthTokens = json.data ?? json;
-
-      // Notify the app about the new tokens
-      await this.config.onTokenRefresh?.(tokens, request);
-
-      return tokens;
-    } catch (error) {
-      console.error('[GrantClient] Token refresh failed:', error);
-      await this.config.onUnauthorized?.(request);
-      return null;
-    }
   }
 }

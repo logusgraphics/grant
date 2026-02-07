@@ -13,7 +13,6 @@ export {
 
 // Utilities
 export { extractTokenFromRequest, extractBearerToken } from './utils/token-extractor';
-export { extractScopeFromRequest, extractScopeFromExpressRequest } from './utils/scope-extractor';
 
 // Types
 export type {
@@ -22,5 +21,4 @@ export type {
   ResourceResolver,
   ResourceResolverParams,
   ResourceResolverResult,
-  ScopeResolver,
 } from './types';

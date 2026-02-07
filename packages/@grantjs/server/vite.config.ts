@@ -4,6 +4,15 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
+  esbuild: {
+    // Required for NestJS parameter decorators (e.g. @Inject) when bundling nest entry
+    tsconfigRaw: {
+      compilerOptions: {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+      },
+    },
+  },
   plugins: [
     dts({
       include: ['src/**/*'],
@@ -17,6 +26,8 @@ export default defineConfig({
         index: resolve(__dirname, 'src/index.ts'),
         express: resolve(__dirname, 'src/express/index.ts'),
         fastify: resolve(__dirname, 'src/fastify/index.ts'),
+        next: resolve(__dirname, 'src/next/index.ts'),
+        nest: resolve(__dirname, 'src/nest/index.ts'),
       },
       name: 'GrantServer',
       formats: ['es', 'cjs'],
@@ -27,12 +38,22 @@ export default defineConfig({
     },
     rollupOptions: {
       // Externalize deps that shouldn't be bundled
-      external: ['express', 'fastify', '@grantjs/schema'],
+      external: [
+        'express',
+        'fastify',
+        'next/server',
+        '@nestjs/common',
+        '@nestjs/core',
+        '@grantjs/schema',
+      ],
       output: {
         // Global vars for UMD build
         globals: {
           express: 'Express',
           fastify: 'Fastify',
+          'next/server': 'NextServer',
+          '@nestjs/common': 'nestjsCommon',
+          '@nestjs/core': 'nestjsCore',
           '@grantjs/schema': 'GrantSchema',
         },
         // preserveModules: false bundles each entry into a single file

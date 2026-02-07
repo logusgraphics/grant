@@ -27,8 +27,6 @@ describe('grant Express Middleware', () => {
     mockReq = {
       headers: {
         authorization: 'Bearer test-token',
-        'x-scope-tenant': 'organization',
-        'x-scope-id': 'org-123',
       },
     };
 
@@ -72,28 +70,6 @@ describe('grant Express Middleware', () => {
       error: 'Unauthorized',
       code: 'UNAUTHENTICATED',
     });
-    expect(mockNext).not.toHaveBeenCalled();
-  });
-
-  it('should return 400 when scope is missing', async () => {
-    mockReq.headers = {
-      authorization: 'Bearer test-token',
-    };
-
-    const middleware = grant(client, {
-      resource: 'Organization',
-      action: 'Query',
-    });
-
-    await middleware(mockReq as Request, mockRes as Response, mockNext);
-
-    expect(mockRes.status).toHaveBeenCalledWith(400);
-    expect(mockRes.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        error: 'Scope required',
-        code: 'SCOPE_REQUIRED',
-      })
-    );
     expect(mockNext).not.toHaveBeenCalled();
   });
 
@@ -141,7 +117,6 @@ describe('grant Express Middleware', () => {
 
     expect(resourceResolver).toHaveBeenCalledWith({
       resourceSlug: 'Organization',
-      scope: { tenant: 'organization', id: 'org-123' },
       request: mockReq,
     });
     expect(mockNext).toHaveBeenCalled();
@@ -164,29 +139,6 @@ describe('grant Express Middleware', () => {
       code: 'NOT_FOUND',
     });
     expect(mockNext).not.toHaveBeenCalled();
-  });
-
-  it('should use custom scope resolver when provided', async () => {
-    const scopeResolver = vi.fn().mockResolvedValue({
-      tenant: 'account',
-      id: 'account-123',
-    });
-
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ success: true, data: { authorized: true } }),
-    });
-
-    const middleware = grant(client, {
-      resource: 'Organization',
-      action: 'Query',
-      scopeResolver,
-    });
-
-    await middleware(mockReq as Request, mockRes as Response, mockNext);
-
-    expect(scopeResolver).toHaveBeenCalledWith(mockReq);
-    expect(mockNext).toHaveBeenCalled();
   });
 
   it('should attach authorization result to request', async () => {

@@ -56,32 +56,44 @@ export async function extractTokenFromRequest(
     if (token) return token;
   }
 
-  // Try to extract from Express request
+  // Try to extract from request (Express-style or Web API / NextRequest)
   const req = request as {
-    headers?: {
-      authorization?: string;
-      cookie?: string;
-    };
+    headers?:
+      | { authorization?: string; cookie?: string }
+      | { get: (name: string) => string | null };
     cookies?: Record<string, string>;
   };
 
   if (!req?.headers) return null;
 
-  // Try Authorization header first
-  const authHeader = req.headers.authorization;
+  // Web API Headers (NextRequest, Request): headers.get(name)
+  const headersGet = (req.headers as { get?: (name: string) => string | null }).get;
+  if (typeof headersGet === 'function') {
+    const authHeader = headersGet.call(req.headers, 'authorization');
+    const bearerToken = extractBearerToken(authHeader ?? undefined);
+    if (bearerToken) return bearerToken;
+    const cookieName = config.cookieName || 'grant-access-token';
+    const cookieHeader = headersGet.call(req.headers, 'cookie');
+    if (cookieHeader) {
+      const cookieToken = extractTokenFromCookies(cookieHeader, cookieName);
+      if (cookieToken) return cookieToken;
+    }
+    return null;
+  }
+
+  // Express-style: headers.authorization, headers.cookie
+  const plainHeaders = req.headers as { authorization?: string; cookie?: string };
+  const authHeader = plainHeaders.authorization;
   const bearerToken = extractBearerToken(authHeader);
   if (bearerToken) return bearerToken;
 
-  // Try cookies
   const cookieName = config.cookieName || 'grant-access-token';
 
-  // Try parsed cookies object (if cookie-parser middleware is used)
   if (req.cookies?.[cookieName]) {
     return req.cookies[cookieName];
   }
 
-  // Try cookie header string
-  const cookieHeader = req.headers.cookie;
+  const cookieHeader = plainHeaders.cookie;
   if (cookieHeader) {
     const cookieToken = extractTokenFromCookies(cookieHeader, cookieName);
     if (cookieToken) return cookieToken;

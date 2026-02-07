@@ -1,9 +1,9 @@
 import { AuthenticationError, AuthorizationError, BadRequestError, NotFoundError } from '../errors';
 import { GrantClient } from '../grant-client';
-import { extractScopeFromRequest } from '../utils/scope-extractor';
+import { debugGrant } from '../utils/debug';
 import { extractTokenFromRequest } from '../utils/token-extractor';
 
-import type { ResourceResolver, ScopeResolver, AuthorizationResult } from '../types';
+import type { ResourceResolver, AuthorizationResult } from '../types';
 import type { Request, Response, NextFunction } from 'express';
 
 /**
@@ -21,12 +21,8 @@ export interface GrantOptions {
   resource: string;
   /** The action to check (e.g., "Query", "Create", "Update", "Delete") */
   action: string;
-  /** Custom scope resolver (overrides default extraction) */
-  scopeResolver?: ScopeResolver;
   /** Custom resource resolver for condition evaluation */
   resourceResolver?: ResourceResolver;
-  /** Custom error message when scope is required but missing */
-  scopeRequiredMessage?: string;
 }
 
 /**
@@ -51,6 +47,8 @@ export function grant(
 ): (req: AuthorizedRequest, res: Response, next: NextFunction) => Promise<void> {
   return async (req: AuthorizedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      debugGrant('Express', { resource: options.resource, action: options.action });
+
       // 1. Check authentication (token must be present)
       const token = await extractTokenFromRequest(req, client.config);
       if (!token) {
@@ -61,27 +59,12 @@ export function grant(
         return;
       }
 
-      // 2. Extract scope from request
-      const requestScope = await extractScopeFromRequest(req, options.scopeResolver);
-
-      if (!requestScope) {
-        res.status(400).json({
-          error: 'Scope required',
-          code: 'SCOPE_REQUIRED',
-          message:
-            options.scopeRequiredMessage ||
-            'Scope must be provided via X-Scope-Tenant and X-Scope-Id headers, or scopeId and tenant query params',
-        });
-        return;
-      }
-
-      // 3. Optionally resolve resource for condition evaluation
+      // 2. Optionally resolve resource for condition evaluation
       let resolvedResource: Record<string, unknown> | null = null;
 
       if (options.resourceResolver) {
         resolvedResource = await options.resourceResolver({
           resourceSlug: options.resource,
-          scope: requestScope,
           request: req,
         });
 
@@ -94,18 +77,24 @@ export function grant(
         }
       }
 
-      // 4. Check authorization (pass request for token extraction)
+      // 3. Check authorization (pass request for token extraction; scope comes from JWT claims)
       const result = await client.isAuthorized(
         options.resource,
         options.action,
         {
-          scope: requestScope,
           context: {
             resource: resolvedResource || undefined,
           },
         },
         req
       );
+
+      debugGrant('Express', {
+        resource: options.resource,
+        action: options.action,
+        authorized: result.authorized,
+        ...(result.authorized ? {} : { reason: result.reason }),
+      });
 
       if (!result.authorized) {
         res.status(403).json({
@@ -116,10 +105,10 @@ export function grant(
         return;
       }
 
-      // 5. Attach authorization result to request for downstream use
+      // 4. Attach authorization result to request for downstream use
       (req as AuthorizedRequest).authorization = result;
 
-      // 6. Proceed to next middleware/handler
+      // 5. Proceed to next middleware/handler
       next();
     } catch (error) {
       // Handle known errors

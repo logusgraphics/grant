@@ -1,19 +1,18 @@
 # @grantjs/server
 
-Server SDK for Grant authorization platform. Provides middleware and guards for Express, Fastify, NestJS, and Next.js applications.
+Server SDK for Grant authorization platform. Provides middleware and guards for **Express**, **Fastify**, **NestJS**, and **Next.js** applications.
 
 **Documentation:** [Server SDK](https://github.com/logusgraphics/grant/blob/main/docs/development/server-sdk.md) in the official docs.
 
 ## Features
 
-- **REST-based API** - Uses native `fetch`, no GraphQL client required
-- **Automatic token refresh** - Handles 401 errors with token refresh and retry
-- **Framework integrations** - Express, Fastify, NestJS, Next.js middleware
-- **Token extraction** - Supports Authorization header and cookies
-- **Scope extraction** - Flexible scope resolution from headers, query params, or body
-- **Resource resolvers** - Optional resource resolution for condition evaluation
-- **TypeScript** - Full type safety with types from `@grantjs/schema`
-- **Generic** - Works with any permission model (uses plain strings for resource/action)
+- **REST-based API** – Uses native `fetch`, no GraphQL client required
+- **Framework integrations** – Express (`grant()`), Fastify (`grant()`), NestJS (`@Grant` + `GrantGuard`), Next.js (`withGrant()`)
+- **Token extraction** – Supports Authorization header and cookies
+- **Resource resolvers** – Optional resource resolution for condition evaluation
+- **JWT-based scope** – Scope is taken from token claims (API-key / client-secret flows); session-style scope from request is not used
+- **TypeScript** – Full type safety with types from `@grantjs/schema`
+- **Generic** – Works with any permission model (uses plain strings for resource/action)
 
 ## Installation
 
@@ -24,6 +23,27 @@ pnpm add @grantjs/server
 # or
 yarn add @grantjs/server
 ```
+
+## Examples
+
+Minimal runnable apps for each framework live in **`examples/`** and share the same CRUD surface (documents: GET, POST, PUT, PATCH, DELETE). From the repo root:
+
+```bash
+pnpm install
+pnpm --filter @grantjs/server build
+cd packages/@grantjs/server/examples/express   # or fastify, nextjs, nestjs
+cp .env.example .env   # set GRANT_API_URL and optionally GRANT_TOKEN
+pnpm start
+```
+
+| Example   | Framework | Usage                                                            |
+| --------- | --------- | ---------------------------------------------------------------- |
+| `express` | Express   | `grant(client, { resource, action })` middleware                 |
+| `fastify` | Fastify   | `grant(client, { resource, action })` preHandler                 |
+| `nextjs`  | Next.js   | `withGrant(client, { resource, action }, handler)` on API routes |
+| `nestjs`  | NestJS    | `@Grant(resource, action)` + `GrantGuard`, `GrantModule`         |
+
+See **[examples/README.md](./examples/README.md)** for prerequisites, routes, and curl commands.
 
 ## Quick Start
 
@@ -50,26 +70,6 @@ const grantClient = new GrantClient({
     // Custom logic to extract token from request
     const req = request as { headers?: { 'x-api-key'?: string } };
     return req.headers?.['x-api-key'] || null;
-  },
-});
-
-// With token refresh support (recommended for session tokens)
-const grantClient = new GrantClient({
-  apiUrl: 'https://api.grant.com',
-  getRefreshToken: (request) => {
-    const req = request as { cookies?: { 'grant-refresh-token'?: string } };
-    return req.cookies?.['grant-refresh-token'] || null;
-  },
-  onTokenRefresh: (tokens, request) => {
-    // Update tokens in request/response
-    const req = request as { headers?: Record<string, string> };
-    if (req.headers) {
-      req.headers['authorization'] = `Bearer ${tokens.accessToken}`;
-    }
-  },
-  onUnauthorized: (request) => {
-    // Handle unauthorized after refresh fails
-    console.error('Authentication failed');
   },
 });
 ```
@@ -102,33 +102,16 @@ app.patch(
   grant(grantClient, {
     resource: 'Project',
     action: 'Update',
-    resourceResolver: async ({ resourceSlug, scope, request }) => {
+    resourceResolver: async ({ resourceSlug, request }) => {
       // Resolve the project resource for condition evaluation
       const projectId = (request as any).params.id;
-      const project = await getProjectById(projectId, scope);
+      const project = await getProjectById(projectId);
       return project ? { id: project.id, ownerId: project.ownerId } : null;
     },
   }),
   async (req, res) => {
     // User is authorized, proceed with handler
     res.json({ success: true });
-  }
-);
-
-// With custom scope resolver
-app.get(
-  '/users',
-  grant(grantClient, {
-    resource: 'User',
-    action: 'Query',
-    scopeResolver: async (request) => {
-      // Custom logic to extract scope from request
-      const orgId = (request as any).headers['x-organization-id'];
-      return orgId ? { tenant: 'organization', id: orgId } : null;
-    },
-  }),
-  async (req, res) => {
-    res.json({ users: [] });
   }
 );
 ```
@@ -169,9 +152,9 @@ fastify.patch(
     preHandler: grant(fastify.grant, {
       resource: 'Project',
       action: 'Update',
-      resourceResolver: async ({ resourceSlug, scope, request }) => {
+      resourceResolver: async ({ resourceSlug, request }) => {
         const projectId = (request.params as { id: string }).id;
-        const project = await getProjectById(projectId, scope);
+        const project = await getProjectById(projectId);
         return project ? { id: project.id, ownerId: project.ownerId } : null;
       },
     }),
@@ -180,25 +163,70 @@ fastify.patch(
     return { success: true };
   }
 );
+```
 
-// With custom scope resolver
-fastify.get(
-  '/users',
-  {
-    preHandler: grant(fastify.grant, {
-      resource: 'User',
-      action: 'Query',
-      scopeResolver: async (request) => {
-        const orgId = (request.headers as { 'x-organization-id'?: string })['x-organization-id'];
-        return orgId ? { tenant: 'organization', id: orgId } : null;
-      },
-    }),
-  },
-  async (request, reply) => {
-    return { users: [] };
+### 4. Next.js (App Router)
+
+```typescript
+// app/api/documents/route.ts
+import { NextResponse } from 'next/server';
+import { withGrant } from '@grantjs/server/next';
+import { GrantClient } from '@grantjs/server';
+
+const grantClient = new GrantClient({ apiUrl: process.env.GRANT_API_URL! });
+
+export const GET = withGrant(grantClient, { resource: 'Document', action: 'Query' }, async () =>
+  NextResponse.json({ data: [] })
+);
+
+export const POST = withGrant(
+  grantClient,
+  { resource: 'Document', action: 'Create' },
+  async (request) => {
+    const body = await request.json();
+    return NextResponse.json({ data: { title: body?.title ?? 'Untitled' } }, { status: 201 });
   }
 );
 ```
+
+### 5. NestJS
+
+```typescript
+// app.module.ts
+import { GrantModule } from '@grantjs/server/nest';
+
+@Module({
+  imports: [
+    GrantModule.forRoot({
+      apiUrl: process.env.GRANT_API_URL!,
+      getToken: (req: any) => req.headers?.authorization?.replace?.('Bearer ', '') ?? null,
+    }),
+  ],
+})
+export class AppModule {}
+
+// documents.controller.ts
+import { Grant, GrantGuard } from '@grantjs/server/nest';
+
+@Controller('documents')
+export class DocumentsController {
+  @Get()
+  @Grant('Document', 'Query')
+  @UseGuards(GrantGuard)
+  list() {
+    return { data: [] };
+  }
+
+  @Post()
+  @Grant('Document', 'Create')
+  @UseGuards(GrantGuard)
+  create(@Body() body: { title?: string }) {
+    return { data: { title: body?.title ?? 'Untitled' } };
+  }
+}
+```
+
+Register `GrantGuard` as a provider in your feature module (e.g. `providers: [GrantGuard]`) so Nest injects `GrantClient`. See `examples/nestjs` for a full app.
 
 ## API Reference
 
@@ -218,9 +246,6 @@ interface GrantServerConfig {
   // Optional
   cookieName?: string; // Default: 'grant-access-token'
   getToken?: (request: unknown) => string | null | Promise<string | null>;
-  getRefreshToken?: (request: unknown) => string | null | Promise<string | null>;
-  onTokenRefresh?: (tokens: AuthTokens, request: unknown) => void | Promise<void>;
-  onUnauthorized?: (request: unknown) => void | Promise<void>;
   fetch?: typeof fetch;
   credentials?: RequestCredentials;
 }
@@ -249,20 +274,18 @@ Creates Express middleware that checks authorization before proceeding.
 interface GrantOptions {
   resource: string; // Resource slug (e.g., "Organization", "Project", "Document")
   action: string; // Action name (e.g., "Query", "Create", "Update", "Delete")
-  scopeResolver?: ScopeResolver; // Custom scope extraction
   resourceResolver?: ResourceResolver; // Resource resolution for conditions
-  scopeRequiredMessage?: string; // Custom error message
 }
 ```
 
 **Behavior:**
 
 - Returns `401 Unauthorized` if no token is found
-- Returns `400 Bad Request` if scope is required but missing
 - Returns `404 Not Found` if resource resolver returns null
 - Returns `403 Forbidden` if user lacks permission
 - Calls `next()` if authorized
 - Attaches `authorization` result to `req.authorization` for downstream use
+- Scope for authorization is taken from the JWT (e.g. API-key / client-secret tokens); it is not extracted from the request
 
 ### Fastify Plugin
 
@@ -283,7 +306,7 @@ await fastify.register(grantPlugin, {
 });
 
 // Now fastify.grant is available
-const canEdit = await fastify.grant.isGranted('Document', 'Update', { scope });
+const canEdit = await fastify.grant.isGranted('Document', 'Update', undefined, request);
 ```
 
 #### `grant(client, options)`
@@ -297,13 +320,34 @@ Same as Express `GrantOptions` - see above.
 **Behavior:**
 
 - Returns `401 Unauthorized` if no token is found
-- Returns `400 Bad Request` if scope is required but missing
 - Returns `404 Not Found` if resource resolver returns null
 - Returns `403 Forbidden` if user lacks permission
 - Attaches `authorization` result to `request.authorization` for downstream use
-- Continues to route handler if authorized
-- Calls `next()` if authorized
-- Attaches `authorization` result to `req.authorization` for downstream use
+- Scope for authorization is taken from the JWT; it is not extracted from the request
+
+### Next.js (App Router)
+
+#### `withGrant(client, options, handler)`
+
+Wraps an App Router route handler with Grant authorization. Use for `GET`, `POST`, `PUT`, `PATCH`, `DELETE` in `app/api/.../route.ts`.
+
+**Options:** Same as Express `GrantOptions` (resource, action, optional resourceResolver).
+
+**Behavior:** Returns `401` / `404` / `403` responses on failure; calls your handler with `(request, { authorization })` on success. Compatible with Next.js 13–16.
+
+### NestJS
+
+#### `GrantModule.forRoot(config)`
+
+Global module that provides `GrantClient` for injection. Import in `AppModule`.
+
+#### `@Grant(resource, action)` / `Grant(resource, action)`
+
+Decorator that sets resource/action metadata for `GrantGuard`. Use with `@UseGuards(GrantGuard)` on controller methods.
+
+#### `GrantGuard`
+
+Guard that reads options from `@Grant()` metadata (or explicit constructor options with optional `resourceResolver`). Register as a provider (e.g. `providers: [GrantGuard]`) so Nest injects `GrantClient` and `Reflector`. Exports `GRANT_CLIENT` and `GRANT_OPTIONS_KEY` for advanced use.
 
 ## Token Extraction
 
@@ -313,23 +357,14 @@ The client supports multiple token extraction methods (in order of precedence):
 2. **Authorization header**: `Authorization: Bearer <token>`
 3. **Cookies**: Cookie named by `cookieName` config (default: `grant-access-token`)
 
-## Scope Extraction
-
-Scope can be extracted from:
-
-1. **Headers**: `X-Scope-Tenant` and `X-Scope-Id`
-2. **Query params**: `scopeId` and `tenant`, or `scope` object
-3. **Request body**: `scope` property
-4. **Custom resolver**: `scopeResolver` function in middleware options
-
 ## Resource Resolvers
 
-Resource resolvers are optional functions that resolve resource data for condition evaluation:
+Resource resolvers are optional functions that resolve resource data for condition evaluation. Scope is not passed from the middleware (it is taken from the JWT on the API side).
 
 ```typescript
-const resourceResolver: ResourceResolver = async ({ resourceSlug, scope, request }) => {
+const resourceResolver: ResourceResolver = async ({ resourceSlug, request }) => {
   // Fetch resource from database
-  const resource = await getResource(resourceSlug, scope, request);
+  const resource = await getResource(resourceSlug, request);
 
   // Return resource data for condition evaluation
   // e.g., { id: '...', ownerId: '...', status: 'active' }
@@ -338,6 +373,10 @@ const resourceResolver: ResourceResolver = async ({ resourceSlug, scope, request
 ```
 
 If the resolver returns `null`, the middleware returns `404 Not Found`.
+
+## Development / Debug
+
+Set **`DEBUG_GRANT=1`** in your environment (e.g. in `.env`) to enable request/outcome logs for all integrations (Express, Fastify, Next, Nest). Logs include resource, action, and authorized/denied with reason.
 
 ## Error Handling
 
@@ -352,7 +391,7 @@ import {
 } from '@grantjs/server';
 
 try {
-  await grantClient.isAuthorized('resource', 'action', { scope }, request);
+  await grantClient.isAuthorized('resource', 'action', undefined, request);
 } catch (error) {
   if (error instanceof AuthenticationError) {
     // Handle 401
@@ -360,27 +399,6 @@ try {
     // Handle 403
   }
 }
-```
-
-## Token Refresh
-
-The client supports automatic token refresh on 401 errors:
-
-```typescript
-const grantClient = new GrantClient({
-  apiUrl: 'https://api.grant.com',
-  getRefreshToken: async (request) => {
-    return getRefreshTokenFromRequest(request);
-  },
-  onTokenRefresh: async (tokens, request) => {
-    // Update tokens in request/response
-    updateTokens(request, tokens);
-  },
-  onUnauthorized: async (request) => {
-    // Handle after refresh fails
-    redirectToLogin(request);
-  },
-});
 ```
 
 ## TypeScript
@@ -394,7 +412,6 @@ import type {
   PermissionCheckOptions,
   Scope,
   ResourceResolver,
-  ScopeResolver,
 } from '@grantjs/server';
 
 import { Tenant } from '@grantjs/schema';
@@ -406,15 +423,15 @@ The server package (`@grantjs/server`) is designed for **server-side** Node.js a
 
 **Key Differences:**
 
-| Feature               | @grantjs/server                             | @grantjs/client             |
-| --------------------- | ------------------------------------------- | --------------------------- |
-| **Target**            | Node.js servers                             | Browser apps                |
-| **Caching**           | No (handled by API)                         | Yes (5min TTL)              |
-| **Token Source**      | Request object                              | Callback functions          |
-| **Framework Support** | Express, Fastify, NestJS, Next.js (planned) | React, Vue, Svelte, Angular |
-| **API**               | `grant()` middleware/hook                   | `useGrant()` hook           |
-| **Error Handling**    | HTTP status codes                           | Boolean returns             |
-| **Resource/Action**   | Plain strings (generic)                     | Plain strings (generic)     |
+| Feature               | @grantjs/server                                                    | @grantjs/client             |
+| --------------------- | ------------------------------------------------------------------ | --------------------------- |
+| **Target**            | Node.js servers                                                    | Browser apps                |
+| **Caching**           | No (handled by API)                                                | Yes (5min TTL)              |
+| **Token Source**      | Request object                                                     | Callback functions          |
+| **Framework Support** | Express, Fastify, NestJS, Next.js                                  | React, Vue, Svelte, Angular |
+| **API**               | `grant()` (Express/Fastify), `withGrant()` (Next), `@Grant` (Nest) | `useGrant()` hook           |
+| **Error Handling**    | HTTP status codes                                                  | Boolean returns             |
+| **Resource/Action**   | Plain strings (generic)                                            | Plain strings (generic)     |
 
 **When to Use:**
 
