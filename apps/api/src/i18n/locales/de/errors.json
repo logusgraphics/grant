@@ -23,6 +23,7 @@
     "githubOAuthError": "GitHub OAuth-Authentifizierungsfehler",
     "githubNoToken": "Kein Zugriffstoken von GitHub erhalten",
     "githubUserInfoFailed": "Fehler beim Abrufen der Benutzerinformationen von GitHub",
+    "githubUnavailable": "GitHub ist vorübergehend nicht erreichbar. Bitte versuchen Sie es in Kürze erneut.",
     "stateRequired": "State-Parameter ist aus Sicherheitsgründen erforderlich",
     "stateNotFound": "Ungültiger oder abgelaufener State-Parameter",
     "invalidState": "Ungültiger oder abgelaufener State-Parameter"

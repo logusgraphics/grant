@@ -21,6 +21,14 @@ export interface CliCallbackPayload {
   accounts: Array<{ id: string; type: string; ownerId?: string | null; [key: string]: unknown }>;
 }
 
+/** Payload stored for web OAuth callback; exchanged via POST /api/auth/callback/exchange */
+export interface WebCallbackPayload {
+  accessToken: string;
+  refreshToken: string;
+  nextUrl: string;
+  accounts: Array<{ id: string; type: string; ownerId?: string | null; [key: string]: unknown }>;
+}
+
 export interface InitiateGithubAuthParams {
   redirectUrl?: string;
   accountType?: string;
@@ -162,12 +170,13 @@ export class OAuthHandler extends CacheHandler {
   }
 
   private static readonly CLI_CALLBACK_KEY_PREFIX = 'oauth:cli-callback:' as CacheKey;
-  private static readonly CLI_CALLBACK_TTL_SECONDS = 60;
+  private static readonly WEB_CALLBACK_KEY_PREFIX = 'oauth:web-callback:' as CacheKey;
+  private static readonly CALLBACK_TTL_SECONDS = 60;
 
   async storeCliCallbackPayload(payload: CliCallbackPayload): Promise<string> {
     const code = crypto.randomBytes(16).toString('hex');
     const key = `${OAuthHandler.CLI_CALLBACK_KEY_PREFIX}${code}` as CacheKey;
-    await this.cache.oauth.set(key, payload, OAuthHandler.CLI_CALLBACK_TTL_SECONDS);
+    await this.cache.oauth.set(key, payload, OAuthHandler.CALLBACK_TTL_SECONDS);
     this.logger.debug({ msg: 'Stored CLI callback payload', codePrefix: code.slice(0, 8) });
     return code;
   }
@@ -179,6 +188,24 @@ export class OAuthHandler extends CacheHandler {
     await this.cache.oauth.delete(key);
     if (!payload) return null;
     this.logger.debug({ msg: 'Consumed CLI callback code', codePrefix: code.slice(0, 8) });
+    return payload;
+  }
+
+  async storeWebCallbackPayload(payload: WebCallbackPayload): Promise<string> {
+    const code = crypto.randomBytes(16).toString('hex');
+    const key = `${OAuthHandler.WEB_CALLBACK_KEY_PREFIX}${code}` as CacheKey;
+    await this.cache.oauth.set(key, payload, OAuthHandler.CALLBACK_TTL_SECONDS);
+    this.logger.debug({ msg: 'Stored web callback payload', codePrefix: code.slice(0, 8) });
+    return code;
+  }
+
+  async consumeWebCallbackCode(code: string): Promise<WebCallbackPayload | null> {
+    if (!code?.trim()) return null;
+    const key = `${OAuthHandler.WEB_CALLBACK_KEY_PREFIX}${code.trim()}` as CacheKey;
+    const payload = await this.cache.oauth.get<WebCallbackPayload>(key);
+    await this.cache.oauth.delete(key);
+    if (!payload) return null;
+    this.logger.debug({ msg: 'Consumed web callback code', codePrefix: code.slice(0, 8) });
     return payload;
   }
 

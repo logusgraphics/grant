@@ -3,17 +3,8 @@ import { useEffect } from 'react';
 import { useLocale } from 'next-intl';
 
 import { useMe } from '@/hooks/auth';
+import { isRedirectInProgress } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
-
-interface WindowWithGrantFlag extends Window {
-  __grantRedirectInProgress?: boolean;
-}
-
-function isRedirectInProgress(): boolean {
-  if (typeof window === 'undefined') return false;
-  if (window.location.pathname.includes('/auth/login')) return true;
-  return (window as WindowWithGrantFlag).__grantRedirectInProgress === true;
-}
 
 export function useAccountsSync() {
   const locale = useLocale();

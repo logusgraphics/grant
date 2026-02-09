@@ -6,6 +6,7 @@ import { authenticateRestRoute } from '@/lib/authorization';
 import { createModuleLogger } from '@/lib/logger';
 import { validate, validateBody, validateQuery } from '@/middleware/validation.middleware';
 import {
+  callbackExchangeRequestSchema,
   cliCallbackRequestSchema,
   handleGithubCallbackQuerySchema,
   initiateGithubAuthQuerySchema,
@@ -27,8 +28,7 @@ import {
   handleGithubCallbackConnect,
   handleGithubConnectFlow,
   handleGithubOAuthError,
-  isLocalhostRedirectUrl,
-  setAuthCookies,
+  isCliRedirectUrl,
   validateRedirectUrl,
 } from '@/rest/utils/auth';
 import { sendSuccessResponse } from '@/rest/utils/response';
@@ -205,13 +205,14 @@ export function createAuthRoutes(context: RequestContext) {
     async (req: TypedRequest<{ query: typeof handleGithubCallbackQuerySchema }>, res: Response) => {
       const { error, error_description, code, state } = req.query;
       const locale = context.locale || 'en';
+      const frontendUrl = config.security.frontendUrl;
 
       // Handle OAuth errors from GitHub
       if (error) {
-        // CLI flow: redirect to localhost with error if state points to localhost
+        // CLI flow: redirect to CLI localhost with error (not same origin as frontend)
         if (state && typeof state === 'string') {
           const storedState = await context.handlers.oauth.getStoredState(state);
-          if (storedState?.redirectUrl && isLocalhostRedirectUrl(storedState.redirectUrl)) {
+          if (storedState?.redirectUrl && isCliRedirectUrl(storedState.redirectUrl, frontendUrl)) {
             const url = new URL(storedState.redirectUrl);
             url.searchParams.set('error', 'oauthError');
             if (error_description) url.searchParams.set('error_description', error_description);
@@ -227,7 +228,7 @@ export function createAuthRoutes(context: RequestContext) {
       let cliRedirectUrl: string | null = null;
       if (state && typeof state === 'string') {
         const storedState = await context.handlers.oauth.getStoredState(state);
-        if (storedState?.redirectUrl && isLocalhostRedirectUrl(storedState.redirectUrl)) {
+        if (storedState?.redirectUrl && isCliRedirectUrl(storedState.redirectUrl, frontendUrl)) {
           cliRedirectUrl = storedState.redirectUrl;
         }
       }
@@ -244,8 +245,10 @@ export function createAuthRoutes(context: RequestContext) {
         // Handle authentication flow (login/register)
         const loginResult = await handleGithubCallbackAuth(context, oauthResult);
 
-        // CLI flow: redirect to localhost with one-time code; no cookies
-        if (oauthResult.redirectUrl && isLocalhostRedirectUrl(oauthResult.redirectUrl)) {
+        const isCli = isCliRedirectUrl(oauthResult.redirectUrl, frontendUrl);
+
+        // CLI flow: redirect to CLI localhost (different origin from frontend) with one-time code
+        if (oauthResult.redirectUrl && isCli) {
           const oneTimeCode = await context.handlers.oauth.storeCliCallbackPayload({
             accessToken: loginResult.accessToken,
             refreshToken: loginResult.refreshToken,
@@ -257,25 +260,34 @@ export function createAuthRoutes(context: RequestContext) {
           return;
         }
 
-        setAuthCookies(res, loginResult.accessToken, loginResult.refreshToken);
-        const finalRedirectUrl = buildAuthRedirectUrl(oauthResult, locale);
-        res.redirect(finalRedirectUrl);
+        // Browser flow: one-time code so frontend can exchange for tokens (avoids fragment issues).
+        const nextUrl = buildAuthRedirectUrl(oauthResult, locale);
+        const webCallbackCode = await context.handlers.oauth.storeWebCallbackPayload({
+          accessToken: loginResult.accessToken,
+          refreshToken: loginResult.refreshToken,
+          nextUrl,
+          accounts: loginResult.accounts,
+        });
+        const callbackUrl = `${frontendUrl}/${locale}/callback?code=${encodeURIComponent(webCallbackCode)}`;
+        res.redirect(callbackUrl);
       } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const errorCode = determineErrorCode(err);
         logger.error({
           msg: 'Error handling GitHub OAuth callback',
           err,
+          errorMessage,
+          errorCode,
+          redirectToLoginWithError: errorCode,
         });
 
         if (cliRedirectUrl) {
-          const errorCode = determineErrorCode(err);
           const url = new URL(cliRedirectUrl);
           url.searchParams.set('error', errorCode);
           res.redirect(url.toString());
           return;
         }
 
-        const frontendUrl = config.security.frontendUrl;
-        const errorCode = determineErrorCode(err);
         res.redirect(`${frontendUrl}/${locale}/auth/login?error=${errorCode}`);
       }
     }
@@ -295,6 +307,27 @@ export function createAuthRoutes(context: RequestContext) {
         return;
       }
       sendSuccessResponse(res, payload);
+    }
+  );
+
+  router.post(
+    '/callback/exchange',
+    validateBody(callbackExchangeRequestSchema),
+    async (req: TypedRequest<{ body: typeof callbackExchangeRequestSchema }>, res: Response) => {
+      const { code } = req.body;
+      const payload = await context.handlers.oauth.consumeWebCallbackCode(code);
+      if (!payload) {
+        res.status(400).json({
+          success: false,
+          error: { code: 'invalid_or_expired_code', message: 'Invalid or expired one-time code' },
+        });
+        return;
+      }
+      sendSuccessResponse(res, {
+        accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
+        nextUrl: payload.nextUrl,
+      });
     }
   );
 

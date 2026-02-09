@@ -239,3 +239,16 @@ export const cliCallbackResultSchema = z.object({
   refreshToken: z.string(),
   accounts: z.array(accountSchema),
 });
+
+export const callbackExchangeRequestSchema = z.object({
+  code: z.string().min(1, 'Code is required').openapi({
+    description: 'One-time code from OAuth callback redirect',
+    example: 'a1b2c3d4e5f6...',
+  }),
+});
+
+export const callbackExchangeResultSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  nextUrl: z.string(),
+});

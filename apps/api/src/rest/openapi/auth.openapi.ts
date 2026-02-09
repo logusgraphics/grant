@@ -555,7 +555,7 @@ and either logs in an existing user or creates a new account.
 4. Checks for existing user by GitHub ID or email
 5. If user exists: logs in and links GitHub auth if needed
 6. If user doesn't exist: creates new account and user
-7. Sets authentication cookies and redirects to frontend
+7. Redirects to frontend \`/auth/callback\` with access and refresh tokens in the URL fragment (and \`next\` for destination); frontend stores tokens and redirects to destination
 
 #### Connect Flow (action=connect)
 1. Validates the state token (CSRF protection)

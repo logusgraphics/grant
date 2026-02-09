@@ -8,9 +8,9 @@ import { RefreshSessionDocument } from '@grantjs/schema';
 import { GraphQLError } from 'graphql';
 import { toast } from 'sonner';
 
-import { removeStoredTokens } from '@/lib/auth';
+import { setRedirectInProgress } from '@/lib/auth';
 import { getApiBaseUrl } from '@/lib/constants';
-import { useAuthStore } from '@/stores/auth.store';
+import { AUTH_STORE_STORAGE_KEY, useAuthStore } from '@/stores/auth.store';
 
 interface ErrorWithGraphQLErrors {
   graphQLErrors?: readonly GraphQLError[];
@@ -21,10 +21,6 @@ interface NetworkErrorWithStatus {
   statusCode?: number;
   response?: { status?: number };
   extensions?: { http?: { status?: number } };
-}
-
-interface WindowWithGrantFlag extends Window {
-  __grantRedirectInProgress?: boolean;
 }
 
 const AUTH_OPERATIONS = [
@@ -248,16 +244,12 @@ function redirectToLogin(showToast = false) {
     }
 
     redirectInProgress = true;
-
-    if (typeof window !== 'undefined') {
-      (window as WindowWithGrantFlag).__grantRedirectInProgress = true;
-    }
+    setRedirectInProgress(true);
 
     try {
-      removeStoredTokens();
-
+      useAuthStore.getState().clearAuth();
       if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem('grant-auth-store');
+        window.localStorage.removeItem(AUTH_STORE_STORAGE_KEY);
       }
     } catch {
       void 0;
