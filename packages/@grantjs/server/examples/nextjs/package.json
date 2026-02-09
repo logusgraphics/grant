@@ -2,7 +2,7 @@
   "name": "example-nextjs",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e .env -- next dev",
+    "dev": "dotenv -e .env.development -- next dev",
     "build": "next build",
     "start": "dotenv -e .env -- next start",
     "lint": "next lint"
