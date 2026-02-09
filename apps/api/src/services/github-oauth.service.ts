@@ -92,6 +92,8 @@ export class GitHubOAuthService {
       );
     }
 
+    const redirectUri = config.githubOAuth.callbackUrl;
+
     try {
       const response = await fetch(config.githubOAuth.tokenUrl, {
         method: 'POST',
@@ -103,6 +105,7 @@ export class GitHubOAuthService {
           client_id: config.githubOAuth.clientId,
           client_secret: config.githubOAuth.clientSecret,
           code: validatedCode,
+          redirect_uri: redirectUri,
         }),
       });
 
@@ -113,10 +116,17 @@ export class GitHubOAuthService {
           status: response.status,
           error: errorText,
         });
-        throw new AuthenticationError(
-          'Failed to exchange authorization code for token',
-          'errors:auth.githubTokenExchangeFailed'
-        );
+        const isGitHubUnavailable =
+          response.status === 503 ||
+          (response.status >= 500 && response.status < 600) ||
+          (errorText.includes('Unicorn') && errorText.includes('No server is currently available'));
+        const message = isGitHubUnavailable
+          ? 'GitHub is temporarily unavailable. Please try again in a moment.'
+          : 'Failed to exchange authorization code for token';
+        const translationKey = isGitHubUnavailable
+          ? 'errors:auth.githubUnavailable'
+          : 'errors:auth.githubTokenExchangeFailed';
+        throw new AuthenticationError(message, translationKey);
       }
 
       const data = (await response.json()) as { access_token?: string; error?: string };
@@ -179,7 +189,7 @@ export class GitHubOAuthService {
 
       let email: string | null = null;
       try {
-        const { data: emails } = await userOctokit.rest.users.listEmailsForAuthenticated();
+        const { data: emails } = await userOctokit.rest.users.listEmailsForAuthenticatedUser();
         const primaryEmail = emails.find((e) => e.primary) || emails.find((e) => e.verified);
         email = primaryEmail?.email || emails[0]?.email || null;
       } catch (emailError) {

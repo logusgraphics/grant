@@ -3,6 +3,30 @@ import { AccountType } from '@grantjs/schema';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
+// ---------------------------------------------------------------------------
+// Redirect-in-progress flag (shared between Apollo error link and useAccountsSync)
+// ---------------------------------------------------------------------------
+
+export interface WindowWithGrantFlag extends Window {
+  __grantRedirectInProgress?: boolean;
+}
+
+export function isRedirectInProgress(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.location.pathname.includes('/auth/login')) return true;
+  return (window as WindowWithGrantFlag).__grantRedirectInProgress === true;
+}
+
+export function setRedirectInProgress(value: boolean): void {
+  if (typeof window !== 'undefined') {
+    (window as WindowWithGrantFlag).__grantRedirectInProgress = value;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cookie-based token storage (legacy; current OAuth flow uses localStorage via auth store)
+// ---------------------------------------------------------------------------
+
 // Cookie expiration matches the refresh token expiration from API config
 // Default to 30 days to match JWT_REFRESH_TOKEN_EXPIRATION_DAYS default
 const REFRESH_TOKEN_EXPIRATION_DAYS =
@@ -17,6 +41,7 @@ interface JWTPayload {
   iat?: number;
 }
 
+/** @deprecated OAuth flow uses localStorage via auth store. Kept for backwards compatibility. */
 export function setStoredTokens(accessToken: string, refreshToken: string): void {
   Cookies.set(AUTH_ACCESS_TOKEN_KEY, accessToken, {
     expires: REFRESH_TOKEN_EXPIRATION_DAYS,
@@ -32,11 +57,13 @@ export function setStoredTokens(accessToken: string, refreshToken: string): void
   });
 }
 
+/** @deprecated OAuth flow uses localStorage via auth store. Kept for backwards compatibility. */
 export function removeStoredTokens(): void {
   Cookies.remove(AUTH_ACCESS_TOKEN_KEY, { path: '/' });
   Cookies.remove(AUTH_REFRESH_TOKEN_KEY, { path: '/' });
 }
 
+/** @deprecated OAuth flow uses localStorage via auth store. Kept for backwards compatibility. */
 export function getStoredTokens(): { accessToken: string | null; refreshToken: string | null } {
   const accessToken = Cookies.get(AUTH_ACCESS_TOKEN_KEY) || null;
   const refreshToken = Cookies.get(AUTH_REFRESH_TOKEN_KEY) || null;

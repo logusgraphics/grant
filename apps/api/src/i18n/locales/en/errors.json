@@ -23,6 +23,7 @@
     "githubOAuthError": "GitHub OAuth authentication error",
     "githubNoToken": "No access token received from GitHub",
     "githubUserInfoFailed": "Failed to fetch user information from GitHub",
+    "githubUnavailable": "GitHub is temporarily unavailable. Please try again in a moment.",
     "stateRequired": "State parameter is required for security",
     "stateNotFound": "Invalid or expired state parameter",
     "invalidState": "Invalid or expired state parameter"

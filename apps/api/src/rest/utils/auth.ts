@@ -1,9 +1,4 @@
 import {
-  AUTH_ACCESS_TOKEN_KEY,
-  AUTH_REFRESH_TOKEN_KEY,
-  MILLISECONDS_PER_DAY,
-} from '@grantjs/constants';
-import {
   AccountType,
   UserAuthenticationEmailProviderAction,
   UserAuthenticationMethodProvider,
@@ -18,28 +13,23 @@ import { RequestContext } from '@/types';
 const logger = createModuleLogger('AuthUtils');
 
 /**
- * Sets authentication cookies on the response
+ * Builds the OAuth callback redirect URL with tokens in the fragment.
+ * The frontend /auth/callback page reads the fragment, stores tokens, then redirects to nextUrl.
  */
-export function setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
-  const isProduction = config.app.isProduction;
-  const refreshTokenExpirationDays = config.jwt.refreshTokenExpirationDays;
-  const maxAge = refreshTokenExpirationDays * MILLISECONDS_PER_DAY;
-
-  res.cookie(AUTH_ACCESS_TOKEN_KEY, accessToken, {
-    httpOnly: false,
-    secure: isProduction,
-    sameSite: 'lax',
-    maxAge,
-    path: '/',
-  });
-
-  res.cookie(AUTH_REFRESH_TOKEN_KEY, refreshToken, {
-    httpOnly: false,
-    secure: isProduction,
-    sameSite: 'lax',
-    maxAge,
-    path: '/',
-  });
+export function buildOAuthCallbackRedirectUrl(
+  locale: string,
+  nextUrl: string,
+  accessToken: string,
+  refreshToken: string
+): string {
+  const frontendUrl = config.security.frontendUrl;
+  const callbackPath = `${frontendUrl}/${locale}/auth/callback`;
+  const fragment = [
+    `access_token=${encodeURIComponent(accessToken)}`,
+    `refresh_token=${encodeURIComponent(refreshToken)}`,
+    `next=${encodeURIComponent(nextUrl)}`,
+  ].join('&');
+  return `${callbackPath}#${fragment}`;
 }
 
 /**
@@ -58,12 +48,29 @@ export function validateRedirectUrl(redirectUrl: string): boolean {
   }
 }
 
-/** Returns true if the redirect URL is a localhost URL (CLI flow). */
+/** Returns true if the redirect URL is a localhost URL (for CLI or dev frontend). */
 export function isLocalhostRedirectUrl(redirectUrl: string | undefined): boolean {
   if (!redirectUrl) return false;
   try {
     const url = new URL(redirectUrl);
     return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Returns true if the redirect URL is a localhost URL that is NOT the frontend origin (CLI flow).
+ * When redirectUrl is the same origin as the frontend (e.g. dev app at localhost:3000), it's the browser flow.
+ */
+export function isCliRedirectUrl(redirectUrl: string | undefined, frontendUrl: string): boolean {
+  if (!redirectUrl) return false;
+  try {
+    const redirect = new URL(redirectUrl);
+    const frontend = new URL(frontendUrl);
+    const isLocalhost = redirect.hostname === 'localhost' || redirect.hostname === '127.0.0.1';
+    const sameOrigin = redirect.origin === frontend.origin;
+    return isLocalhost && !sameOrigin;
   } catch {
     return false;
   }
@@ -276,7 +283,8 @@ export function buildAuthRedirectUrl(
 }
 
 /**
- * Determines error code from error message
+ * Determines error code from error message for OAuth callback redirects.
+ * Use a specific code so the login page can show the right message (e.g. GitHub failure vs account creation).
  */
 export function determineErrorCode(error: unknown): string {
   if (!(error instanceof Error)) {
@@ -295,6 +303,20 @@ export function determineErrorCode(error: unknown): string {
 
   if (message.includes('not configured')) {
     return 'oauthNotConfigured';
+  }
+
+  if (
+    message.includes('fetch user information from github') ||
+    (message.includes('github') && message.includes('bad credentials'))
+  ) {
+    return 'githubUserInfoFailed';
+  }
+
+  if (
+    message.includes('temporarily unavailable') ||
+    (message.includes('github') && message.includes('503'))
+  ) {
+    return 'githubUnavailable';
   }
 
   return 'accountCreationFailed';

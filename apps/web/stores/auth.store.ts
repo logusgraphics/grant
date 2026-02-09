@@ -2,9 +2,9 @@ import { Account, AccountType } from '@grantjs/schema';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
-import { getStoredTokens, removeStoredTokens, setStoredTokens } from '@/lib/auth';
+export const AUTH_STORE_STORAGE_KEY = 'grant-auth-store';
 
-const STORE_NAME = 'grant-auth-store';
+const PERSIST_VERSION = 1;
 
 interface AuthState {
   // Authentication state
@@ -78,12 +78,10 @@ export const useAuthStore = create<AuthState>()(
         setAccounts: (accounts) => set({ accounts }),
         setCurrentAccount: (accountId) => set({ currentAccountId: accountId }),
         setTokens: (accessToken, refreshToken) => {
-          setStoredTokens(accessToken, refreshToken);
           set({ accessToken, refreshToken });
         },
 
         clearAuth: () => {
-          removeStoredTokens();
           set({
             accounts: [],
             // Keep currentAccountId persisted after logout so user can resume with last account
@@ -146,8 +144,6 @@ export const useAuthStore = create<AuthState>()(
                 accounts[0]?.id ||
                 null;
 
-          setStoredTokens(accessToken, refreshToken);
-
           set({
             accounts,
             currentAccountId: targetAccountId,
@@ -193,26 +189,13 @@ export const useAuthStore = create<AuthState>()(
         },
 
         isAuthenticated: () => {
-          let { accessToken, refreshToken } = get();
-
-          // Sync tokens from cookies if not in state (e.g., after OAuth redirect)
-          if (!accessToken || !refreshToken) {
-            const cookieTokens = getStoredTokens();
-            if (cookieTokens.accessToken && cookieTokens.refreshToken) {
-              accessToken = cookieTokens.accessToken;
-              refreshToken = cookieTokens.refreshToken;
-              // Update state with tokens from cookies
-              // setStoredTokens ensures cookies and localStorage stay in sync
-              setStoredTokens(accessToken, refreshToken);
-              set({ accessToken, refreshToken });
-            }
-          }
-
-          return !!accessToken && !!refreshToken;
+          const { accessToken, refreshToken } = get();
+          return !!(accessToken && refreshToken);
         },
       }),
       {
-        name: STORE_NAME,
+        name: AUTH_STORE_STORAGE_KEY,
+        version: PERSIST_VERSION,
         // Only persist auth-related data, not loading states
         partialize: (state) => ({
           accounts: state.accounts,
@@ -224,23 +207,14 @@ export const useAuthStore = create<AuthState>()(
           verificationExpiry: state.verificationExpiry,
         }),
         onRehydrateStorage: () => (state) => {
-          // Sync tokens from cookies on rehydration (e.g., page refresh)
           if (state) {
-            const cookieTokens = getStoredTokens();
-            if (cookieTokens.accessToken && cookieTokens.refreshToken) {
-              // If cookies have tokens but state doesn't, sync them
-              if (!state.accessToken || !state.refreshToken) {
-                state.accessToken = cookieTokens.accessToken;
-                state.refreshToken = cookieTokens.refreshToken;
-              }
-            }
             state.setLoading(false);
           }
         },
       }
     ),
     {
-      name: STORE_NAME,
+      name: AUTH_STORE_STORAGE_KEY,
     }
   )
 );
