@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, List } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface LimitProps {
   limit: number;
@@ -32,29 +33,51 @@ export function Limit({
 }: LimitProps) {
   const t = useTranslations(namespace);
 
+  const tooltipText = `${t(translationKey)}: ${limit}`;
+
+  const buttonContent = (
+    <Button 
+      variant="outline" 
+      size="default" 
+      className={`${className} max-[1600px]:aspect-square max-[1600px]:p-2`}
+    >
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <span className="max-[1600px]:hidden">
+            {t(translationKey)}: {limit}
+          </span>
+          <List className="size-4 max-[1600px]:block hidden" />
+        </div>
+        <ChevronDown className="size-4 max-[1600px]:hidden" />
+      </div>
+    </Button>
+  );
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="default" className={className}>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              {t(translationKey)}: {limit}
-            </div>
-            <ChevronDown className="size-4" />
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {options.map((option) => (
-          <DropdownMenuItem
-            key={option}
-            onClick={() => onLimitChange(option)}
-            className="cursor-pointer"
-          >
-            {option}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <TooltipProvider>
+      <Tooltip>
+        <DropdownMenu>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              {buttonContent}
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            {tooltipText}
+          </TooltipContent>
+          <DropdownMenuContent align="end">
+            {options.map((option) => (
+              <DropdownMenuItem
+                key={option}
+                onClick={() => onLimitChange(option)}
+                className="cursor-pointer"
+              >
+                {option}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

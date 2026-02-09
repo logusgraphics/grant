@@ -30,7 +30,7 @@ export function RefreshButton({ onRefresh, loading = false, className }: Refresh
           <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
         </Button>
       </TooltipTrigger>
-      <TooltipContent>
+      <TooltipContent side="bottom">
         <p>{t('actions.refresh')}</p>
       </TooltipContent>
     </Tooltip>

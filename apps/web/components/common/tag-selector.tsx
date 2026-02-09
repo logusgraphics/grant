@@ -11,8 +11,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTags } from '@/hooks';
 import { useScopeFromParams } from '@/hooks/common';
+import { cn } from '@/lib/utils';
 
 export interface TagSelectorProps {
   selectedTagIds: string[];
@@ -38,85 +40,107 @@ export function TagSelector({ selectedTagIds, onTagIdsChange }: TagSelectorProps
     onTagIdsChange([]);
   };
 
-  return (
-    <div className="flex flex-col gap-2 w-full sm:w-auto">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="default" className="w-full sm:w-auto">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <Tag className="size-4" />
-                {selectedTagIds.length > 0 ? (
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm">
-                      {t('tags.selected', { count: selectedTagIds.length })}
-                    </span>
-                    <div className="flex items-center gap-1 ml-1">
-                      {selectedTags.slice(0, 3).map((tag) => (
-                        <div
-                          key={tag.id}
-                          className={`w-2 h-2 rounded-full border-2 bg-transparent ${getTagBorderClasses(tag.color as TagColor)}`}
-                          title={tag.name}
-                        />
-                      ))}
-                      {selectedTags.length > 3 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{selectedTags.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <span>{t('tags.placeholder')}</span>
+  const tooltipText =
+    selectedTagIds.length > 0
+      ? `${t('tags.selected', { count: selectedTagIds.length })}`
+      : t('tags.placeholder');
+
+  const hasSelectedTags = selectedTagIds.length > 0;
+
+  const buttonContent = (
+    <Button
+      variant="outline"
+      size="default"
+      className={cn(
+        'w-full sm:w-auto max-[1600px]:aspect-square max-[1600px]:p-2',
+        hasSelectedTags && 'max-[1600px]:border-primary',
+        hasSelectedTags && 'max-[1600px]:border-2'
+      )}
+    >
+      <div className="flex items-center w-full max-[1600px]:justify-center">
+        <div className={cn('flex items-center', 'gap-2 max-[1600px]:gap-0')}>
+          <Tag className={cn('size-4', hasSelectedTags && 'max-[1600px]:text-primary')} />
+          {hasSelectedTags ? (
+            <div className="flex items-center gap-1">
+              <span className="text-sm max-[1600px]:hidden">
+                {t('tags.selected', { count: selectedTagIds.length })}
+              </span>
+              <div className="flex items-center gap-1 ml-1 max-[1600px]:ml-0 max-[1600px]:hidden">
+                {selectedTags.slice(0, 3).map((tag) => (
+                  <div
+                    key={tag.id}
+                    className={`w-2 h-2 rounded-full border-2 bg-transparent ${getTagBorderClasses(tag.color as TagColor)}`}
+                    title={tag.name}
+                  />
+                ))}
+                {selectedTags.length > 3 && (
+                  <span className="text-xs text-muted-foreground">+{selectedTags.length - 3}</span>
                 )}
               </div>
             </div>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <div className="p-2">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">{t('tags.title')}</span>
-              {selectedTagIds.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearAll}
-                  className="h-auto p-1 text-xs"
-                >
-                  {t('tags.clearAll')}
-                </Button>
-              )}
-            </div>
-            {loading ? (
-              <div className="text-sm text-muted-foreground p-2">{t('tags.loading')}</div>
-            ) : (
-              <div className="max-h-[200px] overflow-y-auto">
-                <div className="space-y-1 pr-2">
-                  {tags.map((tag) => {
-                    const isSelected = selectedTagIds.includes(tag.id);
-                    return (
-                      <DropdownMenuItem
-                        key={tag.id}
-                        onClick={() => handleTagToggle(tag.id)}
-                        className="flex items-center justify-between cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-3 h-3 rounded-full border-2 bg-transparent ${getTagBorderClasses(tag.color as TagColor)}`}
-                          />
-                          <span className="text-sm">{tag.name}</span>
-                        </div>
-                        {isSelected && <Check className="size-4" />}
-                      </DropdownMenuItem>
-                    );
-                  })}
+          ) : (
+            <span className="max-[1600px]:hidden">{t('tags.placeholder')}</span>
+          )}
+        </div>
+      </div>
+    </Button>
+  );
+
+  return (
+    <div className="flex flex-col gap-2 w-full sm:w-auto">
+      <TooltipProvider>
+        <Tooltip>
+          <DropdownMenu>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>{buttonContent}</DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{tooltipText}</TooltipContent>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="p-2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">{t('tags.title')}</span>
+                  {selectedTagIds.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearAll}
+                      className="h-auto p-1 text-xs"
+                    >
+                      {t('tags.clearAll')}
+                    </Button>
+                  )}
                 </div>
+                {loading ? (
+                  <div className="text-sm text-muted-foreground p-2">{t('tags.loading')}</div>
+                ) : (
+                  <div className="max-h-[200px] overflow-y-auto">
+                    <div className="space-y-1 pr-2">
+                      {tags.map((tag) => {
+                        const isSelected = selectedTagIds.includes(tag.id);
+                        return (
+                          <DropdownMenuItem
+                            key={tag.id}
+                            onClick={() => handleTagToggle(tag.id)}
+                            className="flex items-center justify-between cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`w-3 h-3 rounded-full border-2 bg-transparent ${getTagBorderClasses(tag.color as TagColor)}`}
+                              />
+                              <span className="text-sm">{tag.name}</span>
+                            </div>
+                            {isSelected && <Check className="size-4" />}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }

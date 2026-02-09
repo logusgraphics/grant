@@ -1,7 +1,7 @@
 'use client';
 
 import { SortOrder } from '@grantjs/schema';
-import { ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface SortInput<T extends string> {
   field: T;
@@ -50,57 +51,81 @@ export function Sorter<T extends string>({
     return fieldConfig?.label || field;
   };
 
+  const sortLabel = getSortLabel(currentSort.field);
+  const sortOrderLabel = currentSort.order === SortOrder.Asc ? '↑' : '↓';
+  const tooltipText = `${t('sort.label')}: ${sortLabel} ${sortOrderLabel}`;
+
+  const buttonContent = (
+    <Button 
+      variant="outline" 
+      size="default" 
+      className="w-full sm:w-auto max-[1600px]:aspect-square max-[1600px]:p-2"
+    >
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <span className="max-[1600px]:hidden">
+            {t('sort.label')}:{' '}
+          </span>
+          <span className="max-[1600px]:hidden">
+            {sortLabel}
+          </span>
+          {currentSort.order === SortOrder.Asc ? (
+            <ArrowUp className="size-4 max-[1600px]:hidden" />
+          ) : (
+            <ArrowDown className="size-4 max-[1600px]:hidden" />
+          )}
+          <ArrowUpDown className="size-4 max-[1600px]:block hidden" />
+        </div>
+        <ChevronDown className="size-4 max-[1600px]:hidden" />
+      </div>
+    </Button>
+  );
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="default" className="w-full sm:w-auto">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              {t('sort.label')}:{' '}
+    <TooltipProvider>
+      <Tooltip>
+        <DropdownMenu>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              {buttonContent}
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            {tooltipText}
+          </TooltipContent>
+          <DropdownMenuContent align="end" className="w-48">
+            {showLabel && (
               <>
-                {getSortLabel(currentSort.field)}
-                {currentSort.order === SortOrder.Asc ? (
-                  <ArrowUp className="size-4" />
-                ) : (
-                  <ArrowDown className="size-4" />
-                )}
+                <DropdownMenuLabel className="px-3 py-1.5 text-sm font-medium">
+                  {t('sort.label')}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
               </>
-            </div>
-            <ChevronDown className="size-4" />
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        {showLabel && (
-          <>
-            <DropdownMenuLabel className="px-3 py-1.5 text-sm font-medium">
-              {t('sort.label')}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-          </>
-        )}
-        {fields.map((field) => (
-          <DropdownMenuItem
-            key={field.value}
-            className="flex items-center justify-between px-3 py-1.5 text-sm"
-            onClick={() => {
-              const newOrder =
-                currentSort.field === field.value && currentSort.order === SortOrder.Asc
-                  ? SortOrder.Desc
-                  : SortOrder.Asc;
-              onSortChange(field.value, newOrder);
-            }}
-          >
-            <span>{field.label}</span>
-            {currentSort.field === field.value &&
-              (currentSort.order === SortOrder.Asc ? (
-                <ArrowUp className="size-4" />
-              ) : (
-                <ArrowDown className="size-4" />
-              ))}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            )}
+            {fields.map((field) => (
+              <DropdownMenuItem
+                key={field.value}
+                className="flex items-center justify-between px-3 py-1.5 text-sm"
+                onClick={() => {
+                  const newOrder =
+                    currentSort.field === field.value && currentSort.order === SortOrder.Asc
+                      ? SortOrder.Desc
+                      : SortOrder.Asc;
+                  onSortChange(field.value, newOrder);
+                }}
+              >
+                <span>{field.label}</span>
+                {currentSort.field === field.value &&
+                  (currentSort.order === SortOrder.Asc ? (
+                    <ArrowUp className="size-4" />
+                  ) : (
+                    <ArrowDown className="size-4" />
+                  ))}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

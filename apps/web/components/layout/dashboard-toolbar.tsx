@@ -23,10 +23,12 @@ export function DashboardToolbar({ actions }: DashboardToolbarProps) {
         isExpanded ? 'gap-4' : 'gap-0'
       )}
     >
-      <div className="flex items-center justify-between sm:justify-start gap-4">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger />
-          <Breadcrumb />
+      <div className="flex items-center justify-between sm:justify-start gap-4 min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <SidebarTrigger className="flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <Breadcrumb />
+          </div>
         </div>
         {actions && (
           <Button
@@ -40,11 +42,11 @@ export function DashboardToolbar({ actions }: DashboardToolbarProps) {
         )}
       </div>
       {actions && (
-        <div className="flex items-center w-full sm:w-auto">
+        <div className="flex items-center w-full sm:w-auto flex-shrink-0">
           <div
             className={cn(
               'flex flex-col sm:flex-row sm:items-center overflow-hidden transition-all duration-200 ease-in-out w-full',
-              'sm:max-h-none sm:gap-4',
+              'sm:max-h-none sm:gap-2 max-[1600px]:sm:gap-1.5',
               isExpanded ? 'max-h-[500px] gap-4' : 'max-h-0 sm:max-h-none'
             )}
           >

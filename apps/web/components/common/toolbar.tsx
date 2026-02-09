@@ -9,7 +9,7 @@ export function Toolbar({ items }: ToolbarProps) {
   const filteredItems = items.filter(Boolean);
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 max-[1600px]:gap-1.5">
       {filteredItems.map((item, index) => (
         <div key={index} className="w-full sm:w-auto">
           {item}
