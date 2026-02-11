@@ -107,9 +107,9 @@ async function startServer() {
   app.use(
     '/graphql',
     expressMiddleware(apolloServer, {
-      context: async ({ req }: { req: express.Request }) => {
+      context: async ({ req, res }: { req: express.Request; res: express.Response }) => {
         const contextReq = req as ContextRequest;
-        return contextReq.context;
+        return { ...contextReq.context, req, res };
       },
     })
   );

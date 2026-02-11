@@ -1,15 +1,17 @@
 'use client';
 
-import { redirect, useParams } from 'next/navigation';
+import { useEffect } from 'react';
 
-import { useLocale } from 'next-intl';
+import { useParams } from 'next/navigation';
+
+import { useRouter } from '@/i18n/navigation';
 
 export default function ProjectPage() {
-  const currentLocale = useLocale();
+  const router = useRouter();
   const params = useParams();
   const organizationId = params.organizationId as string;
   const projectId = params.projectId as string;
-  return redirect(
-    `/${currentLocale}/dashboard/organizations/${organizationId}/projects/${projectId}/users`
-  );
+  useEffect(() => {
+    router.push(`/dashboard/organizations/${organizationId}/projects/${projectId}/users`);
+  }, [organizationId, projectId, router]);
 }

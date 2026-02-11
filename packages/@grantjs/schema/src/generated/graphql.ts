@@ -909,11 +909,6 @@ export type MutationLoginArgs = {
   input: LoginInput;
 };
 
-export type MutationRefreshSessionArgs = {
-  accessToken: Scalars['String']['input'];
-  refreshToken: Scalars['String']['input'];
-};
-
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
@@ -2724,10 +2719,7 @@ export type LoginMutation = {
   };
 };
 
-export type RefreshSessionMutationVariables = Exact<{
-  accessToken: Scalars['String']['input'];
-  refreshToken: Scalars['String']['input'];
-}>;
+export type RefreshSessionMutationVariables = Exact<{ [key: string]: never }>;
 
 export type RefreshSessionMutation = {
   __typename?: 'Mutation';
@@ -4545,42 +4537,12 @@ export const RefreshSessionDocument = {
       kind: 'OperationDefinition',
       operation: 'mutation',
       name: { kind: 'Name', value: 'RefreshSession' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'accessToken' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'refreshToken' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
-          },
-        },
-      ],
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'refreshSession' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'accessToken' },
-                value: { kind: 'Variable', name: { kind: 'Name', value: 'accessToken' } },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'refreshToken' },
-                value: { kind: 'Variable', name: { kind: 'Name', value: 'refreshToken' } },
-              },
-            ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [

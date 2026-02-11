@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { useRouter } from 'next/navigation';
-
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import {
   SettingActiveSessionsList,
@@ -26,8 +24,6 @@ export default function SecuritySettingsPage() {
   const { accessToken, clearAuth } = useAuthStore();
   const { changeMyPassword, revokeMyUserSession } = useMyMutations();
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const router = useRouter();
-  const locale = useLocale();
 
   const { authenticationMethods, loading: authMethodsLoading } = useMyUserAuthenticationMethods();
 
@@ -61,7 +57,6 @@ export default function SecuritySettingsPage() {
     await revokeMyUserSession(sessionId);
     if (currentSessionId === sessionId) {
       clearAuth();
-      router.push(`/${locale}/auth/login`);
     } else {
       refetchSessions();
     }

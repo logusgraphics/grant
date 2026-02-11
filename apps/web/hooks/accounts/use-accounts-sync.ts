@@ -1,14 +1,16 @@
-import { useEffect } from 'react';
-
-import { useLocale } from 'next-intl';
+import { useLayoutEffect } from 'react';
 
 import { useMe } from '@/hooks/auth';
-import { isRedirectInProgress } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 export function useAccountsSync() {
-  const locale = useLocale();
-  const { syncFromMe, isAuthenticated, clearAuth, loading: storeLoading } = useAuthStore();
+  const {
+    syncFromMe,
+    setCurrentAccount,
+    loading: storeLoading,
+    currentAccountId,
+    accessToken,
+  } = useAuthStore();
   const {
     accounts,
     email,
@@ -18,21 +20,11 @@ export function useAccountsSync() {
   } = useMe();
 
   const loading = storeLoading || meLoading;
+  const auth = !!accessToken;
 
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    if (isRedirectInProgress()) {
-      return;
-    }
-
-    if (!isAuthenticated()) {
-      clearAuth();
-      window.location.href = `/${locale}/auth/login`;
-      return;
-    }
+  useLayoutEffect(() => {
+    if (!auth) return;
+    if (loading) return;
 
     syncFromMe({
       accounts,
@@ -40,15 +32,23 @@ export function useAccountsSync() {
       requiresEmailVerification,
       verificationExpiry,
     });
+
+    if (!accounts.length) return;
+
+    const hasValidCurrent = currentAccountId && accounts.some((a) => a.id === currentAccountId);
+    if (!hasValidCurrent) {
+      setCurrentAccount(accounts[0].id);
+    }
   }, [
+    auth,
+    loading,
     accounts,
     email,
     requiresEmailVerification,
     verificationExpiry,
-    loading,
-    isAuthenticated,
+    currentAccountId,
+    accessToken,
     syncFromMe,
-    clearAuth,
-    locale,
+    setCurrentAccount,
   ]);
 }

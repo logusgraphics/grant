@@ -84,21 +84,26 @@ export class Grant {
 
   public async isAuthorized(
     permission: IsAuthorizedPermissionInput,
-    context: IsAuthorizedContextInput
+    context: IsAuthorizedContextInput,
+    scopeOverride?: Scope | null
   ): Promise<AuthorizationResult> {
     if (!this.isAuthenticated()) {
       return { authorized: false, reason: AuthorizationReason.NotAuthenticated };
     }
 
-    const { userId, scope } = this.auth!;
+    const { userId, scope, type } = this.auth!;
 
     if (!scope) {
       return { authorized: false, reason: AuthorizationReason.InvalidScope };
     }
 
+    // For session tokens, allow scope override; for API keys, always use token scope
+    const effectiveScope =
+      scopeOverride != null && type === TokenType.Session ? scopeOverride : scope;
+
     return this.permissionChecker.check({
       userId,
-      scope,
+      scope: effectiveScope,
       permission,
       context,
     });

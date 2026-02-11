@@ -2,7 +2,7 @@
 
 import { Geist, Geist_Mono } from 'next/font/google';
 
-import { ApolloProvider, GrantProvider, ThemeProvider } from '@/components/providers';
+import { ApolloProvider, ThemeProvider } from '@/components/providers';
 import { Toast } from '@/components/ui/toast';
 import './globals.css';
 
@@ -22,10 +22,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
           <ApolloProvider>
-            <GrantProvider>
-              {children}
-              <Toast />
-            </GrantProvider>
+            {children}
+            <Toast />
           </ApolloProvider>
         </ThemeProvider>
       </body>

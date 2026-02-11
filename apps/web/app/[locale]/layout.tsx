@@ -8,7 +8,7 @@ import { AbstractIntlMessages } from 'next-intl';
 
 import { FullPageLoader } from '@/components/common';
 import { Header } from '@/components/layout';
-import { MessageProvider } from '@/components/providers';
+import { GrantProvider, MessageProvider, SessionRestoreGate } from '@/components/providers';
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -43,10 +43,14 @@ export default function LocaleLayout({ children }: LocaleLayoutProps) {
 
   return (
     <MessageProvider messages={messages} locale={locale}>
-      <div className="relative flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-      </div>
+      <GrantProvider>
+        <SessionRestoreGate>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+          </div>
+        </SessionRestoreGate>
+      </GrantProvider>
     </MessageProvider>
   );
 }

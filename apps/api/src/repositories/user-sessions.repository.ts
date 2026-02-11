@@ -148,6 +148,27 @@ export class UserSessionRepository extends EntityRepository<UserSessionModel, Us
     return result.items[0];
   }
 
+  /**
+   * Find a valid session by refresh token only (for cookie-based refresh).
+   */
+  public async getSessionByRefreshToken(
+    token: string,
+    transaction?: Transaction
+  ): Promise<UserSession | undefined> {
+    const now = new Date();
+    const result = await this.query(
+      {
+        limit: 1,
+        filters: [
+          { field: 'token', operator: 'eq', value: token },
+          { field: 'expiresAt', operator: 'gte', value: now },
+        ],
+      },
+      transaction
+    );
+    return result.items[0];
+  }
+
   async updateUserSession(
     params: UpdateUserSessionInput,
     transaction?: Transaction

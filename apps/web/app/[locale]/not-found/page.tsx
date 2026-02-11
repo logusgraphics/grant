@@ -1,18 +1,14 @@
 'use client';
 
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-
 import { FileQuestion, Home, ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { usePageTitle } from '@/hooks';
+import { Link } from '@/i18n/navigation';
 
 export default function NotFoundPage() {
   const t = useTranslations('errors');
-  const params = useParams();
-  const locale = params.locale as string;
 
   usePageTitle('errors.notFound');
 
@@ -42,7 +38,7 @@ export default function NotFoundPage() {
         {/* Action buttons */}
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button variant="default" size="lg" asChild>
-            <Link href={`/${locale}/dashboard`}>
+            <Link href={`/dashboard`}>
               <Home className="mr-2 h-4 w-4" />
               {t('notFound.goHome')}
             </Link>

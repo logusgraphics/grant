@@ -2,20 +2,19 @@
 
 import { useEffect } from 'react';
 
-import { useLocale } from 'next-intl';
-
 import { FullPageLoader } from '@/components/common';
+import { useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function HomePage() {
   const { isAuthenticated, loading } = useAuthStore();
-  const locale = useLocale();
+  const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
-    const redirectPath = isAuthenticated() ? `/${locale}/dashboard` : `/${locale}/auth/login`;
-    window.location.href = redirectPath;
-  }, [isAuthenticated, locale, loading]);
+    const redirectPath = isAuthenticated() ? `/dashboard` : `/auth/login`;
+    router.push(redirectPath);
+  }, [isAuthenticated, loading, router]);
 
   return <FullPageLoader />;
 }

@@ -3,8 +3,8 @@
 import { useEffect } from 'react';
 
 import { AccountType } from '@grantjs/schema';
-import { useLocale } from 'next-intl';
 
+import { useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 interface OrganizationLayoutProps {
@@ -14,14 +14,14 @@ interface OrganizationLayoutProps {
 export default function OrganizationLayout({ children }: OrganizationLayoutProps) {
   const { getCurrentAccount, loading } = useAuthStore();
   const currentAccount = getCurrentAccount();
-  const locale = useLocale();
+  const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
     if (currentAccount && currentAccount.type === AccountType.Personal) {
-      window.location.href = `/${locale}/dashboard/accounts/${currentAccount.id}`;
+      router.push(`/dashboard/accounts/${currentAccount.id}`);
     }
-  }, [locale, currentAccount, loading]);
+  }, [currentAccount, loading, router]);
 
   return children;
 }

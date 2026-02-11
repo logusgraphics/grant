@@ -7,6 +7,12 @@ import type {
 } from './types';
 
 /**
+ * Module-level shared promise for cookie-only refresh so that all 401s
+ * (across all GrantClient instances and in-flight requests) coalesce into one refresh.
+ */
+let sharedCredentialsRefreshPromise: Promise<boolean> | null = null;
+
+/**
  * Grant Client for browser applications
  *
  * Makes HTTP requests to the Grant API to check permissions
@@ -87,6 +93,10 @@ export class GrantClient {
       const scope = options?.scope;
       const hasValidScope =
         scope && typeof scope === 'object' && 'tenant' in scope && 'id' in scope;
+      // When scope is provided and context.resource is not, derive context.resource from scope.id
+      const contextResource =
+        options?.context?.resource ??
+        (hasValidScope && scope && 'id' in scope && scope.id != null ? { id: scope.id } : null);
 
       const response = await this.fetchWithAuth('/api/auth/is-authorized', {
         method: 'POST',
@@ -96,7 +106,7 @@ export class GrantClient {
             action,
           },
           context: {
-            resource: options?.context?.resource ?? null,
+            resource: contextResource,
           },
           // Pass scope for dynamic scope override (only works with session tokens)
           ...(hasValidScope && { scope }),
@@ -157,13 +167,24 @@ export class GrantClient {
   private async fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
     const response = await this.doFetch(url, init);
 
-    // If unauthorized and we have refresh capability, try to refresh and retry
-    if (response.status === 401 && this.config.onTokenRefresh) {
+    if (response.status !== 401) return response;
+
+    // Try body-based refresh first (accessToken + refreshToken in body)
+    if (this.config.onTokenRefresh) {
       const refreshed = await this.tryRefreshToken();
-      if (refreshed) {
-        // Retry the original request with new token
-        return this.doFetch(url, init);
+      if (refreshed) return this.doFetch(url, init);
+    }
+
+    // Fallback: cookie-only refresh (e.g. web app with HttpOnly refresh cookie).
+    // Module-level shared promise so all 401s (any client instance) coalesce into one refresh.
+    if (this.config.onRefreshWithCredentials) {
+      if (!sharedCredentialsRefreshPromise) {
+        sharedCredentialsRefreshPromise = this.config.onRefreshWithCredentials().finally(() => {
+          sharedCredentialsRefreshPromise = null;
+        });
       }
+      const refreshed = await sharedCredentialsRefreshPromise;
+      if (refreshed) return this.doFetch(url, init);
     }
 
     return response;

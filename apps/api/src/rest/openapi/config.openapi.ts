@@ -9,7 +9,6 @@ import {
   logoutRequestSchema,
   logoutResultSchema,
   notFoundErrorResponseSchema,
-  refreshSessionRequestSchema,
   registerRequestSchema,
   validationErrorResponseSchema,
 } from '@/rest/schemas';
@@ -46,7 +45,6 @@ function registerCommonSchemas() {
   registry.register('LoginResult', loginResultSchema);
   registry.register('RegisterRequest', registerRequestSchema);
   registry.register('AuthTokens', authTokensSchema);
-  registry.register('RefreshSessionRequest', refreshSessionRequestSchema);
   registry.register('LogoutRequest', logoutRequestSchema);
   registry.register('LogoutResult', logoutResultSchema);
   registry.register('Not Found Error Response', notFoundErrorResponseSchema);

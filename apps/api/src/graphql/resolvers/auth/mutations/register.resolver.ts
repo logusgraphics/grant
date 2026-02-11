@@ -1,11 +1,12 @@
 import { MutationResolvers } from '@grantjs/schema';
 
 import { GraphqlContext } from '@/graphql/types';
+import { setRefreshTokenCookie } from '@/rest/utils/refresh-cookie';
 
 export const register: MutationResolvers<GraphqlContext>['register'] = async (_, args, context) => {
   const { type, provider, providerId, providerData } = args.input;
   const { locale, userAgent, ipAddress } = context;
-  return context.handlers.auth.register(
+  const result = await context.handlers.auth.register(
     {
       type,
       provider,
@@ -16,4 +17,6 @@ export const register: MutationResolvers<GraphqlContext>['register'] = async (_,
     userAgent,
     ipAddress
   );
+  setRefreshTokenCookie(context.res, result.refreshToken);
+  return result;
 };

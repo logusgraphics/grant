@@ -1,5 +1,6 @@
-mutation RefreshSession($accessToken: String!, $refreshToken: String!) {
-  refreshSession(accessToken: $accessToken, refreshToken: $refreshToken) {
+# Cookie-based refresh only (no variables).
+mutation RefreshSession {
+  refreshSession {
     accessToken
     refreshToken
   }

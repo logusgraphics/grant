@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import Link from 'next/link';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { AlertTriangle, CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -12,17 +11,16 @@ import { AuthLayout } from '@/components/layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useAuthMutations, usePageTitle } from '@/hooks';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 type VerificationStatus = 'verifying' | 'success' | 'error' | 'expired' | 'missing-token';
 
 export default function VerifyEmailPage() {
   const t = useTranslations('auth');
-  const params = useParams();
-  const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const searchParams = useSearchParams();
-  const locale = params.locale as string;
+  const router = useRouter();
   const [status, setStatus] = useState<VerificationStatus>('verifying');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const { verifyEmail } = useAuthMutations();
@@ -51,9 +49,9 @@ export default function VerifyEmailPage() {
 
         setTimeout(() => {
           if (isAuthenticated()) {
-            router.push(`/${locale}/dashboard`);
+            router.push(`/dashboard`);
           } else {
-            router.push(`/${locale}/auth/login`);
+            router.push(`/auth/login`);
           }
         }, 3000);
       } catch (error) {
@@ -74,7 +72,7 @@ export default function VerifyEmailPage() {
 
     handleVerification();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, router, locale]);
+  }, [searchParams, router]);
 
   const renderContent = () => {
     switch (status) {
@@ -112,7 +110,7 @@ export default function VerifyEmailPage() {
               </AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/login`}>
+              <Link href={`/auth/login`}>
                 <Button className="w-full" variant="default">
                   {t('verifyEmail.goToLogin')}
                 </Button>
@@ -130,7 +128,7 @@ export default function VerifyEmailPage() {
               <AlertDescription>{t('verifyEmail.expiredTokenDescription')}</AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/login`}>
+              <Link href={`/auth/login`}>
                 <Button className="w-full" variant="default">
                   {t('verifyEmail.goToLogin')}
                 </Button>
@@ -148,7 +146,7 @@ export default function VerifyEmailPage() {
               <AlertDescription>{t('verifyEmail.missingTokenDescription')}</AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/login`}>
+              <Link href={`/auth/login`}>
                 <Button className="w-full" variant="default">
                   {t('verifyEmail.goToLogin')}
                 </Button>

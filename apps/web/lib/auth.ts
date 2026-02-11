@@ -1,11 +1,27 @@
-import { AUTH_ACCESS_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '@grantjs/constants';
 import { AccountType } from '@grantjs/schema';
-import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
-// ---------------------------------------------------------------------------
-// Redirect-in-progress flag (shared between Apollo error link and useAccountsSync)
-// ---------------------------------------------------------------------------
+export function isPublicPath(pathname: string): boolean {
+  if (!pathname || pathname === '/') return false;
+  return (
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/verify-email') ||
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/invitations') ||
+    pathname.startsWith('/forbidden') ||
+    pathname.startsWith('/not-found')
+  );
+}
+
+export function isAuthOnlyPath(pathname: string): boolean {
+  if (!pathname || pathname === '/') return false;
+  return (
+    pathname.startsWith('/auth/login') ||
+    pathname.startsWith('/auth/register') ||
+    pathname.startsWith('/auth/forgot-password')
+  );
+}
 
 export interface WindowWithGrantFlag extends Window {
   __grantRedirectInProgress?: boolean;
@@ -23,15 +39,6 @@ export function setRedirectInProgress(value: boolean): void {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Cookie-based token storage (legacy; current OAuth flow uses localStorage via auth store)
-// ---------------------------------------------------------------------------
-
-// Cookie expiration matches the refresh token expiration from API config
-// Default to 30 days to match JWT_REFRESH_TOKEN_EXPIRATION_DAYS default
-const REFRESH_TOKEN_EXPIRATION_DAYS =
-  Number(process.env.NEXT_PUBLIC_REFRESH_TOKEN_EXPIRATION_DAYS) || 30;
-
 interface JWTPayload {
   exp: number;
   sub: string;
@@ -39,35 +46,6 @@ interface JWTPayload {
   jti?: string;
   aud?: string;
   iat?: number;
-}
-
-/** @deprecated OAuth flow uses localStorage via auth store. Kept for backwards compatibility. */
-export function setStoredTokens(accessToken: string, refreshToken: string): void {
-  Cookies.set(AUTH_ACCESS_TOKEN_KEY, accessToken, {
-    expires: REFRESH_TOKEN_EXPIRATION_DAYS,
-    path: '/',
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
-  Cookies.set(AUTH_REFRESH_TOKEN_KEY, refreshToken, {
-    expires: REFRESH_TOKEN_EXPIRATION_DAYS,
-    path: '/',
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
-}
-
-/** @deprecated OAuth flow uses localStorage via auth store. Kept for backwards compatibility. */
-export function removeStoredTokens(): void {
-  Cookies.remove(AUTH_ACCESS_TOKEN_KEY, { path: '/' });
-  Cookies.remove(AUTH_REFRESH_TOKEN_KEY, { path: '/' });
-}
-
-/** @deprecated OAuth flow uses localStorage via auth store. Kept for backwards compatibility. */
-export function getStoredTokens(): { accessToken: string | null; refreshToken: string | null } {
-  const accessToken = Cookies.get(AUTH_ACCESS_TOKEN_KEY) || null;
-  const refreshToken = Cookies.get(AUTH_REFRESH_TOKEN_KEY) || null;
-  return { accessToken, refreshToken };
 }
 
 export function isTokenValid(token: string): boolean {
@@ -80,18 +58,14 @@ export function isTokenValid(token: string): boolean {
   }
 }
 
-export function getRedirectPath(
-  accountType: AccountType,
-  accountId: string,
-  locale: string
-): string {
+export function getRedirectPath(accountType: AccountType, accountId: string): string {
   switch (accountType) {
     case AccountType.Personal:
-      return `/${locale}/dashboard/accounts/${accountId}`;
+      return `/dashboard/accounts/${accountId}`;
     case AccountType.Organization:
-      return `/${locale}/dashboard/organizations`;
+      return `/dashboard/organizations`;
     default:
-      return `/${locale}/dashboard`;
+      return `/dashboard`;
   }
 }
 

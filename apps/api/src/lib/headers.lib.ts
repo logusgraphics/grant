@@ -1,6 +1,6 @@
 import { IncomingHttpHeaders } from 'http';
 
-import { AUTH_ACCESS_TOKEN_KEY } from '@grantjs/constants';
+import { AUTH_ACCESS_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '@grantjs/constants';
 import { Request } from 'express';
 
 export interface ContextHeaders {
@@ -74,6 +74,20 @@ export function getAuthorizationFromCookie(req: Request): string | null {
   if (req.headers.cookie) {
     const cookies = parseCookieHeader(req.headers.cookie);
     return cookies[AUTH_ACCESS_TOKEN_KEY] || null;
+  }
+
+  return null;
+}
+
+/** Read refresh token from cookie (for cookie-based refresh). */
+export function getRefreshTokenFromCookie(req: Request): string | null {
+  if (req.cookies?.[AUTH_REFRESH_TOKEN_KEY]) {
+    return req.cookies[AUTH_REFRESH_TOKEN_KEY];
+  }
+
+  if (req.headers.cookie) {
+    const cookies = parseCookieHeader(req.headers.cookie);
+    return cookies[AUTH_REFRESH_TOKEN_KEY] || null;
   }
 
   return null;

@@ -1,6 +1,8 @@
 'use client';
 
-import { redirect, useSearchParams } from 'next/navigation';
+import { useCallback } from 'react';
+
+import { useSearchParams } from 'next/navigation';
 
 import { Globe, Monitor, Moon, Sun } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -9,7 +11,7 @@ import { useTheme } from 'next-themes';
 import { SettingCard } from '@/components/features/settings';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { usePathname } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { locales } from '@/i18n/routing';
 
 const LOCALE_LABELS: Record<string, string> = {
@@ -22,11 +24,15 @@ export function SettingPreferences() {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const currentLocale = useLocale();
 
-  const handleLanguageChange = (locale: string) => {
-    redirect(`/${locale}/${pathname}?${searchParams.toString()}`);
-  };
+  const handleLanguageChange = useCallback(
+    (locale: string) => {
+      router.push(`/${pathname}?${searchParams.toString()}`, { locale });
+    },
+    [pathname, searchParams, router]
+  );
 
   return (
     <div className="space-y-6">

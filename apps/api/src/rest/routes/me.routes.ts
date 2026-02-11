@@ -1,8 +1,10 @@
 import { Response, Router } from 'express';
 
 import { authenticateRestRoute } from '@/lib/authorization';
+import { getRefreshTokenFromCookie } from '@/lib/headers.lib';
 import { validate } from '@/middleware/validation.middleware';
 import { TypedRequest } from '@/rest/types';
+import { clearRefreshTokenCookie } from '@/rest/utils/refresh-cookie';
 import { sendSuccessResponse } from '@/rest/utils/response';
 import { RequestContext } from '@/types';
 
@@ -137,8 +139,12 @@ export function createMeRouter(context: RequestContext): Router {
     }
   );
 
-  router.post('/logout', authenticateRestRoute, async (req, res) => {
-    await context.handlers.me.logout();
+  router.post('/logout', async (req: TypedRequest<Record<string, never>>, res: Response) => {
+    const refreshTokenFromCookie = getRefreshTokenFromCookie(req);
+    if (refreshTokenFromCookie) {
+      await context.handlers.auth.logout(refreshTokenFromCookie);
+    }
+    clearRefreshTokenCookie(res);
     sendSuccessResponse(res, { message: 'Logged out successfully' });
   });
 

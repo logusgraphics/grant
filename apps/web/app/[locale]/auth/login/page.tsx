@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -22,9 +21,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuthMutations, usePageTitle } from '@/hooks';
+import { Link, useRouter } from '@/i18n/navigation';
+import { getAuthRedirectUrl } from '@/lib/redirect';
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -32,9 +33,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const t = useTranslations('auth');
-  const params = useParams();
   const searchParams = useSearchParams();
-  const locale = params.locale as string;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAuthSuccess, setIsAuthSuccess] = useState(false);
   usePageTitle('auth.login');
@@ -51,6 +50,7 @@ export default function LoginPage() {
     mode: 'onSubmit',
   });
 
+  const router = useRouter();
   const { login } = useAuthMutations();
 
   const registerUrl = useMemo(() => {
@@ -58,8 +58,8 @@ export default function LoginPage() {
     if (redirectParam) params.set('redirect', redirectParam);
     if (emailParam) params.set('email', emailParam);
     const queryString = params.toString();
-    return `/${locale}/auth/register${queryString ? `?${queryString}` : ''}`;
-  }, [locale, redirectParam, emailParam]);
+    return `/auth/register${queryString ? `?${queryString}` : ''}`;
+  }, [redirectParam, emailParam]);
 
   const onSubmit = async (values: LoginFormValues) => {
     setIsSubmitting(true);
@@ -69,6 +69,7 @@ export default function LoginPage() {
         password: values.password,
       });
       setIsAuthSuccess(true);
+      router.push(getAuthRedirectUrl() ?? '/dashboard');
     } catch {
       setIsSubmitting(false);
     }
@@ -150,9 +151,7 @@ export default function LoginPage() {
           />
           <div>
             <Link
-              href={{
-                pathname: `/${locale}/auth/forgot-password`,
-              }}
+              href={`/auth/forgot-password`}
               className="text-sm text-primary hover:text-primary/80"
             >
               {t('login.forgotPassword')}

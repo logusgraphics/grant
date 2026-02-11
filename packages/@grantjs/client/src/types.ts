@@ -37,6 +37,14 @@ export interface GrantClientConfig {
   onUnauthorized?: () => void;
 
   /**
+   * Optional callback to refresh the session using credentials only (e.g. HttpOnly cookie).
+   * Called on 401 when body-based refresh is not available (e.g. getRefreshToken returns null).
+   * Should call POST /api/auth/refresh with credentials: 'include', then update app token storage.
+   * Return true if refresh succeeded so the client can retry the request.
+   */
+  onRefreshWithCredentials?: () => Promise<boolean>;
+
+  /**
    * Custom fetch implementation
    * Defaults to globalThis.fetch
    */

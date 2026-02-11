@@ -3,16 +3,16 @@ import { Response, Router } from 'express';
 
 import { config } from '@/config';
 import { authenticateRestRoute } from '@/lib/authorization';
+import { AuthenticationError } from '@/lib/errors';
+import { getRefreshTokenFromCookie } from '@/lib/headers.lib';
 import { createModuleLogger } from '@/lib/logger';
 import { validate, validateBody, validateQuery } from '@/middleware/validation.middleware';
 import {
-  callbackExchangeRequestSchema,
   cliCallbackRequestSchema,
   handleGithubCallbackQuerySchema,
   initiateGithubAuthQuerySchema,
   isAuthorizedRequestSchema,
   loginRequestSchema,
-  refreshSessionRequestSchema,
   registerRequestSchema,
   requestPasswordResetRequestSchema,
   resendVerificationRequestSchema,
@@ -31,6 +31,7 @@ import {
   isCliRedirectUrl,
   validateRedirectUrl,
 } from '@/rest/utils/auth';
+import { clearRefreshTokenCookie, setRefreshTokenCookie } from '@/rest/utils/refresh-cookie';
 import { sendSuccessResponse } from '@/rest/utils/response';
 import { RequestContext } from '@/types';
 
@@ -57,6 +58,7 @@ export function createAuthRoutes(context: RequestContext) {
         context.ipAddress
       );
 
+      setRefreshTokenCookie(res, result.refreshToken);
       sendSuccessResponse(res, result);
     }
   );
@@ -79,28 +81,36 @@ export function createAuthRoutes(context: RequestContext) {
         context.ipAddress
       );
 
+      setRefreshTokenCookie(res, result.refreshToken);
       sendSuccessResponse(res, result, 201);
     }
   );
 
-  router.post(
-    '/refresh',
-    validateBody(refreshSessionRequestSchema),
-    async (req: TypedRequest<{ body: typeof refreshSessionRequestSchema }>, res: Response) => {
-      const { accessToken, refreshToken } = req.body;
-
+  router.post('/refresh', async (req: TypedRequest<Record<string, never>>, res: Response) => {
+    const refreshTokenFromCookie = getRefreshTokenFromCookie(req);
+    if (!refreshTokenFromCookie) {
+      throw new AuthenticationError(
+        'Invalid or expired refresh token',
+        'errors:auth.invalidRefreshToken'
+      );
+    }
+    try {
       const result = await context.handlers.auth.refreshSession(
-        {
-          accessToken,
-          refreshToken,
-        },
+        refreshTokenFromCookie,
         context.userAgent,
         context.ipAddress
       );
-
-      sendSuccessResponse(res, result);
+      setRefreshTokenCookie(res, result.refreshToken);
+      sendSuccessResponse(res, { accessToken: result.accessToken });
+    } catch (err) {
+      clearRefreshTokenCookie(res);
+      if (err instanceof AuthenticationError) throw err;
+      throw new AuthenticationError(
+        'Invalid or expired refresh token',
+        'errors:auth.invalidRefreshToken'
+      );
     }
-  );
+  });
 
   router.post(
     '/verify-email',
@@ -260,16 +270,10 @@ export function createAuthRoutes(context: RequestContext) {
           return;
         }
 
-        // Browser flow: one-time code so frontend can exchange for tokens (avoids fragment issues).
+        // Browser flow: set refresh token cookie and redirect to nextUrl (e.g. /dashboard).
         const nextUrl = buildAuthRedirectUrl(oauthResult, locale);
-        const webCallbackCode = await context.handlers.oauth.storeWebCallbackPayload({
-          accessToken: loginResult.accessToken,
-          refreshToken: loginResult.refreshToken,
-          nextUrl,
-          accounts: loginResult.accounts,
-        });
-        const callbackUrl = `${frontendUrl}/${locale}/callback?code=${encodeURIComponent(webCallbackCode)}`;
-        res.redirect(callbackUrl);
+        setRefreshTokenCookie(res, loginResult.refreshToken);
+        res.redirect(nextUrl);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         const errorCode = determineErrorCode(err);
@@ -307,27 +311,6 @@ export function createAuthRoutes(context: RequestContext) {
         return;
       }
       sendSuccessResponse(res, payload);
-    }
-  );
-
-  router.post(
-    '/callback/exchange',
-    validateBody(callbackExchangeRequestSchema),
-    async (req: TypedRequest<{ body: typeof callbackExchangeRequestSchema }>, res: Response) => {
-      const { code } = req.body;
-      const payload = await context.handlers.oauth.consumeWebCallbackCode(code);
-      if (!payload) {
-        res.status(400).json({
-          success: false,
-          error: { code: 'invalid_or_expired_code', message: 'Invalid or expired one-time code' },
-        });
-        return;
-      }
-      sendSuccessResponse(res, {
-        accessToken: payload.accessToken,
-        refreshToken: payload.refreshToken,
-        nextUrl: payload.nextUrl,
-      });
     }
   );
 

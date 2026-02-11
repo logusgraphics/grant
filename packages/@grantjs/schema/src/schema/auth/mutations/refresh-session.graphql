@@ -1,3 +1,4 @@
+# Cookie-based refresh only (HttpOnly cookie). Aligns with REST POST /api/auth/refresh.
 extend type Mutation {
-  refreshSession(accessToken: String!, refreshToken: String!): RefreshSessionResponse!
+  refreshSession: RefreshSessionResponse!
 }

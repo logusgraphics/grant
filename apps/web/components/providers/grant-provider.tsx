@@ -4,7 +4,9 @@ import { ReactNode, useMemo } from 'react';
 
 import { GrantProvider as GrantProviderBase, type GrantClientConfig } from '@grantjs/client/react';
 
+import { logoutSession } from '@/lib/apollo-client';
 import { getApiBaseUrl } from '@/lib/constants';
+import { refreshSessionViaCookie } from '@/lib/refresh-session';
 import { useAuthStore } from '@/stores/auth.store';
 
 interface GrantProviderProps {
@@ -20,23 +22,23 @@ export function GrantProvider({ children }: GrantProviderProps) {
     () => ({
       apiUrl: getApiBaseUrl(),
 
-      // Token getters - read from auth store
+      // Token getters - read from auth store (refresh token is HttpOnly cookie, not in JS)
       getAccessToken: () => useAuthStore.getState().accessToken,
-      getRefreshToken: () => useAuthStore.getState().refreshToken,
+      getRefreshToken: () => null,
 
-      // Handle token refresh - update auth store with new tokens
+      // Handle token refresh - update auth store with new access token only
       onTokenRefresh: (tokens) => {
-        useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
+        useAuthStore.getState().setAccessToken(tokens.accessToken);
       },
 
-      // Handle unauthorized - clear auth and redirect to login
-      onUnauthorized: () => {
+      // Handle unauthorized - clear server session and client auth; SessionRestoreGate will redirect to login
+      onUnauthorized: async () => {
+        await logoutSession();
         useAuthStore.getState().clearAuth();
-        // Redirect to login page
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
-        }
       },
+
+      // Cookie-only refresh on 401; uses shared refresh so Apollo + Grant trigger a single refresh
+      onRefreshWithCredentials: () => refreshSessionViaCookie(),
 
       // Cache configuration
       cache: {

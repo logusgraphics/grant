@@ -10,7 +10,6 @@ import {
   loginResultSchema,
   logoutRequestSchema,
   logoutResponseSchema,
-  refreshSessionRequestSchema,
   refreshSessionResponseSchema,
   registerRequestSchema,
   registerResponseSchema,
@@ -156,23 +155,15 @@ export function registerAuthEndpoints(registry: OpenAPIRegistry) {
 
   /**
    * POST /api/auth/refresh
-   * Refresh authentication tokens
+   * Refresh session using refresh token from HttpOnly cookie (no request body).
    */
   registry.registerPath({
     method: 'post',
     path: '/api/auth/refresh',
     tags: ['Authentication'],
     summary: 'Refresh session',
-    description: 'Refresh access and refresh tokens for an authenticated session',
-    request: {
-      body: {
-        content: {
-          'application/json': {
-            schema: refreshSessionRequestSchema,
-          },
-        },
-      },
-    },
+    description:
+      'Refresh access token using the refresh token sent in an HttpOnly cookie. No request body. Responds with new accessToken; refresh cookie is rotated on success.',
     responses: {
       200: {
         description: 'Successfully refreshed tokens',
@@ -182,16 +173,8 @@ export function registerAuthEndpoints(registry: OpenAPIRegistry) {
           },
         },
       },
-      400: {
-        description: 'Validation error',
-        content: {
-          'application/json': {
-            schema: validationErrorResponseSchema,
-          },
-        },
-      },
       401: {
-        description: 'Invalid or expired tokens',
+        description: 'Invalid or expired refresh token (or no cookie)',
         content: {
           'application/json': {
             schema: authenticationErrorResponseSchema,

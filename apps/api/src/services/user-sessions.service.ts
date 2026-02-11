@@ -230,12 +230,67 @@ export class UserSessionService extends AuditService {
     return this.signSession(refreshedSession, isVerified ?? true);
   }
 
+  /**
+   * Refresh session using only the refresh token (e.g. from HttpOnly cookie).
+   * Used by the web app when no access token is available or for cookie-based refresh.
+   */
+  public async refreshSessionByRefreshToken(
+    refreshToken: string,
+    transaction?: Transaction,
+    userAgent?: string | null,
+    ipAddress?: string | null,
+    isVerified?: boolean
+  ): Promise<CreateSessionResult | null> {
+    const session = await this.repositories.userSessionRepository.getSessionByRefreshToken(
+      refreshToken,
+      transaction
+    );
+
+    if (!session) {
+      return null;
+    }
+
+    const newRefreshToken = this.generateRefreshToken();
+    const now = Date.now();
+    const finalUserAgent = userAgent ?? session.userAgent ?? null;
+    const finalIpAddress = ipAddress ?? session.ipAddress ?? null;
+
+    const refreshedSession = await this.repositories.userSessionRepository.refreshUserSession(
+      session.id,
+      newRefreshToken,
+      this.getRefreshTokenExpirationDate(now),
+      new Date(),
+      finalUserAgent,
+      finalIpAddress,
+      transaction
+    );
+
+    return this.signSession(refreshedSession, isVerified ?? true);
+  }
+
   public async revokeSession(id: string, transaction?: Transaction): Promise<UserSession> {
     const revokedSession = await this.repositories.userSessionRepository.softDeleteUserSession(
       { id },
       transaction
     );
     return revokedSession;
+  }
+
+  /**
+   * Revoke the session identified by the refresh token (e.g. from cookie).
+   * Used by POST /api/auth/logout when no access token is available.
+   */
+  public async revokeSessionByRefreshToken(
+    refreshToken: string,
+    transaction?: Transaction
+  ): Promise<boolean> {
+    const session = await this.repositories.userSessionRepository.getSessionByRefreshToken(
+      refreshToken,
+      transaction
+    );
+    if (!session) return false;
+    await this.revokeSession(session.id, transaction);
+    return true;
   }
 
   public async refreshSessionLastUsed(

@@ -79,17 +79,6 @@ export const registerResponseSchema = createSuccessResponseSchema(
   'Successfully registered new user'
 );
 
-export const refreshSessionRequestSchema = z.object({
-  accessToken: z.string().min(1, 'Access token is required').openapi({
-    description: 'Current access token',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  }),
-  refreshToken: z.string().min(1, 'Refresh token is required').openapi({
-    description: 'Refresh token to obtain a new access token',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  }),
-});
-
 export const refreshSessionResponseSchema = createSuccessResponseSchema(
   authTokensSchema,
   'Successfully refreshed session tokens'
@@ -238,17 +227,4 @@ export const cliCallbackResultSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
   accounts: z.array(accountSchema),
-});
-
-export const callbackExchangeRequestSchema = z.object({
-  code: z.string().min(1, 'Code is required').openapi({
-    description: 'One-time code from OAuth callback redirect',
-    example: 'a1b2c3d4e5f6...',
-  }),
-});
-
-export const callbackExchangeResultSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  nextUrl: z.string(),
 });

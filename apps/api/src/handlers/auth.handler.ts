@@ -8,7 +8,6 @@ import {
   IsAuthorizedInput,
   LoginResponse,
   MutationLoginArgs,
-  MutationRefreshSessionArgs,
   RefreshSessionResponse,
   RegisterInput,
   RequestPasswordResetResponse,
@@ -302,24 +301,17 @@ export class AuthHandler extends CacheHandler {
   }
 
   public async refreshSession(
-    params: MutationRefreshSessionArgs,
+    refreshToken: string,
     userAgent?: string | null,
-    ipAddress?: string | null,
-    userId?: string
+    ipAddress?: string | null
   ): Promise<RefreshSessionResponse> {
     return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
-      // Fetch current email verification status if userId is provided
-      const isVerified = userId
-        ? await this.services.users.getEmailVerificationStatus(userId, tx)
-        : undefined;
-
-      const session = await this.services.userSessions.refreshSession(
-        params.accessToken,
-        params.refreshToken,
+      const session = await this.services.userSessions.refreshSessionByRefreshToken(
+        refreshToken,
         tx,
         userAgent,
         ipAddress,
-        isVerified
+        undefined // isVerified defaults to true in signSession
       );
 
       if (!session) {
@@ -327,6 +319,12 @@ export class AuthHandler extends CacheHandler {
       }
 
       return session;
+    });
+  }
+
+  public async logout(refreshToken: string): Promise<boolean> {
+    return await TransactionManager.withTransaction(this.db, async (tx: Transaction) => {
+      return await this.services.userSessions.revokeSessionByRefreshToken(refreshToken, tx);
     });
   }
 

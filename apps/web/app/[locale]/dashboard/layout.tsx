@@ -1,9 +1,10 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { useEffect, ReactNode } from 'react';
 
-import { EmailVerificationBanner } from '@/components/common';
+import { EmailVerificationBanner, FullPageLoader } from '@/components/common';
 import { useAccountsSync } from '@/hooks/accounts';
+import { usePathname } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 interface DashboardLayoutProps {
@@ -11,9 +12,27 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { email, requiresEmailVerification, verificationExpiry } = useAuthStore();
+  const pathname = usePathname();
+  const {
+    email,
+    requiresEmailVerification,
+    verificationExpiry,
+    isSwitchingAccounts,
+    setSwitchingAccounts,
+  } = useAuthStore();
 
   useAccountsSync();
+
+  useEffect(() => {
+    if (isSwitchingAccounts) {
+      setSwitchingAccounts(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when pathname changes
+  }, [pathname, setSwitchingAccounts]);
+
+  if (isSwitchingAccounts) {
+    return <FullPageLoader />;
+  }
 
   return (
     <div className="flex w-full h-full">

@@ -12,7 +12,6 @@ import {
   DeleteMyAccountsInput,
   DeleteMyUserAuthenticationMethodDocument,
   LogoutMyUserDocument,
-  LogoutMyUserResponse,
   RevokeMyUserSessionDocument,
   RevokeMyUserSessionResult,
   SetMyPrimaryAuthenticationMethodDocument,
@@ -27,13 +26,15 @@ import {
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 import { evictMeCache } from './cache';
 
 export function useMyMutations() {
   const t = useTranslations('settings');
-  const { setAccounts } = useAuthStore();
+  const router = useRouter();
+  const { setAccounts, clearAuth } = useAuthStore();
 
   const update = (cache: ApolloCache) => {
     evictMeCache(cache);
@@ -67,6 +68,8 @@ export function useMyMutations() {
     }
   );
 
+  const [logoutMyUserMutation] = useMutation(LogoutMyUserDocument);
+
   const [revokeMyUserSession] = useMutation<{ revokeMyUserSession: RevokeMyUserSessionResult }>(
     RevokeMyUserSessionDocument,
     {
@@ -89,10 +92,6 @@ export function useMyMutations() {
   const [setMyPrimaryAuthenticationMethod] = useMutation<{
     setMyPrimaryAuthenticationMethod: UserAuthenticationMethod;
   }>(SetMyPrimaryAuthenticationMethodDocument, {
-    update,
-  });
-
-  const [logoutMyUser] = useMutation<{ logoutMyUser: LogoutMyUserResponse }>(LogoutMyUserDocument, {
     update,
   });
 
@@ -263,13 +262,17 @@ export function useMyMutations() {
 
   const handleLogoutMyUser = async () => {
     try {
-      const result = await logoutMyUser();
+      await logoutMyUserMutation();
+      clearAuth();
       toast.success(t('notifications.logoutSuccess'));
-      return result.data?.logoutMyUser;
+      router.push('/auth/login');
+      return { message: 'Logged out successfully' };
     } catch (error) {
+      clearAuth();
       toast.error(t('notifications.logoutError'), {
         description: error instanceof Error ? error.message : 'An unknown error occurred',
       });
+      router.push('/auth/login');
       throw error;
     }
   };

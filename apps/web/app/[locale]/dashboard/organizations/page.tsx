@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 import { AccountType } from '@grantjs/schema';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import {
   OrganizationDeleteDialog,
@@ -15,21 +15,22 @@ import {
 import { DashboardLayout } from '@/components/layout';
 import { OrganizationWorkspaceSidebar } from '@/components/navigation';
 import { usePageTitle } from '@/hooks';
+import { useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function DashboardPage() {
   const { getCurrentAccount, loading } = useAuthStore();
   const currentAccount = getCurrentAccount();
-  const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations('organizations');
   usePageTitle('organizations');
 
   useEffect(() => {
     if (loading) return;
     if (currentAccount && currentAccount.type === AccountType.Personal) {
-      window.location.href = `/${locale}/dashboard/accounts/${currentAccount.id}`;
+      router.push(`/dashboard/accounts/${currentAccount.id}`);
     }
-  }, [currentAccount, locale, loading]);
+  }, [currentAccount, loading, router]);
 
   return (
     <DashboardLayout

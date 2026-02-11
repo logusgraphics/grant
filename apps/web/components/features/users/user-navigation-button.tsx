@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback } from 'react';
+
 import { useParams } from 'next/navigation';
 
 import { Tenant, User } from '@grantjs/schema';
@@ -30,7 +32,7 @@ export function UserNavigationButton({
   const params = useParams();
   const projectId = params.projectId as string;
 
-  const getUserUrl = () => {
+  const getUserUrl = useCallback(() => {
     switch (scope!.tenant) {
       case Tenant.Account:
         return `/dashboard/accounts/${scope!.id}/projects/${projectId}/users/${user.id}`;
@@ -39,7 +41,7 @@ export function UserNavigationButton({
       default:
         throw new Error('Invalid scope');
     }
-  };
+  }, [scope, projectId, user.id]);
 
   return (
     <Button variant={variant} size={size} className={className} asChild>

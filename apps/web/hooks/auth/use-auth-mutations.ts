@@ -4,9 +4,8 @@ import {
   CreateAccountResult,
   LoginDocument,
   LoginResponse,
-  RefreshSessionDocument,
-  RefreshSessionResponse,
   RegisterDocument,
+  RefreshSessionDocument,
   RequestPasswordResetDocument,
   RequestPasswordResetResponse,
   ResendVerificationDocument,
@@ -17,6 +16,7 @@ import {
   UserAuthenticationMethodProvider,
   VerifyEmailDocument,
   VerifyEmailResponse,
+  RefreshSessionResponse,
 } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -36,7 +36,7 @@ interface RegisterInput {
 
 export function useAuthMutations() {
   const t = useTranslations('auth');
-  const { setAuthData, clearAuth } = useAuthStore();
+  const { setAuthData } = useAuthStore();
   const authStore = useAuthStore();
 
   const [login] = useMutation<{ login: LoginResponse }>(LoginDocument);
@@ -53,9 +53,9 @@ export function useAuthMutations() {
   const [resetPasswordMutation] = useMutation<{
     resetPassword: ResetPasswordResponse;
   }>(ResetPasswordDocument);
-  const [refreshSessionMutation] = useMutation<{
-    refreshSession: RefreshSessionResponse;
-  }>(RefreshSessionDocument);
+  const [refreshSessionMutation] = useMutation<{ refreshSession: RefreshSessionResponse }>(
+    RefreshSessionDocument
+  );
 
   const handleLogin = async (input: LoginInput) => {
     try {
@@ -74,11 +74,10 @@ export function useAuthMutations() {
 
       const loginData = result.data?.login;
 
-      if (loginData?.accessToken && loginData?.refreshToken && loginData?.accounts) {
+      if (loginData?.accessToken && loginData?.accounts) {
         setAuthData({
           accounts: loginData.accounts,
           accessToken: loginData.accessToken,
-          refreshToken: loginData.refreshToken,
           email: loginData.email ?? null,
           requiresEmailVerification: loginData.requiresEmailVerification ?? false,
           verificationExpiry: loginData.verificationExpiry ?? null,
@@ -159,13 +158,12 @@ export function useAuthMutations() {
 
       const registerData = result.data?.register;
 
-      if (registerData?.accessToken && registerData?.refreshToken && registerData?.account) {
+      if (registerData?.accessToken && registerData?.account) {
         const accounts = [registerData.account];
 
         setAuthData({
           accounts,
           accessToken: registerData.accessToken,
-          refreshToken: registerData.refreshToken,
           email: registerData.email ?? null,
           requiresEmailVerification: registerData.requiresEmailVerification ?? false,
           verificationExpiry: registerData.verificationExpiry ?? null,
@@ -199,21 +197,6 @@ export function useAuthMutations() {
     }
   };
 
-  const handleLogout = async () => {
-    // Logout is handled client-side by clearing auth data
-    // No server-side logout mutation needed
-    try {
-      clearAuth();
-      toast.success(t('notifications.logoutSuccess'));
-      return true;
-    } catch (error) {
-      toast.error(t('notifications.logoutError'), {
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-      });
-      throw error;
-    }
-  };
-
   const handleVerifyEmail = async (token: string) => {
     try {
       const result = await verifyEmailMutation({
@@ -226,58 +209,30 @@ export function useAuthMutations() {
 
       const verifyData = result.data?.verifyEmail;
 
-      if (verifyData?.success) {
+      if (verifyData?.success && authStore.accounts.length > 0) {
         const currentState = authStore;
+        let accessTokenToSet = currentState.accessToken || '';
 
-        // Refresh session to get a new token with isVerified: true
-        if (currentState.accessToken && currentState.refreshToken) {
+        if (currentState.accessToken) {
           try {
-            const refreshResult = await refreshSessionMutation({
-              variables: {
-                accessToken: currentState.accessToken,
-                refreshToken: currentState.refreshToken,
-              },
-            });
-
-            const refreshData = refreshResult.data?.refreshSession;
-
-            if (refreshData?.accessToken && refreshData?.refreshToken) {
-              // Update auth store with new tokens (containing isVerified: true)
-              setAuthData({
-                accounts: currentState.accounts,
-                accessToken: refreshData.accessToken,
-                refreshToken: refreshData.refreshToken,
-                email: currentState.email,
-                requiresEmailVerification: false,
-                verificationExpiry: null,
-              });
-            }
+            const refreshResult = await refreshSessionMutation();
+            const newAccessToken = refreshResult.data?.refreshSession?.accessToken;
+            if (newAccessToken) accessTokenToSet = newAccessToken;
           } catch (refreshError) {
-            // Session refresh failed - still update local state
             console.warn('Session refresh after verification failed:', refreshError);
-            if (currentState.accounts.length > 0) {
-              setAuthData({
-                accounts: currentState.accounts,
-                accessToken: currentState.accessToken,
-                refreshToken: currentState.refreshToken,
-                email: currentState.email,
-                requiresEmailVerification: false,
-                verificationExpiry: null,
-              });
-            }
           }
-        } else if (currentState.accounts.length > 0) {
-          // No tokens (e.g., user not logged in) - just update local state
-          setAuthData({
-            accounts: currentState.accounts,
-            accessToken: currentState.accessToken || '',
-            refreshToken: currentState.refreshToken || '',
-            email: currentState.email,
-            requiresEmailVerification: false,
-            verificationExpiry: null,
-          });
         }
 
+        setAuthData({
+          accounts: currentState.accounts,
+          accessToken: accessTokenToSet,
+          email: currentState.email,
+          requiresEmailVerification: false,
+          verificationExpiry: null,
+        });
+      }
+
+      if (verifyData?.success) {
         toast.success(t('verifyEmail.success'), {
           description: verifyData.message,
         });
@@ -395,7 +350,6 @@ export function useAuthMutations() {
   return {
     login: handleLogin,
     register: handleRegister,
-    logout: handleLogout,
     verifyEmail: handleVerifyEmail,
     resendVerification: handleResendVerification,
     requestPasswordReset: handleRequestPasswordReset,

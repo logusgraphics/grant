@@ -35,11 +35,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuthMutations, usePageTitle } from '@/hooks';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
+import { getAuthRedirectUrl, validateRedirectUrl } from '@/lib/redirect';
 import { passwordPolicySchema } from '@/lib/validation/password-policy';
 
 export default function RegisterPage() {
   const t = useTranslations('auth');
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAuthSuccess, setIsAuthSuccess] = useState(false);
@@ -73,12 +75,15 @@ export default function RegisterPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      await handleRegister({
+      const data = await handleRegister({
         email: values.email,
         password: values.password,
         accountType: values.accountType,
       });
       setIsAuthSuccess(true);
+      const redirectUrl =
+        validateRedirectUrl(redirectParam) ?? getAuthRedirectUrl() ?? '/dashboard';
+      router.push(redirectUrl);
     } catch {
       setIsSubmitting(false);
     }

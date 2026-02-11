@@ -1,10 +1,12 @@
 import { Account, AccountType } from '@grantjs/schema';
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
+import { createJSONStorage, devtools, persist } from 'zustand/middleware';
 
+/** Used for devtools display name. */
 export const AUTH_STORE_STORAGE_KEY = 'grant-auth-store';
 
-const PERSIST_VERSION = 1;
+/** Storage key for persisted currentAccountId only (last workspace). */
+const AUTH_PREFERENCES_STORAGE_KEY = 'grant-auth-preferences';
 
 interface AuthState {
   // Authentication state
@@ -13,8 +15,8 @@ interface AuthState {
   // Account state
   accounts: Account[];
   currentAccountId: string | null;
+  isSwitchingAccounts: boolean;
   accessToken: string | null;
-  refreshToken: string | null;
 
   // Email verification state
   email: string | null;
@@ -25,7 +27,8 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   setAccounts: (accounts: Account[]) => void;
   setCurrentAccount: (accountId: string | null) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setSwitchingAccounts: (value: boolean) => void;
+  setAccessToken: (accessToken: string) => void;
   clearAuth: () => void;
   switchAccount: (accountId: string) => void;
   updateAccounts: (accounts: Account[], accountId?: string) => void;
@@ -38,7 +41,6 @@ interface AuthState {
   setAuthData: (data: {
     accounts: Account[];
     accessToken: string;
-    refreshToken: string;
     email?: string | null;
     requiresEmailVerification?: boolean;
     verificationExpiry?: Date | null;
@@ -59,14 +61,14 @@ export const useAuthStore = create<AuthState>()(
   devtools(
     persist(
       (set, get) => ({
-        // Initial state
-        loading: true,
+        // In-memory state (tokens, accounts, etc.); only currentAccountId is persisted via partialize
+        loading: false,
 
         // Account state
         accounts: [],
         currentAccountId: null,
+        isSwitchingAccounts: false,
         accessToken: null,
-        refreshToken: null,
 
         // Email verification state
         email: null,
@@ -77,24 +79,25 @@ export const useAuthStore = create<AuthState>()(
         setLoading: (loading) => set({ loading }),
         setAccounts: (accounts) => set({ accounts }),
         setCurrentAccount: (accountId) => set({ currentAccountId: accountId }),
-        setTokens: (accessToken, refreshToken) => {
-          set({ accessToken, refreshToken });
+        setSwitchingAccounts: (value) => set({ isSwitchingAccounts: value }),
+        setAccessToken: (accessToken) => {
+          set({ accessToken });
         },
 
         clearAuth: () => {
           set({
             accounts: [],
-            // Keep currentAccountId persisted after logout so user can resume with last account
-            // currentAccountId: null, // Don't clear this
+            currentAccountId: null,
+            isSwitchingAccounts: false,
             accessToken: null,
-            refreshToken: null,
             email: null,
             requiresEmailVerification: false,
             verificationExpiry: null,
           });
         },
         switchAccount: (accountId) => {
-          const currentAccounts = get().accounts;
+          const state = get();
+          const currentAccounts = state.accounts;
           const targetAccount = currentAccounts.find((account) => account.id === accountId);
           if (targetAccount) {
             set({ currentAccountId: accountId });
@@ -107,8 +110,20 @@ export const useAuthStore = create<AuthState>()(
 
         syncFromMe: (data) => {
           const { accounts, email, requiresEmailVerification, verificationExpiry } = data;
-          const currentAccountId = get().currentAccountId;
+          set({
+            accounts,
+            email,
+            requiresEmailVerification,
+            verificationExpiry,
+          });
+          // currentAccountId is persisted; useAccountsSync only ensures a valid one when accounts load.
+        },
 
+        setAuthData: (data) => {
+          const { accounts, accessToken, email, requiresEmailVerification, verificationExpiry } =
+            data;
+
+          const currentAccountId = get().currentAccountId;
           const targetAccountId =
             currentAccountId && accounts.some((account) => account.id === currentAccountId)
               ? currentAccountId
@@ -119,36 +134,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             accounts,
             currentAccountId: targetAccountId,
-            email,
-            requiresEmailVerification,
-            verificationExpiry,
-          });
-        },
-
-        setAuthData: (data) => {
-          const {
-            accounts,
             accessToken,
-            refreshToken,
-            email,
-            requiresEmailVerification,
-            verificationExpiry,
-          } = data;
-
-          // Try to use persisted currentAccountId if it exists in the new accounts
-          const persistedAccountId = get().currentAccountId;
-          const targetAccountId =
-            persistedAccountId && accounts.some((account) => account.id === persistedAccountId)
-              ? persistedAccountId
-              : accounts.find((account) => account.type === AccountType.Organization)?.id ||
-                accounts[0]?.id ||
-                null;
-
-          set({
-            accounts,
-            currentAccountId: targetAccountId,
-            accessToken,
-            refreshToken,
             email: email ?? null,
             requiresEmailVerification: requiresEmailVerification ?? false,
             verificationExpiry: verificationExpiry ?? null,
@@ -189,32 +175,16 @@ export const useAuthStore = create<AuthState>()(
         },
 
         isAuthenticated: () => {
-          const { accessToken, refreshToken } = get();
-          return !!(accessToken && refreshToken);
+          const { accessToken } = get();
+          return !!accessToken;
         },
       }),
       {
-        name: AUTH_STORE_STORAGE_KEY,
-        version: PERSIST_VERSION,
-        // Only persist auth-related data, not loading states
-        partialize: (state) => ({
-          accounts: state.accounts,
-          currentAccountId: state.currentAccountId,
-          accessToken: state.accessToken,
-          refreshToken: state.refreshToken,
-          email: state.email,
-          requiresEmailVerification: state.requiresEmailVerification,
-          verificationExpiry: state.verificationExpiry,
-        }),
-        onRehydrateStorage: () => (state) => {
-          if (state) {
-            state.setLoading(false);
-          }
-        },
+        name: AUTH_PREFERENCES_STORAGE_KEY,
+        storage: createJSONStorage(() => localStorage),
+        partialize: (state) => ({ currentAccountId: state.currentAccountId }),
       }
     ),
-    {
-      name: AUTH_STORE_STORAGE_KEY,
-    }
+    { name: AUTH_STORE_STORAGE_KEY }
   )
 );

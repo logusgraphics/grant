@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 
-import { redirect, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 import { OrganizationSortableField, SortOrder } from '@grantjs/schema';
 import { Building2, Check } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { SidebarPopover } from '@/components/common';
 import {
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/command';
 import { useAccountScope } from '@/hooks/common/use-account-scope';
 import { useOrganizations } from '@/hooks/organizations';
-import { usePathname } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useOrganizationsStore } from '@/stores/organizations.store';
 
@@ -29,7 +29,7 @@ interface OrganizationSwitcherProps {
 
 export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
   const t = useTranslations('common');
-  const locale = useLocale();
+  const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
   const [open, setOpen] = useState(false);
@@ -58,14 +58,17 @@ export function OrganizationSwitcher({ className }: OrganizationSwitcherProps) {
     };
   }, [selectedOrganization, setCurrentOrganization]);
 
-  const handleOrganizationSelect = (organizationId: string) => {
-    setOpen(false);
+  const handleOrganizationSelect = useCallback(
+    (organizationId: string) => {
+      setOpen(false);
 
-    const newPath = `/${locale}/dashboard/organizations/${organizationId}/projects`;
-    if (pathname !== newPath) {
-      redirect(newPath);
-    }
-  };
+      const newPath = `/dashboard/organizations/${organizationId}/projects`;
+      if (pathname !== newPath) {
+        router.push(newPath);
+      }
+    },
+    [pathname, router]
+  );
 
   const organizationName = loading
     ? t('loading')

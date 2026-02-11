@@ -4,13 +4,14 @@ import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, Observable } from '@
 import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
 import { DEFAULT_LOCALE, isSupportedLocale } from '@grantjs/constants';
-import { RefreshSessionDocument } from '@grantjs/schema';
+import { LogoutMyUserDocument } from '@grantjs/schema';
 import { GraphQLError } from 'graphql';
 import { toast } from 'sonner';
 
-import { setRedirectInProgress } from '@/lib/auth';
+import { getTempClient } from '@/lib/apollo-temp-client';
 import { getApiBaseUrl } from '@/lib/constants';
-import { AUTH_STORE_STORAGE_KEY, useAuthStore } from '@/stores/auth.store';
+import { refreshSessionViaCookie } from '@/lib/refresh-session';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface ErrorWithGraphQLErrors {
   graphQLErrors?: readonly GraphQLError[];
@@ -42,9 +43,8 @@ const SKIP_ERROR_REDIRECT_OPERATIONS = [
   'RefreshSession',
 ] as const;
 
-let refreshPromise: Promise<void> | null = null;
-let refreshInProgress = false;
-let redirectInProgress = false;
+/** Prevents multiple concurrent clear-session flows from 401s. */
+let clearingSession = false;
 
 function getGraphQLUrl(): string {
   return `${getApiBaseUrl()}/graphql`;
@@ -229,51 +229,28 @@ function isInvalidSessionError(error: unknown): boolean {
   return false;
 }
 
-function redirectToLogin(showToast = false) {
-  if (redirectInProgress) {
-    return;
+export async function logoutSession(): Promise<void> {
+  try {
+    await getTempClient().mutate({ mutation: LogoutMyUserDocument });
+  } catch {
+    // Best effort; redirect anyway
   }
+}
 
-  if (typeof window !== 'undefined') {
-    const currentPath = window.location.pathname;
-    const locale = currentPath.split('/')[1] || DEFAULT_LOCALE;
-
-    if (currentPath.includes('/auth/login')) {
-      redirectInProgress = false;
-      return;
-    }
-
-    redirectInProgress = true;
-    setRedirectInProgress(true);
-
-    try {
-      useAuthStore.getState().clearAuth();
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem(AUTH_STORE_STORAGE_KEY);
-      }
-    } catch {
-      void 0;
-    }
-
+async function clearSessionAndAuth(showToast = false) {
+  if (clearingSession || typeof window === 'undefined') return;
+  clearingSession = true;
+  try {
+    await logoutSession();
+    useAuthStore.getState().clearAuth();
     if (showToast) {
-      try {
-        toast.error('Session Expired', {
-          description: 'Your session has expired or been revoked. Redirecting to login...',
-          duration: 2000,
-        });
-      } catch {
-        void 0;
-      }
+      toast.error('Session Expired', {
+        description: 'Your session has expired or been revoked. Redirecting to login...',
+        duration: 2000,
+      });
     }
-
-    setTimeout(
-      () => {
-        if (typeof window !== 'undefined' && redirectInProgress) {
-          window.location.replace(`/${locale}/auth/login`);
-        }
-      },
-      showToast ? 1500 : 0
-    );
+  } finally {
+    clearingSession = false;
   }
 }
 
@@ -300,58 +277,24 @@ function shouldSkipErrorRedirect(operationName: string | undefined): boolean {
   );
 }
 
-const refreshSession = async (accessToken: string, refreshToken: string) => {
-  try {
-    const graphqlUrl = getGraphQLUrl();
-
-    const tempClient = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new HttpLink({
-        uri: graphqlUrl,
-        credentials: 'include',
-      }),
-    });
-
-    const result = await tempClient.mutate({
-      mutation: RefreshSessionDocument,
-      variables: {
-        accessToken,
-        refreshToken,
-      },
-    });
-
-    if (result.data?.refreshSession) {
-      const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-        result.data.refreshSession;
-
-      useAuthStore.getState().setTokens(newAccessToken, newRefreshToken);
-    }
-
-    refreshPromise = null;
-    refreshInProgress = false;
-  } catch (refreshError) {
-    refreshPromise = null;
-    refreshInProgress = false;
-    throw refreshError;
-  }
-};
-
 function createTokenRefreshObservable(
   operation: Parameters<ErrorLink.ErrorHandler>[0]['operation'],
   forward: Parameters<ErrorLink.ErrorHandler>[0]['forward']
 ): Observable<ApolloLink.Result> {
-  const { accessToken, refreshToken } = useAuthStore.getState();
-
   return new Observable<ApolloLink.Result>((observer) => {
-    if (!refreshInProgress) {
-      refreshInProgress = true;
-      refreshPromise = refreshSession(accessToken!, refreshToken!);
-    }
-
-    refreshPromise!
-      .then(() => {
+    let innerSubscription: { unsubscribe: () => void } | null = null;
+    refreshSessionViaCookie()
+      .then((ok) => {
+        if (clearingSession) {
+          observer.complete();
+          return;
+        }
+        if (!ok) {
+          void clearSessionAndAuth(true);
+          observer.complete();
+          return;
+        }
         const newToken = useAuthStore.getState().accessToken;
-
         operation.setContext({
           headers: {
             ...operation.getContext().headers,
@@ -359,49 +302,29 @@ function createTokenRefreshObservable(
           },
           fetchPolicy: 'network-only',
         });
-
-        const retryObservable = forward(operation);
-        const subscription = retryObservable.subscribe(observer);
-
-        return () => {
-          subscription.unsubscribe();
-        };
+        innerSubscription = forward(operation).subscribe(observer);
       })
-      .catch((refreshError) => {
-        if (redirectInProgress) {
+      .catch((refreshError: unknown) => {
+        if (clearingSession) {
           observer.complete();
           return;
         }
-
-        refreshPromise = null;
-        refreshInProgress = false;
-
-        const isInvalidSession = isInvalidSessionError(refreshError);
-        redirectToLogin(isInvalidSession);
-
+        const statusCode = (refreshError as { statusCode?: number }).statusCode;
+        const isInvalidSession = statusCode === 401 || isInvalidSessionError(refreshError);
+        void clearSessionAndAuth(isInvalidSession);
         observer.complete();
       });
+    return () => innerSubscription?.unsubscribe();
   });
 }
 
 function handleUnauthorizedError(
   operation: Parameters<ErrorLink.ErrorHandler>[0]['operation'],
   forward: Parameters<ErrorLink.ErrorHandler>[0]['forward'],
-  error?: unknown
+  _error?: unknown
 ): Observable<ApolloLink.Result> | null {
-  if (redirectInProgress) {
-    return null;
-  }
-
-  const { accessToken, refreshToken } = useAuthStore.getState();
-
-  if (accessToken && refreshToken) {
-    return createTokenRefreshObservable(operation, forward);
-  }
-
-  const isInvalidSession = error ? isInvalidSessionError(error) : false;
-  redirectToLogin(isInvalidSession);
-  return null;
+  if (clearingSession) return null;
+  return createTokenRefreshObservable(operation, forward);
 }
 
 const authLink = new SetContextLink((prevContext, _operation) => {
@@ -422,9 +345,7 @@ const authLink = new SetContextLink((prevContext, _operation) => {
 });
 
 const errorLink = new ErrorLink(({ error, operation, forward }) => {
-  if (redirectInProgress) {
-    return forward(operation);
-  }
+  if (clearingSession) return forward(operation);
 
   if (operation.operationName === 'RefreshSession') {
     return forward(operation);

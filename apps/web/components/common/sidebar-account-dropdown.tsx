@@ -1,7 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
 import {
   Building2,
   ChevronsUpDown,
@@ -12,7 +10,7 @@ import {
   User,
   UserCircle,
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import {
   Avatar,
@@ -34,8 +32,6 @@ export function SidebarAccountDropdown() {
   const t = useTranslations('common');
   const dashboardT = useTranslations('dashboard.navigation');
   const settingsT = useTranslations('settings.navigation');
-  const locale = useLocale();
-  const router = useRouter();
   const { getCurrentAccount, email, isAuthenticated, clearAuth } = useAuthStore();
   const { logoutMyUser } = useMyMutations();
   const currentAccount = getCurrentAccount();
@@ -47,7 +43,6 @@ export function SidebarAccountDropdown() {
   const handleLogout = async () => {
     await logoutMyUser();
     clearAuth();
-    router.push(`/${locale}/auth/login`);
   };
 
   const userDisplayName = currentAccount?.owner?.name || email || 'User';

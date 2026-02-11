@@ -1,8 +1,8 @@
 'use client';
 
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, useCallback, type ReactNode } from 'react';
 
-import { redirect, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { Globe } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { usePathname } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { locales } from '@/i18n/routing';
 
 const LOCALE_LABELS: Record<string, string> = {
@@ -32,8 +32,16 @@ export const LanguageSwitcher = forwardRef<HTMLButtonElement, LanguageSwitcherPr
   ({ trigger }, ref) => {
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const router = useRouter();
     const currentLocale = useLocale();
     const t = useTranslations('common');
+
+    const handleLanguageChange = useCallback(
+      (locale: string) => {
+        router.push(`/${pathname}?${searchParams.toString()}`, { locale });
+      },
+      [pathname, searchParams, router]
+    );
 
     const defaultTrigger = (
       <Button ref={ref} variant="outline" size="icon" data-language-switcher>
@@ -58,7 +66,7 @@ export const LanguageSwitcher = forwardRef<HTMLButtonElement, LanguageSwitcherPr
                 <DropdownMenuRadioItem
                   key={locale}
                   value={locale}
-                  onClick={() => redirect(`/${locale}/${pathname}?${searchParams.toString()}`)}
+                  onClick={() => handleLanguageChange(locale)}
                   className="cursor-pointer"
                 >
                   {LOCALE_LABELS[locale]}

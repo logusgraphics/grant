@@ -40,15 +40,17 @@ vi.mock('@/lib/headers.lib', () => ({
   getClientIp: vi.fn(() => '192.168.1.1'),
 }));
 
-function createMockReq(
-  overrides: Partial<Request> = {}
-): Request & { context?: { user?: { scope?: { tenant: string; id: string } } } } {
+type RequestWithContext = Request & {
+  context?: { user?: { scope?: { tenant: string; id: string } } };
+};
+
+function createMockReq(overrides: Partial<RequestWithContext> = {}): RequestWithContext {
   return {
     method: 'GET',
     path: '/api/some-route',
     headers: {},
     ...overrides,
-  } as Request & { context?: { user?: { scope?: { tenant: string; id: string } } } };
+  } as RequestWithContext;
 }
 
 function createMockRes(): Response {

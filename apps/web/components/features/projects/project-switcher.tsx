@@ -1,13 +1,12 @@
 'use client';
 
-import * as React from 'react';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { redirect, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 import { ProjectSortableField, SortOrder, Tenant } from '@grantjs/schema';
 import { Check, FolderOpen } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { SidebarPopover } from '@/components/common';
 import {
@@ -20,7 +19,7 @@ import {
 } from '@/components/ui/command';
 import { useProjectScope } from '@/hooks/common';
 import { useProjects } from '@/hooks/projects';
-import { usePathname } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useProjectsStore } from '@/stores/projects.store';
 
@@ -30,11 +29,11 @@ interface ProjectSwitcherProps {
 
 export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
   const t = useTranslations('common');
-  const locale = useLocale();
+  const router = useRouter();
   const pathname = usePathname();
   const scope = useProjectScope();
   const params = useParams();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const setCurrentProject = useProjectsStore((state) => state.setCurrentProject);
 
   const { projects, loading, error } = useProjects({
@@ -51,6 +50,27 @@ export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
     [projects, currentProjectId, isProjectPage]
   );
 
+  const handleProjectSelect = useCallback(
+    (projectId: string) => {
+      setOpen(false);
+      let newPath;
+      switch (scope!.tenant) {
+        case Tenant.Account:
+          newPath = `/dashboard/accounts/${scope!.id}/projects/${projectId}`;
+          break;
+        case Tenant.Organization:
+          newPath = `/dashboard/organizations/${scope!.id}/projects/${projectId}`;
+          break;
+        default:
+          throw new Error('Invalid scope');
+      }
+      if (pathname !== newPath) {
+        router.push(newPath);
+      }
+    },
+    [pathname, scope, router]
+  );
+
   // Update store when current project changes
   useEffect(() => {
     if (isProjectPage) {
@@ -64,24 +84,6 @@ export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
   if (!isProjectPage) {
     return null;
   }
-
-  const handleProjectSelect = (projectId: string) => {
-    setOpen(false);
-    let newPath;
-    switch (scope!.tenant) {
-      case Tenant.Account:
-        newPath = `/${locale}/dashboard/accounts/${scope!.id}/projects/${projectId}`;
-        break;
-      case Tenant.Organization:
-        newPath = `/${locale}/dashboard/organizations/${scope!.id}/projects/${projectId}`;
-        break;
-      default:
-        throw new Error('Invalid scope');
-    }
-    if (pathname !== newPath) {
-      redirect(newPath);
-    }
-  };
 
   const projectName = loading
     ? t('loading')

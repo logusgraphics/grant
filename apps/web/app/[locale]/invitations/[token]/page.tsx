@@ -2,12 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 import { AccountType, OrganizationInvitationStatus, Tenant } from '@grantjs/schema';
 import { AlertTriangle, CheckCircle2, Loader2, Mail, MailCheck, XCircle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { InfoPanel } from '@/components/common';
 import { AuthLayout } from '@/components/layout';
@@ -16,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useMyMutations, usePageTitle } from '@/hooks';
 import { useInvitation, useMemberMutations } from '@/hooks/members';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 type InvitationStatus =
@@ -34,7 +34,7 @@ export default function InvitationPage() {
   const tRoot = useTranslations();
   const params = useParams();
   const router = useRouter();
-  const locale = params.locale as string;
+  const locale = useLocale();
   const token = params.token as string;
 
   const [actionStatus, setActionStatus] = useState<InvitationStatus | null>(null);
@@ -90,11 +90,11 @@ export default function InvitationPage() {
   useEffect(() => {
     if (status === 'success' && invitation?.organizationId) {
       const timer = setTimeout(() => {
-        router.push(`/${locale}/dashboard/organizations/${invitation.organizationId}`);
+        router.push(`/dashboard/organizations/${invitation.organizationId}`);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [status, invitation?.organizationId, locale, router]);
+  }, [status, invitation?.organizationId, router]);
 
   const handleAcceptInvitation = async () => {
     if (!token) {
@@ -161,7 +161,7 @@ export default function InvitationPage() {
               <AlertDescription>{t('invalidToken.description')}</AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/login`}>
+              <Link href={`/auth/login`}>
                 <Button className="w-full" variant="default">
                   {t('invalidToken.goToLogin')}
                 </Button>
@@ -179,7 +179,7 @@ export default function InvitationPage() {
               <AlertDescription>{t('expired.description')}</AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/login`}>
+              <Link href={`/auth/login`}>
                 <Button className="w-full" variant="default">
                   {t('expired.goToLogin')}
                 </Button>
@@ -198,7 +198,7 @@ export default function InvitationPage() {
             </Alert>
             {invitation?.organizationId && (
               <div>
-                <Link href={`/${locale}/dashboard/organizations/${invitation.organizationId}`}>
+                <Link href={`/dashboard/organizations/${invitation.organizationId}`}>
                   <Button className="w-full" variant="default">
                     {t('alreadyAccepted.goToOrganization')}
                   </Button>
@@ -255,14 +255,14 @@ export default function InvitationPage() {
                 />
                 <div className="flex flex-col gap-4">
                   <Link
-                    href={`/${locale}/auth/login?email=${invitation?.email || ''}&redirect=${encodeURIComponent(`/${locale}/invitations/${token}`)}`}
+                    href={`/auth/login?email=${invitation?.email || ''}&redirect=${encodeURIComponent(`/invitations/${token}`)}`}
                   >
                     <Button className="w-full" variant="default">
                       {t('requiresLogin.login')}
                     </Button>
                   </Link>
                   <Link
-                    href={`/${locale}/auth/register?email=${invitation?.email || ''}&redirect=${encodeURIComponent(`/${locale}/invitations/${token}`)}`}
+                    href={`/auth/register?email=${invitation?.email || ''}&redirect=${encodeURIComponent(`/invitations/${token}`)}`}
                   >
                     <Button className="w-full" variant="outline">
                       {t('requiresLogin.register')}
@@ -358,7 +358,7 @@ export default function InvitationPage() {
                       t('accept')
                     )}
                   </Button>
-                  <Link href={`/${locale}/dashboard`}>
+                  <Link href={`/dashboard`}>
                     <Button className="w-full" variant="outline">
                       {t('decline')}
                     </Button>

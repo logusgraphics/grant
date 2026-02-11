@@ -5,24 +5,24 @@ import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
 import { AccountType } from '@grantjs/schema';
-import { useLocale } from 'next-intl';
 
 import { FullPageLoader } from '@/components/common';
+import { useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function OrganizationPage() {
   const { getCurrentAccount, loading, clearAuth } = useAuthStore();
   const currentAccount = getCurrentAccount();
-  const locale = useLocale();
+  const router = useRouter();
   const params = useParams();
 
   useEffect(() => {
     if (loading) return;
     if (currentAccount && currentAccount.type === AccountType.Organization) {
       const organizationId = params.organizationId as string;
-      window.location.href = `/${locale}/dashboard/organizations/${organizationId}/projects`;
+      router.push(`/dashboard/organizations/${organizationId}/projects`);
     }
-  }, [locale, params, currentAccount, loading, clearAuth]);
+  }, [params, currentAccount, loading, clearAuth, router]);
 
   return <FullPageLoader />;
 }

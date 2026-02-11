@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback } from 'react';
+
 import { Project, Tenant } from '@grantjs/schema';
 import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -26,7 +28,7 @@ export function ProjectNavigationButton({
   const t = useTranslations('projects');
   const scope = useProjectScope();
 
-  const getProjectUrl = () => {
+  const getProjectUrl = useCallback(() => {
     switch (scope!.tenant) {
       case Tenant.Account:
         return `/dashboard/accounts/${scope!.id}/projects/${project.id}`;
@@ -35,7 +37,7 @@ export function ProjectNavigationButton({
       default:
         throw new Error('Invalid scope');
     }
-  };
+  }, [scope, project.id]);
 
   return (
     <Button variant={variant} size={size} className={className} asChild>

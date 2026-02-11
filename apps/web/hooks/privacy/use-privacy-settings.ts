@@ -1,7 +1,5 @@
 import { useState } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { useLazyQuery, useMutation } from '@apollo/client/react';
 import {
   DeleteMyAccountsDocument,
@@ -12,6 +10,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { useRouter } from '@/i18n/navigation';
 import { getCurrentUserId } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -101,9 +100,7 @@ export function usePrivacySettings() {
 
       // Clear auth and redirect to login
       clearAuth();
-      const currentPath = window.location.pathname;
-      const locale = currentPath.split('/')[1] || 'en';
-      router.push(`/${locale}/auth/login`);
+      router.push(`/auth/login`);
     } catch (error) {
       console.error('Error deleting account:', error);
       toast.error(t('accountDeletion.error'), {

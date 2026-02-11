@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 
-import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, XCircle } from 'lucide-react';
@@ -24,14 +23,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useAuthMutations, usePageTitle } from '@/hooks';
+import { Link } from '@/i18n/navigation';
 import { passwordPolicySchema } from '@/lib/validation/password-policy';
 
 type ResetPasswordStatus = 'form' | 'submitting' | 'success' | 'error' | 'invalid-token';
 
 export default function ResetPasswordPage() {
   const t = useTranslations('auth');
-  const params = useParams();
-  const locale = params.locale as string;
   const searchParams = useSearchParams();
   const { resetPassword } = useAuthMutations();
   usePageTitle('auth.resetPassword');
@@ -92,7 +90,7 @@ export default function ResetPasswordPage() {
               <AlertDescription>{t('resetPassword.invalidToken.description')}</AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/forgot-password`}>
+              <Link href={`/auth/forgot-password`}>
                 <Button className="w-full">{t('resetPassword.requestNewLink')}</Button>
               </Link>
             </div>
@@ -108,7 +106,7 @@ export default function ResetPasswordPage() {
               <AlertDescription>{t('resetPassword.success.description')}</AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/login`}>
+              <Link href={`/auth/login`}>
                 <Button className="w-full">{t('resetPassword.continueToLogin')}</Button>
               </Link>
             </div>
@@ -126,7 +124,7 @@ export default function ResetPasswordPage() {
               </AlertDescription>
             </Alert>
             <div>
-              <Link href={`/${locale}/auth/forgot-password`}>
+              <Link href={`/auth/forgot-password`}>
                 <Button className="w-full">{t('resetPassword.tryAgain')}</Button>
               </Link>
             </div>
@@ -180,7 +178,7 @@ export default function ResetPasswordPage() {
               </Button>
               <p className="text-sm text-center text-gray-600 dark:text-gray-400">
                 {t('resetPassword.rememberPassword')}{' '}
-                <Link href={`/${locale}/auth/login`} className="text-primary hover:text-primary/80">
+                <Link href={`/auth/login`} className="text-primary hover:text-primary/80">
                   {t('resetPassword.backToLogin')}
                 </Link>
               </p>

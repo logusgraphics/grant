@@ -1,19 +1,15 @@
 'use client';
 
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-
 import { ShieldX, Home, ArrowLeft, LogIn } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { usePageTitle } from '@/hooks';
+import { Link } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function ForbiddenPage() {
   const t = useTranslations('errors');
-  const params = useParams();
-  const locale = params.locale as string;
   const { getCurrentAccount } = useAuthStore();
   const isAuthenticated = !!getCurrentAccount();
 
@@ -46,14 +42,14 @@ export default function ForbiddenPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           {isAuthenticated ? (
             <Button variant="default" size="lg" asChild>
-              <Link href={`/${locale}/dashboard`}>
+              <Link href={`/dashboard`}>
                 <Home className="mr-2 h-4 w-4" />
                 {t('forbidden.goHome')}
               </Link>
             </Button>
           ) : (
             <Button variant="default" size="lg" asChild>
-              <Link href={`/${locale}/auth/login`}>
+              <Link href={`/auth/login`}>
                 <LogIn className="mr-2 h-4 w-4" />
                 {t('forbidden.signIn')}
               </Link>

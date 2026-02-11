@@ -1,10 +1,20 @@
+/** SessionStorage key for post-login redirect URL (used by SessionRestoreGate and auth layout). */
+export const AUTH_REDIRECT_STORAGE_KEY = 'auth_redirect_url';
+
+export function getAuthRedirectUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  const url = sessionStorage.getItem(AUTH_REDIRECT_STORAGE_KEY);
+  sessionStorage.removeItem(AUTH_REDIRECT_STORAGE_KEY);
+  return url;
+}
+
 /**
  * Validates that a redirect URL is safe (internal only, no external redirects)
  * @param url - The URL to validate
  * @param locale - The current locale
  * @returns The validated URL or null if invalid
  */
-export function validateRedirectUrl(url: string | null, locale: string): string | null {
+export function validateRedirectUrl(url: string | null): string | null {
   if (!url) return null;
 
   try {
@@ -13,11 +23,6 @@ export function validateRedirectUrl(url: string | null, locale: string): string 
 
     // Must start with / to be an internal path
     if (!decodedUrl.startsWith('/')) {
-      return null;
-    }
-
-    // Must start with the locale prefix
-    if (!decodedUrl.startsWith(`/${locale}/`)) {
       return null;
     }
 

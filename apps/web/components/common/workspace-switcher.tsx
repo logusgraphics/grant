@@ -1,16 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-
-import { redirect, useParams } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
 
 import { AccountType } from '@grantjs/schema';
 import { Building2, Check, Layers, User } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { SidebarPopover } from '@/components/common';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { usePathname } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -20,16 +18,12 @@ interface WorkspaceSwitcherProps {
 
 export function WorkspaceSwitcher({ className }: WorkspaceSwitcherProps) {
   const t = useTranslations('common');
-  const locale = useLocale();
+  const router = useRouter();
   const pathname = usePathname();
-  const params = useParams();
   const [open, setOpen] = useState(false);
 
-  const { accounts, switchAccount } = useAuthStore();
-
-  const isOrganizationWorkspace = pathname.includes('/dashboard/organizations');
-  const isAccountWorkspace = pathname.includes('/dashboard/accounts');
-  const accountId = params.accountId as string | undefined;
+  const { accounts, setCurrentAccount, setSwitchingAccounts, getCurrentAccount } = useAuthStore();
+  const currentAccount = getCurrentAccount();
 
   const workspaces = useMemo(() => {
     return accounts.map((account) => ({
@@ -44,18 +38,7 @@ export function WorkspaceSwitcher({ className }: WorkspaceSwitcherProps) {
   }, [accounts, t]);
 
   const currentWorkspace = useMemo(() => {
-    let activeAccount = null;
-
-    if (isAccountWorkspace && accountId) {
-      activeAccount = accounts.find((account) => account.id === accountId);
-    } else if (isOrganizationWorkspace) {
-      activeAccount = accounts.find((account) => account.type === AccountType.Organization);
-    }
-
-    if (!activeAccount && accounts.length > 0) {
-      activeAccount = accounts[0];
-    }
-
+    const activeAccount = currentAccount ?? accounts[0] ?? null;
     if (!activeAccount) return null;
 
     return {
@@ -67,28 +50,35 @@ export function WorkspaceSwitcher({ className }: WorkspaceSwitcherProps) {
       type: activeAccount.type,
       icon: activeAccount.type === AccountType.Organization ? Building2 : User,
     };
-  }, [isOrganizationWorkspace, isAccountWorkspace, accountId, accounts, t]);
+  }, [currentAccount, accounts, t]);
 
-  const handleWorkspaceSelect = (workspaceId: string, workspaceType: AccountType) => {
-    setOpen(false);
+  const handleWorkspaceSelect = useCallback(
+    (workspaceId: string, workspaceType: AccountType) => {
+      setOpen(false);
 
-    switchAccount(workspaceId);
+      const newPath =
+        workspaceType === AccountType.Organization
+          ? '/dashboard/organizations'
+          : `/dashboard/accounts/${workspaceId}/projects`;
 
-    if (workspaceType === AccountType.Organization) {
-      const newPath = `/${locale}/dashboard/organizations`;
-      if (pathname !== newPath && !pathname.startsWith(`/${locale}/dashboard/organizations`)) {
-        redirect(newPath);
+      const shouldNavigate =
+        workspaceType === AccountType.Organization
+          ? !pathname.startsWith('/dashboard/organizations')
+          : !pathname.startsWith(`/dashboard/accounts/${workspaceId}`);
+
+      setSwitchingAccounts(true);
+      setCurrentAccount(workspaceId);
+
+      if (shouldNavigate) {
+        queueMicrotask(() => {
+          router.push(newPath);
+        });
+      } else {
+        setSwitchingAccounts(false);
       }
-    } else {
-      const newPath = `/${locale}/dashboard/accounts/${workspaceId}/projects`;
-      if (
-        pathname !== newPath &&
-        !pathname.startsWith(`/${locale}/dashboard/accounts/${workspaceId}`)
-      ) {
-        redirect(newPath);
-      }
-    }
-  };
+    },
+    [pathname, router, setCurrentAccount, setSwitchingAccounts]
+  );
 
   const workspaceName = currentWorkspace ? currentWorkspace.name : t('account.workspace');
 

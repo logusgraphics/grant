@@ -35,7 +35,7 @@ export const Mutation = {
   resetPassword: authMutations.resetPassword,
 
   // Me (private - own account operations, always allowed)
-  logoutMyUser: authenticateGraphQLResolver(meMutations.logoutMyUser!),
+  logoutMyUser: meMutations.logoutMyUser!, // Cookie-only; no auth required
   revokeMyUserSession: authenticateGraphQLResolver(meMutations.revokeMyUserSession!),
   deleteMyAccounts: authenticateGraphQLResolver(meMutations.deleteMyAccounts!),
   createMySecondaryAccount: authenticateGraphQLResolver(meMutations.createMySecondaryAccount!),

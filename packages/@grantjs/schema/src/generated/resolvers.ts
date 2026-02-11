@@ -910,11 +910,6 @@ export type MutationLoginArgs = {
   input: LoginInput;
 };
 
-export type MutationRefreshSessionArgs = {
-  accessToken: Scalars['String']['input'];
-  refreshToken: Scalars['String']['input'];
-};
-
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
@@ -3874,12 +3869,7 @@ export type MutationResolvers<
     RequireFields<MutationLoginArgs, 'input'>
   >;
   logoutMyUser?: Resolver<ResolversTypes['LogoutMyUserResponse'], ParentType, ContextType>;
-  refreshSession?: Resolver<
-    ResolversTypes['RefreshSessionResponse'],
-    ParentType,
-    ContextType,
-    RequireFields<MutationRefreshSessionArgs, 'accessToken' | 'refreshToken'>
-  >;
+  refreshSession?: Resolver<ResolversTypes['RefreshSessionResponse'], ParentType, ContextType>;
   register?: Resolver<
     ResolversTypes['CreateAccountResult'],
     ParentType,
