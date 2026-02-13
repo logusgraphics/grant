@@ -35,10 +35,25 @@ apps/
 │       │   ├── graphql/         # GraphQL-related unit tests
 │       │   │   ├── field-selection.test.ts
 │       │   │   └── scalars.test.ts
-│       │   └── middleware/
-│       │       └── rate-limit.middleware.test.ts
-│       └── integration/
-│           └── rate-limit.integration.test.ts  # HTTP-level rate limit tests + benchmarks
+│       │   ├── middleware/
+│       │   │   └── rate-limit.middleware.test.ts
+│       │   ├── services/
+│       │   │   └── audit-service.tenant-scope.test.ts
+│       │   └── jobs/
+│       │       └── tenant-job.test.ts           # Tenant job context validation
+│       ├── integration/
+│       │   └── rate-limit.integration.test.ts   # HTTP-level rate limit tests + benchmarks
+│       └── e2e/                                 # End-to-end security and compliance tests
+│           ├── scenarios/
+│           │   ├── multi-tenant.e2e.test.ts     # Cross-tenant isolation
+│           │   ├── negative-rbac.e2e.test.ts    # Authorization boundaries
+│           │   ├── negative-auth.e2e.test.ts    # Authentication rejection
+│           │   └── user-onboarding.e2e.test.ts  # User onboarding flow
+│           └── compliance/
+│               ├── soc2-access-control.e2e.test.ts  # SOC 2 CC6.x
+│               ├── soc2-audit.e2e.test.ts           # SOC 2 CC7.x
+│               ├── hipaa-phi.e2e.test.ts            # HIPAA technical safeguards
+│               └── gdpr.e2e.test.ts                 # GDPR articles
 └── web/
     └── tests/                    # Web app-specific tests (future)
         └── unit/                # Unit tests
@@ -148,6 +163,120 @@ BENCHMARK_REPORT=0 pnpm test
 - Keep in-test “benchmarks” loose (no strict ms thresholds in CI) to avoid flakiness.
 - Use autocannon/k6 against a running instance for real load; separate from unit/integration tests.
 - For rate limits, verify behavior (429 + Retry-After) in integration tests; use load tools to observe throughput and latency under limit.
+
+## Security and isolation testing
+
+The platform includes dedicated test suites that verify multi-tenant isolation, authorization boundaries, and compliance controls. These tests follow the patterns described in [Multi-Tenancy: The Architecture Powering Billions of Users in the Cloud](https://logus.graphics/blog/multi-tenancy-architecture-powering-billions-users-cloud/) (sections on "Testing Multi-Tenant Systems" and "Isolation Testing") and the [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/).
+
+### Strategy
+
+Every security-relevant test creates **real tenant contexts** (users, organizations, projects, tokens) via the E2E helpers and issues actual HTTP requests against the running API. The approach is:
+
+1. **Positive path:** Verify that an authorized user in Tenant A can perform operations within their own scope.
+2. **Negative path (isolation):** Verify that the same operation by Tenant B (or an unauthenticated caller) against Tenant A's resources returns 403 or 404—never 2xx.
+3. **Compliance mapping:** Each test file documents which compliance control it covers (SOC 2 CC, ISO 27001, HIPAA, GDPR articles).
+
+### Test suites
+
+#### Multi-tenant isolation (`tests/e2e/scenarios/multi-tenant.e2e.test.ts`)
+
+End-to-end cross-tenant access tests. Sets up two independent organizations (Tenant A, Tenant B) and verifies:
+
+- Tenant A cannot create projects in Tenant B's org (and vice versa).
+- Tenant A cannot list, read, update, or delete Tenant B's resources by ID.
+- List endpoints scoped to a tenant never return the other tenant's data.
+- Invitation and member management is tenant-scoped.
+
+Maps to SOC 2 CC6.1 (tenant separation), ISO 27001 A.8.3, HIPAA 164.312(a)(1).
+
+#### Negative RBAC (`tests/e2e/scenarios/negative-rbac.e2e.test.ts`)
+
+Authorization boundary tests that go beyond tenant isolation:
+
+- Cross-tenant resource access (user A vs. user B's org).
+- Invitation restrictions (cannot invite to another user's org).
+- Project creation requires org membership.
+- Role and permission boundary enforcement.
+
+Maps to SOC 2 CC6.1–CC6.2, ISO 27001 A.5.15 / A.8.3.
+
+#### Negative authentication (`tests/e2e/scenarios/negative-auth.e2e.test.ts`)
+
+Validates rejection of invalid authentication:
+
+- Unauthenticated access to protected endpoints (401).
+- Expired, malformed, and tampered tokens.
+- Revoked session tokens.
+
+Maps to SOC 2 CC6.1, CC6.8.
+
+#### SOC 2 access control (`tests/e2e/compliance/soc2-access-control.e2e.test.ts`)
+
+Trust Service Criteria validation:
+
+- CC6.1: All protected endpoints require authentication.
+- CC6.2: Access provisioning (org membership) and removal.
+- CC6.3: Roles and permissions are queryable for audit.
+- CC6.6: JWT RS256 signing and JWKS key publication.
+
+#### SOC 2 audit (`tests/e2e/compliance/soc2-audit.e2e.test.ts`)
+
+Audit trail validation:
+
+- CC7.2: CRUD operations produce audit log entries with who, what, when, and tenant scope.
+- CC7.3: Audit logs cannot be modified via the API (immutability).
+
+#### HIPAA (`tests/e2e/compliance/hipaa-phi.e2e.test.ts`)
+
+HIPAA Security Rule technical safeguards:
+
+- 164.312(a): Access control, unique user identification, session expiration.
+- 164.312(b): Audit controls.
+- 164.312(c): Integrity controls (audit immutability).
+- 164.312(d): Entity authentication.
+- 164.312(e): Transmission security.
+
+#### GDPR (`tests/e2e/compliance/gdpr.e2e.test.ts`)
+
+General Data Protection Regulation technical requirements:
+
+- Art. 15: Right of access (data export).
+- Art. 17: Right to erasure (account deletion).
+- Art. 20: Data portability.
+- Art. 25: Data protection by design (no sensitive fields in responses).
+- Art. 32: Security of processing.
+
+### Rate limit testing
+
+Rate limit behavior is tested at the unit and integration level (see [Rate limit integration tests and benchmarks](#rate-limit-integration-tests-and-benchmarks) above). These tests verify:
+
+- Global rate limit returns 429 with `Retry-After` header.
+- Auth endpoints (login, refresh, CLI callback, token exchange) enforce stricter limits.
+- Per-tenant rate limits isolate tenant quotas when enabled.
+- `/health` is never rate-limited.
+
+### Tenant-scoped audit testing
+
+Unit tests (`tests/unit/services/audit-service.tenant-scope.test.ts`) verify that:
+
+- Audit log entries include `scopeTenant` and `scopeId` when scope is present.
+- Scope is extracted from authenticated context only, not from user input.
+- Entries omit scope fields when no scope is present (system context).
+
+The SOC 2 audit E2E suite (`tests/e2e/compliance/soc2-audit.e2e.test.ts`) verifies end-to-end that audit entries are created for CRUD operations and contain the expected fields.
+
+### Running security tests
+
+```bash
+# All E2E tests (requires running API and database)
+cd apps/api && pnpm test tests/e2e/
+
+# Isolation scenarios only
+cd apps/api && pnpm test tests/e2e/scenarios/multi-tenant.e2e.test.ts
+
+# Compliance suites only
+cd apps/api && pnpm test tests/e2e/compliance/
+```
 
 ## 🔧 What Was Removed
 

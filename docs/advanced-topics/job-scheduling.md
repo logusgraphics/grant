@@ -655,17 +655,19 @@ For multi-tenant security, jobs that act on tenant-scoped data must receive and 
 **Contract:**
 
 - **Job payload:** Use the `TenantJobPayload` type from `@/lib/jobs` and `Scope` from `@grantjs/schema`. For any job that operates on tenant-scoped data, include `scope` in the execution context (scope is tenant type + id).
-- **Validation:** In the job’s `execute()` method, call `validateTenantJobContext(context, true)` at the start when the job is tenant-scoped. This rejects jobs missing or invalid scope.
+- **Structural validation:** In the job’s `execute()` method, call `validateTenantJobContext(context, true)` at the start when the job is tenant-scoped. This is a synchronous check that rejects jobs with missing or malformed scope (scope.tenant and scope.id must be non-empty strings).
+- **Active-status validation:** After structural validation, call `assertTenantActive(context.scope!, this.appContext.db)` to verify the tenant entity exists in the database and is not soft-deleted. This prevents processing jobs for tenants that were deleted between enqueue and execution.
 - **Enqueue from request handlers:** When enqueueing one-off jobs from REST/GraphQL handlers, always pass `scope` from the **authenticated request context** (e.g. `req.context.scope`), never from client-only input. Use `getJobAdapter()` from `@/lib/jobs` and call `adapter.enqueue?.(jobId, { scope, payload })`.
 - **Scheduled vs enqueued:** Recurring scheduled jobs (e.g. data retention) may be global and not require tenant context. Enqueued one-off jobs that touch tenant data must include scope and validate it in the processor.
 
 **Example (tenant-scoped job):**
 
 ```typescript
-import { validateTenantJobContext } from '@/lib/jobs';
+import { assertTenantActive, validateTenantJobContext } from '@/lib/jobs';
 
 async execute(context: JobExecutionContext): Promise<JobResult> {
-  validateTenantJobContext(context, true); // throws if scope missing
+  validateTenantJobContext(context, true); // throws if scope missing or malformed
+  await assertTenantActive(context.scope!, this.appContext.db); // throws if tenant deleted
   const { scope, payload } = context;
   // ... use scope and payload for tenant-scoped work
 }

@@ -1,0 +1,107 @@
+import { accounts, type DbSchema, organizations, projects } from '@grantjs/database';
+import { Tenant, type Scope } from '@grantjs/schema';
+import { and, eq, isNull } from 'drizzle-orm';
+
+/**
+ * Extracts entity IDs from a scope for tenant-active validation.
+ * Returns the organization, project, and account IDs to check based on scope.tenant.
+ */
+function extractTenantIds(scope: Scope): {
+  organizationId?: string;
+  projectId?: string;
+  accountId?: string;
+} {
+  const parts = scope.id.split(':');
+
+  switch (scope.tenant) {
+    case Tenant.System:
+      return {};
+    case Tenant.Organization:
+      return { organizationId: parts[0] };
+    case Tenant.Account:
+      return { accountId: parts[0] };
+    case Tenant.OrganizationProject:
+      return { organizationId: parts[0], projectId: parts[1] };
+    case Tenant.AccountProject:
+      return { accountId: parts[0], projectId: parts[1] };
+    case Tenant.ProjectUser:
+      return { projectId: parts[0] };
+    case Tenant.AccountProjectUser:
+      return { accountId: parts[0], projectId: parts[1] };
+    case Tenant.OrganizationProjectUser:
+      return { organizationId: parts[0], projectId: parts[1] };
+    default:
+      return {};
+  }
+}
+
+/**
+ * Validates that the tenant entities referenced by scope exist and are not soft-deleted.
+ * Call after validateTenantJobContext() for tenant-scoped jobs that need to verify
+ * the tenant is still active before processing.
+ *
+ * Queries run in parallel when multiple entities need checking (e.g. org + project).
+ *
+ * @param scope - The job's scope (tenant type + id)
+ * @param db - Drizzle database instance
+ * @throws Error if any tenant entity does not exist or is soft-deleted
+ */
+export async function assertTenantActive(scope: Scope, db: DbSchema): Promise<void> {
+  const { organizationId, projectId, accountId } = extractTenantIds(scope);
+
+  // System scope (and unknown tenants) have no entity to validate.
+  if (!organizationId && !projectId && !accountId) {
+    return;
+  }
+
+  const checks: Promise<void>[] = [];
+
+  if (organizationId) {
+    checks.push(
+      db
+        .select({ id: organizations.id })
+        .from(organizations)
+        .where(and(eq(organizations.id, organizationId), isNull(organizations.deletedAt)))
+        .limit(1)
+        .then((rows) => {
+          if (rows.length === 0) {
+            throw new Error(
+              `Tenant organization ${organizationId} not found or soft-deleted; job rejected.`
+            );
+          }
+        })
+    );
+  }
+
+  if (projectId) {
+    checks.push(
+      db
+        .select({ id: projects.id })
+        .from(projects)
+        .where(and(eq(projects.id, projectId), isNull(projects.deletedAt)))
+        .limit(1)
+        .then((rows) => {
+          if (rows.length === 0) {
+            throw new Error(`Tenant project ${projectId} not found or soft-deleted; job rejected.`);
+          }
+        })
+    );
+  }
+
+  if (accountId) {
+    checks.push(
+      db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(and(eq(accounts.id, accountId), isNull(accounts.deletedAt)))
+        .limit(1)
+        .then((rows) => {
+          if (rows.length === 0) {
+            throw new Error(`Tenant account ${accountId} not found or soft-deleted; job rejected.`);
+          }
+        })
+    );
+  }
+
+  await Promise.all(checks);
+}

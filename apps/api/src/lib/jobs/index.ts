@@ -1,8 +1,9 @@
 // Job adapter interfaces
 export * from './job-adapter.interface';
 
-// Tenant job types (Phase 3: background job tenant context)
+// Tenant job types and validation (Phase 3: background job tenant context)
 export * from './tenant-job.types';
+export * from './tenant-job.validation';
 
 // Job adapters
 export * from './adapters/bullmq.adapter';
