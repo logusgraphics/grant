@@ -2,7 +2,7 @@
 
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Permission, Tag } from '@grantjs/schema';
-import { Key } from 'lucide-react';
+import { CopyCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -124,7 +124,7 @@ export function PermissionTable() {
       columns={columns}
       loading={loading}
       emptyState={{
-        icon: <Key />,
+        icon: <CopyCheck />,
         title: search ? t('noSearchResults.title') : t('noPermissions.title'),
         description: search ? t('noSearchResults.description') : t('noPermissions.description'),
         action: search ? undefined : <PermissionCreateDialog />,

@@ -36,9 +36,9 @@ export function Limit({
   const tooltipText = `${t(translationKey)}: ${limit}`;
 
   const buttonContent = (
-    <Button 
-      variant="outline" 
-      size="default" 
+    <Button
+      variant="outline"
+      size="default"
       className={`${className} max-[1600px]:aspect-square max-[1600px]:p-2`}
     >
       <div className="flex items-center justify-between w-full">
@@ -58,13 +58,9 @@ export function Limit({
       <Tooltip>
         <DropdownMenu>
           <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              {buttonContent}
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>{buttonContent}</DropdownMenuTrigger>
           </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {tooltipText}
-          </TooltipContent>
+          <TooltipContent side="bottom">{tooltipText}</TooltipContent>
           <DropdownMenuContent align="end">
             {options.map((option) => (
               <DropdownMenuItem

@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 
 import { AccountTag, AuthorizationResult, Scope, Tenant } from '@grantjs/schema';
 
+import { AUTH_RESULT_CACHE_KEY_PREFIX } from '@/constants/cache.constants';
 import { CacheKey, ICacheAdapter, IEntityCacheAdapter } from '@/lib/cache';
 import { BadRequestError } from '@/lib/errors';
 import { Services } from '@/services';
@@ -645,7 +646,7 @@ export class CacheHandler {
       ? createHash('sha256').update(JSON.stringify(context.resource)).digest('hex').substring(0, 8)
       : 'none';
 
-    return `auth:result:${userId}:${scope.tenant}:${scope.id}:${permission.resource}:${permission.action}:${contextHash}`;
+    return `${AUTH_RESULT_CACHE_KEY_PREFIX}${userId}:${scope.tenant}:${scope.id}:${permission.resource}:${permission.action}:${contextHash}`;
   }
 
   protected async getAuthorizationResult<T = AuthorizationResult>(
@@ -704,8 +705,16 @@ export class CacheHandler {
     }
   }
 
+  async invalidateSigningKeysCacheForScope(scope: Scope): Promise<void> {
+    const prefix = `${scope.tenant}:${scope.id}`;
+    const keysToDelete = await this.cache.signingKeys.keys(`${prefix}*`);
+    for (const key of keysToDelete) {
+      await this.cache.signingKeys.delete(key);
+    }
+  }
+
   async invalidateAuthorizationCacheForUser(userId: string): Promise<void> {
-    const pattern = `auth:result:${userId}:*`;
+    const pattern = `${AUTH_RESULT_CACHE_KEY_PREFIX}${userId}:*`;
     const keys = await this.cache.permissions.keys(pattern);
 
     for (const key of keys) {

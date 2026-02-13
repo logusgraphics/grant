@@ -1,3 +1,5 @@
+import { NextRequest } from 'next/server';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GrantClient } from '../../grant-client';
@@ -53,7 +55,7 @@ describe('withGrant (Next.js)', () => {
     const wrapped = withGrant(client, { resource: 'Document', action: 'Query' }, handler);
 
     const request = createMockRequest();
-    const response = await wrapped(request as any);
+    const response = await wrapped(request as NextRequest);
 
     expect(response.status).toBe(200);
     expect(handler).toHaveBeenCalledWith(request, {
@@ -66,7 +68,7 @@ describe('withGrant (Next.js)', () => {
     const wrapped = withGrant(client, { resource: 'Document', action: 'Query' }, handler);
 
     const request = createMockRequest({ authorization: '' });
-    const response = await wrapped(request as any);
+    const response = await wrapped(request as NextRequest);
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -88,7 +90,7 @@ describe('withGrant (Next.js)', () => {
     const wrapped = withGrant(client, { resource: 'Document', action: 'Delete' }, handler);
 
     const request = createMockRequest();
-    const response = await wrapped(request as any);
+    const response = await wrapped(request as NextRequest);
 
     expect(response.status).toBe(403);
     const body = await response.json();
@@ -115,7 +117,7 @@ describe('withGrant (Next.js)', () => {
     );
 
     const request = createMockRequest();
-    await wrapped(request as any);
+    await wrapped(request as NextRequest);
 
     expect(resourceResolver).toHaveBeenCalledWith({
       resourceSlug: 'Document',
@@ -138,7 +140,7 @@ describe('withGrant (Next.js)', () => {
     );
 
     const request = createMockRequest();
-    const response = await wrapped(request as any);
+    const response = await wrapped(request as NextRequest);
 
     expect(response.status).toBe(404);
     const body = await response.json();

@@ -239,6 +239,48 @@
       "when": 1769863678886,
       "tag": "0034_mighty_mentor",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1770828351818,
+      "tag": "0034_mighty_exodus",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1770832148498,
+      "tag": "0035_hesitant_kitty_pryde",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1770836135603,
+      "tag": "0036_silent_anthem",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1770885165744,
+      "tag": "0037_foamy_marauders",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1770885484066,
+      "tag": "0038_white_spot",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1770885607740,
+      "tag": "0039_lowly_midnight",
+      "breakpoints": true
     }
   ]
 }

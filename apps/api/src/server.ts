@@ -15,7 +15,7 @@ import { config, printConfigSummary, validateConfig } from '@/config';
 import { schema } from '@/graphql/resolvers';
 import { GraphqlContext } from '@/graphql/types';
 import { i18nMiddleware, initializeI18n } from '@/i18n';
-import { createAppContext } from '@/lib/app-context';
+import { createAppContext } from '@/lib/app-context.lib';
 import { CacheFactory } from '@/lib/cache';
 import { formatGraphQLError } from '@/lib/errors';
 import { initializeJobs, shutdownJobs } from '@/lib/jobs/initialize';
@@ -27,6 +27,7 @@ import { requestLoggingMiddleware } from '@/middleware/request-logging.middlewar
 import { storageMiddleware } from '@/middleware/storage.middleware';
 import { createRestRouter } from '@/rest';
 import { generateOpenApiDocument } from '@/rest/openapi';
+import { createJwksRouter } from '@/rest/routes/jwks.routes';
 import { ContextRequest } from '@/types';
 
 async function startServer() {
@@ -114,9 +115,11 @@ async function startServer() {
     })
   );
 
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
+
+  app.use(createJwksRouter());
 
   app.use(errorHandler);
 

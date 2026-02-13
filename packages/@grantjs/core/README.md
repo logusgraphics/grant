@@ -16,7 +16,7 @@ Core authorization engine for the Grant. This package provides the internal auth
 ### Core Classes
 
 - **`Grant`** - Main authorization engine class
-- **`TokenParser`** - JWT token parsing and validation
+- **`TokenManager`** - JWT parsing, verification, validation, and signing (session + API key tokens)
 - **`PermissionQueryEngine`** - Permission cascade querying
 - **`ConditionEvaluator`** - Condition expression evaluation
 - **`PermissionChecker`** - Permission matching with condition evaluation
@@ -37,48 +37,14 @@ Types from `@grantjs/schema` (User, Role, Group, Permission, Resource, Scope, Te
 This package is designed to be used internally by `grant-api`. Here's how it would be integrated:
 
 ```typescript
-import { Grant, type GrantConfig } from '@grantjs/core';
-import type { PermissionQueryService, UserService, RoleService, GroupService } from '@grantjs/core';
+import { Grant } from '@grantjs/core';
+import type { GrantService } from '@grantjs/core';
 
-// Implement services that grant-core needs
-const permissionQueryService: PermissionQueryService = {
-  async getUserPermissions(userId, scope, options) {
-    // Query permissions from database
-  },
-  async getRoles(userId, scope) {
-    // Query roles from database
-  },
-  async getGroups(userId, scope) {
-    // Query groups from database
-  },
-};
+// Implement GrantService (permissions, user/role/group lookup, session signing key, verification key)
+const grantService: GrantService = { ... };
 
-const userService: UserService = {
-  async getUser(userId) {
-    // Load user from database
-  },
-};
-
-const roleService: RoleService = {
-  async getRole(roleId) {
-    // Load role from database
-  },
-};
-
-const groupService: GroupService = {
-  async getGroup(groupId) {
-    // Load group from database
-  },
-};
-
-// Initialize Grant engine
-const grant = new Grant({
-  jwtSecret: process.env.JWT_SECRET!,
-  permissionQueryService,
-  userService,
-  roleService,
-  groupService,
-});
+// Initialize Grant with the service
+const grant = new Grant(grantService);
 
 // Use in API endpoints
 const result = await grant.isAuthorized(
@@ -139,7 +105,7 @@ grant-core/
 ├── src/
 │   ├── core/
 │   │   ├── grant.ts              # Main Grant class
-│   │   ├── token-parser.ts       # JWT parsing
+│   │   ├── token-manager.ts      # JWT parse, verify, sign
 │   │   ├── permission-query-engine.ts  # Permission queries
 │   │   ├── condition-evaluator.ts      # Condition evaluation
 │   │   ├── permission-checker.ts      # Permission checking

@@ -6,18 +6,16 @@ import type { GrantConfig } from '../types/config.js';
 
 vi.mock('../api/client.js', () => ({
   exchangeApiKey: vi.fn(),
-  refreshSession: vi.fn(),
 }));
 
-const { exchangeApiKey, refreshSession } = await import('../api/client.js');
+const { exchangeApiKey } = await import('../api/client.js');
 
 describe('resolveAccessToken', () => {
   beforeEach(() => {
     vi.mocked(exchangeApiKey).mockReset();
-    vi.mocked(refreshSession).mockReset();
   });
 
-  it('returns session token when authMethod is session and no refreshToken', async () => {
+  it('returns session token when authMethod is session', async () => {
     const config: GrantConfig = {
       apiUrl: 'http://localhost',
       authMethod: 'session',
@@ -26,43 +24,17 @@ describe('resolveAccessToken', () => {
     const token = await resolveAccessToken(config);
     expect(token).toBe('session-token-xyz');
     expect(exchangeApiKey).not.toHaveBeenCalled();
-    expect(refreshSession).not.toHaveBeenCalled();
   });
 
-  it('calls refreshSession and returns new access token when session has refreshToken', async () => {
-    vi.mocked(refreshSession).mockResolvedValue({
-      accessToken: 'new-access-token',
-      refreshToken: 'new-refresh-token',
-    });
+  it('returns session token when authMethod is session with refreshToken stored (no auto-refresh)', async () => {
     const config: GrantConfig = {
       apiUrl: 'http://localhost',
       authMethod: 'session',
-      session: { token: 'old-token', refreshToken: 'old-refresh' },
+      session: { token: 'stored-access-token', refreshToken: 'stored-refresh' },
     };
     const token = await resolveAccessToken(config);
-    expect(token).toBe('new-access-token');
-    expect(refreshSession).toHaveBeenCalledWith('http://localhost', 'old-token', 'old-refresh');
+    expect(token).toBe('stored-access-token');
     expect(exchangeApiKey).not.toHaveBeenCalled();
-  });
-
-  it('calls onTokensRefreshed when session is refreshed', async () => {
-    vi.mocked(refreshSession).mockResolvedValue({
-      accessToken: 'new-access',
-      refreshToken: 'new-refresh',
-    });
-    const config: GrantConfig = {
-      apiUrl: 'http://localhost',
-      authMethod: 'session',
-      session: { token: 'old', refreshToken: 'old-r' },
-    };
-    const onTokensRefreshed = vi.fn();
-    const token = await resolveAccessToken(config, { onTokensRefreshed });
-    expect(token).toBe('new-access');
-    expect(onTokensRefreshed).toHaveBeenCalledTimes(1);
-    expect(onTokensRefreshed).toHaveBeenCalledWith({
-      accessToken: 'new-access',
-      refreshToken: 'new-refresh',
-    });
   });
 
   it('calls exchangeApiKey and returns access token when authMethod is api-key', async () => {

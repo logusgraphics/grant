@@ -1,5 +1,5 @@
 import { MILLISECONDS_PER_MINUTE } from '@grantjs/constants';
-import { GrantAuth } from '@grantjs/core';
+import { Grant, GrantAuth, NoSessionSigningKeyError } from '@grantjs/core';
 import { DbSchema, apiKeyAuditLogs } from '@grantjs/database';
 import {
   ApiKey,
@@ -10,12 +10,11 @@ import {
   QueryApiKeysArgs,
   Scope,
   Tenant,
-  TokenType,
 } from '@grantjs/schema';
-import jwt, { type JwtPayload } from 'jsonwebtoken';
 
 import { config } from '@/config';
 import { AuthenticationError, BadRequestError, NotFoundError } from '@/lib/errors';
+import { buildJwksIssuerUrl } from '@/lib/jwks.lib';
 import { generateRandomBytes, generateUUID, hashSecret, verifySecret } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { Repositories } from '@/repositories';
@@ -53,7 +52,8 @@ export class ApiKeyService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     readonly user: GrantAuth | null,
-    readonly db: DbSchema
+    readonly db: DbSchema,
+    private readonly grant: Grant
   ) {
     super(apiKeyAuditLogs, 'apiKeyId', user, db);
   }
@@ -62,27 +62,83 @@ export class ApiKeyService extends AuditService {
     return new Date(from + config.jwt.accessTokenExpirationMinutes * MILLISECONDS_PER_MINUTE);
   }
 
-  private signToken(params: SignTokenParams): string {
+  private async resolveSigningScope(
+    scope: Scope,
+    transaction?: Transaction
+  ): Promise<Scope | null> {
+    switch (scope.tenant) {
+      case Tenant.AccountProject:
+      case Tenant.OrganizationProject:
+        return scope;
+      case Tenant.AccountProjectUser: {
+        const parts = scope.id.split(':');
+        if (parts.length >= 2) {
+          return { tenant: Tenant.AccountProject, id: `${parts[0]}:${parts[1]}` };
+        }
+        return null;
+      }
+      case Tenant.OrganizationProjectUser: {
+        const parts = scope.id.split(':');
+        if (parts.length >= 2) {
+          return { tenant: Tenant.OrganizationProject, id: `${parts[0]}:${parts[1]}` };
+        }
+        return null;
+      }
+      case Tenant.ProjectUser: {
+        const parts = scope.id.split(':');
+        const projectId = parts[0];
+        if (!projectId) return null;
+        const accountProject = await this.repositories.accountProjectRepository.getFirstByProjectId(
+          projectId,
+          transaction
+        );
+        if (accountProject) {
+          return {
+            tenant: Tenant.AccountProject,
+            id: `${accountProject.accountId}:${accountProject.projectId}`,
+          };
+        }
+        const orgProject =
+          await this.repositories.organizationProjectRepository.getFirstByProjectId(
+            projectId,
+            transaction
+          );
+        if (orgProject) {
+          return {
+            tenant: Tenant.OrganizationProject,
+            id: `${orgProject.organizationId}:${orgProject.projectId}`,
+          };
+        }
+        return null;
+      }
+      default:
+        return null;
+    }
+  }
+
+  private async signToken(params: SignTokenParams, transaction?: Transaction): Promise<string> {
     const { apiKeyId, scope, userId } = params;
-    const sub = userId;
     const aud = config.app.url;
-    const iss = config.app.url;
-    const jti = apiKeyId;
     const iat = Math.floor(Date.now() / 1000);
     const exp = Math.floor(this.getAccessTokenExpirationDate(Date.now()).getTime() / 1000);
 
-    const jwtPayload: JwtPayload = {
-      sub,
+    const signingScope = await this.resolveSigningScope(scope, transaction);
+    if (!signingScope) {
+      throw new NoSessionSigningKeyError('No session signing key found');
+    }
+
+    const iss = buildJwksIssuerUrl(signingScope);
+
+    const payload = {
+      sub: userId,
       aud,
       iss,
       exp,
       iat,
-      jti,
-      type: TokenType.ApiKey, // Token type: ApiKey (enum value: 'apiKey')
-      scope, // Required for API key tokens (fixed scope)
+      jti: apiKeyId,
+      scope,
     };
-
-    return jwt.sign(jwtPayload, config.jwt.secret);
+    return this.grant.signApiKeyToken(payload, { signingScope, transaction });
   }
 
   private validateApiKeyActive(apiKey: ApiKey | null): void {
@@ -301,7 +357,7 @@ export class ApiKeyService extends AuditService {
       throw new AuthenticationError('User ID not found', 'errors:auth.userIdNotFound');
     }
 
-    const accessToken = this.signToken({ apiKeyId: apiKey.id, scope, userId });
+    const accessToken = await this.signToken({ apiKeyId: apiKey.id, scope, userId }, transaction);
     const expiresIn = config.jwt.accessTokenExpirationMinutes * 60;
 
     const response: ExchangeTokenResult = {

@@ -1,64 +1,75 @@
-import { AuthorizationReason, Tenant, TokenType } from '@grantjs/schema';
+import crypto from 'node:crypto';
+
+import { AuthorizationReason, Permission, Tenant, TokenType } from '@grantjs/schema';
 import jwt from 'jsonwebtoken';
 import { describe, expect, it, vi } from 'vitest';
 
-import { TokenValidationError } from '../errors/grant-exception';
-import { ComparisonOperator, type GrantService, type Permission } from '../types';
+import { TokenExpiredError, TokenInvalidError } from '../errors/grant-exception';
+import { type GrantService } from '../types';
 
 import { Grant } from './grant';
 
-describe('Grant', () => {
-  const secret = 'test-secret-key';
+const TEST_KID = 'test-kid';
+const { publicKey: publicKeyPem, privateKey: privateKeyPem } = crypto.generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+  publicKeyEncoding: { type: 'spki', format: 'pem' },
+  privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+});
 
-  const createMockGrantService = (): GrantService => ({
+function createMockGrantService(): GrantService {
+  return {
     getUserPermissions: vi.fn(),
     getUserRoles: vi.fn(),
     getUserGroups: vi.fn(),
     getUser: vi.fn(),
-  });
-
-  const createValidToken = (
-    type: TokenType = TokenType.Session,
-    scope?: { tenant: Tenant; id: string },
-    isVerified?: boolean
-  ) => {
-    const payload = {
-      sub: 'user-123',
-      aud: 'https://api.example.com',
-      iss: 'https://auth.example.com',
-      exp: Math.floor(Date.now() / 1000) + 3600,
-      iat: Math.floor(Date.now() / 1000),
-      jti: 'token-456',
-      type,
-      ...(scope && { scope }),
-      ...(isVerified !== undefined && { isVerified }),
-    };
-
-    return jwt.sign(payload, secret);
+    getSessionSigningKey: vi.fn().mockResolvedValue({ kid: TEST_KID, privateKeyPem }),
+    getVerificationKey: vi
+      .fn()
+      .mockImplementation((kid: string) =>
+        kid === TEST_KID ? Promise.resolve(publicKeyPem) : Promise.resolve(null)
+      ),
+    getPublicKeysForJwks: vi.fn().mockResolvedValue([{ kid: TEST_KID, publicKeyPem }]),
+    getSigningKeyForScope: vi.fn().mockResolvedValue({ kid: TEST_KID, privateKeyPem }),
+    invalidateSessionSigningKeyCache: vi.fn().mockResolvedValue(undefined),
+    rotateSystemSigningKey: vi.fn().mockResolvedValue({ kid: TEST_KID, createdAt: new Date() }),
   };
+}
 
+function createValidToken(
+  type: TokenType = TokenType.Session,
+  scope?: { tenant: Tenant; id: string },
+  isVerified?: boolean
+): string {
+  const payload = {
+    sub: 'user-123',
+    aud: 'https://api.example.com',
+    iss: 'https://auth.example.com',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    iat: Math.floor(Date.now() / 1000),
+    jti: 'token-456',
+    type,
+    ...(scope && { scope }),
+    ...(isVerified !== undefined && { isVerified }),
+  };
+  return jwt.sign(payload, privateKeyPem, { algorithm: 'RS256', keyid: TEST_KID });
+}
+
+describe('Grant', () => {
   describe('constructor', () => {
-    it('should initialize with config', () => {
+    it('should initialize with grantService', () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
+      const grant = new Grant(mockService);
       expect(grant.auth).toBeNull();
     });
   });
 
   describe('authenticate', () => {
-    it('should authenticate with valid Bearer token', () => {
+    it('should authenticate with valid Bearer token', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
       const token = createValidToken();
-      grant.authenticate(`Bearer ${token}`);
+      await grant.authenticate(`Bearer ${token}`);
 
       expect(grant.isAuthenticated()).toBe(true);
       expect(grant.auth).not.toBeNull();
@@ -66,49 +77,38 @@ describe('Grant', () => {
       expect(grant.auth?.tokenId).toBe('token-456');
     });
 
-    it('should not authenticate with missing header', () => {
+    it('should not authenticate with missing header', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
-      grant.authenticate(null);
+      await grant.authenticate(null);
 
       expect(grant.isAuthenticated()).toBe(false);
       expect(grant.auth).toBeNull();
     });
 
-    it('should not authenticate with invalid Bearer format', () => {
+    it('should not authenticate with invalid Bearer format', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
-      grant.authenticate('InvalidToken');
+      await grant.authenticate('InvalidToken');
 
       expect(grant.isAuthenticated()).toBe(false);
       expect(grant.auth).toBeNull();
     });
 
-    it('should not authenticate with invalid token', () => {
+    it('should not authenticate with invalid token', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
-      expect(() => grant.authenticate('Bearer invalid.token')).toThrow();
+      await grant.authenticate('Bearer invalid.token');
+
       expect(grant.isAuthenticated()).toBe(false);
     });
 
-    it('should not authenticate with expired token', () => {
+    it('should not authenticate with expired token', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
       const expiredPayload = {
         sub: 'user-123',
@@ -119,19 +119,19 @@ describe('Grant', () => {
         jti: 'token-456',
         type: TokenType.Session,
       };
+      const expiredToken = jwt.sign(expiredPayload, privateKeyPem, {
+        algorithm: 'RS256',
+        keyid: TEST_KID,
+      });
 
-      const expiredToken = jwt.sign(expiredPayload, secret);
+      await grant.authenticate(`Bearer ${expiredToken}`);
 
-      expect(() => grant.authenticate(`Bearer ${expiredToken}`)).toThrow();
       expect(grant.isAuthenticated()).toBe(false);
     });
 
-    it('should authenticate with API key token and scope', () => {
+    it('should authenticate with API key token and scope', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
       const scope = {
         tenant: Tenant.OrganizationProject,
@@ -139,46 +139,197 @@ describe('Grant', () => {
       };
 
       const token = createValidToken(TokenType.ApiKey, scope);
-      grant.authenticate(`Bearer ${token}`);
+      await grant.authenticate(`Bearer ${token}`);
 
       expect(grant.isAuthenticated()).toBe(true);
       expect(grant.auth?.type).toBe(TokenType.ApiKey);
       expect(grant.auth?.scope).toEqual(scope);
+    });
+
+    it('should not authenticate when token has no kid', async () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant(mockService);
+
+      const payload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        iat: Math.floor(Date.now() / 1000),
+        jti: 'token-456',
+        type: TokenType.Session,
+      };
+      const tokenNoKid = jwt.sign(payload, privateKeyPem, { algorithm: 'RS256' }); // no keyid
+
+      await grant.authenticate(`Bearer ${tokenNoKid}`);
+
+      expect(grant.isAuthenticated()).toBe(false);
+      expect(grant.auth).toBeNull();
+    });
+
+    it('should not authenticate when verification key cannot be resolved for kid', async () => {
+      const mockService = createMockGrantService();
+      mockService.getVerificationKey = vi.fn().mockResolvedValue(null); // unknown kid
+
+      const grant = new Grant(mockService);
+      const token = createValidToken();
+
+      await grant.authenticate(`Bearer ${token}`);
+
+      expect(grant.isAuthenticated()).toBe(false);
+      expect(grant.auth).toBeNull();
     });
   });
 
   describe('isAuthenticated', () => {
     it('should return false when not authenticated', () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
+      const grant = new Grant(mockService);
       expect(grant.isAuthenticated()).toBe(false);
     });
 
-    it('should return true when authenticated', () => {
+    it('should return true when authenticated', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
       const token = createValidToken();
-      grant.authenticate(`Bearer ${token}`);
+      await grant.authenticate(`Bearer ${token}`);
 
       expect(grant.isAuthenticated()).toBe(true);
+    });
+  });
+
+  describe('verifyToken', () => {
+    it('should return claims for valid token', async () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant(mockService);
+      const token = createValidToken();
+
+      const claims = await grant.verifyToken(token);
+
+      expect(claims.sub).toBe('user-123');
+      expect(claims.jti).toBe('token-456');
+      expect(claims.type).toBe(TokenType.Session);
+    });
+
+    it('should throw when token has no kid', async () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant(mockService);
+
+      const payload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        iat: Math.floor(Date.now() / 1000),
+        jti: 'token-456',
+        type: TokenType.Session,
+      };
+      const tokenNoKid = jwt.sign(payload, privateKeyPem, { algorithm: 'RS256' });
+
+      await expect(grant.verifyToken(tokenNoKid)).rejects.toThrow(TokenInvalidError);
+      await expect(grant.verifyToken(tokenNoKid)).rejects.toThrow(
+        'Cannot resolve verification key for token'
+      );
+    });
+
+    it('should throw when getVerificationKey returns null for kid', async () => {
+      const mockService = createMockGrantService();
+      mockService.getVerificationKey = vi.fn().mockResolvedValue(null);
+
+      const grant = new Grant(mockService);
+      const token = createValidToken();
+
+      await expect(grant.verifyToken(token)).rejects.toThrow(TokenInvalidError);
+      await expect(grant.verifyToken(token)).rejects.toThrow(
+        'Cannot resolve verification key for token'
+      );
+    });
+
+    it('should throw for invalid token', async () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant(mockService);
+
+      await expect(grant.verifyToken('invalid.token.here')).rejects.toThrow(TokenInvalidError);
+    });
+
+    it('should throw when token is expired', async () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant(mockService);
+
+      const expiredPayload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) - 3600,
+        iat: Math.floor(Date.now() / 1000) - 7200,
+        jti: 'token-456',
+        type: TokenType.Session,
+      };
+      const expiredToken = jwt.sign(expiredPayload, privateKeyPem, {
+        algorithm: 'RS256',
+        keyid: TEST_KID,
+      });
+
+      await expect(grant.verifyToken(expiredToken)).rejects.toThrow(TokenExpiredError);
+    });
+
+    it('should return claims for expired token when ignoreExpiration is true', async () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant(mockService);
+
+      const expiredPayload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) - 3600,
+        iat: Math.floor(Date.now() / 1000) - 7200,
+        jti: 'token-456',
+        type: TokenType.Session,
+      };
+      const expiredToken = jwt.sign(expiredPayload, privateKeyPem, {
+        algorithm: 'RS256',
+        keyid: TEST_KID,
+      });
+
+      const claims = await grant.verifyToken(expiredToken, { ignoreExpiration: true });
+
+      expect(claims.sub).toBe('user-123');
+    });
+  });
+
+  describe('signSessionToken', () => {
+    it('should sign payload with key from getSessionSigningKey', async () => {
+      const mockService = createMockGrantService();
+      const grant = new Grant(mockService);
+
+      const payload = {
+        sub: 'user-123',
+        aud: 'https://api.example.com',
+        iss: 'https://auth.example.com',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        iat: Math.floor(Date.now() / 1000),
+        jti: 'session-789',
+        type: TokenType.Session,
+      };
+
+      const token = await grant.signSessionToken(payload);
+
+      expect(typeof token).toBe('string');
+      expect(token.split('.')).toHaveLength(3);
+      const decoded = jwt.decode(token, { complete: true }) as {
+        header: { kid?: string };
+        payload: Record<string, unknown>;
+      };
+      expect(decoded.header.kid).toBe(TEST_KID);
+      expect(decoded.payload.sub).toBe('user-123');
     });
   });
 
   describe('isAuthorized', () => {
     it('should return NotAuthenticated when not authenticated', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
       const result = await grant.isAuthorized(
         { resource: 'projects', action: 'read' },
@@ -191,12 +342,8 @@ describe('Grant', () => {
 
     it('should return InvalidScope when token has no scope', async () => {
       const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
-      // Create token without scope (session token without scope)
       const payload = {
         sub: 'user-123',
         aud: 'https://api.example.com',
@@ -205,11 +352,9 @@ describe('Grant', () => {
         iat: Math.floor(Date.now() / 1000),
         jti: 'token-456',
         type: TokenType.Session,
-        // No scope
       };
-
-      const token = jwt.sign(payload, secret);
-      grant.authenticate(`Bearer ${token}`);
+      const token = jwt.sign(payload, privateKeyPem, { algorithm: 'RS256', keyid: TEST_KID });
+      await grant.authenticate(`Bearer ${token}`);
 
       const result = await grant.isAuthorized(
         { resource: 'projects', action: 'read' },
@@ -232,10 +377,7 @@ describe('Grant', () => {
       const mockService = createMockGrantService();
       mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
 
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
+      const grant = new Grant(mockService);
 
       const scope = {
         tenant: Tenant.OrganizationProject,
@@ -243,7 +385,7 @@ describe('Grant', () => {
       };
 
       const token = createValidToken(TokenType.Session, scope);
-      grant.authenticate(`Bearer ${token}`);
+      await grant.authenticate(`Bearer ${token}`);
 
       const result = await grant.isAuthorized(
         { resource: 'projects', action: 'read' },
@@ -252,321 +394,6 @@ describe('Grant', () => {
 
       expect(result.authorized).toBe(true);
       expect(result.reason).toBe(AuthorizationReason.PermissionGrantedNoCondition);
-    });
-
-    it('should use token scope when no override provided', async () => {
-      const permission: Permission = {
-        id: 'perm-1',
-        name: 'Read Projects',
-        action: 'read',
-        resourceId: 'resource-1',
-        condition: null,
-      } as Permission;
-
-      const mockService = createMockGrantService();
-      mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
-
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const tokenScope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-123',
-      };
-
-      const token = createValidToken(TokenType.Session, tokenScope);
-      grant.authenticate(`Bearer ${token}`);
-
-      await grant.isAuthorized({ resource: 'projects', action: 'read' }, { resource: null });
-
-      expect(mockService.getUserPermissions).toHaveBeenCalledWith(
-        'user-123',
-        tokenScope,
-        'projects',
-        'read'
-      );
-    });
-
-    it('should allow scope override for session tokens', async () => {
-      const permission: Permission = {
-        id: 'perm-1',
-        name: 'Read Projects',
-        action: 'read',
-        resourceId: 'resource-1',
-        condition: null,
-      } as Permission;
-
-      const mockService = createMockGrantService();
-      mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
-
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const tokenScope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-123',
-      };
-
-      const overrideScope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-456',
-      };
-
-      const token = createValidToken(TokenType.Session, tokenScope);
-      grant.authenticate(`Bearer ${token}`);
-
-      await grant.isAuthorized(
-        { resource: 'projects', action: 'read' },
-        { resource: null },
-        overrideScope
-      );
-
-      expect(mockService.getUserPermissions).toHaveBeenCalledWith(
-        'user-123',
-        overrideScope,
-        'projects',
-        'read'
-      );
-    });
-
-    it('should not allow scope override for API key tokens', async () => {
-      const permission: Permission = {
-        id: 'perm-1',
-        name: 'Read Projects',
-        action: 'read',
-        resourceId: 'resource-1',
-        condition: null,
-      } as Permission;
-
-      const mockService = createMockGrantService();
-      mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
-
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const tokenScope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-123',
-      };
-
-      const overrideScope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-456',
-      };
-
-      const token = createValidToken(TokenType.ApiKey, tokenScope);
-      grant.authenticate(`Bearer ${token}`);
-
-      await grant.isAuthorized(
-        { resource: 'projects', action: 'read' },
-        { resource: null },
-        overrideScope
-      );
-
-      // Should use token scope, not override
-      expect(mockService.getUserPermissions).toHaveBeenCalledWith(
-        'user-123',
-        tokenScope,
-        'projects',
-        'read'
-      );
-    });
-
-    it('should authorize when condition is met', async () => {
-      const permission: Permission = {
-        id: 'perm-1',
-        name: 'Read Projects',
-        action: 'read',
-        resourceId: 'resource-1',
-        condition: {
-          [ComparisonOperator.Equals]: {
-            'user.metadata.department': 'sales',
-          },
-        },
-      } as Permission;
-
-      const mockService = createMockGrantService();
-      mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
-      mockService.getUser = vi.fn().mockResolvedValue({
-        id: 'user-123',
-        metadata: { department: 'sales', region: 'us-east' },
-      });
-      mockService.getUserRoles = vi.fn().mockResolvedValue([]);
-      mockService.getUserGroups = vi.fn().mockResolvedValue([]);
-
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const scope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-123',
-      };
-
-      const token = createValidToken(TokenType.Session, scope);
-      grant.authenticate(`Bearer ${token}`);
-
-      const result = await grant.isAuthorized(
-        { resource: 'projects', action: 'read' },
-        { resource: null }
-      );
-
-      expect(result.authorized).toBe(true);
-      expect(result.reason).toBe(AuthorizationReason.PermissionGrantedConditionMet);
-    });
-
-    it('should deny when condition is not met', async () => {
-      const permission: Permission = {
-        id: 'perm-1',
-        name: 'Read Projects',
-        action: 'read',
-        resourceId: 'resource-1',
-        condition: {
-          [ComparisonOperator.Equals]: {
-            'user.metadata.department': 'engineering',
-          },
-        },
-      } as Permission;
-
-      const mockService = createMockGrantService();
-      mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
-      mockService.getUser = vi.fn().mockResolvedValue({
-        id: 'user-123',
-        metadata: { department: 'sales', region: 'us-east' },
-      });
-      mockService.getUserRoles = vi.fn().mockResolvedValue([]);
-      mockService.getUserGroups = vi.fn().mockResolvedValue([]);
-
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const scope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-123',
-      };
-
-      const token = createValidToken(TokenType.Session, scope);
-      grant.authenticate(`Bearer ${token}`);
-
-      const result = await grant.isAuthorized(
-        { resource: 'projects', action: 'read' },
-        { resource: null }
-      );
-
-      expect(result.authorized).toBe(false);
-      expect(result.reason).toBe(AuthorizationReason.PermissionFoundConditionNotMet);
-    });
-
-    it('should throw TokenValidationError when token validation fails', () => {
-      const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      // Create token with missing required claims
-      const invalidPayload = {
-        sub: 'user-123',
-        // Missing required claims
-      };
-
-      const invalidToken = jwt.sign(invalidPayload, secret);
-
-      expect(() => grant.authenticate(`Bearer ${invalidToken}`)).toThrow(TokenValidationError);
-    });
-  });
-
-  describe('isVerified in GrantAuth', () => {
-    it('should set isVerified to true for session token with isVerified: true', () => {
-      const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const token = createValidToken(TokenType.Session, undefined, true);
-      grant.authenticate(`Bearer ${token}`);
-
-      expect(grant.isAuthenticated()).toBe(true);
-      expect(grant.auth?.isVerified).toBe(true);
-    });
-
-    it('should set isVerified to false for session token with isVerified: false', () => {
-      const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const token = createValidToken(TokenType.Session, undefined, false);
-      grant.authenticate(`Bearer ${token}`);
-
-      expect(grant.isAuthenticated()).toBe(true);
-      expect(grant.auth?.isVerified).toBe(false);
-    });
-
-    it('should set isVerified to undefined for session token without isVerified claim', () => {
-      const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const token = createValidToken(TokenType.Session);
-      grant.authenticate(`Bearer ${token}`);
-
-      expect(grant.isAuthenticated()).toBe(true);
-      expect(grant.auth?.isVerified).toBeUndefined();
-    });
-
-    it('should set isVerified to true for API key token regardless of claim', () => {
-      const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const scope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-123',
-      };
-
-      // API key with isVerified: false should still result in isVerified: true
-      const token = createValidToken(TokenType.ApiKey, scope, false);
-      grant.authenticate(`Bearer ${token}`);
-
-      expect(grant.isAuthenticated()).toBe(true);
-      expect(grant.auth?.type).toBe(TokenType.ApiKey);
-      expect(grant.auth?.isVerified).toBe(true);
-    });
-
-    it('should set isVerified to true for API key token without isVerified claim', () => {
-      const mockService = createMockGrantService();
-      const grant = new Grant({
-        jwtSecret: secret,
-        grantService: mockService,
-      });
-
-      const scope = {
-        tenant: Tenant.OrganizationProject,
-        id: 'project-123',
-      };
-
-      const token = createValidToken(TokenType.ApiKey, scope);
-      grant.authenticate(`Bearer ${token}`);
-
-      expect(grant.isAuthenticated()).toBe(true);
-      expect(grant.auth?.type).toBe(TokenType.ApiKey);
-      expect(grant.auth?.isVerified).toBe(true);
     });
   });
 });

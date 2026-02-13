@@ -37,19 +37,20 @@ export interface GrantProviderProps {
  *
  * @example
  * ```tsx
- * // Option 1: Pass config
+ * // Option 1: Pass config (cookie-based refresh)
  * <GrantProvider
  *   config={{
  *     apiUrl: 'https://api.grant.com',
  *     getAccessToken: () => localStorage.getItem('accessToken'),
- *     getRefreshToken: () => localStorage.getItem('refreshToken'),
- *     onTokenRefresh: (tokens) => {
- *       localStorage.setItem('accessToken', tokens.accessToken);
- *       localStorage.setItem('refreshToken', tokens.refreshToken);
+ *     onRefreshWithCredentials: async () => {
+ *       const res = await fetch('https://api.grant.com/api/auth/refresh', { method: 'POST', credentials: 'include' });
+ *       if (!res.ok) return false;
+ *       const { data } = await res.json();
+ *       if (data?.accessToken) { localStorage.setItem('accessToken', data.accessToken); return true; }
+ *       return false;
  *     },
- *     onUnauthorized: () => {
- *       window.location.href = '/login';
- *     },
+ *     onTokenRefresh: (tokens) => { localStorage.setItem('accessToken', tokens.accessToken); },
+ *     onUnauthorized: () => { window.location.href = '/login'; },
  *   }}
  * >
  *   <App />

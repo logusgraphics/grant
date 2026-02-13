@@ -3,7 +3,6 @@ import type {
   AuthorizationResult,
   PermissionQueryOptions,
   Scope,
-  AuthTokens,
 } from './types';
 
 /**
@@ -23,7 +22,6 @@ export class GrantClient {
   private config: Required<Pick<GrantClientConfig, 'apiUrl'>> & GrantClientConfig;
   private cache: Map<string, { data: unknown; expires: number }> = new Map();
   private defaultTtl: number;
-  private refreshPromise: Promise<AuthTokens | null> | null = null;
 
   constructor(config: GrantClientConfig) {
     this.config = config;
@@ -169,13 +167,7 @@ export class GrantClient {
 
     if (response.status !== 401) return response;
 
-    // Try body-based refresh first (accessToken + refreshToken in body)
-    if (this.config.onTokenRefresh) {
-      const refreshed = await this.tryRefreshToken();
-      if (refreshed) return this.doFetch(url, init);
-    }
-
-    // Fallback: cookie-only refresh (e.g. web app with HttpOnly refresh cookie).
+    // Cookie-based refresh (HttpOnly refresh cookie). Body-based refresh is not supported (security: CSRF / third-party).
     // Module-level shared promise so all 401s (any client instance) coalesce into one refresh.
     if (this.config.onRefreshWithCredentials) {
       if (!sharedCredentialsRefreshPromise) {
@@ -185,6 +177,7 @@ export class GrantClient {
       }
       const refreshed = await sharedCredentialsRefreshPromise;
       if (refreshed) return this.doFetch(url, init);
+      this.config.onUnauthorized?.();
     }
 
     return response;
@@ -225,81 +218,6 @@ export class GrantClient {
       return token instanceof Promise ? token : token;
     }
     return null;
-  }
-
-  /**
-   * Attempt to refresh the access token
-   * Uses a shared promise to prevent multiple simultaneous refresh attempts
-   */
-  private async tryRefreshToken(): Promise<boolean> {
-    // If already refreshing, wait for the existing promise
-    if (this.refreshPromise) {
-      const result = await this.refreshPromise;
-      return result !== null;
-    }
-
-    // Check if we have refresh capability
-    if (!this.config.onTokenRefresh || !this.config.getRefreshToken) {
-      return false;
-    }
-
-    const refreshToken = await this.config.getRefreshToken();
-    const accessToken = await this.getToken();
-
-    if (!refreshToken || !accessToken) {
-      return false;
-    }
-
-    // Start refresh process
-    this.refreshPromise = this.performTokenRefresh(accessToken, refreshToken);
-
-    try {
-      const result = await this.refreshPromise;
-      return result !== null;
-    } finally {
-      this.refreshPromise = null;
-    }
-  }
-
-  /**
-   * Perform the token refresh API call
-   */
-  private async performTokenRefresh(
-    accessToken: string,
-    refreshToken: string
-  ): Promise<AuthTokens | null> {
-    try {
-      const fetchFn = this.config.fetch ?? globalThis.fetch;
-      const response = await fetchFn(`${this.config.apiUrl}/api/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: this.config.credentials ?? 'include',
-        body: JSON.stringify({
-          accessToken,
-          refreshToken,
-        }),
-      });
-
-      if (!response.ok) {
-        // Refresh failed - trigger unauthorized handler
-        this.config.onUnauthorized?.();
-        return null;
-      }
-
-      const json = await response.json();
-      const tokens: AuthTokens = json.data ?? json;
-
-      // Notify the app about the new tokens
-      await this.config.onTokenRefresh?.(tokens);
-
-      return tokens;
-    } catch (error) {
-      console.error('[GrantClient] Token refresh failed:', error);
-      this.config.onUnauthorized?.();
-      return null;
-    }
   }
 
   // ============================================================================

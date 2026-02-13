@@ -139,7 +139,8 @@
       "project": "Projekt",
       "account": "Account",
       "settings": "Einstellungen",
-      "backToOrganization": "Zurück zur Organisation"
+      "backToOrganization": "Zurück zur Organisation",
+      "signingKeys": "Signierungsschlüssel (JWKS)"
     }
   },
   "theme": {
@@ -2561,6 +2562,41 @@
       "revokeSuccess": "API-Schlüssel widerrufen",
       "revokeError": "Fehler beim Widerrufen des API-Schlüssels",
       "exchangeError": "Fehler beim Austauschen des API-Schlüssels"
+    }
+  },
+  "signingKeys": {
+    "title": "Signaturschlüssel (JWKS)",
+    "toolbar": {
+      "rotate": "Schlüssel rotieren",
+      "create": "Signaturschlüssel erstellen"
+    },
+    "viewer": {
+      "kid": "Schlüssel-ID",
+      "active": "Aktiv",
+      "activeYes": "Aktiv",
+      "activeNo": "Rotiert",
+      "createdAt": "Erstellt",
+      "rotatedAt": "Rotiert am",
+      "publicKey": "Öffentlicher Schlüssel",
+      "never": "Nie",
+      "empty": "Keine Signaturschlüssel",
+      "emptyDescription": "Der erste Signaturschlüssel wird erstellt, wenn ein API-Schlüssel gegen einen Token getauscht wird, oder Sie können einen manuell erstellen.",
+      "emptyAction": "Signaturschlüssel erstellen"
+    },
+    "rotateDialog": {
+      "title": "Signaturschlüssel rotieren",
+      "description": "Ein neuer Schlüssel wird erzeugt und für neue Tokens verwendet. Bestehende Tokens bleiben bis zum Ablauf gültig. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "createTitle": "Signaturschlüssel erstellen",
+      "createDescription": "Ein neuer Signaturschlüssel wird für dieses Projekt erzeugt. Er wird zum Signieren von Tokens beim Austausch von API-Schlüsseln verwendet.",
+      "cancel": "Abbrechen",
+      "confirm": "Schlüssel rotieren",
+      "confirming": "Wird rotiert…",
+      "createConfirm": "Schlüssel erstellen",
+      "createConfirming": "Wird erstellt…"
+    },
+    "notifications": {
+      "rotateSuccess": "Signaturschlüssel rotiert",
+      "rotateError": "Fehler beim Rotieren des Signaturschlüssels"
     }
   }
 }

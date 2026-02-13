@@ -139,7 +139,8 @@
       "project": "Project",
       "account": "Account",
       "settings": "Settings",
-      "backToOrganization": "Back to Organization"
+      "backToOrganization": "Back to Organization",
+      "signingKeys": "Signing Keys (JWKS)"
     }
   },
   "theme": {
@@ -2562,6 +2563,41 @@
       "revokeSuccess": "API key revoked",
       "revokeError": "Failed to revoke API key",
       "exchangeError": "Failed to exchange API key"
+    }
+  },
+  "signingKeys": {
+    "title": "Signing Keys (JWKS)",
+    "toolbar": {
+      "rotate": "Rotate key",
+      "create": "Create signing key"
+    },
+    "viewer": {
+      "kid": "Key ID",
+      "active": "Active",
+      "activeYes": "Active",
+      "activeNo": "Rotated",
+      "createdAt": "Created",
+      "rotatedAt": "Rotated at",
+      "publicKey": "Public key",
+      "never": "Never",
+      "empty": "No signing keys",
+      "emptyDescription": "The first signing key is created when an API key is exchanged for a token, or you can create one manually.",
+      "emptyAction": "Create signing key"
+    },
+    "rotateDialog": {
+      "title": "Rotate signing key",
+      "description": "A new key will be generated and used for signing new tokens. Existing tokens remain valid until they expire. This action cannot be undone.",
+      "createTitle": "Create signing key",
+      "createDescription": "A new signing key will be generated for this project. It will be used to sign tokens when API keys are exchanged.",
+      "cancel": "Cancel",
+      "confirm": "Rotate key",
+      "confirming": "Rotating…",
+      "createConfirm": "Create key",
+      "createConfirming": "Creating…"
+    },
+    "notifications": {
+      "rotateSuccess": "Signing key rotated",
+      "rotateError": "Failed to rotate signing key"
     }
   }
 }

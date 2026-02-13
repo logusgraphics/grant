@@ -1,0 +1,10 @@
+query GetSigningKeys($scope: Scope!) {
+  signingKeys(scope: $scope) {
+    id
+    kid
+    active
+    createdAt
+    rotatedAt
+    publicKeyPem
+  }
+}

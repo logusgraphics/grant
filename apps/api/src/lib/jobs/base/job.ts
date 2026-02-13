@@ -1,5 +1,5 @@
-import { AppContext } from '@/lib/app-context';
 import { createModuleLogger } from '@/lib/logger';
+import { AppContext } from '@/types';
 
 import { JobExecutionContext, JobResult, ScheduledJob } from '../job-adapter.interface';
 

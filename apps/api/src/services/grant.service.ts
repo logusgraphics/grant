@@ -1,11 +1,104 @@
-import { GrantService as IGrantService } from '@grantjs/core';
+import { GrantService as IGrantService, type SessionSigningKey } from '@grantjs/core';
 import { ExecutionContextGroup, ExecutionContextRole, ExecutionContextUser } from '@grantjs/core';
 import { Permission, Scope } from '@grantjs/schema';
 
+import {
+  SYSTEM_SIGNING_KEY_CACHE_KEY,
+  VERIFICATION_KEY_CACHE_PREFIX,
+} from '@/constants/cache.constants';
+import { SYSTEM_SCOPE } from '@/constants/system.constants';
+import type { IEntityCacheAdapter } from '@/lib/cache';
+import type { Transaction } from '@/lib/transaction-manager.lib';
 import { GrantRepository } from '@/repositories/grant.repository';
 
+import type { SigningKeyService } from './signing-keys.service';
+
+export interface GrantServiceSessionKeyOptions {
+  cacheTtlSeconds?: number;
+}
+
 export class GrantService implements IGrantService {
-  constructor(private readonly grantRepository: GrantRepository) {}
+  constructor(
+    private readonly cache: IEntityCacheAdapter,
+    private readonly grantRepository: GrantRepository,
+    private readonly signingKeyService: SigningKeyService,
+    private readonly sessionKeyOptions?: GrantServiceSessionKeyOptions
+  ) {}
+
+  /** TTL for both session signing key and verification-key caches (from config). */
+  private getKeyCacheTtlSeconds(): number {
+    return this.sessionKeyOptions?.cacheTtlSeconds ?? 300;
+  }
+
+  async getSessionSigningKey(): Promise<SessionSigningKey | null> {
+    const cacheTtlSeconds = this.getKeyCacheTtlSeconds();
+    const cached = await this.cache.signingKeys.get<SessionSigningKey>(
+      SYSTEM_SIGNING_KEY_CACHE_KEY
+    );
+    if (cached) {
+      return cached;
+    }
+    try {
+      const key = await this.signingKeyService.getOrCreateForScope(SYSTEM_SCOPE);
+      await this.cache.signingKeys.set(SYSTEM_SIGNING_KEY_CACHE_KEY, key, cacheTtlSeconds);
+      return key;
+    } catch {
+      return null;
+    }
+  }
+
+  async getVerificationKey(kid: string): Promise<string | null> {
+    const cacheKey = `${VERIFICATION_KEY_CACHE_PREFIX}${kid}`;
+    const cacheTtlSeconds = this.getKeyCacheTtlSeconds();
+    const cached = await this.cache.signingKeys.get<string>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    const publicKeyPem = await this.signingKeyService.getPublicKeyPemByKid(kid);
+    if (publicKeyPem) {
+      await this.cache.signingKeys.set(cacheKey, publicKeyPem, cacheTtlSeconds);
+    }
+    return publicKeyPem;
+  }
+
+  async getPublicKeysForJwks(
+    scope: Scope | null,
+    retentionCutoff: Date
+  ): Promise<Array<{ kid: string; publicKeyPem: string }>> {
+    const effectiveTenant = scope?.tenant ?? SYSTEM_SCOPE.tenant;
+    const effectiveId = scope?.id ?? SYSTEM_SCOPE.id;
+    return this.signingKeyService.getPublicKeysForJwksByScope(
+      effectiveTenant,
+      effectiveId,
+      retentionCutoff
+    );
+  }
+
+  async invalidateSessionSigningKeyCache(): Promise<void> {
+    await this.cache.signingKeys.delete(SYSTEM_SIGNING_KEY_CACHE_KEY);
+  }
+
+  async rotateSystemSigningKey(transaction?: unknown): Promise<{ kid: string; createdAt: Date }> {
+    const key = await this.signingKeyService.rotateForScope(
+      SYSTEM_SCOPE,
+      transaction as Transaction | undefined
+    );
+    return { kid: key.kid, createdAt: key.createdAt };
+  }
+
+  async getSigningKeyForScope(
+    scope: Scope,
+    transaction?: unknown
+  ): Promise<SessionSigningKey | null> {
+    try {
+      return await this.signingKeyService.getOrCreateForScope(
+        scope,
+        transaction as Transaction | undefined
+      );
+    } catch {
+      return null;
+    }
+  }
 
   async getUserPermissions(
     userId: string,

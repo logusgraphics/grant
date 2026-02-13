@@ -2,7 +2,7 @@
 
 import { TagColor } from '@grantjs/constants';
 import { Permission, Tag } from '@grantjs/schema';
-import { Key, Package, Play, Tags } from 'lucide-react';
+import { CopyCheck, Package, Play, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, CardHeader, ScrollBadges } from '@/components/common';
@@ -28,7 +28,7 @@ export function PermissionCards() {
       entities={permissions}
       loading={loading}
       emptyState={{
-        icon: <Key />,
+        icon: <CopyCheck />,
         title: search ? t('noSearchResults.title') : t('noPermissions.title'),
         description: search ? t('noSearchResults.description') : t('noPermissions.description'),
         action: search ? undefined : <PermissionCreateDialog />,

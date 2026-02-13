@@ -1,7 +1,7 @@
 import { MILLISECONDS_PER_MINUTE } from '@grantjs/constants';
 
-import { CacheKey } from '@/lib/cache';
-import { ICacheAdapter } from '@/lib/cache';
+import { OAUTH_STATE_KEY_PREFIX } from '@/constants/cache.constants';
+import { CacheKey, ICacheAdapter } from '@/lib/cache';
 import { createModuleLogger } from '@/lib/logger';
 import { validateInput } from '@/services/common';
 
@@ -121,7 +121,7 @@ export class OAuthStateService {
     const now = Date.now();
     let cleaned = 0;
 
-    const keys = await this.cache.keys('oauth:state:*');
+    const keys = await this.cache.keys(`${OAUTH_STATE_KEY_PREFIX}*`);
     for (const key of keys) {
       const cachedValue = await this.cache.get(key);
       if (cachedValue && cachedValue.size > 0) {
@@ -153,7 +153,7 @@ export class OAuthStateService {
   }
 
   private getCacheKey(stateToken: string): CacheKey {
-    return `oauth:state:${stateToken}` as CacheKey;
+    return `${OAUTH_STATE_KEY_PREFIX}${stateToken}` as CacheKey;
   }
 
   destroy(): void {

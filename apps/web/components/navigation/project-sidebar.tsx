@@ -9,11 +9,12 @@ import {
   Fingerprint,
   FolderOpen,
   Group,
-  Key,
   Package,
   Shield,
   Tag,
   Users,
+  KeyRound,
+  CopyCheck,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -72,6 +73,11 @@ export function ProjectSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         {
           title: t('apiKeys'),
           url: `/dashboard/organizations/${organizationId}/projects/${projectId}/api-keys`,
+          icon: KeyRound,
+        },
+        {
+          title: t('signingKeys'),
+          url: `/dashboard/organizations/${organizationId}/projects/${projectId}/signing-keys`,
           icon: Fingerprint,
         },
         {
@@ -87,7 +93,7 @@ export function ProjectSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         {
           title: t('permissions'),
           url: `/dashboard/organizations/${organizationId}/projects/${projectId}/permissions`,
-          icon: Key,
+          icon: CopyCheck,
         },
         {
           title: t('resources'),

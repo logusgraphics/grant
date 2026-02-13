@@ -18,6 +18,7 @@ import * as permissionMutations from './permissions/mutations';
 import * as projectMutations from './projects/mutations';
 import * as resourceMutations from './resources/mutations';
 import * as roleMutations from './roles/mutations';
+import * as signingKeyMutations from './signing-keys/mutations';
 import * as tagMutations from './tags/mutations';
 import * as userMutations from './users/mutations';
 
@@ -335,6 +336,15 @@ export const Mutation = {
     authorizeGraphQLResolver(
       { resource: ResourceSlug.ApiKey, action: ResourceAction.Delete },
       apiKeyMutations.deleteApiKey!
+    )
+  ),
+
+  // Signing Keys (scoped; project only – same permission as API key query for rotate)
+  rotateSigningKey: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      { resource: ResourceSlug.ApiKey, action: ResourceAction.Query },
+      signingKeyMutations.rotateSigningKey!
     )
   ),
 } as const;

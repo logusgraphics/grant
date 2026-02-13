@@ -221,6 +221,84 @@ Sessions have two expiration timestamps:
 
 Expired sessions are automatically filtered out when querying active sessions.
 
+## JWKS and Asymmetric Signing
+
+Grant supports **asymmetric JWT signing** (RS256) with keys stored in the database and exposed via a **JWKS** (JSON Web Key Set) endpoint. This allows verifiers to validate tokens using public keys only, supports **key rotation** without redeploys, and provides **per-project signing** for API key tokens so compromise of one project’s key does not affect others or platform sessions.
+
+### Key Model
+
+- **System (platform) keys** – Sign **session tokens** (login, refresh). One key set for the whole platform; scope is system (e.g. `tenant: system`, `id: systemUserId`). Key IDs use the prefix `system-` (e.g. `system-<uuid>`).
+- **Per-project keys** – Sign **API key–exchanged tokens**. One active key per project (or org project); scope is `accountProject` or `organizationProject`. Keys are created **lazily** on first token exchange for that scope. Key IDs use the prefix `proj-` (e.g. `proj-<uuid>`).
+
+Keys are stored in the `signing_keys` table (scope by `scope_tenant` + `scope_id`). Multiple keys per scope are allowed for rotation: one active, others rotated; the `kid` is globally unique. Old keys remain in JWKS until tokens signed with them expire.
+
+### JWKS Endpoint
+
+- **URL:** `GET /.well-known/jwks.json` (always exposed when JWT algorithm is RS256).
+- **Response:** JSON object `{ "keys": [ ... ] }` — **active** public keys plus keys **rotated within the retention window** (see below). Verifiers use the JWT header `kid` to select the matching key; no per-project URL.
+- **Auth:** None (public keys). Cache-Control is configurable (e.g. `JWT_JWKS_MAX_AGE_SECONDS`).
+
+### Signing and Verification
+
+- **Session tokens:** Signed with the **system** private key from the database (resolved via GrantService with cache; no env fallback), RS256, `kid` in header.
+- **API key tokens:** Signed with the **project** private key for the exchange scope (resolved from scope; key created on first use), RS256, `kid` in header.
+- **Verification:** `@grantjs/core` supports `jwksUrl` and key cache; the API passes it in context middleware. Tokens without `kid` fall back to symmetric verification with `JWT_SECRET` (HS256) for backward compatibility.
+
+### Per-Project Key Lifecycle
+
+- **Creation:** On first API key token exchange for a project scope; key is generated and stored.
+- **Rotation:** Via GraphQL mutation or REST API; UI (Signing Keys page) allows viewing and rotating. New key becomes active; previous key is marked rotated and remains in JWKS until existing tokens expire.
+- **Audit:** Create and rotate events are logged in `signing_key_audit_logs` (no key material in logs).
+
+### Key Retention and Per-Request Signing
+
+- **Do keys in JWKS grow indefinitely?** No. The JWKS endpoint returns only keys that might still verify a valid token: **active** keys plus keys **rotated after** a cutoff. The cutoff is `refreshTokenExpirationDays + 7` days (configurable via `JWT_REFRESH_TOKEN_EXPIRATION_DAYS`). Keys rotated earlier are omitted so the key set stays bounded.
+- **When do we know no more tokens are signed with an old key?** Access tokens expire in minutes (`JWT_ACCESS_TOKEN_EXPIRATION_MINUTES`); refresh tokens in days (`JWT_REFRESH_TOKEN_EXPIRATION_DAYS`). After that period, no valid token can bear an old `kid`, so it is safe to stop exposing that key in JWKS (and the retention window does that).
+- **Why did refresh previously sign with the old key?** The session signing key was resolved once at server startup. After rotation, the process still held the previous key in memory. Per DIP, core defines **GrantService.getSessionSigningKey()**; the API implements it with DB + cache (invalidated on system key rotation). Grant and TokenManager depend only on the GrantService abstraction. So after rotation, the next request gets the new key from cache miss or TTL. JWKS still includes the old key for the retention window so existing tokens continue to verify until they expire.
+
+### Server-side verification and JWKS
+
+- **Every authenticated request:** The API verifies the Bearer token in-process: context middleware → Grant.authenticate → TokenManager.verifyToken → GrantService.getVerificationKey(kid) → SigningKeyService → repository → database. Without caching, that would be one DB read per request. **Verification keys (public key by kid) are cached in GrantService.getVerificationKey** using the same cache namespace as the session signing key, key `verification:{kid}`, TTL from `JWT_SYSTEM_SIGNING_KEY_CACHE_TTL_SECONDS` (default 300s). No invalidation on rotation: old kids remain valid for verification until their tokens expire; new kids are cached on first use.
+- **JWKS endpoint (`GET /.well-known/jwks.json`):** Serves public keys for **external verifiers** (e.g. other services, or client-side validation). The API does not use this HTTP endpoint to verify its own requests; it uses the in-process path above. The response has `Cache-Control: public, max-age=…` so browsers and CDNs can cache it; that is HTTP-level caching for consumers of the endpoint, not for grant-api itself.
+
+### JWKS and multi-tenant scaling
+
+Today a single `GET /.well-known/jwks.json` returns **all** keys (system + every project), so the response size grows with the number of tenants/projects and can become large.
+
+**Industry standard:** Multi-tenant platforms typically use **issuer-scoped JWKS**:
+
+- **Issuer (`iss`) is tenant- or scope-specific.** Examples: Auth0 `https://{tenant}.auth0.com/`, Azure AD `https://login.microsoftonline.com/{tenant-id}/v2.0`, AWS Cognito (user pool in issuer). The verifier uses `iss` from the token to know _which_ authority issued it.
+- **JWKS is served at a URL derived from the issuer.** Convention is `{iss}/.well-known/jwks.json` (or OIDC discovery `{iss}/.well-known/openid-configuration` with `jwks_uri`). Each endpoint returns **only the keys for that issuer**, so response size is bounded (e.g. 1–2 active keys plus a few rotated per tenant).
+
+**Options for Grant:**
+
+1. **Issuer per scope + per-issuer JWKS (recommended for scale)**
+   - Session tokens: `iss` = e.g. `https://api.example.com` or `https://api.example.com/system`.
+   - API key tokens: `iss` = e.g. `https://api.example.com/org/{orgId}/project/{projectId}` (or a stable scope identifier).
+   - Routes: `GET /.well-known/jwks.json` → system keys only. `GET /org/:orgId/project/:projectId/.well-known/jwks.json` (or similar) → that project’s keys only.
+   - Verifier: read `iss` from token, fetch JWKS from `{iss}/.well-known/jwks.json`. Small, cacheable responses.
+
+2. **Single issuer + by-kid lookup**
+   - Keep one `iss`. Verifier gets `kid` from token and calls a dedicated endpoint (e.g. `GET /keys/:kid`) that returns the single key or a minimal JWKS for that kid. JWKS URL is not derived from `iss`; key resolution is by `kid` only. Non-standard but avoids one giant JWKS.
+
+3. **Single issuer + retention only (current)**
+   - One `/.well-known/jwks.json` with retention window. Acceptable when the number of active keys (system + projects with recent tokens) is small; does not scale to many tenants.
+
+Adopting (1) implies: setting `iss` per scope when issuing tokens, and serving JWKS from scope-specific paths so verifiers use `iss` to choose the right JWKS URL.
+
+### System Key Rotation (Optional)
+
+A scheduled job can rotate the **system** signing key (e.g. monthly). Config: `JOBS_SYSTEM_SIGNING_KEY_ROTATION_ENABLED` (default `false`), `JOBS_SYSTEM_SIGNING_KEY_ROTATION_SCHEDULE` (cron). The job runs only when `JWT_ALGORITHM=RS256` and calls the same rotate flow as the UI; new keys use the `system-` kid prefix.
+
+### Configuration
+
+Relevant environment variables (see [Configuration](../getting-started/configuration.md) and [Environment](../deployment/environment.md)):
+
+- `JWT_ALGORITHM` – e.g. `RS256` (default for asymmetric).
+- `JWT_JWKS_MAX_AGE_SECONDS` – Cache-Control for JWKS response (when using RS256).
+- `JWT_SYSTEM_SIGNING_KEY_CACHE_TTL_SECONDS` – TTL for the cached system signing key (default 300). Invalidated on rotation; safety bound for cache. Same TTL is used for verification keys (public key by kid) in GrantService.getVerificationKey; no invalidation on rotation.
+- `JWT_PER_PROJECT_KEYS_ENABLED` – Use per-project keys for API key tokens (default true when using DB keys).
+
 ## Security Features
 
 ### Session Isolation
@@ -273,8 +351,6 @@ Rate limiting protects against abuse, brute force, and noisy neighbors by cappin
 - `SECURITY_RATE_LIMIT_PER_TENANT_ENABLED` – Enable per-tenant rate limiting (default: false). When true, authenticated requests with scope are limited per tenant in addition to the global limit.
 - `SECURITY_RATE_LIMIT_PER_TENANT_MAX`, `SECURITY_RATE_LIMIT_PER_TENANT_WINDOW_MINUTES` – Per-tenant limit and window (e.g. 200 requests per 15 minutes per tenant).
 
-**Roadmap:** Isolation testing and other security phases are documented in [Multi-Tenant Security Roadmap](../implementation-plans/multi-tenant-security-roadmap.md).
-
 ### CSRF Protection
 
 **Current Status:** Partially Protected
@@ -287,7 +363,7 @@ The platform uses multiple layers of CSRF protection:
 
 3. **Apollo Server CSRF Prevention** - GraphQL endpoints have built-in CSRF protection enabled via Apollo Server's `csrfPrevention` feature.
 
-4. **CSRF Token Protection** - Full CSRF token implementation is planned (see [CSRF Protection Implementation Plan](../implementation-plans/csrf-protection.md)).
+4. **CSRF Token Protection** - Full CSRF token implementation is planned.
 
 **Why Additional CSRF Protection is Recommended:**
 
@@ -763,7 +839,7 @@ Potential improvements to authentication and session management:
 
 ### Session Management
 
-1. **CSRF Token Protection** - Full implementation of CSRF tokens for all state-changing operations (see [Implementation Plan](../implementation-plans/csrf-protection.md))
+1. **CSRF Token Protection** - Full implementation of CSRF tokens for all state-changing operations
 2. **Device Fingerprinting** - More sophisticated device identification using browser fingerprinting libraries
 3. **Geolocation** - Track session location for security alerts
 4. **Session Limits** - Configurable maximum concurrent sessions per user

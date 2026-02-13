@@ -6,6 +6,7 @@ import {
   QueryAccountProjectsInput,
   RemoveAccountProjectInput,
 } from '@grantjs/schema';
+import { and, eq, isNull } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 
@@ -60,5 +61,20 @@ export class AccountProjectRepository extends PivotRepository<AccountProjectMode
     transaction?: Transaction
   ): Promise<AccountProject> {
     return this.hardDelete(params, transaction);
+  }
+
+  /** Resolve project to account-project scope (for signing key lookup). Returns first match or null. */
+  async getFirstByProjectId(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<AccountProject | null> {
+    const client = transaction ?? this.db;
+    const rows = await client
+      .select()
+      .from(accountProjects)
+      .where(and(eq(accountProjects.projectId, projectId), isNull(accountProjects.deletedAt)))
+      .limit(1);
+    const row = rows[0];
+    return row ? this.toEntity(row) : null;
   }
 }

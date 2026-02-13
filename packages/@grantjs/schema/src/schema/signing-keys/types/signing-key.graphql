@@ -1,0 +1,26 @@
+"""
+Signing key for a scope (e.g. project). Used for RS256 API key tokens; public key is exposed in JWKS.
+Only project scopes (accountProject, organizationProject) have manageable keys; system key is internal.
+"""
+type SigningKey implements Auditable {
+  id: ID!
+  """
+  Key ID used in JWT header and JWKS.
+  """
+  kid: String!
+  """
+  Whether this key is currently used for signing new tokens.
+  """
+  active: Boolean!
+  createdAt: Date!
+  """
+  Set when the key was rotated (replaced by a new key); key remains in JWKS until existing tokens expire.
+  """
+  rotatedAt: Date
+  """
+  Public key PEM for JWKS / verification (optional in response for display or copy).
+  """
+  publicKeyPem: String
+  updatedAt: Date!
+  deletedAt: Date
+}

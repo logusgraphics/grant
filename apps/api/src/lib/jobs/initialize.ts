@@ -1,7 +1,7 @@
 import { config } from '@/config';
 import { createJobs } from '@/jobs';
-import { AppContext } from '@/lib/app-context';
 import { createModuleLogger } from '@/lib/logger';
+import { AppContext } from '@/types';
 
 import { IJobAdapter } from './job-adapter.interface';
 import { JobFactory } from './job.factory';

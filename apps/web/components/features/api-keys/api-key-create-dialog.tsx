@@ -6,7 +6,7 @@ import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { canAssignRole } from '@grantjs/constants';
 import { Scope, Tenant } from '@grantjs/schema';
-import { Key } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { DefaultValues } from 'react-hook-form';
 import { z } from 'zod';
@@ -190,7 +190,7 @@ export function ApiKeyCreateDialog({
   return (
     <CreateDialog<ApiKeyCreateFormValues>
       open={open !== undefined ? open : isDialogOpen}
-      icon={Key}
+      icon={KeyRound}
       schema={createApiKeySchema}
       defaultValues={defaultValues}
       fields={fields}

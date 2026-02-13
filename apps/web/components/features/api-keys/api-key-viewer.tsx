@@ -6,7 +6,7 @@ import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { ApiKey, Scope, Tenant } from '@grantjs/schema';
 import { format } from 'date-fns';
-import { Fingerprint } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -106,7 +106,7 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
           <Avatar
             initial={apiKey.name?.charAt(0) || apiKey.clientId.charAt(0)}
             size="sm"
-            icon={<Fingerprint className="h-3 w-3 text-muted-foreground" />}
+            icon={<KeyRound className="h-3 w-3 text-muted-foreground" />}
           />
         </div>
       ),
@@ -232,7 +232,7 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
         columns={columns}
         loading={loading}
         emptyState={{
-          icon: <Fingerprint />,
+          icon: <KeyRound />,
           title: t('empty'),
           description: t('emptyDescription'),
           action: <ApiKeyCreateDialog onApiKeyCreated={handleApiKeyCreated} />,

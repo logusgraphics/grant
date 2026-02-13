@@ -15,6 +15,7 @@ import { PermissionHandler } from './permissions.handler';
 import { ProjectHandler } from './projects.handler';
 import { ResourceHandler } from './resources.handler';
 import { RoleHandler } from './roles.handler';
+import { SigningKeysHandler } from './signing-keys.handler';
 import { TagHandler } from './tags.handler';
 import { UserHandler } from './users.handler';
 
@@ -24,6 +25,7 @@ export function createHandlers(cache: IEntityCacheAdapter, services: Services, d
   return {
     me: new MeHandler(cache, services, db),
     apiKeys: new ApiKeysHandler(cache, services, db),
+    signingKeys: new SigningKeysHandler(cache, services, db),
     auth: new AuthHandler(cache, services, db),
     groups: new GroupHandler(cache, services, db),
     oauth: new OAuthHandler(cache, services, db),

@@ -24,6 +24,7 @@ export * from './project-groups.schema';
 export * from './project-permissions.schema';
 export * from './project-resources.schema';
 export * from './project-roles.schema';
+export * from './signing-keys.schema';
 export * from './project-tags.schema';
 export * from './project-user-api-keys.schema';
 export * from './project-users.schema';

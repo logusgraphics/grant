@@ -46,6 +46,7 @@ import { ResourceService } from './resources.service';
 import { RoleGroupService } from './role-groups.service';
 import { RoleTagService } from './role-tags.service';
 import { RoleService } from './roles.service';
+import { SigningKeyService } from './signing-keys.service';
 import { TagService } from './tags.service';
 import { UserAuthenticationMethodService } from './user-authentication-methods.service';
 import { UserRoleService } from './user-roles.service';
@@ -77,7 +78,7 @@ export function createServices(
     oauthState: new OAuthStateService(cache.oauth),
     users: new UserService(repositories, user, db),
     userAuthenticationMethods: new UserAuthenticationMethodService(repositories, user, db),
-    userSessions: new UserSessionService(repositories, user, db),
+    userSessions: new UserSessionService(repositories, user, db, grant),
     roles: new RoleService(repositories, user, db),
     userRoles: new UserRoleService(repositories, user, db),
     userTags: new UserTagService(repositories, user, db),
@@ -92,7 +93,8 @@ export function createServices(
     projectPermissions: new ProjectPermissionService(repositories, user, db),
     projectResources: new ProjectResourceService(repositories, user, db),
     projectTags: new ProjectTagService(repositories, user, db),
-    apiKeys: new ApiKeyService(repositories, user, db),
+    signingKeys: new SigningKeyService(repositories, user, db),
+    apiKeys: new ApiKeyService(repositories, user, db, grant),
     projectUserApiKeys: new ProjectUserApiKeyService(repositories, user, db),
     projectUsers: new ProjectUserService(repositories, user, db),
     organizations: new OrganizationService(repositories, user, db),

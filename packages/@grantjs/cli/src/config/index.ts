@@ -11,7 +11,6 @@ export {
   saveConfigFile,
 } from './storage.js';
 export { resolveAccessToken } from './resolve-token.js';
-export type { ResolveAccessTokenOptions } from './resolve-token.js';
 export type {
   ApiKeyCredentials,
   GrantConfig,

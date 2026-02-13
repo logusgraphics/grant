@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { fetchPermissions, fetchResources } from '../api/client.js';
-import { loadProfile, resolveAccessToken, saveConfigFile } from '../config/index.js';
+import { loadProfile, resolveAccessToken } from '../config/index.js';
 
 import { generateTypesContent } from './generate-types-impl.js';
 
@@ -45,19 +45,7 @@ export function createGenerateTypesCommand(program: Command): void {
       const dryRun = options.dryRun === true;
 
       try {
-        const accessToken = await resolveAccessToken(config, {
-          onTokensRefreshed: (tokens) => {
-            if (result!.config.session) {
-              result!.config.session = {
-                ...result!.config.session,
-                token: tokens.accessToken,
-                refreshToken: tokens.refreshToken,
-              };
-              result!.file.profiles[result!.profileName] = result!.config;
-              void saveConfigFile(result!.file);
-            }
-          },
-        });
+        const accessToken = await resolveAccessToken(config);
 
         const [resources, permissions] = await Promise.all([
           fetchResources(config.apiUrl, accessToken, scope),
@@ -82,7 +70,16 @@ export function createGenerateTypesCommand(program: Command): void {
         console.log('  Permissions:', permissions.length, '→', actions.length, 'unique actions');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error('\n' + msg);
+        const isUnauthorized =
+          config.authMethod === 'session' &&
+          (msg.includes('401') ||
+            msg.includes('Unauthorized') ||
+            /failed\s*\(\s*401\s*\)/i.test(msg));
+        if (isUnauthorized) {
+          console.error('\nSession expired or invalid. Run "grant start" to sign in again.');
+        } else {
+          console.error('\n' + msg);
+        }
         process.exitCode = 1;
       }
     });

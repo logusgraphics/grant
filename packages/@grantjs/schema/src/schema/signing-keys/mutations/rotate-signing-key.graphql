@@ -1,0 +1,8 @@
+extend type Mutation {
+  """
+  Rotate the signing key for the given scope: create a new active key and mark the previous one as rotated.
+  Allowed scopes: accountProject, organizationProject only.
+  Returns the new signing key (public info).
+  """
+  rotateSigningKey(scope: Scope!): SigningKey!
+}

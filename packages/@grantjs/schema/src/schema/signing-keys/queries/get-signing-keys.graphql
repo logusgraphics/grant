@@ -1,0 +1,7 @@
+extend type Query {
+  """
+  List signing keys for the given scope (current + rotated).
+  Allowed scopes: accountProject, organizationProject only.
+  """
+  signingKeys(scope: Scope!): [SigningKey!]!
+}

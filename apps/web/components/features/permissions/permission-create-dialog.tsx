@@ -2,7 +2,7 @@
 
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { Key } from 'lucide-react';
+import { CopyCheck } from 'lucide-react';
 import { DefaultValues } from 'react-hook-form';
 
 import {
@@ -155,7 +155,7 @@ export function PermissionCreateDialog() {
   return (
     <CreateDialog
       open={isCreateDialogOpen}
-      icon={Key}
+      icon={CopyCheck}
       schema={createPermissionSchema}
       defaultValues={defaultValues}
       fields={fields}

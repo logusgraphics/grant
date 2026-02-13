@@ -33,17 +33,29 @@ import { GrantClient } from '@grantjs/client';
 const grant = new GrantClient({
   apiUrl: 'https://api.your-app.com',
 
-  // Token management
   getAccessToken: () => localStorage.getItem('accessToken'),
-  getRefreshToken: () => localStorage.getItem('refreshToken'),
 
-  // Handle token refresh
-  onTokenRefresh: (tokens) => {
-    localStorage.setItem('accessToken', tokens.accessToken);
-    localStorage.setItem('refreshToken', tokens.refreshToken);
+  // Cookie-based refresh: your callback calls POST /api/auth/refresh with credentials: 'include',
+  // then updates app token storage. Refresh token is in HttpOnly cookie; response body has only accessToken.
+  onRefreshWithCredentials: async () => {
+    const res = await fetch('https://api.your-app.com/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) return false;
+    const { data } = await res.json();
+    if (data?.accessToken) {
+      localStorage.setItem('accessToken', data.accessToken);
+      return true;
+    }
+    return false;
   },
 
-  // Handle auth failure (after refresh attempt)
+  onTokenRefresh: (tokens) => {
+    localStorage.setItem('accessToken', tokens.accessToken);
+    // tokens.refreshToken may be undefined when using cookie-based refresh
+  },
+
   onUnauthorized: () => {
     window.location.href = '/login';
   },
@@ -69,16 +81,27 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     () => ({
       apiUrl: process.env.NEXT_PUBLIC_API_URL!,
 
-      // Token getters - read from auth store
       getAccessToken: () => useAuthStore.getState().accessToken,
-      getRefreshToken: () => useAuthStore.getState().refreshToken,
 
-      // Token refresh callback - update auth store
-      onTokenRefresh: (tokens) => {
-        useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
+      // Cookie-based refresh: POST /api/auth/refresh with credentials: 'include', then update store
+      onRefreshWithCredentials: async () => {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (!res.ok) return false;
+        const { data } = await res.json();
+        if (data?.accessToken) {
+          useAuthStore.getState().setAccessToken(data.accessToken);
+          return true;
+        }
+        return false;
       },
 
-      // Unauthorized callback - logout and redirect
+      onTokenRefresh: (tokens) => {
+        useAuthStore.getState().setAccessToken(tokens.accessToken);
+      },
+
       onUnauthorized: () => {
         useAuthStore.getState().logout();
         if (typeof window !== 'undefined') {
@@ -86,7 +109,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         }
       },
 
-      // Cache configuration
       cache: {
         ttl: 5 * 60 * 1000, // 5 minutes
         prefix: 'grant',
@@ -182,22 +204,18 @@ const grant = new GrantClient(config: GrantClientConfig);
 
 ```typescript
 interface GrantClientConfig {
-  // Required
   apiUrl: string;
 
-  // Token management
   getAccessToken?: () => string | null | Promise<string | null>;
-  getRefreshToken?: () => string | null | Promise<string | null>;
+  /** Called after cookie-based refresh; use to update app token storage. `tokens.refreshToken` may be undefined. */
   onTokenRefresh?: (tokens: AuthTokens) => void | Promise<void>;
   onUnauthorized?: () => void;
+  /** Cookie-based refresh on 401: call POST /api/auth/refresh with credentials: 'include', update token, return true on success. */
+  onRefreshWithCredentials?: () => Promise<boolean>;
 
-  // Optional
-  fetch?: typeof fetch; // Custom fetch implementation
-  credentials?: RequestCredentials; // Default: 'include' (for cookies)
-  cache?: {
-    ttl?: number; // Cache TTL in ms (default: 5 minutes)
-    prefix?: string; // Cache key prefix (default: 'grant')
-  };
+  fetch?: typeof fetch;
+  credentials?: RequestCredentials; // default: 'include'
+  cache?: { ttl?: number; prefix?: string };
 }
 ```
 
@@ -336,15 +354,13 @@ grant.clearScopeCache({ tenant: Tenant.Organization, id: orgId });
 
 ## Authentication Flow
 
-The client handles authentication automatically:
-
-1. **Access token** is sent via `Authorization: Bearer <token>` header
-2. **Cookies** are included by default (`credentials: 'include'`)
-3. On **401 response**:
-   - Attempts to refresh using `getRefreshToken()` callback
-   - Calls `POST /api/auth/refresh` with the refresh token
-   - On success: calls `onTokenRefresh()` with new tokens, retries original request
-   - On failure: calls `onUnauthorized()` (typically redirects to login)
+1. **Access token** is sent via `Authorization: Bearer <token>` (when `getAccessToken` is provided).
+2. **Cookies** are included by default (`credentials: 'include'`).
+3. On **401**, the client uses **cookie-based refresh only** (no body-based refresh for security):
+   - If `onRefreshWithCredentials` is set, it is called. Your callback should call `POST /api/auth/refresh` with `credentials: 'include'`, read the new `accessToken` from the response body, update your storage, and return `true` on success.
+   - On success the client retries the original request; you may also use `onTokenRefresh` to sync token state.
+   - On failure or if `onRefreshWithCredentials` is not set, `onUnauthorized()` is called (e.g. redirect to login).
+   - The refresh token lives in an HttpOnly cookie; the API returns only `accessToken` in the refresh response body.
 
 ## Development Notes
 

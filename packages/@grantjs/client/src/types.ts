@@ -19,14 +19,9 @@ export interface GrantClientConfig {
   getAccessToken?: () => string | null | Promise<string | null>;
 
   /**
-   * Function to get the current refresh token
-   * Required for automatic token refresh on 401
-   */
-  getRefreshToken?: () => string | null | Promise<string | null>;
-
-  /**
-   * Callback when tokens are refreshed
-   * Use this to update your token storage
+   * Callback when the access token is updated after a cookie-based refresh.
+   * The API returns only `accessToken` in the refresh response body; the refresh token stays in an HttpOnly cookie.
+   * Use this to update your in-memory or cookie-based access token so subsequent requests use the new token.
    */
   onTokenRefresh?: (tokens: AuthTokens) => void | Promise<void>;
 
@@ -37,10 +32,13 @@ export interface GrantClientConfig {
   onUnauthorized?: () => void;
 
   /**
-   * Optional callback to refresh the session using credentials only (e.g. HttpOnly cookie).
-   * Called on 401 when body-based refresh is not available (e.g. getRefreshToken returns null).
-   * Should call POST /api/auth/refresh with credentials: 'include', then update app token storage.
-   * Return true if refresh succeeded so the client can retry the request.
+   * **Session refresh (cookie-based).** Called on 401 to refresh the session using the HttpOnly refresh cookie.
+   * Your callback should: (1) call `POST /api/auth/refresh` with `credentials: 'include'`, (2) parse the
+   * response for the new `accessToken`, (3) update your app token storage (e.g. set the new access token so
+   * `getAccessToken` returns it), and optionally call the same logic you pass to `onTokenRefresh`. Return `true`
+   * if refresh succeeded so the client can retry the request.
+   * Refresh tokens are not sent in the request body; the API uses only the refresh cookie. Body-based refresh
+   * is not supported (CSRF and third-party hardening could be added later, but not in MVP).
    */
   onRefreshWithCredentials?: () => Promise<boolean>;
 
@@ -63,11 +61,13 @@ export interface GrantClientConfig {
 }
 
 /**
- * Auth tokens returned from refresh endpoint
+ * Auth tokens from the refresh endpoint. With cookie-based refresh, the API returns only `accessToken` in the
+ * response body; `refreshToken` is set in an HttpOnly cookie and is not exposed to JS, so it may be undefined.
  */
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
+  /** Undefined when using cookie-based refresh (refresh token is HttpOnly cookie). */
+  refreshToken?: string;
 }
 
 /**

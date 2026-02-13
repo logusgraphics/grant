@@ -1,0 +1,10 @@
+mutation RotateSigningKey($scope: Scope!) {
+  rotateSigningKey(scope: $scope) {
+    id
+    kid
+    active
+    createdAt
+    rotatedAt
+    publicKeyPem
+  }
+}

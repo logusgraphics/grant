@@ -39,7 +39,7 @@ async function main() {
   console.log('');
   console.log('📋 Seeding plan:');
   if (options.systemUser) {
-    console.log('   ✓ System user');
+    console.log('   ✓ System user + system signing key');
   }
   if (options.permissions) {
     console.log('   ✓ Permission model');

@@ -782,6 +782,12 @@ export type Mutation = {
   revokeApiKey: ApiKey;
   revokeInvitation: OrganizationInvitation;
   revokeMyUserSession: RevokeMyUserSessionResult;
+  /**
+   * Rotate the signing key for the given scope: create a new active key and mark the previous one as rotated.
+   * Allowed scopes: accountProject, organizationProject only.
+   * Returns the new signing key (public info).
+   */
+  rotateSigningKey: SigningKey;
   setMyPrimaryAuthenticationMethod: UserAuthenticationMethod;
   updateGroup: Group;
   updateMyUser: User;
@@ -952,6 +958,10 @@ export type MutationRevokeInvitationArgs = {
 
 export type MutationRevokeMyUserSessionArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationRotateSigningKeyArgs = {
+  scope: Scope;
 };
 
 export type MutationSetMyPrimaryAuthenticationMethodArgs = {
@@ -1504,6 +1514,11 @@ export type Query = {
   projects: ProjectPage;
   resources: ResourcePage;
   roles: RolePage;
+  /**
+   * List signing keys for the given scope (current + rotated).
+   * Allowed scopes: accountProject, organizationProject only.
+   */
+  signingKeys: Array<SigningKey>;
   tags: TagPage;
   users: UserPage;
 };
@@ -1606,6 +1621,10 @@ export type QueryRolesArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<RoleSortInput>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type QuerySigningKeysArgs = {
+  scope: Scope;
 };
 
 export type QueryTagsArgs = {
@@ -2136,6 +2155,26 @@ export type SessionExportData = {
   ipAddress?: Maybe<Scalars['String']['output']>;
   lastUsedAt?: Maybe<Scalars['Date']['output']>;
   userAgent?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * Signing key for a scope (e.g. project). Used for RS256 API key tokens; public key is exposed in JWKS.
+ * Only project scopes (accountProject, organizationProject) have manageable keys; system key is internal.
+ */
+export type SigningKey = Auditable & {
+  __typename?: 'SigningKey';
+  /** Whether this key is currently used for signing new tokens. */
+  active: Scalars['Boolean']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  /** Key ID used in JWT header and JWKS. */
+  kid: Scalars['String']['output'];
+  /** Public key PEM for JWKS / verification (optional in response for display or copy). */
+  publicKeyPem?: Maybe<Scalars['String']['output']>;
+  /** Set when the key was rotated (replaced by a new key); key remains in JWKS until existing tokens expire. */
+  rotatedAt?: Maybe<Scalars['Date']['output']>;
+  updatedAt: Scalars['Date']['output'];
 };
 
 export enum SortOrder {
@@ -2706,6 +2745,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
     | Role
     | RoleGroup
     | RoleTag
+    | SigningKey
     | Tag
     | User
     | UserAuthenticationMethod
@@ -2965,6 +3005,7 @@ export type ResolversTypes = ResolversObject<{
   Scope: Scope;
   Searchable: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Searchable']>;
   SessionExportData: ResolverTypeWrapper<SessionExportData>;
+  SigningKey: ResolverTypeWrapper<SigningKey>;
   SortOrder: SortOrder;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Tag: ResolverTypeWrapper<Tag>;
@@ -3234,6 +3275,7 @@ export type ResolversParentTypes = ResolversObject<{
   Scope: Scope;
   Searchable: ResolversInterfaceTypes<ResolversParentTypes>['Searchable'];
   SessionExportData: SessionExportData;
+  SigningKey: SigningKey;
   String: Scalars['String']['output'];
   Tag: Tag;
   TagPage: TagPage;
@@ -3489,6 +3531,7 @@ export type AuditableResolvers<
     | 'Role'
     | 'RoleGroup'
     | 'RoleTag'
+    | 'SigningKey'
     | 'Tag'
     | 'User'
     | 'UserAuthenticationMethod'
@@ -3929,6 +3972,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationRevokeMyUserSessionArgs, 'id'>
+  >;
+  rotateSigningKey?: Resolver<
+    ResolversTypes['SigningKey'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRotateSigningKeyArgs, 'scope'>
   >;
   setMyPrimaryAuthenticationMethod?: Resolver<
     ResolversTypes['UserAuthenticationMethod'],
@@ -4593,6 +4642,12 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryRolesArgs, 'scope'>
   >;
+  signingKeys?: Resolver<
+    Array<ResolversTypes['SigningKey']>,
+    ParentType,
+    ContextType,
+    RequireFields<QuerySigningKeysArgs, 'scope'>
+  >;
   tags?: Resolver<
     ResolversTypes['TagPage'],
     ParentType,
@@ -4802,6 +4857,21 @@ export type SessionExportDataResolvers<
   ipAddress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   lastUsedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   userAgent?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+}>;
+
+export type SigningKeyResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['SigningKey'] = ResolversParentTypes['SigningKey'],
+> = ResolversObject<{
+  active?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  kid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  publicKeyPem?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  rotatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type TagResolvers<
@@ -5099,6 +5169,7 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   RoleTag?: RoleTagResolvers<ContextType>;
   Searchable?: SearchableResolvers<ContextType>;
   SessionExportData?: SessionExportDataResolvers<ContextType>;
+  SigningKey?: SigningKeyResolvers<ContextType>;
   Tag?: TagResolvers<ContextType>;
   TagPage?: TagPageResolvers<ContextType>;
   UploadUserPictureResult?: UploadUserPictureResultResolvers<ContextType>;

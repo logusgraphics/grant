@@ -216,34 +216,26 @@ describe('GrantClient', () => {
     });
   });
 
-  describe('token refresh', () => {
-    it('should refresh token on 401 and retry', async () => {
-      const onTokenRefresh = vi.fn();
-      const client = new GrantClient({
-        apiUrl: 'https://api.example.com',
-        getAccessToken: () => 'expired-token',
-        getRefreshToken: () => 'refresh-token',
-        onTokenRefresh,
+  describe('token refresh (cookie-based)', () => {
+    it('should call onRefreshWithCredentials on 401 and retry when it returns true', async () => {
+      let token = 'expired-token';
+      const onRefreshWithCredentials = vi.fn().mockImplementation(async () => {
+        token = 'new-token';
+        return true;
       });
 
-      // First call returns 401
+      const client = new GrantClient({
+        apiUrl: 'https://api.example.com',
+        getAccessToken: () => token,
+        onRefreshWithCredentials,
+      });
+
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
         json: () => Promise.resolve({ error: 'Unauthorized' }),
       });
 
-      // Refresh call succeeds
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            data: { accessToken: 'new-token', refreshToken: 'new-refresh' },
-          }),
-      });
-
-      // Retry call succeeds
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ success: true, data: { authorized: true } }),
@@ -252,50 +244,39 @@ describe('GrantClient', () => {
       const result = await client.can('Document', 'Update', { useCache: false });
 
       expect(result).toBe(true);
-      expect(onTokenRefresh).toHaveBeenCalledWith({
-        accessToken: 'new-token',
-        refreshToken: 'new-refresh',
+      expect(onRefreshWithCredentials).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch.mock.calls[1][1].headers).toMatchObject({
+        Authorization: 'Bearer new-token',
       });
-      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
 
-    it('should call onUnauthorized when refresh fails', async () => {
+    it('should call onUnauthorized when onRefreshWithCredentials returns false', async () => {
       const onUnauthorized = vi.fn();
-      const onTokenRefresh = vi.fn(); // Required to trigger refresh flow
       const client = new GrantClient({
         apiUrl: 'https://api.example.com',
         getAccessToken: () => 'expired-token',
-        getRefreshToken: () => 'invalid-refresh',
-        onTokenRefresh,
+        onRefreshWithCredentials: async () => false,
         onUnauthorized,
       });
 
-      // First call returns 401
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
         json: () => Promise.resolve({ error: 'Unauthorized' }),
-      });
-
-      // Refresh call fails
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        json: () => Promise.resolve({ error: 'Invalid refresh token' }),
       });
 
       const result = await client.can('Document', 'Update', { useCache: false });
 
       expect(result).toBe(false);
       expect(onUnauthorized).toHaveBeenCalled();
-      expect(onTokenRefresh).not.toHaveBeenCalled(); // Refresh failed, tokens not updated
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
-    it('should not attempt refresh if onTokenRefresh is not provided', async () => {
+    it('should not attempt refresh if onRefreshWithCredentials is not provided', async () => {
       const client = new GrantClient({
         apiUrl: 'https://api.example.com',
         getAccessToken: () => 'expired-token',
-        // No onTokenRefresh provided
       });
 
       mockFetch.mockResolvedValueOnce({
@@ -307,29 +288,7 @@ describe('GrantClient', () => {
       const result = await client.can('Document', 'Update', { useCache: false });
 
       expect(result).toBe(false);
-      expect(mockFetch).toHaveBeenCalledTimes(1); // No refresh attempt
-    });
-
-    it('should not attempt refresh if refresh token is missing', async () => {
-      const onTokenRefresh = vi.fn();
-      const client = new GrantClient({
-        apiUrl: 'https://api.example.com',
-        getAccessToken: () => 'expired-token',
-        getRefreshToken: () => null, // No refresh token
-        onTokenRefresh,
-      });
-
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        json: () => Promise.resolve({ error: 'Unauthorized' }),
-      });
-
-      const result = await client.can('Document', 'Update', { useCache: false });
-
-      expect(result).toBe(false);
-      expect(mockFetch).toHaveBeenCalledTimes(1); // No refresh attempt
-      expect(onTokenRefresh).not.toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
 

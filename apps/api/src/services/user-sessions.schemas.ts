@@ -72,17 +72,6 @@ export const createSessionSchema = z.object({
   ipAddress: z.string().max(45).nullable().optional(),
 });
 
-// Token validation schema
-export const validateAccessTokenSchema = z.object({
-  accessToken: z.string().min(1, 'Token is required'),
-});
-
-// Session refresh schema
-export const refreshSessionSchema = z.object({
-  accessToken: z.string().min(1, 'Token is required'),
-  refreshToken: z.string().min(1, 'Token is required'),
-});
-
 // Bulk session operations
 export const revokeUserSessionsSchema = z.object({
   userId: idSchema,

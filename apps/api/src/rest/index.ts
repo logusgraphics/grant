@@ -11,6 +11,7 @@ import { createPermissionsRouter } from '@/rest/routes/permissions.routes';
 import { createProjectsRouter } from '@/rest/routes/projects.routes';
 import { createResourcesRouter } from '@/rest/routes/resources.routes';
 import { createRolesRouter } from '@/rest/routes/roles.routes';
+import { createSigningKeysRoutes } from '@/rest/routes/signing-keys.routes';
 import { createTagsRouter } from '@/rest/routes/tags.routes';
 import { createUserRoutes } from '@/rest/routes/users.routes';
 import { RequestContext } from '@/types';
@@ -20,6 +21,7 @@ export function createRestRouter(context: RequestContext): Router {
 
   router.use('/api-keys', createApiKeysRoutes(context));
   router.use('/auth', createAuthRoutes(context));
+  router.use('/signing-keys', createSigningKeysRoutes(context));
   router.use('/me', createMeRouter(context));
   router.use('/groups', createGroupsRouter(context));
   router.use('/organization-invitations', createOrganizationInvitationsRoutes(context));

@@ -28,6 +28,18 @@ The article defines:
 | **Scope from token**         | ✅     | Session tokens allow scope override; API key scope is fixed; scope never taken from untrusted input alone (derived from auth)                    |
 | **Rate limit config**        | ⚠️     | `SECURITY_ENABLE_RATE_LIMIT`, `SECURITY_RATE_LIMIT_MAX`, `SECURITY_RATE_LIMIT_WINDOW_MINUTES` exist in config but **no middleware applies them** |
 
+### MVP Accomplished (Auth, JWKS, OIDC)
+
+The following were implemented for MVP and are now in place:
+
+| Area                      | What was done                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Session refresh (API)** | Cookie-only refresh; no body-based refresh (CSRF/third-party safety). Refresh token in HttpOnly cookie; response body returns only `accessToken`. See [downstream-auth-assessment](./downstream-auth-assessment.md).                                                                                                                                                                                                                                                                 |
+| **CLI auth**              | Session auth does not auto-refresh; user re-authenticates via `grant start` when the access token expires. API key exchange unchanged. `generate-types` shows a friendly “Session expired or invalid” message on 401.                                                                                                                                                                                                                                                                |
+| **Client SDK**            | Removed `getRefreshToken`. Refresh only via `onRefreshWithCredentials` (app calls `POST /api/auth/refresh` with `credentials: 'include'`, updates token storage). `onTokenRefresh` and `onUnauthorized` documented; `AuthTokens.refreshToken` optional (cookie-based flow). Call `onUnauthorized` when cookie refresh returns false.                                                                                                                                                 |
+| **JWKS & OIDC**           | Key-id based JWKS: single `grant.getPublicKeysForJwks(scope, retentionCutoff)` (scope `null` = system keys). Router: `createJwksRouter()` mounted with `app.use()`; routes: `/.well-known/jwks.json` (system), `/org/:orgId/prj/:projectId/.well-known/jwks.json`, `/acc/:accId/prj/:projectId/.well-known/jwks.json`. Project-signed tokens use scope-specific `iss` via `buildJwksIssuerUrl(scope)` for OIDC discovery. See [jwks-routes-assessment](./jwks-routes-assessment.md). |
+| **GitHub OAuth**          | Resilient user info: coerce `avatar_url` and empty `email`; attach and log error cause for `githubUserInfoFailed`.                                                                                                                                                                                                                                                                                                                                                                   |
+
 ### ❌ Gaps (To Address)
 
 | Area                         | Gap                                                                                 | Risk                               |
@@ -231,11 +243,16 @@ The article defines:
 
 ---
 
-### Phase 7: Per-Tenant JWT Secret (Configurable)
+### Phase 7: Per-Tenant JWT Secret (Configurable) — JWKS Implemented
 
 **Goal:** Reduce blast radius of JWT secret compromise by allowing a separate signing/verification secret per tenant (e.g. per organization or per account). When enabled, a leaked secret for one tenant does not invalidate or expose tokens for others. Must remain **configurable** so deployments can keep using a single global secret (current behavior) or opt into per-tenant secrets.
 
-**Current state:** A single `JWT_SECRET` is used to sign and verify all session and API-key tokens. If that secret is exposed, an attacker can forge or tamper with tokens for any tenant.
+**Current state (MVP):** The platform implements **asymmetric JWT signing (RS256)** with **JWKS** and **OIDC-aligned issuers**:
+
+- **Key resolution:** Single method `grant.getPublicKeysForJwks(scope, retentionCutoff)`; scope `null` = system (session) keys; project scope = keys for that scope. All JWKS routes use this (no separate DB access in routes).
+- **Routes:** `createJwksRouter()` (mounted with `app.use`) serves: `/.well-known/jwks.json` (system keys), `/org/:orgId/prj/:projectId/.well-known/jwks.json`, `/acc/:accId/prj/:projectId/.well-known/jwks.json`. 404 when scope has no keys or invalid params.
+- **Issuer (`iss`):** Session tokens use API base URL; project tokens use scope-specific JWKS URL via `buildJwksIssuerUrl(scope)` so verifiers can discover keys from `iss`. See [JWKS routes assessment](./jwks-routes-assessment.md).
+- System and per-project signing keys live in the DB; verification is by `kid`. Symmetric `JWT_SECRET` (HS256) remains supported as a fallback for tokens without `kid`. See [Security & Session Management — JWKS and Asymmetric Signing](../../architecture/security.md#jwks-and-asymmetric-signing) for the full description.
 
 **Deliverables:**
 
@@ -346,4 +363,6 @@ JWT_PER_TENANT_ENABLED=false
 - [docs/architecture/security.md](/architecture/security) – Grant security and session management.
 - [docs/architecture/multi-tenancy.md](/architecture/multi-tenancy) – Grant multi-tenancy model.
 - [docs/advanced-topics/audit-logging.md](/advanced-topics/audit-logging) – Audit logging (if present).
+- [downstream-auth-assessment.md](./downstream-auth-assessment.md) – CLI and client auth decisions (cookie-only refresh, no body-based refresh, session no auto-refresh).
+- [jwks-routes-assessment.md](./jwks-routes-assessment.md) – JWKS routes, issuer URLs, and enumeration considerations.
 - [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/) – Security testing methodologies.

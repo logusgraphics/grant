@@ -199,28 +199,39 @@ export class GitHubOAuthService {
         });
       }
 
+      const avatarUrl =
+        typeof user.avatar_url === 'string' && user.avatar_url.startsWith('http')
+          ? user.avatar_url
+          : 'https://github.com/identicons/placeholder';
+
       const userInfo = {
         id: user.id,
         login: user.login,
-        email,
+        email: email === '' ? null : email,
         name: user.name || null,
-        avatar_url: user.avatar_url,
-        bio: user.bio || null,
-        company: user.company || null,
-        location: user.location || null,
+        avatar_url: avatarUrl,
+        bio: user.bio ?? null,
+        company: user.company ?? null,
+        location: user.location ?? null,
       };
 
       return validateInput(githubUserInfoSchema, userInfo, context);
     } catch (error) {
+      const causeMessage = error instanceof Error ? error.message : String(error);
       this.logger.error({
         msg: 'Error fetching user info from GitHub',
         err: error,
+        cause: causeMessage,
       });
 
-      throw new AuthenticationError(
+      const authError = new AuthenticationError(
         'Failed to fetch user information from GitHub',
         'errors:auth.githubUserInfoFailed'
       );
+      if (error instanceof Error) {
+        (authError as Error & { cause?: Error }).cause = error;
+      }
+      throw authError;
     }
   }
 

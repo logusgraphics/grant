@@ -93,7 +93,10 @@ export const APP_CONFIG = {
   /** Whether the app is running in test mode */
   isTest: getEnv('NODE_ENV', 'development') === 'test',
 
-  /** API base URL for JWT audience/issuer claims */
+  /**
+   * API base URL. Used as JWT iss (issuer) and aud (audience) for session and API key tokens.
+   * In production set to your public API URL (e.g. https://api.example.com). RS256 verifiers use this to validate iss/aud.
+   */
   url: getEnv('APP_URL', 'http://localhost:4000'),
 } as const;
 
@@ -129,20 +132,17 @@ export const DB_CONFIG = {
 // ============================================================================
 
 export const JWT_CONFIG = {
-  /** JWT secret key for signing tokens */
-  secret: getEnv('JWT_SECRET', 'your-secret-key-change-in-production'),
-
   /** Access token expiration in minutes */
   accessTokenExpirationMinutes: getEnvNumber('JWT_ACCESS_TOKEN_EXPIRATION_MINUTES', 15),
 
-  /** Refresh token expiration in days */
+  /** Refresh token expiration in days. Drives JWKS key retention (which rotated keys to expose), not a cache TTL. */
   refreshTokenExpirationDays: getEnvNumber('JWT_REFRESH_TOKEN_EXPIRATION_DAYS', 30),
 
-  /** JWT algorithm */
-  algorithm: 'HS256' as const,
+  /** Cache-Control max-age for GET /.well-known/jwks.json response (seconds). For external verifiers only. */
+  jwksMaxAgeSeconds: getEnvNumber('JWT_JWKS_MAX_AGE_SECONDS', 300),
 
-  /** JWT issuer */
-  issuer: 'grant',
+  /** TTL in seconds for in-app key caches: system signing key and verification keys by kid (GrantService). Invalidated on rotation for signing key; verification keys use TTL only. */
+  systemSigningKeyCacheTtlSeconds: getEnvNumber('JWT_SYSTEM_SIGNING_KEY_CACHE_TTL_SECONDS', 300),
 } as const;
 
 // ============================================================================
@@ -528,6 +528,14 @@ export const JOB_CONFIG = {
     enabled: getEnvBoolean('JOBS_DATA_RETENTION_ENABLED', true),
   },
 
+  /** System (platform) signing key rotation – only runs when JWT_ALGORITHM=RS256 */
+  systemSigningKeyRotation: {
+    /** Cron pattern (e.g. '0 0 1 * *' = monthly, first day at midnight) */
+    schedule: getEnv('JOBS_SYSTEM_SIGNING_KEY_ROTATION_SCHEDULE', '0 0 1 * *'),
+    /** Enable automatic system signing key rotation */
+    enabled: getEnvBoolean('JOBS_SYSTEM_SIGNING_KEY_ROTATION_ENABLED', false),
+  },
+
   /** BullMQ default job options */
   bullmq: {
     /** Number of retry attempts for failed jobs */
@@ -584,11 +592,6 @@ export const SYSTEM_CONSTANTS = {
  */
 export function validateConfig(): void {
   const errors: string[] = [];
-
-  // Validate JWT secret in production
-  if (APP_CONFIG.isProduction && JWT_CONFIG.secret === 'your-secret-key-change-in-production') {
-    errors.push('JWT_SECRET must be set to a secure value in production');
-  }
 
   // Validate database URL
   if (!DB_CONFIG.url || DB_CONFIG.url.length === 0) {

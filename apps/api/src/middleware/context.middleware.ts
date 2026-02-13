@@ -3,6 +3,7 @@ import { DbSchema } from '@grantjs/database';
 import { NextFunction, Request, Response } from 'express';
 
 import { config } from '@/config';
+import { SYSTEM_USER } from '@/constants/system.constants';
 import { createHandlers } from '@/handlers';
 import { getLocale } from '@/i18n';
 import { extractScopeFromRequest } from '@/lib/authorization/scope-extractor';
@@ -13,29 +14,32 @@ import { GrantRepository } from '@/repositories/grant.repository';
 import { createResourceResolvers } from '@/resource-resolvers';
 import { createServices } from '@/services';
 import { GrantService } from '@/services/grant.service';
+import { SigningKeyService } from '@/services/signing-keys.service';
 import { ContextRequest } from '@/types';
 
+/** Context middleware: builds Grant with GrantService (RS256 only; keys from DB via grantService). */
 export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
-  return (req: Request, _res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     const headers = req.headers;
     const { origin, userAgent } = getContextHeaders(headers);
     const locale = getLocale(req);
     const ipAddress = getClientIp(req);
 
     const repositories = createRepositories(db);
-
     const grantRepository = new GrantRepository(db);
-    const grantService = new GrantService(grantRepository);
-    const grant = new Grant({ jwtSecret: config.jwt.secret, grantService });
+
+    const signingKeyService = new SigningKeyService(repositories, SYSTEM_USER, db);
+
+    const grantService = new GrantService(cache, grantRepository, signingKeyService, {
+      cacheTtlSeconds: config.jwt.systemSigningKeyCacheTtlSeconds,
+    });
+
+    const grant = new Grant(grantService);
 
     const authToken = getAuthorizationToken(req);
     const requestScope = extractScopeFromRequest(req);
 
-    try {
-      grant.authenticate(authToken, requestScope);
-    } catch {
-      grant.auth = null;
-    }
+    await grant.authenticate(authToken, requestScope);
 
     const user = grant.auth;
 
@@ -44,6 +48,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
     const resourceResolvers = createResourceResolvers();
 
     (req as ContextRequest).context = {
+      grant,
       user,
       handlers,
       resourceResolvers,

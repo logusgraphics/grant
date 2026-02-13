@@ -1,0 +1,1 @@
+ALTER TABLE "signing_keys" ADD COLUMN "deleted_at" timestamp;

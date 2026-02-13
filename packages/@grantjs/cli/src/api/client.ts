@@ -204,52 +204,6 @@ export async function loginWithEmail(
   };
 }
 
-export interface RefreshSessionResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-/**
- * Refresh session tokens. POST {baseUrl}/api/auth/refresh
- * Requires current access token and refresh token. Returns new pair.
- */
-export async function refreshSession(
-  baseUrl: string,
-  accessToken: string,
-  refreshToken: string
-): Promise<RefreshSessionResponse> {
-  const url = new URL('/api/auth/refresh', baseUrl).href;
-
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken, refreshToken }),
-    });
-  } catch (err) {
-    throw new Error(detailFetchError(url, err));
-  }
-
-  if (!res.ok) {
-    const text = await res.text();
-    let message = `Token refresh failed (${res.status})`;
-    try {
-      const data = JSON.parse(text) as ApiErrorBody;
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      if (text) message = text.slice(0, 200);
-    }
-    throw new Error(message);
-  }
-
-  const json = (await res.json()) as { data?: RefreshSessionResponse };
-  if (!json.data?.accessToken || !json.data?.refreshToken) {
-    throw new Error('Invalid refresh response: missing accessToken or refreshToken');
-  }
-  return json.data;
-}
-
 /**
  * Exchange one-time CLI OAuth code for session. POST {baseUrl}/api/auth/cli-callback
  * Used after browser redirect from GitHub OAuth when redirect_uri was localhost.

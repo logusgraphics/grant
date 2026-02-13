@@ -13,6 +13,7 @@ import * as permissionQueries from './permissions/queries';
 import * as projectQueries from './projects/queries';
 import * as resourceQueries from './resources/queries';
 import * as roleQueries from './roles/queries';
+import * as signingKeyQueries from './signing-keys/queries';
 import * as tagQueries from './tags/queries';
 import * as userQueries from './users/queries';
 
@@ -81,6 +82,11 @@ export const Query = {
   apiKeys: authorizeGraphQLResolver(
     { resource: ResourceSlug.ApiKey, action: ResourceAction.Query },
     apiKeyQueries.getApiKeys!
+  ),
+  // Signing Keys (scoped; project only)
+  signingKeys: authorizeGraphQLResolver(
+    { resource: ResourceSlug.ApiKey, action: ResourceAction.Query },
+    signingKeyQueries.getSigningKeys!
   ),
   // Tags (scoped)
   tags: authorizeGraphQLResolver(

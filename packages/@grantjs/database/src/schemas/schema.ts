@@ -80,6 +80,11 @@ import {
 import { roleGroups, roleGroupsRelations } from './role-groups.schema';
 import { roleTags, roleTagsRelations } from './role-tags.schema';
 import { roles, rolesRelations } from './roles.schema';
+import {
+  signingKeyAuditLogs,
+  signingKeyAuditLogsRelations,
+  signingKeys,
+} from './signing-keys.schema';
 import { tags } from './tags.schema';
 import {
   userAuthenticationMethods,
@@ -128,6 +133,8 @@ export const schema = {
   projectResources,
   projectResourceAuditLogs,
   projectRoles,
+  signingKeyAuditLogs,
+  signingKeys,
   projectTags,
   projectUserApiKeys,
   projectUserApiKeyAuditLogs,
@@ -172,6 +179,7 @@ export const schema = {
   projectResourcesRelations,
   projectResourceAuditLogsRelations,
   projectRolesRelations,
+  signingKeyAuditLogsRelations,
   projectTagsRelations,
   projectUserApiKeysRelations,
   projectUserApiKeyAuditLogsRelations,

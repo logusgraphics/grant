@@ -52,3 +52,4 @@ audit-reports/
 
 # File storage
 apps/api/storage/
+*.pem

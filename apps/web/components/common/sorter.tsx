@@ -56,19 +56,15 @@ export function Sorter<T extends string>({
   const tooltipText = `${t('sort.label')}: ${sortLabel} ${sortOrderLabel}`;
 
   const buttonContent = (
-    <Button 
-      variant="outline" 
-      size="default" 
+    <Button
+      variant="outline"
+      size="default"
       className="w-full sm:w-auto max-[1600px]:aspect-square max-[1600px]:p-2"
     >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
-          <span className="max-[1600px]:hidden">
-            {t('sort.label')}:{' '}
-          </span>
-          <span className="max-[1600px]:hidden">
-            {sortLabel}
-          </span>
+          <span className="max-[1600px]:hidden">{t('sort.label')}: </span>
+          <span className="max-[1600px]:hidden">{sortLabel}</span>
           {currentSort.order === SortOrder.Asc ? (
             <ArrowUp className="size-4 max-[1600px]:hidden" />
           ) : (
@@ -86,13 +82,9 @@ export function Sorter<T extends string>({
       <Tooltip>
         <DropdownMenu>
           <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              {buttonContent}
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>{buttonContent}</DropdownMenuTrigger>
           </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {tooltipText}
-          </TooltipContent>
+          <TooltipContent side="bottom">{tooltipText}</TooltipContent>
           <DropdownMenuContent align="end" className="w-48">
             {showLabel && (
               <>

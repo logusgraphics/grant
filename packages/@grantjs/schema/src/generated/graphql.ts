@@ -781,6 +781,12 @@ export type Mutation = {
   revokeApiKey: ApiKey;
   revokeInvitation: OrganizationInvitation;
   revokeMyUserSession: RevokeMyUserSessionResult;
+  /**
+   * Rotate the signing key for the given scope: create a new active key and mark the previous one as rotated.
+   * Allowed scopes: accountProject, organizationProject only.
+   * Returns the new signing key (public info).
+   */
+  rotateSigningKey: SigningKey;
   setMyPrimaryAuthenticationMethod: UserAuthenticationMethod;
   updateGroup: Group;
   updateMyUser: User;
@@ -951,6 +957,10 @@ export type MutationRevokeInvitationArgs = {
 
 export type MutationRevokeMyUserSessionArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationRotateSigningKeyArgs = {
+  scope: Scope;
 };
 
 export type MutationSetMyPrimaryAuthenticationMethodArgs = {
@@ -1503,6 +1513,11 @@ export type Query = {
   projects: ProjectPage;
   resources: ResourcePage;
   roles: RolePage;
+  /**
+   * List signing keys for the given scope (current + rotated).
+   * Allowed scopes: accountProject, organizationProject only.
+   */
+  signingKeys: Array<SigningKey>;
   tags: TagPage;
   users: UserPage;
 };
@@ -1605,6 +1620,10 @@ export type QueryRolesArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<RoleSortInput>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type QuerySigningKeysArgs = {
+  scope: Scope;
 };
 
 export type QueryTagsArgs = {
@@ -2135,6 +2154,26 @@ export type SessionExportData = {
   ipAddress?: Maybe<Scalars['String']['output']>;
   lastUsedAt?: Maybe<Scalars['Date']['output']>;
   userAgent?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * Signing key for a scope (e.g. project). Used for RS256 API key tokens; public key is exposed in JWKS.
+ * Only project scopes (accountProject, organizationProject) have manageable keys; system key is internal.
+ */
+export type SigningKey = Auditable & {
+  __typename?: 'SigningKey';
+  /** Whether this key is currently used for signing new tokens. */
+  active: Scalars['Boolean']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  /** Key ID used in JWT header and JWKS. */
+  kid: Scalars['String']['output'];
+  /** Public key PEM for JWKS / verification (optional in response for display or copy). */
+  publicKeyPem?: Maybe<Scalars['String']['output']>;
+  /** Set when the key was rotated (replaced by a new key); key remains in JWKS until existing tokens expire. */
+  rotatedAt?: Maybe<Scalars['Date']['output']>;
+  updatedAt: Scalars['Date']['output'];
 };
 
 export enum SortOrder {
@@ -3927,6 +3966,40 @@ export type UpdateRoleMutation = {
     metadata: Record<string, unknown>;
     createdAt: Date;
     updatedAt: Date;
+  };
+};
+
+export type GetSigningKeysQueryVariables = Exact<{
+  scope: Scope;
+}>;
+
+export type GetSigningKeysQuery = {
+  __typename?: 'Query';
+  signingKeys: Array<{
+    __typename?: 'SigningKey';
+    id: string;
+    kid: string;
+    active: boolean;
+    createdAt: Date;
+    rotatedAt?: Date | null;
+    publicKeyPem?: string | null;
+  }>;
+};
+
+export type RotateSigningKeyMutationVariables = Exact<{
+  scope: Scope;
+}>;
+
+export type RotateSigningKeyMutation = {
+  __typename?: 'Mutation';
+  rotateSigningKey: {
+    __typename?: 'SigningKey';
+    id: string;
+    kid: string;
+    active: boolean;
+    createdAt: Date;
+    rotatedAt?: Date | null;
+    publicKeyPem?: string | null;
   };
 };
 
@@ -8373,6 +8446,100 @@ export const UpdateRoleDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdateRoleMutation, UpdateRoleMutationVariables>;
+export const GetSigningKeysDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetSigningKeys' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'signingKeys' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kid' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'active' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'rotatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'publicKeyPem' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetSigningKeysQuery, GetSigningKeysQueryVariables>;
+export const RotateSigningKeyDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RotateSigningKey' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'rotateSigningKey' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'kid' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'active' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'rotatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'publicKeyPem' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RotateSigningKeyMutation, RotateSigningKeyMutationVariables>;
 export const CreateTagDocument = {
   kind: 'Document',
   definitions: [

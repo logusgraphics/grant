@@ -1,10 +1,11 @@
-import { AppContext } from '@/lib/app-context';
 import { Job } from '@/lib/jobs/base/job';
+import type { AppContext } from '@/types';
 
 import DataRetentionCleanupJob from './data-retention-cleanup.job';
+import SystemSigningKeyRotationJob from './system-signing-key-rotation.job';
 
 export type Jobs = ReturnType<typeof createJobs>;
 
 export function createJobs(appContext: AppContext): Job[] {
-  return [new DataRetentionCleanupJob(appContext)];
+  return [new DataRetentionCleanupJob(appContext), new SystemSigningKeyRotationJob(appContext)];
 }

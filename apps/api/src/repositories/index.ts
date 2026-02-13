@@ -36,6 +36,7 @@ import { ResourceRepository } from './resources.repository';
 import { RoleGroupRepository } from './role-groups.repository';
 import { RoleTagRepository } from './role-tags.repository';
 import { RoleRepository } from './roles.repository';
+import { SigningKeyRepository } from './signing-keys.repository';
 import { TagRepository } from './tags.repository';
 import { UserAuthenticationMethodRepository } from './user-authentication-methods.repository';
 import { UserRoleRepository } from './user-roles.repository';
@@ -74,6 +75,7 @@ export function createRepositories(db: DbSchema) {
     projectPermissionRepository: new ProjectPermissionRepository(db),
     projectResourceRepository: new ProjectResourceRepository(db),
     projectRoleRepository: new ProjectRoleRepository(db),
+    signingKeyRepository: new SigningKeyRepository(db),
     projectTagRepository: new ProjectTagRepository(db),
     projectUserApiKeyRepository: new ProjectUserApiKeyRepository(db),
     projectUserRepository: new ProjectUserRepository(db),

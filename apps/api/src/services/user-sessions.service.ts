@@ -1,5 +1,5 @@
 import { MILLISECONDS_PER_DAY, MILLISECONDS_PER_MINUTE } from '@grantjs/constants';
-import { GrantAuth } from '@grantjs/core';
+import { Grant, GrantAuth } from '@grantjs/core';
 import { DbSchema, userSessionAuditLogs } from '@grantjs/database';
 import {
   CreateUserSessionInput,
@@ -9,10 +9,9 @@ import {
   UserSession,
   UserSessionPage,
 } from '@grantjs/schema';
-import jwt from 'jsonwebtoken';
 
 import { config } from '@/config';
-import { AuthenticationError, NotFoundError } from '@/lib/errors';
+import { NotFoundError } from '@/lib/errors';
 import { generateRandomBytes } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { Repositories } from '@/repositories';
@@ -20,14 +19,10 @@ import { Repositories } from '@/repositories';
 import { AuditService, SelectedFields, validateInput, validateOutput } from './common';
 import {
   createSessionSchema,
-  refreshSessionSchema,
   sessionResultSchema,
   updateUserSessionSchema,
   userSessionSchema,
-  validateAccessTokenSchema,
 } from './user-sessions.schemas';
-
-import type { JwtPayload } from 'jsonwebtoken';
 
 interface CreateSessionResult {
   refreshToken: string;
@@ -38,7 +33,8 @@ export class UserSessionService extends AuditService {
   constructor(
     private readonly repositories: Repositories,
     readonly user: GrantAuth | null,
-    readonly db: DbSchema
+    readonly db: DbSchema,
+    private readonly grant: Grant
   ) {
     super(userSessionAuditLogs, 'userSessionId', user, db);
   }
@@ -53,41 +49,6 @@ export class UserSessionService extends AuditService {
 
   private getRefreshTokenExpirationDate(from: number = Date.now()): Date {
     return new Date(from + config.jwt.refreshTokenExpirationDays * MILLISECONDS_PER_DAY);
-  }
-
-  private decodeJwt(token: string, ignoreExpiration: boolean = false): JwtPayload {
-    const decoded = jwt.verify(token, config.jwt.secret, { ignoreExpiration });
-    if (!decoded) {
-      throw new AuthenticationError('Invalid token', 'errors:auth.invalidToken');
-    }
-    return decoded as JwtPayload;
-  }
-
-  private async getSessionFromTokens(
-    accessToken: string,
-    refreshToken?: string,
-    ignoreExpired: boolean = false
-  ): Promise<UserSession> {
-    const decoded = this.decodeJwt(accessToken, ignoreExpired);
-
-    const userId = decoded.sub;
-    const audience = decoded.aud as string;
-
-    if (!userId || !audience) {
-      throw new AuthenticationError('Invalid token', 'errors:auth.invalidToken');
-    }
-
-    const session = await this.repositories.userSessionRepository.getLastValidUserSession(
-      userId,
-      audience,
-      refreshToken
-    );
-
-    if (!session) {
-      throw new AuthenticationError('Invalid session', 'errors:auth.invalidSession');
-    }
-
-    return session;
   }
 
   public async getUserSession(
@@ -130,7 +91,7 @@ export class UserSessionService extends AuditService {
     const iat = Math.floor(Date.now() / 1000);
     const exp = Math.floor(this.getAccessTokenExpirationDate(Date.now()).getTime() / 1000);
 
-    const jwtPayload: JwtPayload = {
+    const jwtPayload = {
       sub,
       aud,
       iss,
@@ -141,7 +102,7 @@ export class UserSessionService extends AuditService {
       isVerified,
     };
 
-    const accessToken = jwt.sign(jwtPayload, config.jwt.secret);
+    const accessToken = await this.grant.signSessionToken(jwtPayload);
     const refreshToken = session.token;
 
     return validateOutput(sessionResultSchema, { accessToken, refreshToken }, context);
@@ -177,57 +138,6 @@ export class UserSessionService extends AuditService {
     );
 
     return this.signSession(session, params.isVerified ?? true);
-  }
-
-  public async validateAccessToken(accessToken: string): Promise<boolean> {
-    const context = 'UserSessionService.validateToken';
-
-    validateInput(validateAccessTokenSchema, { accessToken }, context);
-
-    const session = await this.getSessionFromTokens(accessToken);
-
-    if (!session) {
-      return false;
-    }
-
-    await this.updateUserSession({
-      id: session.id,
-      lastUsedAt: new Date(),
-    });
-
-    return true;
-  }
-
-  public async refreshSession(
-    accessToken: string,
-    refreshToken: string,
-    transaction?: Transaction,
-    userAgent?: string | null,
-    ipAddress?: string | null,
-    isVerified?: boolean
-  ): Promise<CreateSessionResult | null> {
-    const context = 'UserSessionService.refreshSession';
-    validateInput(refreshSessionSchema, { accessToken, refreshToken }, context);
-
-    const currentSession = await this.getSessionFromTokens(accessToken, refreshToken, true);
-
-    const newRefreshToken = this.generateRefreshToken();
-    const now = Date.now();
-
-    const finalUserAgent = userAgent ?? currentSession.userAgent ?? null;
-    const finalIpAddress = ipAddress ?? currentSession.ipAddress ?? null;
-
-    const refreshedSession = await this.repositories.userSessionRepository.refreshUserSession(
-      currentSession.id,
-      newRefreshToken,
-      this.getRefreshTokenExpirationDate(now),
-      new Date(),
-      finalUserAgent,
-      finalIpAddress,
-      transaction
-    );
-
-    return this.signSession(refreshedSession, isVerified ?? true);
   }
 
   /**

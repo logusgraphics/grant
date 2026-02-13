@@ -159,6 +159,29 @@ export interface RoleGroupCombination {
   group?: ExecutionContextGroup;
 }
 
+/**
+ * Result of resolving the current session (global) signing key.
+ * Used for RS256 signing with kid in JWT header.
+ */
+export interface SessionSigningKey {
+  kid: string;
+  privateKeyPem: string;
+}
+
+/** Payload for signing an API key (project-scoped) token. Scope is used to resolve the signing key. */
+export interface ApiKeyTokenPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  iat: number;
+  jti: string;
+  scope: Scope;
+}
+
+/**
+ * Grant service abstraction (DIP). All token signing and verification key resolution goes through this interface.
+ */
 export interface GrantService {
   getUserPermissions(
     userId: string,
@@ -172,11 +195,21 @@ export interface GrantService {
   getUserGroups(userId: string, scope: Scope): Promise<ExecutionContextGroup[]>;
 
   getUser(userId: string, scope?: Scope): Promise<ExecutionContextUser>;
-}
 
-export interface GrantConfig {
-  jwtSecret: string;
-  grantService: GrantService;
+  getSessionSigningKey(): Promise<SessionSigningKey | null>;
+
+  getVerificationKey(kid: string): Promise<string | null>;
+
+  getPublicKeysForJwks(
+    scope: Scope | null,
+    retentionCutoff: Date
+  ): Promise<Array<{ kid: string; publicKeyPem: string }>>;
+
+  invalidateSessionSigningKeyCache(): Promise<void>;
+
+  rotateSystemSigningKey(transaction?: unknown): Promise<{ kid: string; createdAt: Date }>;
+
+  getSigningKeyForScope(scope: Scope, transaction?: unknown): Promise<SessionSigningKey | null>;
 }
 
 export interface GrantAuth {

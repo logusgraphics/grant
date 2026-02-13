@@ -6,51 +6,50 @@ import {
   TokenType,
 } from '@grantjs/schema';
 
-import { TokenValidationError } from '../errors/grant-exception';
-
 import { ConditionEvaluator } from './condition-evaluator';
 import { PermissionChecker } from './permission-checker';
-import { TokenParser } from './token-parser';
+import { TokenManager } from './token-manager';
 
-import type { AuthorizationResult, GrantAuth, GrantConfig } from '../types';
+import type {
+  ApiKeyTokenPayload,
+  AuthorizationResult,
+  GrantAuth,
+  GrantService,
+  TokenClaims,
+} from '../types';
 
 export class Grant {
-  private tokenParser: TokenParser;
   private conditionEvaluator: ConditionEvaluator;
   private permissionChecker: PermissionChecker;
-  private jwtSecret: string;
+  private tokenManager: TokenManager;
 
   public auth: GrantAuth | null = null;
 
-  constructor(config: GrantConfig) {
-    this.jwtSecret = config.jwtSecret;
-    this.tokenParser = new TokenParser();
+  constructor(private readonly grantService: GrantService) {
     this.conditionEvaluator = new ConditionEvaluator();
-    this.permissionChecker = new PermissionChecker(this.conditionEvaluator, config.grantService);
+    this.permissionChecker = new PermissionChecker(this.conditionEvaluator, grantService);
+    this.tokenManager = new TokenManager(grantService);
   }
 
   private getBearerToken(authorizationHeader: string | null): string | null {
-    if (!authorizationHeader) {
-      return null;
-    }
-
-    if (!authorizationHeader.startsWith('Bearer ')) {
+    if (!authorizationHeader?.startsWith('Bearer ')) {
       return null;
     }
     return authorizationHeader.substring(7);
   }
 
-  private getAuth(token: string | null, requestScope?: Scope | null): GrantAuth | null {
+  private async getAuth(
+    token: string | null,
+    requestScope?: Scope | null
+  ): Promise<GrantAuth | null> {
     if (!token) {
       return null;
     }
+    const claims = await this.tokenManager.verifyToken(token);
+    return this.claimsToAuth(claims, requestScope);
+  }
 
-    const claims = this.tokenParser.parse(token, this.jwtSecret);
-
-    if (!this.tokenParser.validate(claims)) {
-      throw new TokenValidationError('Token validation failed');
-    }
-
+  private claimsToAuth(claims: TokenClaims, requestScope?: Scope | null): GrantAuth {
     const {
       sub: userId,
       scope: tokenScope,
@@ -59,10 +58,8 @@ export class Grant {
       jti: tokenId,
       isVerified: isVerifiedClaim,
     } = claims;
-
     const isVerified = type === TokenType.ApiKey ? true : isVerifiedClaim;
     const scope = requestScope && type === TokenType.Session ? requestScope : tokenScope;
-
     return {
       userId,
       scope,
@@ -73,13 +70,55 @@ export class Grant {
     };
   }
 
-  public authenticate(authorizationHeader: string | null, requestScope?: Scope | null) {
+  public async authenticate(
+    authorizationHeader: string | null,
+    requestScope?: Scope | null
+  ): Promise<void> {
     const bearerToken = this.getBearerToken(authorizationHeader);
-    this.auth = this.getAuth(bearerToken, requestScope);
+    try {
+      this.auth = await this.getAuth(bearerToken, requestScope);
+    } catch {
+      this.auth = null;
+    }
+  }
+
+  public async signSessionToken(payload: Record<string, unknown>): Promise<string> {
+    return this.tokenManager.signSessionToken(payload);
+  }
+
+  public async verifyToken(
+    token: string,
+    options?: { ignoreExpiration?: boolean }
+  ): Promise<TokenClaims> {
+    return this.tokenManager.verifyToken(token, options);
   }
 
   public isAuthenticated(): boolean {
     return this.auth !== null;
+  }
+
+  public getPublicKeysForJwks(
+    scope: Scope | null,
+    retentionCutoff: Date
+  ): Promise<Array<{ kid: string; publicKeyPem: string }>> {
+    return this.grantService.getPublicKeysForJwks(scope, retentionCutoff);
+  }
+
+  public async invalidateSessionSigningKeyCache(): Promise<void> {
+    await this.grantService.invalidateSessionSigningKeyCache();
+  }
+
+  public async rotateSystemSigningKey(
+    transaction?: unknown
+  ): Promise<{ kid: string; createdAt: Date } | null> {
+    return this.grantService.rotateSystemSigningKey(transaction);
+  }
+
+  public async signApiKeyToken(
+    payload: ApiKeyTokenPayload,
+    options?: { signingScope?: Scope; transaction?: unknown }
+  ): Promise<string> {
+    return this.tokenManager.signApiKeyToken(payload, options);
   }
 
   public async isAuthorized(
@@ -97,7 +136,6 @@ export class Grant {
       return { authorized: false, reason: AuthorizationReason.InvalidScope };
     }
 
-    // For session tokens, allow scope override; for API keys, always use token scope
     const effectiveScope =
       scopeOverride != null && type === TokenType.Session ? scopeOverride : scope;
 

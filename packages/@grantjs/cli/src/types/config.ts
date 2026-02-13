@@ -9,7 +9,7 @@ export interface GrantScope {
 
 /**
  * Session: only tokens are stored (no credentials like email/password).
- * refreshToken enables implicit refresh for commands that require authentication.
+ * Session auth does not auto-refresh; when the access token expires, run "grant start" again.
  */
 export interface SessionCredentials {
   token: string;

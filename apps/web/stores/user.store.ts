@@ -46,6 +46,12 @@ interface UserState {
   permissionsLoading: boolean;
   permissionsRefetch: (() => void) | null;
 
+  // Signing Keys state
+  signingKeysLoading: boolean;
+  signingKeysRefetch: (() => void) | null;
+  signingKeysHasKeys: boolean;
+  signingKeysRotateDialogOpen: boolean;
+
   // Actions - API Keys
   setApiKeysPage: (page: number) => void;
   setApiKeysLimit: (limit: number) => void;
@@ -94,12 +100,19 @@ interface UserState {
   setPermissionsLoading: (loading: boolean) => void;
   setPermissionsRefetch: (refetch: (() => void) | null) => void;
 
+  // Actions - Signing Keys
+  setSigningKeysLoading: (loading: boolean) => void;
+  setSigningKeysRefetch: (refetch: (() => void) | null) => void;
+  setSigningKeysHasKeys: (hasKeys: boolean) => void;
+  setSigningKeysRotateDialogOpen: (open: boolean) => void;
+
   // Reset
   resetApiKeysState: () => void;
   resetRolesState: () => void;
   resetTagsState: () => void;
   resetGroupsState: () => void;
   resetPermissionsState: () => void;
+  resetSigningKeysState: () => void;
   resetAll: () => void;
 }
 
@@ -163,6 +176,12 @@ export const useUserStore = create<UserState>()(
       permissionsLimit: 10,
       permissionsLoading: false,
       permissionsRefetch: null,
+
+      // Initial state - Signing Keys
+      signingKeysLoading: false,
+      signingKeysRefetch: null,
+      signingKeysHasKeys: false,
+      signingKeysRotateDialogOpen: false,
 
       // Actions - API Keys
       setApiKeysPage: (page) => set({ apiKeysPage: page }),
@@ -236,6 +255,12 @@ export const useUserStore = create<UserState>()(
       setPermissionsLoading: (loading) => set({ permissionsLoading: loading }),
       setPermissionsRefetch: (refetch) => set({ permissionsRefetch: refetch }),
 
+      // Actions - Signing Keys
+      setSigningKeysLoading: (loading) => set({ signingKeysLoading: loading }),
+      setSigningKeysRefetch: (refetch) => set({ signingKeysRefetch: refetch }),
+      setSigningKeysHasKeys: (hasKeys) => set({ signingKeysHasKeys: hasKeys }),
+      setSigningKeysRotateDialogOpen: (open) => set({ signingKeysRotateDialogOpen: open }),
+
       // Reset
       resetApiKeysState: () =>
         set({
@@ -285,6 +310,13 @@ export const useUserStore = create<UserState>()(
           permissionsLoading: false,
           permissionsRefetch: null,
         }),
+      resetSigningKeysState: () =>
+        set({
+          signingKeysLoading: false,
+          signingKeysRefetch: null,
+          signingKeysHasKeys: false,
+          signingKeysRotateDialogOpen: false,
+        }),
       resetAll: () =>
         set({
           apiKeysPage: 1,
@@ -320,6 +352,10 @@ export const useUserStore = create<UserState>()(
           permissionsLimit: 10,
           permissionsLoading: false,
           permissionsRefetch: null,
+          signingKeysLoading: false,
+          signingKeysRefetch: null,
+          signingKeysHasKeys: false,
+          signingKeysRotateDialogOpen: false,
         }),
     }),
     { name: 'grant-user-store' }

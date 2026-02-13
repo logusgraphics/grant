@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
   },
   typedRoutes: true,
   transpilePackages: ['@grantjs/core', '@grantjs/schema'],
+  webpack: (config, { isServer }) => {
+    // @grantjs/core uses Node crypto (JWKS); not used in client. Stub for browser bundle.
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+      };
+    }
+    return config;
+  },
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:3000'],

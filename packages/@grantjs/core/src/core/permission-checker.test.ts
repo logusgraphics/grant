@@ -16,6 +16,12 @@ describe('PermissionChecker', () => {
     getUserRoles: vi.fn(),
     getUserGroups: vi.fn(),
     getUser: vi.fn(),
+    getSessionSigningKey: vi.fn().mockResolvedValue(null),
+    getVerificationKey: vi.fn().mockResolvedValue(null),
+    getPublicKeysForJwks: vi.fn().mockResolvedValue([]),
+    invalidateSessionSigningKeyCache: vi.fn().mockResolvedValue(undefined),
+    rotateSystemSigningKey: vi.fn().mockResolvedValue({ kid: 'mock', createdAt: new Date() }),
+    getSigningKeyForScope: vi.fn().mockResolvedValue(null),
   });
 
   describe('check', () => {

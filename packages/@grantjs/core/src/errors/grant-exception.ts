@@ -51,3 +51,13 @@ export class TokenValidationError extends GrantException {
     this.name = 'TokenValidationError';
   }
 }
+
+/**
+ * Thrown when no session signing key is found.
+ */
+export class NoSessionSigningKeyError extends GrantException {
+  constructor(message: string = 'No session signing key found', originalError?: Error) {
+    super(message, 'NO_SESSION_SIGNING_KEY_FOUND', originalError);
+    this.name = 'NoSessionSigningKeyError';
+  }
+}

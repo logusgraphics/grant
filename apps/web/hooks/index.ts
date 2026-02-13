@@ -1,6 +1,7 @@
 export * from './accounts';
 export * from './api-keys';
 export * from './auth';
+export * from './signing-keys';
 export * from './common';
 export * from './groups';
 export * from './me';

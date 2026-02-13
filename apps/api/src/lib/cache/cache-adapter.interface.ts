@@ -32,6 +32,7 @@ export interface IEntityCacheAdapter {
   tags: ICacheAdapter;
   projects: ICacheAdapter;
   apiKeys: ICacheAdapter;
+  signingKeys: ICacheAdapter;
   oauth: ICacheAdapter;
   rateLimit: ICacheAdapter;
 }

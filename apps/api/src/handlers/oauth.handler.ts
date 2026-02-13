@@ -6,6 +6,7 @@ import {
   UserAuthenticationMethodProvider,
 } from '@grantjs/schema';
 
+import { OAUTH_CLI_CALLBACK_KEY_PREFIX } from '@/constants/cache.constants';
 import { CacheHandler } from '@/handlers/base/cache-handler';
 import { CacheKey, IEntityCacheAdapter } from '@/lib/cache';
 import { AuthenticationError, ConfigurationError } from '@/lib/errors';
@@ -161,12 +162,11 @@ export class OAuthHandler extends CacheHandler {
     });
   }
 
-  private static readonly CLI_CALLBACK_KEY_PREFIX = 'oauth:cli-callback:' as CacheKey;
   private static readonly CALLBACK_TTL_SECONDS = 60;
 
   async storeCliCallbackPayload(payload: CliCallbackPayload): Promise<string> {
     const code = crypto.randomBytes(16).toString('hex');
-    const key = `${OAuthHandler.CLI_CALLBACK_KEY_PREFIX}${code}` as CacheKey;
+    const key = `${OAUTH_CLI_CALLBACK_KEY_PREFIX}${code}` as CacheKey;
     await this.cache.oauth.set(key, payload, OAuthHandler.CALLBACK_TTL_SECONDS);
     this.logger.debug({ msg: 'Stored CLI callback payload', codePrefix: code.slice(0, 8) });
     return code;
@@ -174,7 +174,7 @@ export class OAuthHandler extends CacheHandler {
 
   async consumeCliCallbackCode(code: string): Promise<CliCallbackPayload | null> {
     if (!code?.trim()) return null;
-    const key = `${OAuthHandler.CLI_CALLBACK_KEY_PREFIX}${code.trim()}` as CacheKey;
+    const key = `${OAUTH_CLI_CALLBACK_KEY_PREFIX}${code.trim()}` as CacheKey;
     const payload = await this.cache.oauth.get<CliCallbackPayload>(key);
     await this.cache.oauth.delete(key);
     if (!payload) return null;

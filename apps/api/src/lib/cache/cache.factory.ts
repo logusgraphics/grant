@@ -25,6 +25,7 @@ const entityTypes = [
   'tags',
   'projects',
   'apiKeys',
+  'signingKeys',
   'oauth',
   'rateLimit',
 ] as const;
