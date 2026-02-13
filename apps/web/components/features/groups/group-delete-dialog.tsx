@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 
 import { DeleteDialog } from '@/components/common';
@@ -15,12 +15,18 @@ export function GroupDeleteDialog() {
   const groupToDelete = useGroupsStore((state) => state.groupToDelete);
   const setGroupToDelete = useGroupsStore((state) => state.setGroupToDelete);
 
-  const canDelete = useGrant(ResourceSlug.Group, ResourceAction.Delete, {
-    scope: scope!,
-  });
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.Group,
+    ResourceAction.Delete,
+    { scope: scope!, enabled: !!groupToDelete, returnLoading: true }
+  ) as UseGrantResult;
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canDelete || requiresEmailVerification) {
+  if (!scope || requiresEmailVerification) {
+    return null;
+  }
+
+  if (!isDeleteLoading && !canDelete) {
     return null;
   }
 

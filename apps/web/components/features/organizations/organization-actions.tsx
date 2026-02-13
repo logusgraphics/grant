@@ -1,6 +1,8 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useCallback, useState } from 'react';
+
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Organization, Tenant } from '@grantjs/schema';
 import { Edit, Trash2 } from 'lucide-react';
@@ -20,27 +22,35 @@ export function OrganizationActions({ organization }: OrganizationActionsProps) 
   const setOrganizationToEdit = useOrganizationsStore((state) => state.setOrganizationToEdit);
   const setOrganizationToDelete = useOrganizationsStore((state) => state.setOrganizationToDelete);
 
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && !hasBeenOpened) setHasBeenOpened(true);
+    },
+    [hasBeenOpened]
+  );
+
   // Scope permissions to this organization
   const scope = organization.id ? { tenant: Tenant.Organization, id: organization.id } : null;
 
-  // Check permissions using the Grant client
-  // Hook automatically waits for scope to become valid when provided
-  const canUpdate = useGrant(ResourceSlug.Organization, ResourceAction.Update, { scope });
-  const canDelete = useGrant(ResourceSlug.Organization, ResourceAction.Delete, { scope });
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.Organization,
+    ResourceAction.Update,
+    { scope, enabled: hasBeenOpened, returnLoading: true }
+  ) as UseGrantResult;
+
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.Organization,
+    ResourceAction.Delete,
+    { scope, enabled: hasBeenOpened, returnLoading: true }
+  ) as UseGrantResult;
+
   const isEmailVerified = useEmailVerified();
 
-  // If user has no permissions or email not verified (organization context), don't render the actions menu
-  if ((!canUpdate && !canDelete) || !isEmailVerified) {
-    return null;
-  }
+  if (!isEmailVerified) return null;
 
-  const handleEditClick = () => {
-    setOrganizationToEdit(organization);
-  };
-
-  const handleDeleteClick = () => {
-    setOrganizationToDelete({ id: organization.id, name: organization.name });
-  };
+  const permissionsResolved = hasBeenOpened && !isUpdateLoading && !isDeleteLoading;
+  if (permissionsResolved && !canUpdate && !canDelete) return null;
 
   // Build actions array based on permissions
   const actions: ActionItem<Organization>[] = [];
@@ -50,7 +60,7 @@ export function OrganizationActions({ organization }: OrganizationActionsProps) 
       key: 'edit',
       label: t('edit'),
       icon: <Edit className="mr-2 h-4 w-4" />,
-      onClick: handleEditClick,
+      onClick: () => setOrganizationToEdit(organization),
     });
   }
 
@@ -59,10 +69,19 @@ export function OrganizationActions({ organization }: OrganizationActionsProps) 
       key: 'delete',
       label: t('delete'),
       icon: <Trash2 className="mr-2 h-4 w-4" />,
-      onClick: handleDeleteClick,
+      onClick: () => setOrganizationToDelete({ id: organization.id, name: organization.name }),
       variant: 'destructive',
     });
   }
 
-  return <Actions entity={organization} actions={actions} />;
+  const isLoading = hasBeenOpened && (isUpdateLoading || isDeleteLoading);
+
+  return (
+    <Actions
+      entity={organization}
+      actions={actions}
+      onOpenChange={handleOpenChange}
+      isLoading={isLoading}
+    />
+  );
 }

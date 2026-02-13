@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { canAssignRole } from '@grantjs/constants';
 import { ApiKey, Scope, Tenant } from '@grantjs/schema';
@@ -27,8 +27,26 @@ export function ApiKeyActions({ apiKey, scope }: ApiKeyActionsProps) {
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const canRevoke = useGrant(ResourceSlug.ApiKey, ResourceAction.Revoke, { scope });
-  const canDelete = useGrant(ResourceSlug.ApiKey, ResourceAction.Delete, { scope });
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && !hasBeenOpened) setHasBeenOpened(true);
+    },
+    [hasBeenOpened]
+  );
+
+  const { isGranted: canRevoke, isLoading: isRevokeLoading } = useGrant(
+    ResourceSlug.ApiKey,
+    ResourceAction.Revoke,
+    { scope, enabled: hasBeenOpened, returnLoading: true }
+  ) as UseGrantResult;
+
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.ApiKey,
+    ResourceAction.Delete,
+    { scope, enabled: hasBeenOpened, returnLoading: true }
+  ) as UseGrantResult;
+
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
   const organizationId =
@@ -55,9 +73,10 @@ export function ApiKeyActions({ apiKey, scope }: ApiKeyActionsProps) {
     return canAssignRole(currentUserRoleName, apiKey.role.name);
   }, [scope.tenant, currentUserRoleName, apiKey.role]);
 
-  if ((!canRevoke && !canDelete) || requiresEmailVerification) {
-    return null;
-  }
+  if (requiresEmailVerification) return null;
+
+  const permissionsResolved = hasBeenOpened && !isRevokeLoading && !isDeleteLoading;
+  if (permissionsResolved && !canRevoke && !canDelete) return null;
 
   const handleRevokeClick = () => {
     if (apiKey.isRevoked) return;
@@ -90,9 +109,16 @@ export function ApiKeyActions({ apiKey, scope }: ApiKeyActionsProps) {
     });
   }
 
+  const isLoading = hasBeenOpened && (isRevokeLoading || isDeleteLoading);
+
   return (
     <>
-      <Actions entity={apiKey} actions={actions} />
+      <Actions
+        entity={apiKey}
+        actions={actions}
+        onOpenChange={handleOpenChange}
+        isLoading={isLoading}
+      />
       {!apiKey.isRevoked && canRevoke && canManageApiKey && (
         <ApiKeyRevokeDialog
           apiKey={apiKey}

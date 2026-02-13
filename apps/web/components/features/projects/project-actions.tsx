@@ -1,6 +1,8 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useCallback, useState } from 'react';
+
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Project } from '@grantjs/schema';
 import { Edit, Trash2 } from 'lucide-react';
@@ -20,23 +22,44 @@ export function ProjectActions({ project }: ProjectActionsProps) {
   const setProjectToEdit = useProjectsStore((state) => state.setProjectToEdit);
   const setProjectToDelete = useProjectsStore((state) => state.setProjectToDelete);
 
-  // Get scope from URL params (AccountProject or OrganizationProject)
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && !hasBeenOpened) setHasBeenOpened(true);
+    },
+    [hasBeenOpened]
+  );
+
   const scope = useScopeFromParams();
 
-  // Check permissions using the Grant client (always call hooks, pass undefined scope if not available)
-  const canUpdate = useGrant(ResourceSlug.Project, ResourceAction.Update, {
-    scope: scope!,
-    context: { resource: { id: project.id, scope: { projects: [project.id] } } },
-  });
-  const canDelete = useGrant(ResourceSlug.Project, ResourceAction.Delete, {
-    scope: scope!,
-    context: { resource: { id: project.id, scope: { projects: [project.id] } } },
-  });
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.Project,
+    ResourceAction.Update,
+    {
+      scope: scope!,
+      context: { resource: { id: project.id, scope: { projects: [project.id] } } },
+      enabled: hasBeenOpened,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
+
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.Project,
+    ResourceAction.Delete,
+    {
+      scope: scope!,
+      context: { resource: { id: project.id, scope: { projects: [project.id] } } },
+      enabled: hasBeenOpened,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
+
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || (!canUpdate && !canDelete) || requiresEmailVerification) {
-    return null;
-  }
+  if (!scope || requiresEmailVerification) return null;
+
+  const permissionsResolved = hasBeenOpened && !isUpdateLoading && !isDeleteLoading;
+  if (permissionsResolved && !canUpdate && !canDelete) return null;
 
   // Build actions array based on permissions
   const actions = [];
@@ -60,5 +83,14 @@ export function ProjectActions({ project }: ProjectActionsProps) {
     });
   }
 
-  return <Actions entity={project} actions={actions} />;
+  const isLoading = hasBeenOpened && (isUpdateLoading || isDeleteLoading);
+
+  return (
+    <Actions
+      entity={project}
+      actions={actions}
+      onOpenChange={handleOpenChange}
+      isLoading={isLoading}
+    />
+  );
 }

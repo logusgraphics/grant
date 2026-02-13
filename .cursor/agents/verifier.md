@@ -9,11 +9,16 @@ After implementation, run an independent verification pass.
 
 ## Steps
 
-1. **Type check**: Run `pnpm type-check`. Report any errors with file and line.
+1. **Type check**: Run from the **workspace root** using `pnpm --filter`:
+   - Web app: `pnpm --filter grant-web type-check`
+   - API app: `pnpm --filter grant-api type-check`
+   - Schema package: `pnpm --filter @grantjs/schema type-check`
+   - **Do not** `cd` into a package and run `npx tsc` or `./node_modules/.bin/tsc` directly — always use `pnpm --filter` from the workspace root.
+   - Report any errors with file and line.
 
-2. **Lint**: Run `pnpm lint`. Report violations.
+2. **Lint**: Run `pnpm --filter <package> lint`. Report violations.
 
-3. **Tests**: Run `pnpm test`. Report failures; distinguish pre-existing from new.
+3. **Tests**: Run `pnpm --filter <package> test`. Report failures; distinguish pre-existing from new.
 
 4. **OpenAPI sync** (if REST routes were changed):
    - Compare REST route definitions in `apps/api/src/rest/routes/` against their OpenAPI specs in `apps/api/src/rest/openapi/`.
@@ -24,7 +29,15 @@ After implementation, run an independent verification pass.
    - **Services**: should not import from `@grantjs/database` tables directly — only `@/repositories`, `@/lib`, and `@grantjs/schema`.
    - **Resolvers/Routes**: should not import from `@/services` or `@/repositories` — only call via `context.handlers`.
 
-6. **Schema codegen freshness**: If `packages/@grantjs/schema` source files changed, confirm `pnpm --filter @grantjs/schema generate` was run and generated types are up to date.
+6. **Schema codegen freshness**: If `packages/@grantjs/schema` source files (`.graphql` schemas or operations) changed, regenerate types by running `pnpm --filter @grantjs/schema generate` **from the workspace root**. The exit code may be non-zero due to the `afterAllFileWrite` format hook, but the generated files in `src/generated/` will still be updated — verify by checking file timestamps. **Do not** try to run `graphql-codegen` directly via `npx`, `pnpm exec`, or the binary path — always use `pnpm --filter` from the workspace root.
+
+7. **Client package (`@grantjs/client`)**:
+   - If source files under `packages/@grantjs/client/src/` were changed, you **must** rebuild and test.
+   - The web app imports from the **built dist** (`dist/react.mjs`, `dist/index.mjs`), not from source. Editing source files alone has no effect until the package is rebuilt.
+   - **Test**: `pnpm --filter @grantjs/client test` (runs vitest in watch mode; use `test:run` for CI).
+   - **Build**: `pnpm --filter @grantjs/client build` (runs `vite build`, outputs to `dist/`).
+   - After building, verify the fix is present in the dist: grep for a key identifier in `packages/@grantjs/client/dist/react.mjs`.
+   - Do **not** try to run vitest directly via `npx`, `pnpm exec`, or `./node_modules/.bin/vitest` from within the package directory — use `pnpm --filter` from the workspace root instead.
 
 ## Output format
 
@@ -38,6 +51,7 @@ Verification results:
 - OpenAPI sync: PASS / FAIL (details)
 - Layer boundaries: PASS / FAIL (details)
 - Codegen freshness: PASS / SKIP / STALE
+- Client package: PASS / SKIP / FAIL (tests N passed, dist rebuilt: yes/no)
 ```
 
 If everything passes, confirm with "All checks passed."

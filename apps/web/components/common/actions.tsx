@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Spinner } from '@/components/ui/spinner';
 
 import { BaseEntity } from './common-types';
 
@@ -30,6 +31,8 @@ export interface ActionsProps<TEntity extends BaseEntity> {
   triggerClassName?: string;
   contentClassName?: string;
   align?: 'start' | 'center' | 'end';
+  onOpenChange?: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
 export function Actions<TEntity extends BaseEntity>({
@@ -38,15 +41,19 @@ export function Actions<TEntity extends BaseEntity>({
   triggerClassName,
   contentClassName,
   align = 'end',
+  onOpenChange,
+  isLoading,
 }: ActionsProps<TEntity>) {
   const a11y = useTranslations('common.accessibility');
 
+  const TriggerIcon = isLoading ? Spinner : MoreVertical;
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <DropdownMenu onOpenChange={onOpenChange}>
+      <DropdownMenuTrigger asChild disabled={isLoading}>
         <Button variant="ghost" className={`h-8 w-8 p-0 ${triggerClassName || ''}`}>
           <span className="sr-only">{a11y('openMenu')}</span>
-          <MoreVertical className="h-4 w-4" />
+          <TriggerIcon className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className={contentClassName}>

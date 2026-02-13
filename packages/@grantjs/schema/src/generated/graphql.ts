@@ -3981,6 +3981,7 @@ export type GetSigningKeysQuery = {
     kid: string;
     active: boolean;
     createdAt: Date;
+    updatedAt: Date;
     rotatedAt?: Date | null;
     publicKeyPem?: string | null;
   }>;
@@ -8483,6 +8484,7 @@ export const GetSigningKeysDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'kid' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'active' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'rotatedAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'publicKeyPem' } },
               ],

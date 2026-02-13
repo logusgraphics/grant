@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Tenant } from '@grantjs/schema';
 
@@ -20,13 +20,22 @@ export function OrganizationDeleteDialog() {
     ? { tenant: Tenant.Organization, id: organizationToDelete.id }
     : null;
 
-  const canDelete = useGrant(ResourceSlug.Organization, ResourceAction.Delete, {
-    scope: scope ?? undefined,
-    enabled: scope !== null, // Skip check when scope is not available
-  });
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.Organization,
+    ResourceAction.Delete,
+    {
+      scope: scope ?? undefined,
+      enabled: !!organizationToDelete,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
   const isEmailVerified = useEmailVerified();
 
-  if (!scope || !canDelete || !isEmailVerified) {
+  if (!scope || !isEmailVerified) {
+    return null;
+  }
+
+  if (!isDeleteLoading && !canDelete) {
     return null;
   }
 

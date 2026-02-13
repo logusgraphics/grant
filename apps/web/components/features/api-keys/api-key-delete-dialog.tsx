@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { ApiKey, Scope } from '@grantjs/schema';
 import { Trash2 } from 'lucide-react';
@@ -30,10 +30,18 @@ export function ApiKeyDeleteDialog({ apiKey, scope, open, onOpenChange }: ApiKey
   const t = useTranslations('user.apiKeys.deleteDialog');
   const { deleteApiKey } = useApiKeyMutations();
 
-  const canDelete = useGrant(ResourceSlug.ApiKey, ResourceAction.Delete, { scope });
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.ApiKey,
+    ResourceAction.Delete,
+    { scope, enabled: open, returnLoading: true }
+  ) as UseGrantResult;
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!canDelete || requiresEmailVerification) {
+  if (requiresEmailVerification) {
+    return null;
+  }
+
+  if (!isDeleteLoading && !canDelete) {
     return null;
   }
 

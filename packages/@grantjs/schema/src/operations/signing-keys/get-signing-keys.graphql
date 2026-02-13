@@ -4,6 +4,7 @@ query GetSigningKeys($scope: Scope!) {
     kid
     active
     createdAt
+    updatedAt
     rotatedAt
     publicKeyPem
   }

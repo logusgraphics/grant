@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Organization, Tag, Tenant } from '@grantjs/schema';
 import { DefaultValues } from 'react-hook-form';
@@ -24,10 +24,18 @@ export function OrganizationEditDialog() {
     : null;
 
   // Hook automatically waits for scope to become valid when provided
-  const canUpdate = useGrant(ResourceSlug.Organization, ResourceAction.Update, { scope });
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.Organization,
+    ResourceAction.Update,
+    { scope, enabled: !!organizationToEdit, returnLoading: true }
+  ) as UseGrantResult;
   const isEmailVerified = useEmailVerified();
 
-  if (!scope || !canUpdate || !isEmailVerified) {
+  if (!scope || !isEmailVerified) {
+    return null;
+  }
+
+  if (!isUpdateLoading && !canUpdate) {
     return null;
   }
 

@@ -102,6 +102,23 @@ export function useGrant(
   const [data, setData] = useState<AuthorizationResult | null>(null);
   const [isLoading, setIsLoading] = useState(isEffectivelyEnabled);
 
+  // Synchronously correct isLoading when isEffectivelyEnabled transitions.
+  // useState only uses its initializer on first render, so subsequent transitions
+  // leave isLoading stale for one render cycle (the effect hasn't run yet).
+  // This uses React's "storing information from previous renders" pattern to
+  // immediately set isLoading before the render completes.
+  // See: https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const [prevEffectivelyEnabled, setPrevEffectivelyEnabled] = useState(isEffectivelyEnabled);
+  if (isEffectivelyEnabled !== prevEffectivelyEnabled) {
+    setPrevEffectivelyEnabled(isEffectivelyEnabled);
+    if (isEffectivelyEnabled) {
+      setIsLoading(true);
+    } else {
+      setIsLoading(false);
+      setData(null);
+    }
+  }
+
   // Track mounted state to prevent state updates after unmount
   const isMounted = useRef(true);
 

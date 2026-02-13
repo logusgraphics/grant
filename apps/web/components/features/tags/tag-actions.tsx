@@ -1,18 +1,14 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useCallback, useState } from 'react';
+
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Tag } from '@grantjs/schema';
-import { MoreVertical } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { ActionItem, Actions } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useTagsStore } from '@/stores/tags.store';
@@ -26,45 +22,70 @@ export function TagActions({ tag }: TagActionsProps) {
   const setTagToEdit = useTagsStore((state) => state.setTagToEdit);
   const setTagToDelete = useTagsStore((state) => state.setTagToDelete);
 
-  // Get scope from URL params (can be Organization, AccountProject, or OrganizationProject)
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && !hasBeenOpened) setHasBeenOpened(true);
+    },
+    [hasBeenOpened]
+  );
+
   const scope = useScopeFromParams();
 
-  // Check permissions using the Grant client (always call hooks, pass undefined scope if not available)
-  const canUpdate = useGrant(ResourceSlug.Tag, ResourceAction.Update, {
-    scope: scope!,
-    context: { resource: { id: tag.id, scope: { tags: [tag.id] } } },
-  });
-  const canDelete = useGrant(ResourceSlug.Tag, ResourceAction.Delete, {
-    scope: scope!,
-    context: { resource: { id: tag.id, scope: { tags: [tag.id] } } },
-  });
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.Tag,
+    ResourceAction.Update,
+    {
+      scope: scope!,
+      context: { resource: { id: tag.id, scope: { tags: [tag.id] } } },
+      enabled: hasBeenOpened,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
+
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.Tag,
+    ResourceAction.Delete,
+    {
+      scope: scope!,
+      context: { resource: { id: tag.id, scope: { tags: [tag.id] } } },
+      enabled: hasBeenOpened,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
+
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || (!canUpdate && !canDelete) || requiresEmailVerification) {
-    return null;
+  if (!scope || requiresEmailVerification) return null;
+
+  const permissionsResolved = hasBeenOpened && !isUpdateLoading && !isDeleteLoading;
+  if (permissionsResolved && !canUpdate && !canDelete) return null;
+
+  // Build actions array based on permissions
+  const actions: ActionItem<Tag>[] = [];
+
+  if (canUpdate) {
+    actions.push({
+      key: 'edit',
+      label: t('actions.edit'),
+      icon: <Edit className="mr-2 h-4 w-4" />,
+      onClick: () => setTagToEdit(tag),
+    });
   }
 
+  if (canDelete) {
+    actions.push({
+      key: 'delete',
+      label: t('actions.delete'),
+      icon: <Trash2 className="mr-2 h-4 w-4" />,
+      onClick: () => setTagToDelete(tag),
+      variant: 'destructive',
+    });
+  }
+
+  const isLoading = hasBeenOpened && (isUpdateLoading || isDeleteLoading);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {canUpdate && (
-          <DropdownMenuItem onClick={() => setTagToEdit(tag)}>{t('actions.edit')}</DropdownMenuItem>
-        )}
-        {canDelete && (
-          <DropdownMenuItem
-            onClick={() => setTagToDelete(tag)}
-            className="text-destructive focus:text-destructive"
-          >
-            {t('actions.delete')}
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Actions entity={tag} actions={actions} onOpenChange={handleOpenChange} isLoading={isLoading} />
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Group, Role, Tag } from '@grantjs/schema';
 import { DefaultValues } from 'react-hook-form';
@@ -33,12 +33,18 @@ export function RoleEditDialog() {
   const roleToEdit = useRolesStore((state) => state.roleToEdit);
   const setRoleToEdit = useRolesStore((state) => state.setRoleToEdit);
 
-  const canUpdate = useGrant(ResourceSlug.Role, ResourceAction.Update, {
-    scope: scope!,
-  });
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.Role,
+    ResourceAction.Update,
+    { scope: scope!, enabled: !!roleToEdit, returnLoading: true }
+  ) as UseGrantResult;
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canUpdate || requiresEmailVerification) {
+  if (!scope || requiresEmailVerification) {
+    return null;
+  }
+
+  if (!isUpdateLoading && !canUpdate) {
     return null;
   }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Role, Tag, User as UserType } from '@grantjs/schema';
 
@@ -43,14 +43,16 @@ export function UserEditDialog() {
   const userToEdit = useUsersStore((state) => state.userToEdit);
   const setUserToEdit = useUsersStore((state) => state.setUserToEdit);
 
-  const canUpdate = useGrant(ResourceSlug.User, ResourceAction.Update, {
-    scope: scope!,
-  });
+  // Defer permission check until the dialog is actually open
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.User,
+    ResourceAction.Update,
+    { scope: scope!, enabled: !!userToEdit, returnLoading: true }
+  ) as UseGrantResult;
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canUpdate || requiresEmailVerification) {
-    return null;
-  }
+  if (!scope || requiresEmailVerification) return null;
+  if (!isUpdateLoading && !canUpdate) return null;
 
   const fields: DialogField[] = [
     {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { getAvailableTagColors } from '@grantjs/constants';
 import { Tag } from '@grantjs/schema';
@@ -29,15 +29,25 @@ export function TagEditDialog() {
   const setTagToEdit = useTagsStore((state) => state.setTagToEdit);
   const { handleUpdateTag } = useTagMutations();
 
-  const canUpdate = useGrant(ResourceSlug.Tag, ResourceAction.Update, {
-    scope: scope!,
-    context: tagToEdit
-      ? { resource: { id: tagToEdit.id, scope: { tags: [tagToEdit.id] } } }
-      : undefined,
-  });
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.Tag,
+    ResourceAction.Update,
+    {
+      scope: scope!,
+      context: tagToEdit
+        ? { resource: { id: tagToEdit.id, scope: { tags: [tagToEdit.id] } } }
+        : undefined,
+      enabled: !!tagToEdit,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canUpdate || requiresEmailVerification) {
+  if (!scope || requiresEmailVerification) {
+    return null;
+  }
+
+  if (!isUpdateLoading && !canUpdate) {
     return null;
   }
 

@@ -1,6 +1,8 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useCallback, useState } from 'react';
+
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Role } from '@grantjs/schema';
 import { Edit, Trash2 } from 'lucide-react';
@@ -21,29 +23,34 @@ export function RoleActions({ role }: RoleActionsProps) {
   const setRoleToEdit = useRolesStore((state) => state.setRoleToEdit);
   const setRoleToDelete = useRolesStore((state) => state.setRoleToDelete);
 
-  // Get scope from URL params (can be Organization, AccountProject, or OrganizationProject)
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && !hasBeenOpened) setHasBeenOpened(true);
+    },
+    [hasBeenOpened]
+  );
+
   const scope = useScopeFromParams();
 
-  // Check permissions using the Grant client (always call hooks, pass undefined scope if not available)
-  const canUpdate = useGrant(ResourceSlug.Role, ResourceAction.Update, {
-    scope: scope!,
-  });
-  const canDelete = useGrant(ResourceSlug.Role, ResourceAction.Delete, {
-    scope: scope!,
-  });
+  const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.Role,
+    ResourceAction.Update,
+    { scope: scope!, enabled: hasBeenOpened, returnLoading: true }
+  ) as UseGrantResult;
+
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.Role,
+    ResourceAction.Delete,
+    { scope: scope!, enabled: hasBeenOpened, returnLoading: true }
+  ) as UseGrantResult;
+
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || (!canUpdate && !canDelete) || requiresEmailVerification) {
-    return null;
-  }
+  if (!scope || requiresEmailVerification) return null;
 
-  const handleEditClick = () => {
-    setRoleToEdit(role);
-  };
-
-  const handleDeleteClick = () => {
-    setRoleToDelete(role);
-  };
+  const permissionsResolved = hasBeenOpened && !isUpdateLoading && !isDeleteLoading;
+  if (permissionsResolved && !canUpdate && !canDelete) return null;
 
   // Build actions array based on permissions
   const actions: ActionItem<Role>[] = [];
@@ -53,7 +60,7 @@ export function RoleActions({ role }: RoleActionsProps) {
       key: 'edit',
       label: t('edit'),
       icon: <Edit className="mr-2 h-4 w-4" />,
-      onClick: handleEditClick,
+      onClick: () => setRoleToEdit(role),
     });
   }
 
@@ -62,10 +69,19 @@ export function RoleActions({ role }: RoleActionsProps) {
       key: 'delete',
       label: t('delete'),
       icon: <Trash2 className="mr-2 h-4 w-4" />,
-      onClick: handleDeleteClick,
+      onClick: () => setRoleToDelete(role),
       variant: 'destructive',
     });
   }
 
-  return <Actions entity={role} actions={actions} />;
+  const isLoading = hasBeenOpened && (isUpdateLoading || isDeleteLoading);
+
+  return (
+    <Actions
+      entity={role}
+      actions={actions}
+      onOpenChange={handleOpenChange}
+      isLoading={isLoading}
+    />
+  );
 }

@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useParams } from 'next/navigation';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { canAssignRole } from '@grantjs/constants';
 import { OrganizationInvitationStatus, Tenant } from '@grantjs/schema';
@@ -37,27 +37,49 @@ export function MemberActions({ member }: MemberActionsProps) {
   const currentAccount = getCurrentAccount();
   const members = useMembersStore((state) => state.members);
 
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && !hasBeenOpened) setHasBeenOpened(true);
+    },
+    [hasBeenOpened]
+  );
+
   // Scope permissions to this organization
   const scope = { tenant: Tenant.Organization, id: organizationId };
 
-  // Check permissions using the Grant client
-  const canUpdateMember = useGrant(ResourceSlug.OrganizationMember, ResourceAction.Update, {
-    scope,
-  });
-  const canRemoveMember = useGrant(ResourceSlug.OrganizationMember, ResourceAction.Remove, {
-    scope,
-  });
-  const canRevokeInvitation = useGrant(ResourceSlug.OrganizationInvitation, ResourceAction.Revoke, {
-    scope,
-  });
-  const canResendInvitationEmail = useGrant(
+  // Defer permission checks until the dropdown is first opened
+  const grantOpts = { scope, enabled: hasBeenOpened, returnLoading: true } as const;
+
+  const { isGranted: canUpdateMember, isLoading: isUpdateLoading } = useGrant(
+    ResourceSlug.OrganizationMember,
+    ResourceAction.Update,
+    grantOpts
+  ) as UseGrantResult;
+
+  const { isGranted: canRemoveMember, isLoading: isRemoveLoading } = useGrant(
+    ResourceSlug.OrganizationMember,
+    ResourceAction.Remove,
+    grantOpts
+  ) as UseGrantResult;
+
+  const { isGranted: canRevokeInvitation, isLoading: isRevokeLoading } = useGrant(
+    ResourceSlug.OrganizationInvitation,
+    ResourceAction.Revoke,
+    grantOpts
+  ) as UseGrantResult;
+
+  const { isGranted: canResendInvitationEmail, isLoading: isResendLoading } = useGrant(
     ResourceSlug.OrganizationInvitation,
     ResourceAction.ResendEmail,
-    { scope }
-  );
-  const canRenewInvitation = useGrant(ResourceSlug.OrganizationInvitation, ResourceAction.Renew, {
-    scope,
-  });
+    grantOpts
+  ) as UseGrantResult;
+
+  const { isGranted: canRenewInvitation, isLoading: isRenewLoading } = useGrant(
+    ResourceSlug.OrganizationInvitation,
+    ResourceAction.Renew,
+    grantOpts
+  ) as UseGrantResult;
 
   const currentUserRole = useMemo(() => {
     const ownerId = currentAccount?.ownerId;
@@ -238,14 +260,25 @@ export function MemberActions({ member }: MemberActionsProps) {
 
   const isEmailVerified = useEmailVerified();
 
-  // Block all member actions if email not verified (organization context requires verification)
-  if (actions.length === 0 || isCurrentUser || !canManageMember || !isEmailVerified) {
-    return null;
-  }
+  // Block all member actions if email not verified or current user
+  if (isCurrentUser || !canManageMember || !isEmailVerified) return null;
+
+  // Once all permission checks have resolved, hide if no actions are available
+  const allGrantsLoading =
+    isUpdateLoading || isRemoveLoading || isRevokeLoading || isResendLoading || isRenewLoading;
+  const permissionsResolved = hasBeenOpened && !allGrantsLoading;
+  if (permissionsResolved && actions.length === 0) return null;
+
+  const isLoading = hasBeenOpened && allGrantsLoading;
 
   return (
     <>
-      <Actions entity={member} actions={actions} />
+      <Actions
+        entity={member}
+        actions={actions}
+        onOpenChange={handleOpenChange}
+        isLoading={isLoading}
+      />
       {member.type === 'member' && member.user && (
         <>
           <MemberRoleUpdateDialog

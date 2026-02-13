@@ -1,6 +1,6 @@
 'use client';
 
-import { useGrant } from '@grantjs/client/react';
+import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 
 import { DeleteDialog } from '@/components/common';
@@ -15,15 +15,25 @@ export function ProjectDeleteDialog() {
   const setProjectToDelete = useProjectsStore((state) => state.setProjectToDelete);
   const { deleteProject } = useProjectMutations();
 
-  const canDelete = useGrant(ResourceSlug.Project, ResourceAction.Delete, {
-    scope: scope!,
-    context: projectToDelete
-      ? { resource: { id: projectToDelete.id, scope: { projects: [projectToDelete.id] } } }
-      : undefined,
-  });
+  const { isGranted: canDelete, isLoading: isDeleteLoading } = useGrant(
+    ResourceSlug.Project,
+    ResourceAction.Delete,
+    {
+      scope: scope!,
+      context: projectToDelete
+        ? { resource: { id: projectToDelete.id, scope: { projects: [projectToDelete.id] } } }
+        : undefined,
+      enabled: !!projectToDelete,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  if (!scope || !canDelete || requiresEmailVerification) {
+  if (!scope || requiresEmailVerification) {
+    return null;
+  }
+
+  if (!isDeleteLoading && !canDelete) {
     return null;
   }
 
