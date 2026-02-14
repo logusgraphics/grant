@@ -49,19 +49,16 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
     }
   );
 
+  // Accept uses the invitation token as authorization — the user isn't an org member yet,
+  // so RBAC can't apply. The handler validates token, expiry, and email independently.
   router.post(
     '/accept',
     validate({ body: acceptInvitationRequestSchema }),
     requireEmailVerificationRest({ allowPersonalContext: false }),
-    authorizeRestRoute({
-      resource: ResourceSlug.OrganizationInvitation,
-      action: ResourceAction.Accept,
-    }),
     async (req: TypedRequest<{ body: typeof acceptInvitationRequestSchema }>, res: Response) => {
-      const { scope, token, userData } = req.body;
+      const { token, userData } = req.body;
 
       const result = await context.handlers.organizationInvitations.acceptInvitation({
-        scope,
         token,
         userData,
       });

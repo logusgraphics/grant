@@ -160,12 +160,11 @@ export const Mutation = {
       organizationInvitationMutations.inviteMember!
     )
   ),
+  // Accept uses the invitation token as authorization — the user isn't an org member yet,
+  // so RBAC can't apply. The handler validates token, expiry, and email independently.
   acceptInvitation: requireEmailVerificationGraphQL(
     BLOCK_UNVERIFIED,
-    authorizeGraphQLResolver(
-      { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Accept },
-      organizationInvitationMutations.acceptInvitation!
-    )
+    organizationInvitationMutations.acceptInvitation!
   ),
   resendInvitationEmail: requireEmailVerificationGraphQL(
     BLOCK_UNVERIFIED,

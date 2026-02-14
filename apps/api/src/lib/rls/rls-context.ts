@@ -1,8 +1,7 @@
-import { sql } from 'drizzle-orm';
 import { Tenant, type Scope } from '@grantjs/schema';
+import { sql } from 'drizzle-orm';
 
 import { config } from '@/config';
-
 import type { Transaction } from '@/lib/transaction-manager.lib';
 
 /**

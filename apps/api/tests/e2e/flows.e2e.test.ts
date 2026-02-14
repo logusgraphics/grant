@@ -45,6 +45,7 @@ const state: {
   projectId: string;
   // Invitee auth state
   inviteeAccessToken: string;
+  inviteePersonalAccountId: string;
   inviteeOrgAccountId: string;
 } = {} as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -230,11 +231,11 @@ describe('Invite member', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 8. Accept invitation (invitee must register, verify, login, create org account first)
+// 8. Accept invitation (personal-only user — backend creates org account)
 // ---------------------------------------------------------------------------
 describe('Accept invitation', () => {
-  it('Register invitee → verify → login → create org account', async () => {
-    // 8a. Register the invitee
+  it('Register invitee → verify → login (personal account only)', async () => {
+    // 8a. Register the invitee with a personal account
     const regRes = await apiClient()
       .post('/api/auth/register')
       .send({
@@ -249,6 +250,7 @@ describe('Accept invitation', () => {
       .expect(201);
 
     expect(regRes.body.success).toBe(true);
+    state.inviteePersonalAccountId = regRes.body.data.account.id;
 
     // 8b. Verify invitee's email (token is in the DB via console email provider)
     const verifyToken = await getVerificationTokenForEmail(INVITEE_EMAIL);
@@ -270,47 +272,127 @@ describe('Accept invitation', () => {
 
     state.inviteeAccessToken = loginRes.body.data.accessToken;
 
-    // 8d. Create an org-type secondary account (grants OrganizationAccountOwner role)
-    const accountRes = await apiClient()
-      .post('/api/me/accounts')
-      .set('Authorization', `Bearer ${state.inviteeAccessToken}`)
-      .expect(201);
-
-    state.inviteeOrgAccountId = accountRes.body.data.account.id;
+    // NOTE: No manual secondary account creation — the accept handler now
+    // creates the Organization account and seeds roles automatically.
   });
 
-  it('POST /api/organization-invitations/accept → 200 with result', async () => {
+  it('POST /api/organization-invitations/accept → 200 with org account created', async () => {
     // Retrieve the invitation token from the database
     const invitationToken = await getInvitationTokenForEmail(INVITEE_EMAIL, state.organizationId);
     expect(invitationToken).toBeTruthy();
     state.invitationToken = invitationToken!;
 
+    // No scope is sent — the accept endpoint needs cross-tenant access
+    // (organization_invitations, accounts, account_roles, etc.) which would
+    // be blocked by RLS if a scoped context were applied.
     const res = await apiClient()
       .post('/api/organization-invitations/accept')
       .set('Authorization', `Bearer ${state.inviteeAccessToken}`)
       .send({
-        scope: {
-          // Accept requires OrganizationAccountOwner role → use invitee's org account scope
-          id: state.inviteeOrgAccountId,
-          tenant: 'account',
-        },
         token: state.invitationToken,
-        userData: {
-          name: INVITEE_NAME,
-          username: `e2e-invitee-${RUN_ID}`,
-          password: INVITEE_PASSWORD,
-        },
       });
 
     // Accept may return 200 or 201 depending on whether user already existed
     expect([200, 201]).toContain(res.status);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toBeDefined();
+    expect(res.body.data.requiresRegistration).toBe(false);
+
+    // Backend should have created an Organization account and seeded roles
+    const accounts = res.body.data.accounts;
+    expect(accounts).toBeDefined();
+    expect(accounts.length).toBeGreaterThanOrEqual(2);
+
+    const orgAccount = accounts.find((a: { type: string }) => a.type === 'organization');
+    expect(orgAccount).toBeDefined();
+    state.inviteeOrgAccountId = orgAccount.id;
   });
 });
 
 // ---------------------------------------------------------------------------
-// 9. Create project (under the organization)
+// 9. Invitee organization permissions (verify account roles were seeded)
+// ---------------------------------------------------------------------------
+describe('Invitee organization permissions', () => {
+  it('invitee can authorize Organization.Query with the new org account scope', async () => {
+    // Guard: skip if the accept step didn't populate the org account ID
+    expect(state.inviteeOrgAccountId).toBeDefined();
+
+    // Re-login invitee to get a fresh token that reflects the new org account
+    const loginRes = await apiClient()
+      .post('/api/auth/login')
+      .send({
+        provider: 'email',
+        providerId: INVITEE_EMAIL,
+        providerData: {
+          password: INVITEE_PASSWORD,
+        },
+      })
+      .expect(200);
+
+    const freshToken = loginRes.body.data.accessToken;
+
+    const res = await apiClient()
+      .post('/api/auth/is-authorized')
+      .set('Authorization', `Bearer ${freshToken}`)
+      .send({
+        permission: {
+          resource: 'Organization',
+          action: 'Query',
+        },
+        context: {
+          resource: { id: state.inviteeOrgAccountId },
+        },
+        scope: {
+          id: state.inviteeOrgAccountId,
+          tenant: 'account',
+        },
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.authorized).toBe(true);
+  });
+
+  it('invitee can authorize Organization.Create with the new org account scope', async () => {
+    // Guard: skip if the accept step didn't populate the org account ID
+    expect(state.inviteeOrgAccountId).toBeDefined();
+
+    const loginRes = await apiClient()
+      .post('/api/auth/login')
+      .send({
+        provider: 'email',
+        providerId: INVITEE_EMAIL,
+        providerData: {
+          password: INVITEE_PASSWORD,
+        },
+      })
+      .expect(200);
+
+    const freshToken = loginRes.body.data.accessToken;
+
+    const res = await apiClient()
+      .post('/api/auth/is-authorized')
+      .set('Authorization', `Bearer ${freshToken}`)
+      .send({
+        permission: {
+          resource: 'Organization',
+          action: 'Create',
+        },
+        context: {
+          resource: { id: state.inviteeOrgAccountId },
+        },
+        scope: {
+          id: state.inviteeOrgAccountId,
+          tenant: 'account',
+        },
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.authorized).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 10. Create project (under the organization)
 // ---------------------------------------------------------------------------
 describe('Create project', () => {
   it('POST /api/projects → 201 with project data', async () => {

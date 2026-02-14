@@ -1,7 +1,7 @@
 import { SupportedLocale } from '@grantjs/constants';
+import { Request } from 'express';
 
 import { HttpException } from '@/lib/errors';
-import { Request } from 'express';
 
 import { defaultLocale, getFixedT } from './config';
 

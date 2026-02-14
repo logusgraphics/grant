@@ -1,9 +1,10 @@
 import { NotFoundError } from '@grantjs/core';
 import { accounts, type DbSchema, organizations, projects } from '@grantjs/database';
-import type { Scope } from '@grantjs/schema';
 import { and, eq, isNull } from 'drizzle-orm';
 
 import { scopeToRlsContext } from '@/lib/rls';
+
+import type { Scope } from '@grantjs/schema';
 
 /**
  * Validates that the tenant entities referenced by scope exist and are not soft-deleted.

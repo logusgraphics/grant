@@ -141,9 +141,6 @@ export const getOrganizationInvitationsResponseSchema = createSuccessResponseSch
 );
 
 export const acceptInvitationRequestSchema = z.object({
-  scope: scopeSchema.openapi({
-    description: 'Scope context for authorization',
-  }),
   token: z.string().min(1, 'Token is required').openapi({
     description: 'Unique invitation token received via email',
     example: 'inv_a1b2c3d4e5f6g7h8i9j0',

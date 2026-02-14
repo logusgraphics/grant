@@ -16,12 +16,7 @@ import {
   NotFoundError,
   ValidationError,
 } from '@/lib/errors';
-import {
-  generateSecureToken,
-  hashSecret,
-  isTokenValid,
-  verifySecret,
-} from '@/lib/token.lib';
+import { generateSecureToken, hashSecret, isTokenValid, verifySecret } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 import type { Otp } from '@/types';
@@ -51,7 +46,6 @@ interface ProcessedProvider {
   isVerified: boolean;
   name: string;
 }
-
 
 export class UserAuthenticationMethodService implements IUserAuthenticationMethodService {
   constructor(

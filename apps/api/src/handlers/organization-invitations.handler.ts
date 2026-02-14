@@ -25,6 +25,7 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { SelectedFields } from '@/types';
 
 import type {
+  IAccountRoleService,
   IAccountService,
   IAuthService,
   IEmailService,
@@ -54,6 +55,7 @@ export class OrganizationInvitationsHandler {
     private readonly organizationUsers: IOrganizationUserService,
     private readonly userRoles: IUserRoleService,
     private readonly auth: IAuthService,
+    private readonly accountRoles: IAccountRoleService,
     private readonly db: ITransactionalConnection<Transaction>
   ) {}
 
@@ -269,14 +271,26 @@ export class OrganizationInvitationsHandler {
           tx
         );
 
-        // Create account
-        await this.accounts.createAccount(
+        // Create account and seed account-level roles
+        const newOrgAccount = await this.accounts.createAccount(
           {
             type: AccountType.Organization,
             ownerId: user.id,
           },
           tx
         );
+
+        const seededRolesForNewUser = await this.accountRoles.seedAccountRoles(
+          newOrgAccount.id,
+          tx
+        );
+        const ownerRoleForNewUser = seededRolesForNewUser[0];
+        if (ownerRoleForNewUser) {
+          await this.userRoles.addUserRole(
+            { userId: user.id, roleId: ownerRoleForNewUser.role.id },
+            tx
+          );
+        }
       } else {
         // Get existing user with accounts
         const usersResult = await this.users.getUsers(
@@ -304,13 +318,30 @@ export class OrganizationInvitationsHandler {
           }
 
           // Create Organization account for existing user
-          await this.accounts.createAccount(
+          const newOrgAccount = await this.accounts.createAccount(
             {
               type: AccountType.Organization,
               ownerId: user.id,
             },
             tx
           );
+
+          // Seed account-level roles (creates the account_roles link required for
+          // account-scoped permission resolution — mirrors createMySecondaryAccount)
+          const seededRoles = await this.accountRoles.seedAccountRoles(newOrgAccount.id, tx);
+          const accountOwnerRole = seededRoles[0];
+          if (accountOwnerRole) {
+            const existingUserRoles = await this.userRoles.getUserRoles({ userId: user.id }, tx);
+            const hasOwnerRole = existingUserRoles.some(
+              (ur) => ur.roleId === accountOwnerRole.role.id
+            );
+            if (!hasOwnerRole) {
+              await this.userRoles.addUserRole(
+                { userId: user.id, roleId: accountOwnerRole.role.id },
+                tx
+              );
+            }
+          }
         }
       }
 

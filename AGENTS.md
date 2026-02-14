@@ -39,6 +39,7 @@ Transport (GraphQL resolvers, REST routes)
 ```
 
 **Hard rules:**
+
 - Handlers never import repositories; they go through services.
 - Repositories never import services or handlers.
 - REST/GraphQL resolvers never import repositories; they call handlers only.
@@ -46,14 +47,14 @@ Transport (GraphQL resolvers, REST routes)
 
 ### Import discipline (within `apps/api/src/`)
 
-| Symbol | Import from | NOT from |
-|--------|-------------|----------|
-| `createLogger`, `Logger` | `@/lib/logger` | `@grantjs/logger` |
-| `HttpException`, `mapDomainToHttp` | `@/lib/errors` | `@grantjs/errors` |
-| Domain errors (`NotFoundError`, etc.) | `@/lib/errors` | (already re-exports from `@grantjs/core`) |
-| `DeleteParams`, `SelectedFields`, `Otp` | `@/types` | `@/services/common` |
-| `validateInput`, `validateOutput`, schemas | `./common` (within services) | — |
-| `jsonSchema` (REST layer) | `@/rest/schemas/common.schemas` | `@/services/common` |
+| Symbol                                     | Import from                     | NOT from                                  |
+| ------------------------------------------ | ------------------------------- | ----------------------------------------- |
+| `createLogger`, `Logger`                   | `@/lib/logger`                  | `@grantjs/logger`                         |
+| `HttpException`, `mapDomainToHttp`         | `@/lib/errors`                  | `@grantjs/errors`                         |
+| Domain errors (`NotFoundError`, etc.)      | `@/lib/errors`                  | (already re-exports from `@grantjs/core`) |
+| `DeleteParams`, `SelectedFields`, `Otp`    | `@/types`                       | `@/services/common`                       |
+| `validateInput`, `validateOutput`, schemas | `./common` (within services)    | —                                         |
+| `jsonSchema` (REST layer)                  | `@/rest/schemas/common.schemas` | `@/services/common`                       |
 
 ### Configuration
 
@@ -110,11 +111,11 @@ When adding or changing features, follow this order. Each step may produce outpu
 
 ## Where to look
 
-| Layer | Location | Rule (when editing) |
-|-------|----------|---------------------|
-| Domain core | `packages/@grantjs/core` | — |
-| Schema/types | `packages/@grantjs/schema` | `schema.mdc` |
-| Database | `packages/@grantjs/database` | `database.mdc` |
-| Adapter packages | `packages/@grantjs/{cache,storage,email,jobs,logger,errors}` | — |
-| API app | `apps/api` | `api.mdc` |
-| Web app | `apps/web` | `react-and-web.mdc` |
+| Layer            | Location                                                     | Rule (when editing) |
+| ---------------- | ------------------------------------------------------------ | ------------------- |
+| Domain core      | `packages/@grantjs/core`                                     | —                   |
+| Schema/types     | `packages/@grantjs/schema`                                   | `schema.mdc`        |
+| Database         | `packages/@grantjs/database`                                 | `database.mdc`      |
+| Adapter packages | `packages/@grantjs/{cache,storage,email,jobs,logger,errors}` | —                   |
+| API app          | `apps/api`                                                   | `api.mdc`           |
+| Web app          | `apps/web`                                                   | `react-and-web.mdc` |

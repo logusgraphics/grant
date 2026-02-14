@@ -100,6 +100,7 @@ export function createHandlers(
       services.organizationUsers,
       services.userRoles,
       services.auth,
+      services.accountRoles,
       db
     ),
     organizationMembers: new OrganizationMembersHandler(

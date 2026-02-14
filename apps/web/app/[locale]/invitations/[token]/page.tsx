@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useParams } from 'next/navigation';
 
-import { AccountType, OrganizationInvitationStatus, Tenant } from '@grantjs/schema';
+import { AccountType, OrganizationInvitationStatus } from '@grantjs/schema';
 import { AlertTriangle, CheckCircle2, Loader2, Mail, MailCheck, XCircle } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -13,7 +13,8 @@ import { AuthLayout } from '@/components/layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useMyMutations, usePageTitle } from '@/hooks';
+import { usePageTitle } from '@/hooks';
+import { useAccountsSync } from '@/hooks/accounts';
 import { useInvitation, useMemberMutations } from '@/hooks/members';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
@@ -49,11 +50,10 @@ export default function InvitationPage() {
   });
 
   const { acceptInvitation } = useMemberMutations();
-  const { isAuthenticated, updateAccounts, setCurrentAccount, currentAccountId, accounts } =
-    useAuthStore();
-  const { createMySecondaryAccount } = useMyMutations();
+  const { isAuthenticated, updateAccounts, setCurrentAccount } = useAuthStore();
 
   usePageTitle('invitations');
+  useAccountsSync();
 
   const status = useMemo<InvitationStatus>(() => {
     if (actionStatus) {
@@ -105,25 +105,7 @@ export default function InvitationPage() {
     setActionStatus('accepting');
 
     try {
-      const scope = {
-        id: currentAccountId!,
-        tenant: Tenant.Account,
-      };
-
-      const hasOrganizationAccount = accounts.some(
-        (account) => account.type === AccountType.Organization
-      );
-
-      if (!hasOrganizationAccount) {
-        const result = await createMySecondaryAccount();
-        const accountId = result?.account.id;
-        if (accountId) {
-          scope.id = accountId;
-          setCurrentAccount(accountId);
-        }
-      }
-
-      const result = await acceptInvitation({ token, scope });
+      const result = await acceptInvitation({ token });
 
       if (result?.requiresRegistration) {
         setActionStatus('requires-login');
@@ -132,6 +114,12 @@ export default function InvitationPage() {
 
       if (result?.accounts && result.accounts.length > 0) {
         updateAccounts(result.accounts);
+
+        // Switch to Organization account for the org dashboard redirect
+        const orgAccount = result.accounts.find((a) => a.type === AccountType.Organization);
+        if (orgAccount) {
+          setCurrentAccount(orgAccount.id);
+        }
       }
 
       setActionStatus('success');

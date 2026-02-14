@@ -23,7 +23,6 @@ export type Scalars = {
 };
 
 export type AcceptInvitationInput = {
-  scope: Scope;
   token: Scalars['String']['input'];
   userData?: InputMaybe<UserRegistrationData>;
 };
