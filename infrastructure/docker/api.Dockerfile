@@ -15,7 +15,7 @@
 # Stage 1 – base: Node 22 Alpine with pnpm
 # ---------------------------------------------------------------------------
 FROM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+RUN npm install -g pnpm@8.15.0
 WORKDIR /app
 
 # ---------------------------------------------------------------------------
