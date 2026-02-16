@@ -7,6 +7,7 @@ import type { IEntityCacheAdapter, ILogger, ILoggerFactory } from '@grantjs/core
 /** Silent fallback when no logger factory is provided */
 const noop = () => {};
 const noopLogger: ILogger = {
+  trace: noop,
   debug: noop,
   info: noop,
   warn: noop,

@@ -23,7 +23,7 @@ export function getJobAdapter(): IJobAdapter | null {
 
 export async function initializeJobs(appContext: AppContext): Promise<void> {
   if (!config.jobs.enabled) {
-    logger.info('Job scheduling is disabled');
+    logger.info({ msg: 'Job scheduling is disabled' });
     return;
   }
 
@@ -39,7 +39,7 @@ export async function initializeJobs(appContext: AppContext): Promise<void> {
   const jobs = createJobs(appContext);
 
   if (jobs.length === 0) {
-    logger.warn('No jobs found');
+    logger.warn({ msg: 'No jobs found' });
     return;
   }
 
@@ -52,7 +52,7 @@ export async function initializeJobs(appContext: AppContext): Promise<void> {
 
     try {
       if (!job.config.enabled) {
-        logger.debug({ jobId: job.config.id }, 'Job is disabled, skipping');
+        logger.debug({ jobId: job.config.id, msg: 'Job is disabled, skipping' });
         skippedJobs.push(job.config.id);
         continue;
       }
@@ -60,28 +60,26 @@ export async function initializeJobs(appContext: AppContext): Promise<void> {
       await jobAdapter.schedule(job.config, job.getHandler());
       scheduledJobs.push(job.config.id);
 
-      logger.debug({ jobId: job.config.id }, 'Job scheduled successfully');
+      logger.debug({ jobId: job.config.id, msg: 'Job scheduled successfully' });
     } catch (error) {
-      logger.error({ jobId: job.config.id, err: error }, 'Failed to schedule job');
+      logger.error({ jobId: job.config.id, err: error, msg: 'Failed to schedule job' });
     }
   }
 
-  logger.info(
-    {
-      provider: config.jobs.provider,
-      totalJobs: jobs.length,
-      scheduled: scheduledJobs.length,
-      skipped: skippedJobs.length,
-      jobsScheduled: scheduledJobs,
-    },
-    'Job scheduling initialized'
-  );
+  logger.info({
+    msg: 'Job scheduling initialized',
+    provider: config.jobs.provider,
+    totalJobs: jobs.length,
+    scheduled: scheduledJobs.length,
+    skipped: skippedJobs.length,
+    jobsScheduled: scheduledJobs,
+  });
 }
 
 export async function shutdownJobs(): Promise<void> {
   if (jobAdapter) {
     await jobAdapter.shutdown();
     jobAdapter = null;
-    logger.info('Job scheduling shut down');
+    logger.info({ msg: 'Job scheduling shut down' });
   }
 }

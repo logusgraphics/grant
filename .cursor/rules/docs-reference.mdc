@@ -36,7 +36,10 @@ When working on a topic below, read the linked doc for detailed patterns, conven
 | Audit logging, compliance trail | `docs/advanced-topics/audit-logging.md` |
 | GraphQL field selection optimization | `docs/advanced-topics/field-selection.md` |
 | Internationalization (i18n/l10n) | `docs/advanced-topics/internationalization.md` |
-| Structured logging (Pino, correlation IDs) | `docs/advanced-topics/logging.md` |
+| Observability (ports and adapters: logging, metrics, telemetry, tracing, analytics) | `docs/advanced-topics/observability-overview.md` |
+| Structured logging (Pino, correlation IDs) | `docs/advanced-topics/observability-overview.md` |
+| Grafana dashboards (first dashboard walkthrough) | `docs/advanced-topics/grafana-dashboards.md` |
+| Umami dashboards (first analytics dashboard) | `docs/advanced-topics/umami-dashboards.md` |
 | Email service, adapter pattern | `docs/advanced-topics/email-service.md` |
 | Background jobs, tenant context | `docs/advanced-topics/job-scheduling.md` |
 | GDPR, data export/deletion | `docs/advanced-topics/privacy-settings.md` |

@@ -13,5 +13,9 @@ export const createOrganizationResolver: MutationResolvers<GraphqlContext>['crea
       { input },
       context.user.userId
     );
+    context.requestLogger.info({
+      msg: 'Organization created',
+      organizationId: createdOrganization.id,
+    });
     return createdOrganization;
   };

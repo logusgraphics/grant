@@ -22,17 +22,15 @@ export class AuthService implements IAuthService {
 
     const { permission, context: authContext } = validatedInput;
 
-    this.logger.debug(
-      {
-        userId,
-        permission: {
-          resource: permission.resource,
-          action: permission.action,
-        },
-        context: authContext?.resource ? { hasResource: true } : { hasResource: false },
+    this.logger.debug({
+      msg: 'Evaluating authorization',
+      userId,
+      permission: {
+        resource: permission.resource,
+        action: permission.action,
       },
-      'Evaluating authorization'
-    );
+      context: authContext?.resource ? { hasResource: true } : { hasResource: false },
+    });
 
     const startTime = Date.now();
     const result = await this.grant.isAuthorized(permission, authContext || {});
@@ -54,9 +52,9 @@ export class AuthService implements IAuthService {
     };
 
     if (result.authorized) {
-      this.logger.info(logData, 'Authorization granted');
+      this.logger.info({ ...logData, msg: 'Authorization granted' });
     } else {
-      this.logger.warn(logData, 'Authorization denied');
+      this.logger.warn({ ...logData, msg: 'Authorization denied' });
     }
 
     const output = {

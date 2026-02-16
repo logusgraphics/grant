@@ -6,7 +6,8 @@ export const resendInvitationEmailResolver: MutationResolvers<GraphqlContext>['r
   async (_parent, { id }, context) => {
     const invitation = await context.handlers.organizationInvitations.resendInvitationEmail(
       id,
-      context.locale
+      context.locale,
+      context.requestLogger
     );
 
     return invitation;

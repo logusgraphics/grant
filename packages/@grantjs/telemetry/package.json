@@ -1,0 +1,38 @@
+{
+  "name": "@grantjs/telemetry",
+  "version": "1.0.0",
+  "description": "Telemetry adapters for Grant (log shipping: noop, CloudWatch)",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src/**/*"
+  ],
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@grantjs/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3",
+    "typescript": "^5"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-cloudwatch-logs": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.797.0",
+    "@types/node": "^24.7.2",
+    "typescript": "^5"
+  },
+  "license": "MIT"
+}

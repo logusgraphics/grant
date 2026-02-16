@@ -3,6 +3,7 @@ import type { ILogger, JobExecutionContext, JobResult, ScheduledJob } from '@gra
 /** Silent fallback when no logger is injected */
 const noop = () => {};
 const noopLogger: ILogger = {
+  trace: noop,
   debug: noop,
   info: noop,
   warn: noop,

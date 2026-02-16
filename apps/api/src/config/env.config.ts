@@ -446,6 +446,7 @@ export const EMAIL_CONFIG = {
 // ============================================================================
 // Logging Configuration
 // ============================================================================
+// Level is applied at logger bootstrap (apps/api/src/lib/logger) and affects all modules using the shared logger.
 
 export const LOGGING_CONFIG = {
   /** Log level: trace, debug, info, warn, error, fatal */
@@ -457,6 +458,88 @@ export const LOGGING_CONFIG = {
 
   /** Pretty print logs (development only) */
   prettyPrint: getEnvBoolean('LOG_PRETTY_PRINT', APP_CONFIG.isDevelopment),
+} as const;
+
+// ============================================================================
+// Metrics Configuration (Prometheus)
+// ============================================================================
+// When enabled, GET /metrics is served and HTTP request metrics are collected. See docs/advanced-topics/metrics.md.
+
+export const METRICS_CONFIG = {
+  /** Enable metrics collection and expose GET /metrics */
+  enabled: getEnvBoolean('METRICS_ENABLED', false),
+
+  /** Metrics endpoint path (e.g. /metrics) */
+  endpoint: getEnv('METRICS_ENDPOINT', '/metrics'),
+
+  /** Collect default metrics (CPU, memory, event loop, etc.) when implementation is added */
+  collectDefaults: getEnvBoolean('METRICS_COLLECT_DEFAULTS', true),
+
+  /** Default labels for all metrics */
+  defaultLabels: {
+    environment: APP_CONFIG.nodeEnv,
+    service: 'grant-api',
+    version: APP_CONFIG.version,
+  },
+} as const;
+
+// ============================================================================
+// Telemetry Configuration (log shipping / tracing adapter)
+// ============================================================================
+
+export const TELEMETRY_CONFIG = {
+  /** Telemetry provider: none (noop) | cloudwatch */
+  provider: getEnvEnum('TELEMETRY_PROVIDER', ['none', 'cloudwatch'] as const, 'none'),
+
+  /** CloudWatch adapter (used when provider is cloudwatch) */
+  cloudwatch: {
+    region: getEnv('TELEMETRY_CLOUDWATCH_REGION', 'us-east-1'),
+    logGroupName: getEnv('TELEMETRY_CLOUDWATCH_LOG_GROUP', ''),
+    logStreamPrefix: process.env.TELEMETRY_CLOUDWATCH_LOG_STREAM_PREFIX || 'grant-api',
+  },
+} as const;
+
+// ============================================================================
+// Analytics Configuration (optional event tracking via port + adapters)
+// ============================================================================
+
+export const ANALYTICS_CONFIG = {
+  /** Enable analytics (when provider is not 'none') */
+  enabled: getEnvBoolean('ANALYTICS_ENABLED', false),
+
+  /** Analytics provider: none | umami */
+  provider: getEnvEnum('ANALYTICS_PROVIDER', ['none', 'umami'] as const, 'none'),
+
+  /** Umami adapter (used when provider is umami) */
+  umami: {
+    apiUrl: getEnv('ANALYTICS_UMAMI_API_URL', ''),
+    websiteId: getEnv('ANALYTICS_UMAMI_WEBSITE_ID', ''),
+    hostname: process.env.ANALYTICS_UMAMI_HOSTNAME || 'grant-api',
+  },
+} as const;
+
+// ============================================================================
+// Tracing Configuration (OpenTelemetry distributed tracing)
+// ============================================================================
+
+export const TRACING_CONFIG = {
+  /** Enable distributed tracing */
+  enabled: getEnvBoolean('TRACING_ENABLED', false),
+
+  /** Trace backend: jaeger | otlp | xray */
+  backend: getEnvEnum('TRACING_BACKEND', ['jaeger', 'otlp', 'xray'] as const, 'jaeger'),
+
+  /** Jaeger collector endpoint (for TRACING_BACKEND=jaeger) */
+  jaegerEndpoint: getEnv('JAEGER_ENDPOINT', 'http://localhost:14268/api/traces'),
+
+  /** OTLP trace endpoint (for TRACING_BACKEND=otlp or xray) */
+  otlpEndpoint: getEnv('OTLP_ENDPOINT', 'http://localhost:4318/v1/traces'),
+
+  /** Sampling rate 0.0 to 1.0 */
+  samplingRate: getEnvNumber('TRACING_SAMPLING_RATE', 1.0),
+
+  /** Service name in traces */
+  serviceName: getEnv('TRACING_SERVICE_NAME', 'grant-api'),
 } as const;
 
 // ============================================================================
@@ -795,6 +878,10 @@ export const config = {
   email: EMAIL_CONFIG,
   i18n: I18N_CONFIG,
   logging: LOGGING_CONFIG,
+  metrics: METRICS_CONFIG,
+  telemetry: TELEMETRY_CONFIG,
+  analytics: ANALYTICS_CONFIG,
+  tracing: TRACING_CONFIG,
   storage: STORAGE_CONFIG,
   privacy: PRIVACY_CONFIG,
   jobs: JOB_CONFIG,

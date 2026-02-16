@@ -9,7 +9,8 @@ export const renewInvitationResolver: MutationResolvers<GraphqlContext>['renewIn
 ) => {
   const invitation = await context.handlers.organizationInvitations.renewInvitation(
     id,
-    context.locale
+    context.locale,
+    context.requestLogger
   );
 
   return invitation;

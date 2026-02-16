@@ -65,6 +65,16 @@ export function configureLogger(config: LoggerConfig): void {
 export class PinoLoggerAdapter implements ILogger {
   constructor(private readonly pino: pino.Logger) {}
 
+  trace(msgOrObj: string | Record<string, unknown>, msg?: string): void {
+    if (typeof msgOrObj === 'string') {
+      this.pino.trace(msgOrObj);
+    } else if (msg !== undefined) {
+      this.pino.trace(msgOrObj, msg);
+    } else {
+      this.pino.trace(msgOrObj);
+    }
+  }
+
   debug(msgOrObj: string | Record<string, unknown>, msg?: string): void {
     if (typeof msgOrObj === 'string') {
       this.pino.debug(msgOrObj);

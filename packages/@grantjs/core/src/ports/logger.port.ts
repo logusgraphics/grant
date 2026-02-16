@@ -6,6 +6,8 @@
  * concrete logging library.
  */
 export interface ILogger {
+  trace(msg: string): void;
+  trace(obj: Record<string, unknown>, msg?: string): void;
   debug(msg: string): void;
   debug(obj: Record<string, unknown>, msg?: string): void;
   info(msg: string): void;

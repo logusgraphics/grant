@@ -1,3 +1,4 @@
+export * from './analytics.port';
 export * from './audit.port';
 export * from './cache.port';
 export * from './email.port';
@@ -6,6 +7,7 @@ export * from './job.port';
 export * from './logger.port';
 export * from './token.port';
 export * from './transaction.port';
+export * from './telemetry.port';
 export * from './repositories';
 export * from './scoped-id-provider.port';
 export * from './services';

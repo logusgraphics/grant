@@ -78,13 +78,17 @@ export function createMeRouter(context: RequestContext): Router {
       }>,
       res: Response
     ) => {
-      const result = await context.handlers.me.createMyUserAuthenticationMethod({
-        provider: req.body.provider,
-        providerId: req.body.providerId,
-        providerData: req.body.providerData,
-        isVerified: req.body.isVerified,
-        isPrimary: req.body.isPrimary,
-      });
+      const result = await context.handlers.me.createMyUserAuthenticationMethod(
+        {
+          provider: req.body.provider,
+          providerId: req.body.providerId,
+          providerData: req.body.providerData,
+          isVerified: req.body.isVerified,
+          isPrimary: req.body.isPrimary,
+        },
+        context.locale,
+        context.requestLogger
+      );
       sendSuccessResponse(res, result, 201);
     }
   );

@@ -151,9 +151,11 @@ export default withMermaid({
           items: [
             { text: 'Overview', link: '/advanced-topics/observability-overview' },
             { text: 'Structured Logging', link: '/advanced-topics/logging' },
-            { text: 'Distributed Tracing', link: '/advanced-topics/tracing' },
             { text: 'Metrics & Monitoring', link: '/advanced-topics/metrics' },
-            { text: 'Business Analytics', link: '/advanced-topics/analytics' },
+            { text: 'Grafana dashboards', link: '/advanced-topics/grafana-dashboards' },
+            { text: 'Distributed Tracing', link: '/advanced-topics/tracing' },
+            { text: 'Analytics', link: '/advanced-topics/analytics' },
+            { text: 'Umami dashboards', link: '/advanced-topics/umami-dashboards' },
           ],
         },
       ],

@@ -76,6 +76,10 @@ export function createOrganizationRoutes(context: RequestContext) {
         userId
       );
 
+      context.requestLogger.info({
+        msg: 'Organization created',
+        organizationId: organization.id,
+      });
       sendSuccessResponse(res, organization, 201);
     }
   );

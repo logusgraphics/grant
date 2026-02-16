@@ -36,6 +36,8 @@ COPY packages/@grantjs/cache/package.json packages/@grantjs/cache/package.json
 COPY packages/@grantjs/storage/package.json packages/@grantjs/storage/package.json
 COPY packages/@grantjs/email/package.json packages/@grantjs/email/package.json
 COPY packages/@grantjs/jobs/package.json packages/@grantjs/jobs/package.json
+COPY packages/@grantjs/analytics/package.json packages/@grantjs/analytics/package.json
+COPY packages/@grantjs/telemetry/package.json packages/@grantjs/telemetry/package.json
 COPY packages/@grantjs/client/package.json packages/@grantjs/client/package.json
 COPY packages/@grantjs/server/package.json packages/@grantjs/server/package.json
 COPY packages/@grantjs/cli/package.json packages/@grantjs/cli/package.json
@@ -66,6 +68,8 @@ COPY --from=deps /app/packages/@grantjs/cache/node_modules ./packages/@grantjs/c
 COPY --from=deps /app/packages/@grantjs/storage/node_modules ./packages/@grantjs/storage/node_modules
 COPY --from=deps /app/packages/@grantjs/email/node_modules ./packages/@grantjs/email/node_modules
 COPY --from=deps /app/packages/@grantjs/jobs/node_modules ./packages/@grantjs/jobs/node_modules
+COPY --from=deps /app/packages/@grantjs/analytics/node_modules ./packages/@grantjs/analytics/node_modules
+COPY --from=deps /app/packages/@grantjs/telemetry/node_modules ./packages/@grantjs/telemetry/node_modules
 
 # -- Workspace root (pnpm needs these for workspace resolution) --
 COPY package.json pnpm-workspace.yaml tsconfig.json ./
@@ -116,6 +120,16 @@ COPY packages/@grantjs/email/src packages/@grantjs/email/src
 COPY packages/@grantjs/jobs/package.json packages/@grantjs/jobs/package.json
 COPY packages/@grantjs/jobs/tsconfig.json packages/@grantjs/jobs/tsconfig.json
 COPY packages/@grantjs/jobs/src packages/@grantjs/jobs/src
+
+# -- @grantjs/analytics (analytics adapters: noop, Umami) --
+COPY packages/@grantjs/analytics/package.json packages/@grantjs/analytics/package.json
+COPY packages/@grantjs/analytics/tsconfig.json packages/@grantjs/analytics/tsconfig.json
+COPY packages/@grantjs/analytics/src packages/@grantjs/analytics/src
+
+# -- @grantjs/telemetry (log shipping: noop, CloudWatch) --
+COPY packages/@grantjs/telemetry/package.json packages/@grantjs/telemetry/package.json
+COPY packages/@grantjs/telemetry/tsconfig.json packages/@grantjs/telemetry/tsconfig.json
+COPY packages/@grantjs/telemetry/src packages/@grantjs/telemetry/src
 
 # -- API app (source + tsconfig for path alias resolution) --
 COPY apps/api/package.json apps/api/package.json

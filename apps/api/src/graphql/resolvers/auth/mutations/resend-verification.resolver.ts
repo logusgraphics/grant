@@ -7,5 +7,9 @@ export const resendVerification: MutationResolvers<GraphqlContext>['resendVerifi
   args: MutationResendVerificationArgs,
   context: GraphqlContext
 ) => {
-  return context.handlers.auth.resendVerificationEmail(args.input.email, context.locale);
+  return context.handlers.auth.resendVerificationEmail(
+    args.input.email,
+    context.locale,
+    context.requestLogger
+  );
 };

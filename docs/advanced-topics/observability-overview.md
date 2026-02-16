@@ -1,488 +1,169 @@
 ---
 title: Observability Overview
-description: Comprehensive guide to logging, tracing, metrics, and analytics in Grant
+description: Logging, metrics, telemetry, tracing, and analytics — ports and adapters in Grant
 ---
 
 # Observability Overview
 
-Grant provides comprehensive observability capabilities to help you monitor, debug, and optimize your deployment. This guide covers the four pillars of observability implemented in the platform.
-
-## The Four Pillars
-
-```mermaid
-graph TB
-    A[Observability] --> B[Logging]
-    A --> C[Tracing]
-    A --> D[Metrics]
-    A --> E[Analytics]
-
-    B --> B1[Structured Logs]
-    B --> B2[Request Context]
-    B --> B3[Correlation IDs]
-
-    C --> C1[Distributed Tracing]
-    C --> C2[Span Context]
-    C --> C3[Service Dependencies]
-
-    D --> D1[Performance Metrics]
-    D --> D2[Business Metrics]
-    D --> D3[System Metrics]
-
-    E --> E1[User Behavior]
-    E --> E2[Feature Usage]
-    E --> E3[Business Intelligence]
-```
-
-## Why Observability Matters
-
-### For Developers
-
-- **Debug faster**: Trace requests across services with correlation IDs
-- **Understand behavior**: See exactly what your code is doing in production
-- **Performance insights**: Identify slow queries and bottlenecks
-- **Error tracking**: Get full context when things go wrong
-
-### For DevOps
-
-- **System health**: Monitor resource usage and system metrics
-- **Alerting**: Set up intelligent alerts based on metrics
-- **Capacity planning**: Track growth and plan infrastructure
-- **Incident response**: Quickly identify and resolve issues
-
-### For Business
-
-- **Feature adoption**: Track which features users actually use
-- **User behavior**: Understand how customers interact with your platform
-- **Cost optimization**: Track resource usage per tenant
-- **Compliance**: Maintain detailed audit trails for regulations
+The API provides **structured logging**, **metrics**, **log-shipping**, **tracing**, and optional **analytics** via a small set of ports and adapters — the same pattern as the [Caching System](/advanced-topics/caching).
 
 ## Architecture
 
-Grant's observability stack is designed to work in both self-hosted and cloud environments:
-
 ```mermaid
-flowchart LR
-    A[API Server] --> B[Structured Logger]
-    A --> C[Tracer]
-    A --> D[Metrics Collector]
-    A --> E[Analytics Service]
-
-    B --> F[Log Aggregation]
-    C --> G[Trace Backend]
-    D --> H[Metrics Store]
-    E --> I[Analytics Database]
-
-    F --> J[Loki/CloudWatch]
-    G --> K[Jaeger/X-Ray]
-    H --> L[Prometheus/CloudWatch]
-    I --> M[PostgreSQL/TimescaleDB]
+flowchart TB
+  API[API]
+  API --> Logs[Logging Pino]
+  API --> Metrics[Metrics]
+  API --> Telemetry[Telemetry]
+  API --> Tracing[Tracing]
+  API --> Analytics[Analytics]
+  Logs --> Stdout[stdout]
+  Metrics --> Prom[GET /metrics]
+  Prom --> Prometheus[Prometheus]
+  Telemetry --> ITelemetry[ITelemetryAdapter]
+  ITelemetry --> NoopT[noop]
+  ITelemetry --> CW[CloudWatch]
+  Tracing --> OTel[OpenTelemetry SDK]
+  OTel --> Jaeger[Jaeger]
+  OTel --> OTLP[OTLP]
+  Analytics --> IAnalytics[IAnalyticsAdapter]
+  IAnalytics --> NoopA[noop]
+  IAnalytics --> Umami[Umami]
 ```
 
-## Components
+## Ports and adapters
 
-### 1. Structured Logging
+| Pillar        | Purpose                      | Port / contract       | Adapters / backends | Config prefix                     | Wired in                                    |
+| ------------- | ---------------------------- | --------------------- | ------------------- | --------------------------------- | ------------------------------------------- |
+| **Logging**   | Structured JSON logs         | Config only (no port) | Pino → stdout       | `LOG_*`                           | `lib/logger`                                |
+| **Metrics**   | HTTP request metrics         | GET /metrics scrape   | Prometheus          | `METRICS_*`                       | `lib/metrics`                               |
+| **Telemetry** | Request-summary log shipping | `ITelemetryAdapter`   | noop, CloudWatch    | `TELEMETRY_*`                     | `lib/telemetry`, request-logging middleware |
+| **Tracing**   | Distributed traces           | OpenTelemetry SDK     | Jaeger, OTLP        | `TRACING_*`, `JAEGER_*`, `OTLP_*` | `lib/tracing` (first import in server)      |
+| **Analytics** | Optional event tracking      | `IAnalyticsAdapter`   | noop, Umami         | `ANALYTICS_*`                     | `lib/analytics`                             |
 
-**Technology**: Pino (fast, structured JSON logging)
+Runbook and Prometheus config: `observability/README.md`, `observability/prometheus.yml`. First dashboard: [Grafana dashboards](/advanced-topics/grafana-dashboards).
 
-**Features**:
+## Quick start
 
-- JSON-formatted logs for easy parsing
-- Request correlation IDs
-- Automatic PII redaction
-- Multi-level logging (debug, info, warn, error)
-- Pretty printing in development
-
-**Learn more**: [Logging Guide](/advanced-topics/logging)
-
-### 2. Distributed Tracing
-
-**Technology**: OpenTelemetry
-
-**Features**:
-
-- End-to-end request tracing
-- Automatic instrumentation for HTTP, GraphQL, Database
-- Support for multiple backends (Jaeger, AWS X-Ray, Datadog)
-- Performance profiling
-- Service dependency mapping
-
-**Learn more**: [Tracing Guide](/advanced-topics/tracing)
-
-### 3. Metrics & Monitoring
-
-**Technology**: Prometheus + Custom Metrics
-
-**Features**:
-
-- HTTP request metrics (duration, count, errors)
-- GraphQL operation metrics
-- Database connection pool metrics
-- Cache hit/miss rates
-- Authentication and authorization metrics
-- Custom business metrics
-
-**Learn more**: [Metrics Guide](/advanced-topics/metrics)
-
-### 4. Business Analytics
-
-**Technology**: PostgreSQL + Optional External Services
-
-**Features**:
-
-- User behavior tracking
-- Feature usage analytics
-- Multi-tenant analytics
-- Custom event tracking
-- Integration with external services (Segment, Mixpanel)
-
-**Learn more**: [Analytics Guide](/advanced-topics/analytics)
-
-## Deployment Patterns
-
-### Development Environment
-
-In development, observability focuses on developer experience:
-
-```typescript
-// Pretty, human-readable logs
-LOG_PRETTY_PRINT=true
-
-// Local tracing with Jaeger UI
-TRACING_ENABLED=true
-JAEGER_ENDPOINT=http://localhost:14268/api/traces
-
-// Metrics endpoint for local Prometheus
-METRICS_ENABLED=true
-```
-
-**Tools**:
-
-- Pino Pretty for readable logs
-- Jaeger UI for trace visualization
-- Prometheus + Grafana for metrics
-
-### Self-Hosted Production
-
-Self-hosted deployments can use open-source tools:
-
-```typescript
-// Structured JSON logs
+```bash
 LOG_LEVEL=info
 LOG_PRETTY_PRINT=false
-
-// Jaeger or compatible backend
-TRACING_ENABLED=true
-JAEGER_ENDPOINT=http://jaeger-collector:14268/api/traces
-
-// Expose metrics for Prometheus
 METRICS_ENABLED=true
+# Optional: TRACING_ENABLED=true, TRACING_BACKEND=jaeger, JAEGER_ENDPOINT=http://localhost:14268/api/traces
 ```
-
-**Stack Options**:
-
-- **Logging**: Loki + Grafana, ELK Stack
-- **Tracing**: Jaeger, Zipkin
-- **Metrics**: Prometheus + Grafana
-- **Analytics**: PostgreSQL or TimescaleDB
-
-### AWS/Cloud Production
-
-Cloud deployments leverage managed services:
-
-```typescript
-// CloudWatch integration
-LOG_LEVEL = info;
-CLOUD_PROVIDER = aws;
-
-// AWS X-Ray for distributed tracing
-TRACING_ENABLED = true;
-TRACING_BACKEND = xray;
-
-// CloudWatch Metrics + Prometheus
-METRICS_ENABLED = true;
-CLOUDWATCH_METRICS = true;
-```
-
-**AWS Stack**:
-
-- **Logging**: CloudWatch Logs
-- **Tracing**: AWS X-Ray
-- **Metrics**: CloudWatch Metrics + Prometheus
-- **Analytics**: RDS PostgreSQL or Timestream
-
-## Quick Start
-
-### 1. Enable Basic Observability
-
-Add to your `.env`:
-
-```bash
-# Logging
-LOG_LEVEL=info
-LOG_PRETTY_PRINT=false
-
-# Metrics
-METRICS_ENABLED=true
-
-# Tracing (optional)
-TRACING_ENABLED=false
-```
-
-### 2. Access Metrics
-
-```bash
-# View Prometheus metrics
-curl http://localhost:4000/metrics
-
-# Health check with system status
-curl http://localhost:4000/health
-```
-
-### 3. View Logs
-
-Logs are written to stdout/stderr in JSON format:
-
-```bash
-# With Docker
-docker logs grant-api
-
-# With PM2
-pm2 logs grant-api
-
-# With systemd
-journalctl -u grant-api -f
-```
-
-### 4. Set Up Tracing (Optional)
-
-Start Jaeger for local development:
-
-```bash
-docker run -d --name jaeger \
-  -p 16686:16686 \
-  -p 14268:14268 \
-  jaegertracing/all-in-one:latest
-
-# Enable tracing
-export TRACING_ENABLED=true
-export JAEGER_ENDPOINT=http://localhost:14268/api/traces
-
-# View traces at http://localhost:16686
-```
-
-## Best Practices
-
-### 1. Use Correlation IDs
-
-Every request gets a unique ID that flows through all logs and traces:
-
-```typescript
-// Automatically added to all logs
-{
-  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-  "userId": "user-123",
-  "accountId": "account-456",
-  "msg": "Processing request"
-}
-```
-
-### 2. Log Structured Data
-
-Always log structured data, not interpolated strings:
-
-```typescript
-// ❌ Bad
-logger.info(`User ${userId} created organization ${orgId}`);
-
-// ✅ Good
-logger.info({
-  msg: 'Organization created',
-  userId,
-  organizationId: orgId,
-  action: 'create',
-});
-```
-
-### 3. Set Appropriate Log Levels
-
-Use log levels correctly:
-
-- **error**: Something failed and requires attention
-- **warn**: Something unexpected but handled
-- **info**: Important business events and milestones
-- **debug**: Detailed information for debugging
-- **trace**: Very detailed, typically only in development
-
-### 4. Monitor Key Metrics
-
-Essential metrics to monitor:
-
-- **Request rate**: Requests per second
-- **Error rate**: Percentage of failed requests
-- **Response time**: P50, P95, P99 latencies
-- **Database connections**: Active vs available
-- **Cache hit rate**: Percentage of cache hits
-- **Authentication success rate**: Auth failures may indicate attacks
-
-### 5. Create Alerts
-
-Set up alerts for critical conditions:
-
-```yaml
-# Example Prometheus alert
-- alert: HighErrorRate
-  expr: rate(http_requests_total{status_code=~"5.."}[5m]) > 0.05
-  for: 5m
-  annotations:
-    summary: 'High error rate detected'
-```
-
-### 6. Use Request Context
-
-Always include request context in logs:
-
-```typescript
-// Available on all requests
-req.logger.info({
-  msg: 'Processing request',
-  // requestId, userId, accountId already attached
-  additionalData: {...}
-});
-```
-
-## Multi-Tenancy Considerations
-
-Grant is multi-tenant, so observability must support tenant isolation:
-
-### Tenant-Scoped Metrics
-
-```typescript
-// Metrics with tenant labels
-httpRequestDuration.observe(
-  {
-    method: req.method,
-    route: req.route,
-    accountId: req.accountId, // ← Tenant dimension
-  },
-  duration
-);
-```
-
-### Tenant-Scoped Logs
-
-```typescript
-// Logs automatically include tenant context
-logger.child({
-  accountId: 'account-123',
-  organizationId: 'org-456',
-});
-```
-
-### Analytics by Tenant
-
-```typescript
-// Track tenant-specific events
-analytics.track({
-  event: 'feature.used',
-  accountId: 'account-123',
-  organizationId: 'org-456',
-  properties: { feature: 'advanced-permissions' },
-});
-```
-
-## Cost Optimization
-
-Observability can generate significant data volume. Optimize costs:
-
-### Sampling
-
-```typescript
-// Sample traces in high-volume environments
-TRACING_SAMPLING_RATE = 0.1; // 10% of traces
-```
-
-### Log Retention
-
-```typescript
-// Configure retention policies
-LOG_RETENTION_DAYS = 30; // Keep logs for 30 days
-METRICS_RETENTION_DAYS = 90; // Keep metrics for 90 days
-```
-
-### Smart Filtering
-
-```typescript
-// Don't log health checks
-if (req.path === '/health') return;
-
-// Sample high-volume endpoints
-if (Math.random() > 0.1) return; // 10% sampling
-```
-
-## Security & Compliance
-
-### PII Protection
-
-Automatic redaction of sensitive data:
-
-```typescript
-// Automatically redacted fields
-redact: [
-  'req.headers.authorization',
-  'req.headers.cookie',
-  '*.password',
-  '*.token',
-  '*.secret',
-  '*.apiKey',
-];
-```
-
-### Audit Trails
-
-Comprehensive audit logging for compliance:
-
-- User authentication events
-- Permission changes
-- Data access and modifications
-- Administrative actions
-
-See: [Audit Logging Guide](/advanced-topics/audit-logging)
-
-## Next Steps
-
-1. **Set up logging**: [Logging Guide](/advanced-topics/logging)
-2. **Add metrics**: [Metrics Guide](/advanced-topics/metrics)
-3. **Enable tracing**: [Tracing Guide](/advanced-topics/tracing)
-4. **Track analytics**: [Analytics Guide](/advanced-topics/analytics)
-
-## Resources
-
-### Tools & Services
-
-**Open Source**:
-
-- [Pino](https://getpino.io/) - Fast JSON logger
-- [OpenTelemetry](https://opentelemetry.io/) - Observability framework
-- [Prometheus](https://prometheus.io/) - Metrics and monitoring
-- [Grafana](https://grafana.com/) - Visualization
-- [Jaeger](https://www.jaegertracing.io/) - Distributed tracing
-- [Loki](https://grafana.com/oss/loki/) - Log aggregation
-
-**Commercial**:
-
-- AWS CloudWatch, X-Ray
-- Datadog
-- New Relic
-- Honeycomb
-- Sentry
-
-### Learning Resources
-
-- [Google SRE Book - Monitoring](https://sre.google/sre-book/monitoring-distributed-systems/)
-- [OpenTelemetry Getting Started](https://opentelemetry.io/docs/getting-started/)
-- [Prometheus Best Practices](https://prometheus.io/docs/practices/)
-- [The Three Pillars of Observability](https://www.oreilly.com/library/view/distributed-systems-observability/9781492033431/)
 
 ---
 
-**Next**: Start with [Structured Logging](/advanced-topics/logging) →
+## Logging
+
+Structured JSON via Pino. Level and pretty-print in `LOGGING_CONFIG` ([env.config.ts](apps/api/src/config/env.config.ts)); applied at bootstrap in [lib/logger](apps/api/src/lib/logger/logger.ts).
+
+| Variable           | Default (prod / dev) | Description                                        |
+| ------------------ | -------------------- | -------------------------------------------------- |
+| `LOG_LEVEL`        | `info` / `debug`     | `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
+| `LOG_PRETTY_PRINT` | `false` / `true`     | Human-readable in dev                              |
+
+**Wired in:** Request middleware attaches `requestId` and a child logger. The context built for each request includes `requestLogger` (see [Structured Logging](/advanced-topics/logging#request-scoped-logger)).
+
+**Request-scoped logger:** In REST routes use `context.requestLogger`; in GraphQL resolvers use `context.requestLogger` (same context). For code that only has `req`, use `getRequestLogger(req)` from `@/middleware/request-logging.middleware`. Any log from that logger includes `requestId`. Handlers that log (e.g. on error) accept an optional last parameter `requestLogger?: ILogger`; pass `context.requestLogger` from routes and resolvers so handler-originated logs are correlated by requestId.
+
+```typescript
+context.requestLogger.info({ msg: 'Organization created', organizationId: org.id });
+// In a handler: (requestLogger ?? this.logger).error({ msg: 'Send failed', err: error });
+```
+
+Log objects with `msg`; avoid string interpolation. In `apps/api`: import `createLogger`, `createModuleLogger` from `@/lib/logger`. Never import `@grantjs/logger` directly.
+
+| Level   | Use                  |
+| ------- | -------------------- |
+| `trace` | Very noisy, dev only |
+| `debug` | Diagnostic           |
+| `info`  | Business events      |
+| `warn`  | Handled anomalies    |
+| `error` | Failures             |
+| `fatal` | Unrecoverable        |
+
+---
+
+## Metrics
+
+HTTP request duration and count for Prometheus when enabled. Labels: `method`, `route`, `status_code`.
+
+| Variable                   | Default    | Description             |
+| -------------------------- | ---------- | ----------------------- |
+| `METRICS_ENABLED`          | `false`    | Expose GET /metrics     |
+| `METRICS_ENDPOINT`         | `/metrics` | Path                    |
+| `METRICS_COLLECT_DEFAULTS` | `true`     | CPU, memory, event loop |
+
+**Wired in:** [lib/metrics](apps/api/src/lib/metrics/). Middleware records on response finish; handler serves at `METRICS_ENDPOINT`.
+
+**Runbook:** Start API with `METRICS_ENABLED=true`; `docker compose up -d prometheus grafana`; in Grafana add Prometheus data source `http://prometheus:9090`. See [Grafana dashboards](/advanced-topics/grafana-dashboards) for first dashboard steps.
+
+**PromQL:** Request rate `rate(http_requests_total[5m])`. P95 duration by route: `histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))`.
+
+---
+
+## Telemetry (log shipping)
+
+Optional adapter to send request-summary logs to a backend (e.g. CloudWatch Logs). Port: `ITelemetryAdapter` ([@grantjs/core](packages/@grantjs/core)); adapters in [@grantjs/telemetry](packages/@grantjs/telemetry) (noop, CloudWatch).
+
+| Variable                                 | Default     | Description            |
+| ---------------------------------------- | ----------- | ---------------------- |
+| `TELEMETRY_PROVIDER`                     | `none`      | `none` or `cloudwatch` |
+| `TELEMETRY_CLOUDWATCH_REGION`            | `us-east-1` | AWS region             |
+| `TELEMETRY_CLOUDWATCH_LOG_GROUP`         | —           | Log group name         |
+| `TELEMETRY_CLOUDWATCH_LOG_STREAM_PREFIX` | `grant-api` | Stream prefix          |
+
+**Wired in:** [lib/telemetry](apps/api/src/lib/telemetry/). Request-logging middleware calls `getTelemetryAdapter().sendLog(...)` on response finish (fire-and-forget).
+
+---
+
+## Tracing
+
+Distributed tracing via OpenTelemetry. **Implemented.** Spans include `http.request_id` and optional `http.user_id` for correlation with logs.
+
+| Variable                | Default                             | Description              |
+| ----------------------- | ----------------------------------- | ------------------------ |
+| `TRACING_ENABLED`       | `false`                             | Enable OTel SDK          |
+| `TRACING_BACKEND`       | `jaeger`                            | `jaeger`, `otlp`, `xray` |
+| `JAEGER_ENDPOINT`       | `http://localhost:14268/api/traces` | Jaeger collector         |
+| `OTLP_ENDPOINT`         | `http://localhost:4318/v1/traces`   | OTLP endpoint            |
+| `TRACING_SAMPLING_RATE` | `1.0`                               | Sampling 0–1             |
+| `TRACING_SERVICE_NAME`  | `grant-api`                         | Service name in traces   |
+
+**Wired in:** [lib/tracing](apps/api/src/lib/tracing/) — **first import** in [server.ts](apps/api/src/server.ts) so the SDK patches http/express before they load. Request-logging middleware sets `http.request_id` and `http.user_id` on the active span. `shutdownTracing()` called in graceful shutdown before DB/cache close.
+
+**Runbook:** Start Jaeger (`docker compose up -d jaeger`); set `TRACING_ENABLED=true`, `TRACING_BACKEND=jaeger`, `JAEGER_ENDPOINT`; restart API; open Jaeger UI (http://localhost:16686), service `grant-api`. Full reference: [Tracing](/advanced-topics/tracing).
+
+---
+
+## Analytics
+
+Optional event tracking. Port: `IAnalyticsAdapter` ([@grantjs/core](packages/@grantjs/core)); adapters in [@grantjs/analytics](packages/@grantjs/analytics) (noop, Umami). Grant does not store events; adapters forward to the backend of your choice.
+
+| Variable                     | Default     | Description           |
+| ---------------------------- | ----------- | --------------------- |
+| `ANALYTICS_ENABLED`          | `false`     | Enable tracking       |
+| `ANALYTICS_PROVIDER`         | `none`      | `none` or `umami`     |
+| `ANALYTICS_UMAMI_API_URL`    | —           | Umami API base URL    |
+| `ANALYTICS_UMAMI_WEBSITE_ID` | —           | Website ID from Umami |
+| `ANALYTICS_UMAMI_HOSTNAME`   | `grant-api` | Hostname per event    |
+
+**Wired in:** [lib/analytics](apps/api/src/lib/analytics/). Handlers call `getAnalyticsAdapter().trackEvent(...)` (fire-and-forget). Usage: [Analytics](/advanced-topics/analytics). First dashboard: [Umami dashboards](/advanced-topics/umami-dashboards).
+
+---
+
+## Practices
+
+- Use `req.logger` (or `getRequestLogger(req)`) in request handlers so logs include `requestId`.
+- Log structured objects with `msg`; avoid string interpolation.
+- Set `LOG_LEVEL` by environment (e.g. `debug` in dev, `info` in prod).
+- Correlation: requestId is automatic via request-scoped logger and is set on trace spans.
+
+---
+
+**Related:**
+
+- [Configuration](/getting-started/configuration) — Environment variable reference
+- [Grafana dashboards](/advanced-topics/grafana-dashboards) — First dashboard walkthrough
+- [Audit Logging](/advanced-topics/audit-logging) — Compliance trail (separate from runtime logs)

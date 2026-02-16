@@ -13,7 +13,7 @@ function sendJwksResponse(res: Response, keys: Array<{ kid: string; publicKeyPem
   const jwks = getJwks({
     projectKeys: keys,
     onKeyError: config.app.isDevelopment
-      ? (kid, err) => logger.warn({ kid, err }, 'JWKS: failed to add key')
+      ? (kid, err) => logger.warn({ kid, err, msg: 'JWKS: failed to add key' })
       : undefined,
   });
   res.setHeader('Content-Type', 'application/json');

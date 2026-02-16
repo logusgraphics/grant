@@ -38,6 +38,7 @@ import type {
   IAccountService,
   IAuthService,
   IEmailService,
+  ILogger,
   ITransactionalConnection,
   IUserAuthenticationMethodService,
   IUserRoleService,
@@ -68,7 +69,8 @@ export class AuthHandler extends CacheHandler {
     params: RegisterInput,
     locale?: string,
     userAgent?: string | null,
-    ipAddress?: string | null
+    ipAddress?: string | null,
+    requestLogger?: ILogger
   ): Promise<CreateAccountResult> {
     const { type, provider, providerId, providerData } = params;
 
@@ -142,7 +144,7 @@ export class AuthHandler extends CacheHandler {
           try {
             await this.email.sendOtp({ to: providerId, token, validUntil, locale });
           } catch (error) {
-            this.logger.error({
+            (requestLogger ?? this.logger).error({
               msg: 'Error sending OTP',
               err: error,
             });
@@ -345,7 +347,8 @@ export class AuthHandler extends CacheHandler {
 
   public async resendVerificationEmail(
     email: string,
-    locale?: SupportedLocale
+    locale?: SupportedLocale,
+    requestLogger?: ILogger
   ): Promise<ResendVerificationResponse> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { token, validUntil } = await this.userAuthenticationMethods.resendVerificationEmail(
@@ -356,7 +359,7 @@ export class AuthHandler extends CacheHandler {
       try {
         await this.email.sendOtp({ to: email, token, validUntil, locale });
       } catch (error) {
-        this.logger.error({
+        (requestLogger ?? this.logger).error({
           msg: 'Error sending verification email',
           err: error,
         });
@@ -373,7 +376,8 @@ export class AuthHandler extends CacheHandler {
 
   public async requestPasswordReset(
     email: string,
-    locale?: SupportedLocale
+    locale?: SupportedLocale,
+    requestLogger?: ILogger
   ): Promise<RequestPasswordResetResponse> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const otp = await this.userAuthenticationMethods.requestPasswordReset(email, tx);
@@ -394,7 +398,7 @@ export class AuthHandler extends CacheHandler {
           locale,
         });
       } catch (error) {
-        this.logger.error({
+        (requestLogger ?? this.logger).error({
           msg: 'Error sending password reset email',
           err: error,
         });
@@ -412,7 +416,8 @@ export class AuthHandler extends CacheHandler {
   public async resetPassword(
     token: string,
     newPassword: string,
-    locale?: SupportedLocale
+    locale?: SupportedLocale,
+    requestLogger?: ILogger
   ): Promise<ResetPasswordResponse> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const userId = await this.userAuthenticationMethods.resetPassword(token, newPassword, tx);
@@ -428,7 +433,7 @@ export class AuthHandler extends CacheHandler {
         // TODO: Implement password change confirmation email
         // await this.email.sendPasswordChangeConfirmation({ to: email, locale });
       } catch (error) {
-        this.logger.error({
+        (requestLogger ?? this.logger).error({
           msg: 'Error sending password change confirmation email',
           err: error,
         });

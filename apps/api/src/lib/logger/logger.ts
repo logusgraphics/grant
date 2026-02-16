@@ -53,6 +53,9 @@ export const rawPinoLogger = getRawPinoLogger();
 /** Shared logger factory instance for injecting into adapter packages */
 export const loggerFactory = new PinoLoggerFactory();
 
-// Re-export shared utilities
+/** Alias for createLogger: creates a child logger scoped to a module name (used in docs). */
+export const createModuleLogger = createLogger;
+
+// Re-export shared utilities (createModuleLogger is already exported above as const)
 export { createContextLogger, createLogger };
 export type { ILogger as Logger };

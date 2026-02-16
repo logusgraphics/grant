@@ -3,7 +3,7 @@ import type { ResourceResolvers } from '@/resource-resolvers';
 import type { Services } from '@/services';
 
 import type { SupportedLocale } from '@grantjs/constants';
-import type { Grant, GrantAuth } from '@grantjs/core';
+import type { Grant, GrantAuth, ILogger } from '@grantjs/core';
 import type { DbSchema } from '@grantjs/database';
 
 export interface RequestContext {
@@ -11,6 +11,7 @@ export interface RequestContext {
   user: GrantAuth | null;
   handlers: Handlers;
   resourceResolvers: ResourceResolvers;
+  requestLogger: ILogger;
   origin: string;
   locale: SupportedLocale;
   userAgent: string | null;

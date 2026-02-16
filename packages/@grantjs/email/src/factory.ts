@@ -11,6 +11,7 @@ import type { EmailTemplates } from './templates';
 /** Silent fallback when no logger factory is provided */
 const noop = () => {};
 const noopLogger: ILogger = {
+  trace: noop,
   debug: noop,
   info: noop,
   warn: noop,

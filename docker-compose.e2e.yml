@@ -109,6 +109,15 @@ services:
       # Logging
       LOG_LEVEL: info
 
+      # Metrics – enabled for E2E so GET /metrics is asserted
+      METRICS_ENABLED: 'true'
+      METRICS_COLLECT_DEFAULTS: 'false'
+
+      # Telemetry / Analytics / Tracing – noop/disabled in E2E (covered by integration tests)
+      TELEMETRY_PROVIDER: none
+      ANALYTICS_ENABLED: 'false'
+      TRACING_ENABLED: 'false'
+
       # Job scheduling – disabled for E2E
       JOB_PROVIDER: none
     ports:

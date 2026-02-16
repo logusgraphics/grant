@@ -21,12 +21,20 @@ pnpm test:coverage     # With coverage report
 apps/api/tests/
 ├── unit/
 │   ├── graphql/                # Field selection, custom scalars
-│   ├── middleware/             # Rate limiting middleware logic
+│   ├── middleware/             # Rate limiting, request-logging middleware logic
+│   │   ├── rate-limit.middleware.test.ts
+│   │   └── request-logging.middleware.test.ts
+│   ├── handlers/               # Handler optional requestLogger behavior
+│   │   └── auth.handler.request-logger.test.ts
 │   ├── services/              # Audit service tenant scoping
 │   └── jobs/                  # Tenant job context validation
 ├── integration/
-│   └── rate-limit.integration.test.ts   # HTTP-level rate limit tests
+│   ├── rate-limit.integration.test.ts   # HTTP-level rate limit tests
+│   ├── observability.integration.test.ts   # Metrics endpoint, telemetry/analytics/tracing adapters
+│   └── request-logging.integration.test.ts   # Request-scoped logger and requestId in log payload
 └── e2e/
+    ├── flows.e2e.test.ts                # Full flow: register → login → org → invite → project
+    ├── observability.e2e.test.ts        # GET /metrics against real API (metrics enabled in E2E stack)
     ├── scenarios/
     │   ├── multi-tenant.e2e.test.ts     # Cross-tenant isolation
     │   ├── negative-rbac.e2e.test.ts    # Authorization boundaries
@@ -88,6 +96,15 @@ Rate limiting is tested at two levels:
 - **Integration** (`tests/integration/`) — HTTP-level via supertest against a minimal Express app
 
 The integration suite includes optional benchmark reporting (duration, req/s). Suppress with `BENCHMARK_REPORT=0`.
+
+## Observability Testing
+
+Observability is covered at two levels:
+
+- **Integration** (`observability.integration.test.ts`) — Metrics endpoint (GET /metrics with mocked config), telemetry adapter (`sendLog` noop when provider is none), analytics adapter (`trackEvent` noop when disabled), and tracing shutdown. No real server or external backends.
+- **E2E** (`observability.e2e.test.ts`) — GET /metrics against the real API container. The E2E stack enables metrics (`METRICS_ENABLED=true` in `docker-compose.e2e.yml`); telemetry and analytics are set to noop/disabled. Full E2E for log-push or analytics would require a test backend (e.g. mock HTTP receiver).
+
+**Request logging:** Unit tests (`request-logging.middleware.test.ts`) assert requestId and request-scoped logger on `req`, and the completion log payload on `res.finish`. Handler unit test (`auth.handler.request-logger.test.ts`) asserts that when `requestLogger` is passed, the handler uses it for error logs. Integration test (`request-logging.integration.test.ts`) uses a minimal Express app with the middleware and one route that calls `getRequestLogger(req).info(...)`; it asserts the log payload includes `requestId` and the event message.
 
 ## Coverage Goals
 

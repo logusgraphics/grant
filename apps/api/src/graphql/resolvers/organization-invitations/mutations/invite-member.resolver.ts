@@ -9,7 +9,8 @@ export const inviteMemberResolver: MutationResolvers<GraphqlContext>['inviteMemb
 ) => {
   const invitation = await context.handlers.organizationInvitations.inviteMember(
     input,
-    context.locale
+    context.locale,
+    context.requestLogger
   );
 
   return invitation;

@@ -1,3 +1,4 @@
+import '@/lib/tracing'; // must run first so OTel patches http/express before they load
 import http from 'http';
 
 import { ApolloServer } from '@apollo/server';
@@ -20,6 +21,8 @@ import { CacheFactory } from '@/lib/cache';
 import { formatGraphQLError } from '@/lib/errors';
 import { initializeJobs, shutdownJobs } from '@/lib/jobs/initialize';
 import { logger, loggerFactory } from '@/lib/logger';
+import { metricsHandler, metricsMiddleware } from '@/lib/metrics';
+import { shutdownTracing } from '@/lib/tracing';
 import { contextMiddleware } from '@/middleware/context.middleware';
 import { errorHandler } from '@/middleware/error.middleware';
 import { rateLimitMiddleware } from '@/middleware/rate-limit.middleware';
@@ -87,9 +90,12 @@ async function startServer() {
     app.use('/storage', storageMiddleware());
   }
 
+  app.use(requestLoggingMiddleware);
   app.use(contextMiddleware(db, cache));
   app.use(rateLimitMiddleware(cache.rateLimit));
-  app.use(requestLoggingMiddleware);
+  if (config.metrics.enabled) {
+    app.use(metricsMiddleware);
+  }
 
   const openApiDocument = generateOpenApiDocument();
 
@@ -122,6 +128,10 @@ async function startServer() {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  if (config.metrics.enabled) {
+    app.get(config.metrics.endpoint, metricsHandler);
+  }
+
   app.use(createJwksRouter());
 
   app.use(errorHandler);
@@ -131,7 +141,10 @@ async function startServer() {
   try {
     await initializeJobs(createAppContext(db, cache));
   } catch (error) {
-    logger.warn({ err: error }, 'Failed to initialize job scheduling, continuing without jobs');
+    logger.warn({
+      msg: 'Failed to initialize job scheduling, continuing without jobs',
+      err: error,
+    });
   }
 
   logger.info({
@@ -147,7 +160,7 @@ async function startServer() {
 
   const gracefulShutdown = async (signal: string) => {
     if (isDevelopment) {
-      logger.info('Shutting down...');
+      logger.info({ msg: 'Shutting down...' });
       httpServer.close(() => {
         process.exit(0);
       });
@@ -160,11 +173,20 @@ async function startServer() {
     });
 
     httpServer.close(async () => {
-      logger.info('HTTP server closed');
+      logger.info({ msg: 'HTTP server closed' });
+
+      try {
+        await shutdownTracing();
+      } catch (error) {
+        logger.error({
+          msg: 'Error shutting down tracing',
+          err: error,
+        });
+      }
 
       try {
         await shutdownJobs();
-        logger.info('Job scheduling shut down');
+        logger.info({ msg: 'Job scheduling shut down' });
       } catch (error) {
         logger.error({
           msg: 'Error shutting down job scheduling',
@@ -174,7 +196,7 @@ async function startServer() {
 
       try {
         await CacheFactory.disconnect(cache);
-        logger.info('Cache disconnected');
+        logger.info({ msg: 'Cache disconnected' });
       } catch (error) {
         logger.error({
           msg: 'Error disconnecting cache',
@@ -184,7 +206,7 @@ async function startServer() {
 
       try {
         await closeDatabase();
-        logger.info('Database closed');
+        logger.info({ msg: 'Database closed' });
       } catch (error) {
         logger.error({
           msg: 'Error closing database',
@@ -196,7 +218,7 @@ async function startServer() {
     });
 
     setTimeout(() => {
-      logger.error('Forced shutdown after timeout');
+      logger.error({ msg: 'Forced shutdown after timeout' });
       process.exit(1);
     }, 30000);
   };

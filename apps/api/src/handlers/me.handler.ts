@@ -30,6 +30,7 @@ import type {
   IAuthService,
   IEmailService,
   IFileStorageServicePort,
+  ILogger,
   IMeService,
   IOrganizationUserService,
   IProjectUserService,
@@ -347,7 +348,8 @@ export class MeHandler extends CacheHandler {
 
   public async createMyUserAuthenticationMethod(
     input: CreateMyUserAuthenticationMethodInput,
-    locale?: SupportedLocale
+    locale?: SupportedLocale,
+    requestLogger?: ILogger
   ): Promise<UserAuthenticationMethod> {
     const userId = this.getAuthenticatedUserId();
     return await this.db.withTransaction(async (tx: Transaction) => {
@@ -382,7 +384,7 @@ export class MeHandler extends CacheHandler {
               locale: locale || 'en',
             });
           } catch (error) {
-            this.logger.error({
+            (requestLogger ?? this.logger).error({
               msg: 'Error sending OTP email for new authentication method',
               err: error,
               userId,

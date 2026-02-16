@@ -29,6 +29,7 @@ import type {
   IAccountService,
   IAuthService,
   IEmailService,
+  ILogger,
   IOrganizationInvitationService,
   IOrganizationRoleService,
   IOrganizationService,
@@ -64,7 +65,8 @@ export class OrganizationInvitationsHandler {
    */
   public async inviteMember(
     params: InviteMemberInput,
-    locale?: string
+    locale?: string,
+    requestLogger?: ILogger
   ): Promise<OrganizationInvitation> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { scope, email, roleId } = params;
@@ -191,7 +193,7 @@ export class OrganizationInvitationsHandler {
         );
         return updatedInvitation as OrganizationInvitation;
       } catch (error) {
-        this.logger.error({
+        (requestLogger ?? this.logger).error({
           msg: 'Failed to send invitation email',
           err: error,
         });
@@ -427,7 +429,11 @@ export class OrganizationInvitationsHandler {
   /**
    * Resend invitation email for a pending invitation
    */
-  public async resendInvitationEmail(id: string, locale?: string): Promise<OrganizationInvitation> {
+  public async resendInvitationEmail(
+    id: string,
+    locale?: string,
+    requestLogger?: ILogger
+  ): Promise<OrganizationInvitation> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       // 1. Get invitation by ID
       const invitation = await this.organizationInvitations.getInvitationById(id, tx);
@@ -478,7 +484,7 @@ export class OrganizationInvitationsHandler {
           locale,
         })
         .catch((error) => {
-          this.logger.error({
+          (requestLogger ?? this.logger).error({
             msg: 'Failed to resend invitation email',
             err: error,
           });
@@ -492,7 +498,11 @@ export class OrganizationInvitationsHandler {
   /**
    * Renew an expired invitation
    */
-  public async renewInvitation(id: string, locale?: string): Promise<OrganizationInvitation> {
+  public async renewInvitation(
+    id: string,
+    locale?: string,
+    requestLogger?: ILogger
+  ): Promise<OrganizationInvitation> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       // 1. Get invitation by ID
       const invitation = await this.organizationInvitations.getInvitationById(id, tx);
@@ -569,7 +579,7 @@ export class OrganizationInvitationsHandler {
         );
         return finalInvitation as OrganizationInvitation;
       } catch (error) {
-        this.logger.error({
+        (requestLogger ?? this.logger).error({
           msg: 'Failed to send renewal invitation email',
           err: error,
         });

@@ -42,7 +42,8 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
 
       const invitation = await context.handlers.organizationInvitations.inviteMember(
         { scope, email, roleId },
-        context.locale
+        context.locale,
+        context.requestLogger
       );
 
       sendSuccessResponse(res, invitation, 201);
@@ -63,6 +64,10 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
         userData,
       });
 
+      context.requestLogger.info({
+        msg: 'Invitation accepted',
+        organizationId: result.invitation?.organizationId,
+      });
       sendSuccessResponse(res, result);
     }
   );
@@ -162,7 +167,8 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
 
       const invitation = await context.handlers.organizationInvitations.resendInvitationEmail(
         id,
-        context.locale
+        context.locale,
+        context.requestLogger
       );
 
       sendSuccessResponse(res, invitation);
@@ -188,7 +194,8 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
 
       const invitation = await context.handlers.organizationInvitations.renewInvitation(
         id,
-        context.locale
+        context.locale,
+        context.requestLogger
       );
 
       sendSuccessResponse(res, invitation);

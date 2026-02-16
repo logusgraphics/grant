@@ -1,6 +1,7 @@
 export {
   createContextLogger,
   createLogger,
+  createModuleLogger,
   logger,
   loggerFactory,
   rawPinoLogger,

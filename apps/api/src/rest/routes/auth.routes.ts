@@ -78,10 +78,15 @@ export function createAuthRoutes(context: RequestContext) {
         },
         context.locale,
         context.userAgent,
-        context.ipAddress
+        context.ipAddress,
+        context.requestLogger
       );
 
       setRefreshTokenCookie(res, result.refreshToken);
+      context.requestLogger.info({
+        msg: 'User registered',
+        accountId: result.account?.id,
+      });
       sendSuccessResponse(res, result, 201);
     }
   );
@@ -114,6 +119,7 @@ export function createAuthRoutes(context: RequestContext) {
 
       const result = await context.handlers.auth.verifyEmail(token, context.locale);
 
+      context.requestLogger.info({ msg: 'Email verified' });
       sendSuccessResponse(res, result);
     }
   );
@@ -124,7 +130,11 @@ export function createAuthRoutes(context: RequestContext) {
     async (req: TypedRequest<{ body: typeof resendVerificationRequestSchema }>, res: Response) => {
       const { email } = req.body;
 
-      const result = await context.handlers.auth.resendVerificationEmail(email, context.locale);
+      const result = await context.handlers.auth.resendVerificationEmail(
+        email,
+        context.locale,
+        context.requestLogger
+      );
 
       sendSuccessResponse(res, result);
     }
@@ -139,7 +149,11 @@ export function createAuthRoutes(context: RequestContext) {
     ) => {
       const { email } = req.body;
 
-      const result = await context.handlers.auth.requestPasswordReset(email, context.locale);
+      const result = await context.handlers.auth.requestPasswordReset(
+        email,
+        context.locale,
+        context.requestLogger
+      );
 
       sendSuccessResponse(res, result);
     }
@@ -151,7 +165,12 @@ export function createAuthRoutes(context: RequestContext) {
     async (req: TypedRequest<{ body: typeof resetPasswordRequestSchema }>, res: Response) => {
       const { token, newPassword } = req.body;
 
-      const result = await context.handlers.auth.resetPassword(token, newPassword, context.locale);
+      const result = await context.handlers.auth.resetPassword(
+        token,
+        newPassword,
+        context.locale,
+        context.requestLogger
+      );
 
       sendSuccessResponse(res, result);
     }

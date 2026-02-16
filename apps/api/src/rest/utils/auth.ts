@@ -258,7 +258,8 @@ export async function handleGithubCallbackAuth(
     },
     context.locale,
     context.userAgent,
-    context.ipAddress
+    context.ipAddress,
+    context.requestLogger
   );
   return {
     accessToken: result.accessToken,

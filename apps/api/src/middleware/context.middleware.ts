@@ -14,6 +14,7 @@ import { getAuthorizationToken, getClientIp, getContextHeaders } from '@/lib/hea
 import { hasRlsKeys, scopeToRlsContext, setRlsContext } from '@/lib/rls';
 import { JwtTokenProvider } from '@/lib/token';
 import { DrizzleTransactionalConnection } from '@/lib/transaction-manager.lib';
+import { getRequestLogger } from '@/middleware/request-logging.middleware';
 import { createRepositories } from '@/repositories';
 import { GrantRepository } from '@/repositories/grant.repository';
 import { createResourceResolvers } from '@/resource-resolvers';
@@ -85,6 +86,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
           user,
           handlers,
           resourceResolvers,
+          requestLogger: getRequestLogger(req),
           origin,
           locale,
           userAgent,
@@ -114,6 +116,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
         user,
         handlers,
         resourceResolvers,
+        requestLogger: getRequestLogger(req),
         origin,
         locale,
         userAgent,

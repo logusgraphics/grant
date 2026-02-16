@@ -19,17 +19,17 @@ export default class SystemSigningKeyRotationJob extends Job {
   async execute(_context: JobExecutionContext): Promise<JobResult> {
     const txConn = new DrizzleTransactionalConnection(this.appContext.db);
     const newKey = await txConn.withTransaction(async (tx) => {
-      this.logger.info('Starting system signing key rotation');
+      this.logger.info({ msg: 'Starting system signing key rotation' });
       const rotated = await this.appContext.grant.rotateSystemSigningKey(tx);
       if (!rotated) {
         throw new ConfigurationError('rotateSystemSigningKey not implemented');
       }
-      this.logger.info({ kid: rotated.kid }, 'System signing key rotated successfully');
+      this.logger.info({ kid: rotated.kid, msg: 'System signing key rotated successfully' });
       return rotated;
     });
 
     await this.appContext.grant.invalidateSessionSigningKeyCache();
-    this.logger.info('Session signing key cache invalidated');
+    this.logger.info({ msg: 'Session signing key cache invalidated' });
 
     return {
       success: true,

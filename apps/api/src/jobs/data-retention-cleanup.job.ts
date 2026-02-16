@@ -17,13 +17,11 @@ export default class DataRetentionCleanupJob extends Job {
       const accountRetentionDate = new Date();
       accountRetentionDate.setDate(accountRetentionDate.getDate() - accountRetentionDays);
 
-      this.logger.info(
-        {
-          retentionDays: accountRetentionDays,
-          retentionDate: accountRetentionDate.toISOString(),
-        },
-        'Starting cleanup of expired accounts'
-      );
+      this.logger.info({
+        msg: 'Starting cleanup of expired accounts',
+        retentionDays: accountRetentionDays,
+        retentionDate: accountRetentionDate.toISOString(),
+      });
 
       const expiredAccounts = await this.appContext.services.accounts.getExpiredAccounts(
         accountRetentionDate,
@@ -31,7 +29,7 @@ export default class DataRetentionCleanupJob extends Job {
       );
 
       if (expiredAccounts.length === 0) {
-        this.logger.debug('No expired accounts found for cleanup');
+        this.logger.debug({ msg: 'No expired accounts found for cleanup' });
         return {
           accountsDeleted: 0,
           usersDeleted: 0,
@@ -39,7 +37,10 @@ export default class DataRetentionCleanupJob extends Job {
         };
       }
 
-      this.logger.info({ count: expiredAccounts.length }, 'Found expired accounts to delete');
+      this.logger.info({
+        msg: 'Found expired accounts to delete',
+        count: expiredAccounts.length,
+      });
 
       const expiredUserIds = [...new Set(expiredAccounts.map((a) => a.ownerId))];
 
@@ -54,9 +55,13 @@ export default class DataRetentionCleanupJob extends Job {
             tx
           );
           deletedUsers++;
-          this.logger.debug({ userId }, 'Permanently deleted expired user');
+          this.logger.debug({ userId, msg: 'Permanently deleted expired user' });
         } catch (error) {
-          this.logger.error({ userId, err: error }, 'Failed to permanently delete expired user');
+          this.logger.error({
+            userId,
+            err: error,
+            msg: 'Failed to permanently delete expired user',
+          });
         }
       }
 
@@ -71,35 +76,41 @@ export default class DataRetentionCleanupJob extends Job {
             tx
           );
           deletedAccounts++;
-          this.logger.debug({ accountId: account.id }, 'Permanently deleted expired account');
+          this.logger.debug({
+            accountId: account.id,
+            msg: 'Permanently deleted expired account',
+          });
         } catch (error) {
-          this.logger.error(
-            { accountId: account.id, err: error },
-            'Failed to permanently delete expired account'
-          );
+          this.logger.error({
+            accountId: account.id,
+            err: error,
+            msg: 'Failed to permanently delete expired account',
+          });
         }
       }
 
-      this.logger.info(
-        { deletedUsers, deletedAccounts, totalFound: expiredAccounts.length },
-        'Completed cleanup of expired accounts'
-      );
+      this.logger.info({
+        msg: 'Completed cleanup of expired accounts',
+        deletedUsers,
+        deletedAccounts,
+        totalFound: expiredAccounts.length,
+      });
 
       const backupRetentionDays = config.privacy.backupRetentionDays;
       const backupRetentionDate = new Date();
       backupRetentionDate.setDate(backupRetentionDate.getDate() - backupRetentionDays);
 
-      this.logger.info(
-        {
-          retentionDays: backupRetentionDays,
-          retentionDate: backupRetentionDate.toISOString(),
-        },
-        'Starting cleanup of expired backups'
-      );
+      this.logger.info({
+        msg: 'Starting cleanup of expired backups',
+        retentionDays: backupRetentionDays,
+        retentionDate: backupRetentionDate.toISOString(),
+      });
 
       // TODO: Implement backup cleanup when backup system is implemented
       // For now, backups are not stored in the database, so there's nothing to clean up
-      this.logger.debug('Backup cleanup not yet implemented, no backups to clean');
+      this.logger.debug({
+        msg: 'Backup cleanup not yet implemented, no backups to clean',
+      });
 
       return {
         accountsDeleted: deletedAccounts,

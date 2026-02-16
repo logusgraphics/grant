@@ -1,0 +1,14 @@
+# Prometheus config for Grant API.
+# API runs on the host; Prometheus runs in Docker and scrapes host.docker.internal.
+# Ensure the API is running with METRICS_ENABLED=true and APP_PORT matches (default 4000).
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: grant-api
+    static_configs:
+      - targets: ['host.docker.internal:4000']
+    metrics_path: /metrics
+    scrape_interval: 10s

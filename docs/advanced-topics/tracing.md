@@ -5,6 +5,12 @@ description: End-to-end request tracing with OpenTelemetry in Grant
 
 # Distributed Tracing
 
+**Status:** Implemented. The API uses the OpenTelemetry SDK with auto-instrumentation (HTTP, Express, GraphQL, ioredis). Bootstrap: [apps/api/src/lib/tracing/index.ts](apps/api/src/lib/tracing/index.ts). Config: `TRACING_CONFIG` in [apps/api/src/config/env.config.ts](apps/api/src/config/env.config.ts). Runbook: [observability/README.md](observability/README.md) (Tracing section) and optional Jaeger service in `docker-compose.yml`.
+
+**Current implementation details:** Request IDs are set on the active span in [request-logging middleware](apps/api/src/middleware/request-logging.middleware.ts) (`http.request_id`, optional `http.user_id`). Redis is instrumented via `@opentelemetry/instrumentation-ioredis` (app uses ioredis). PostgreSQL is not auto-instrumented (app uses postgres.js; no standard OTel instrumentation). Shutdown is triggered from the server's graceful shutdown (`shutdownTracing()` before DB/cache close). The rest of this page is reference for custom spans, exporters, and backends.
+
+---
+
 Grant uses [OpenTelemetry](https://opentelemetry.io/) for distributed tracing, providing visibility into request flows across services, databases, and external APIs.
 
 ## What is Distributed Tracing?

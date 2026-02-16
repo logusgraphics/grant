@@ -10,6 +10,7 @@ export const resetPassword: MutationResolvers<GraphqlContext>['resetPassword'] =
   return context.handlers.auth.resetPassword(
     args.input.token,
     args.input.newPassword,
-    context.locale
+    context.locale,
+    context.requestLogger
   );
 };

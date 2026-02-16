@@ -1,7 +1,10 @@
+import { trace } from '@opentelemetry/api';
 import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
+import { config } from '@/config';
 import { logger } from '@/lib/logger';
+import { getTelemetryAdapter } from '@/lib/telemetry';
 import { ContextRequest } from '@/types';
 
 import type { ILogger } from '@grantjs/core';
@@ -34,6 +37,16 @@ export function requestLoggingMiddleware(req: Request, res: Response, next: Next
 
   res.setHeader('X-Request-ID', requestId);
 
+  if (config.tracing.enabled) {
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.setAttribute('http.request_id', requestId);
+      if (contextReq.user?.userId) {
+        span.setAttribute('http.user_id', contextReq.user.userId);
+      }
+    }
+  }
+
   requestLogger.info({
     msg: 'Incoming request',
     method: req.method,
@@ -60,6 +73,29 @@ export function requestLoggingMiddleware(req: Request, res: Response, next: Next
       requestLogger.warn(logData);
     } else {
       requestLogger.info(logData);
+    }
+
+    if (config.telemetry.provider !== 'none') {
+      const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+      getTelemetryAdapter()
+        .sendLog({
+          message: logData.msg,
+          level,
+          timestamp: new Date().toISOString(),
+          requestId,
+          fields: {
+            method: req.method,
+            path: req.path,
+            statusCode: res.statusCode,
+            duration,
+          },
+        })
+        .catch((err: unknown) => {
+          requestLogger.error({
+            msg: 'Telemetry sendLog failed',
+            err,
+          });
+        });
     }
   });
 

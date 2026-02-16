@@ -23,9 +23,6 @@ features:
   - icon: 🏢
     title: Account Workspaces
     details: Flexible workspace model supporting both personal accounts for individual users and organization accounts for teams, with seamless switching and role-based access.
-  - icon: 🏗️
-    title: Modern Architecture
-    details: Monorepo structure with shared packages, GraphQL API with type-safe operations, PostgreSQL with Drizzle ORM.
   - icon: 🚀
     title: Developer Experience
     details: TypeScript-first with full type safety, comprehensive SDK for Node.js, Express, Next.js, and more.
@@ -105,8 +102,7 @@ Get up and running with Grant in minutes:
 ## Community & Support
 
 - **GitHub** - [Source code and issues](https://github.com/logusgraphics/grant)
-- **Discord** - [Community discussions](https://discord.gg/grant)
-- **Email** - [Support and inquiries](mailto:support@grant.logus.graphics)
+- **Email** - [Support and inquiries](mailto:ale@logus.graphics)
 
 ---
 

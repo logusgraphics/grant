@@ -208,7 +208,7 @@
 /* What You'll Find Here - Clean 4 column layout */
 .what-youll-find {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   margin: 3rem 0;
   padding: 0;

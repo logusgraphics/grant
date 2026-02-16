@@ -69,6 +69,7 @@ Transport (GraphQL resolvers, REST routes)
 - `apps/api/src/lib/logger/` is the centralized re-export layer; it also exports a `loggerFactory` singleton.
 - Adapter packages accept `ILoggerFactory` in their factory functions and create scoped loggers internally (with a no-op fallback when no factory is provided).
 - Never use `console.log/warn/error` in API source or runtime adapter code; use the structured logger.
+- In request-scoped code use `context.requestLogger` (or `getRequestLogger(req)`); pass it into handler methods that log so logs include `requestId`.
 
 ### Error handling
 
