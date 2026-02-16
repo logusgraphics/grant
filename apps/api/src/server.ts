@@ -54,7 +54,6 @@ async function startServer() {
   const apolloServer = new ApolloServer<GraphqlContext>({
     schema,
     introspection: config.apollo.introspection,
-    csrfPrevention: config.apollo.csrfPrevention,
     formatError: formatGraphQLError,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),

@@ -373,14 +373,6 @@ const PERMISSION_MAPPING_TEMPLATES: Partial<Record<GroupKey, PermissionMappingTe
     },
   ],
 
-  [GroupKey.OrganizationInvitationOrganizationAccountOwner]: [
-    {
-      action: ResourceAction.Accept,
-      resource: ResourceSlug.OrganizationInvitation,
-      condition: null,
-    },
-  ],
-
   [GroupKey.ProjectUserCommon]: [
     {
       action: ResourceAction.Read,

@@ -470,7 +470,7 @@ cd apps/api && pnpm run dev
 
 - **API Configuration**: `apps/api/src/config/README.md`
 - **API Setup Guide**: `apps/api/CONFIG_MIGRATION.md`
-- **Cache Setup**: `docs/advanced-topics/caching-setup.md`
+- **Cache Setup**: `docs/advanced-topics/caching.md`
 - **Installation Guide**: `docs/getting-started/installation.md`
 
 ## Support

@@ -51,6 +51,5 @@ Images are automatically built and pushed to ECR during CloudFormation deploymen
 Required environment variables:
 
 - `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - JWT signing secret
 - `NODE_ENV` - Environment (production/development)
 - `API_URL` - Backend API URL (for web container)

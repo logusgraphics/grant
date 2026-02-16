@@ -31,21 +31,15 @@ pnpm preview
 docs/
 ├── .vitepress/
 │   └── config.ts          # VitePress configuration
-├── api/                   # API documentation
-├── architecture/          # Architecture guides
-├── concepts/              # Core concepts
-├── development/           # Development guides
-├── packages/              # Package documentation
-├── deployment/            # Deployment guides
-├── business/              # Business model docs
-├── enterprise/            # Enterprise features
-├── advanced/              # Advanced topics
-├── troubleshooting/       # Troubleshooting guides
+├── getting-started/       # Introduction, quick start, installation, config
+├── architecture/          # System design, multi-tenancy, RBAC, security
+├── core-concepts/         # Resources, API keys, invitations, tags
+├── development/           # Dev guide, SDKs, CLI, REST API, testing
+├── deployment/            # Self-hosting, Docker, CloudFormation
+├── api-reference/         # REST API, error handling
+├── advanced-topics/       # Caching, email, jobs, i18n, observability
 ├── index.md               # Homepage
-├── introduction.md        # Introduction
-├── quick-start.md         # Quick start guide
-├── package.json           # Dependencies
-└── TABLE_OF_CONTENTS.md   # Content structure
+└── package.json           # Dependencies
 ```
 
 ## 📝 Content Guidelines

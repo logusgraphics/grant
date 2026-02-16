@@ -203,7 +203,7 @@ export const GITHUB_OAUTH_CONFIG = {
   /** OAuth scopes to request */
   scopes: ['user:email', 'read:user'],
 
-  /** State token validity in minutes (for CSRF protection) */
+  /** State token validity in minutes (OAuth flow protection) */
   stateValidityMinutes: getEnvNumber('GITHUB_OAUTH_STATE_VALIDITY_MINUTES', 10),
 
   /** Default avatar URL used when a GitHub user has no avatar */
@@ -271,9 +271,6 @@ export const SECURITY_CONFIG = {
     ? process.env.SECURITY_ADDITIONAL_ORIGINS.split(',').map((o) => o.trim())
     : [],
 
-  /** Enable CSRF protection */
-  enableCsrf: getEnvBoolean('SECURITY_ENABLE_CSRF', APP_CONFIG.isProduction),
-
   /** Enable Helmet security headers */
   enableHelmet: getEnvBoolean('SECURITY_ENABLE_HELMET', true),
 
@@ -321,9 +318,6 @@ export const SECURITY_CONFIG = {
 export const APOLLO_CONFIG = {
   /** Enable GraphQL introspection */
   introspection: getEnvBoolean('APOLLO_INTROSPECTION', !APP_CONFIG.isProduction),
-
-  /** Enable CSRF prevention */
-  csrfPrevention: getEnvBoolean('APOLLO_CSRF_PREVENTION', APP_CONFIG.isProduction),
 
   /** Enable GraphQL playground */
   playground: getEnvBoolean('APOLLO_PLAYGROUND', APP_CONFIG.isDevelopment),
@@ -557,7 +551,7 @@ export const JOB_CONFIG = {
     enabled: getEnvBoolean('JOBS_DATA_RETENTION_ENABLED', true),
   },
 
-  /** System (platform) signing key rotation – only runs when JWT_ALGORITHM=RS256 */
+  /** System (platform) signing key rotation */
   systemSigningKeyRotation: {
     /** Cron pattern (e.g. '0 0 1 * *' = monthly, first day at midnight) */
     schedule: getEnv('JOBS_SYSTEM_SIGNING_KEY_ROTATION_SCHEDULE', '0 0 1 * *'),

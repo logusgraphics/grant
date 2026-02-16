@@ -1,6 +1,6 @@
 # Grant Platform – Agent Instructions
 
-Multi-tenant RBAC/ACL platform. Monorepo: `apps/api`, `apps/web`, `packages/@grantjs/*`.
+Multi-tenant RBAC platform. Monorepo: `apps/api`, `apps/web`, `packages/@grantjs/*`.
 
 ## API surface
 

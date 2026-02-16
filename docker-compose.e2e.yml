@@ -75,8 +75,7 @@ services:
       # Cache
       CACHE_STRATEGY: redis
 
-      # JWT – fixed secret for E2E
-      JWT_SECRET: e2e-test-jwt-secret-do-not-use-in-production
+      # JWT
       JWT_ACCESS_TOKEN_EXPIRATION_MINUTES: 60
       JWT_REFRESH_TOKEN_EXPIRATION_DAYS: 30
 
@@ -103,7 +102,6 @@ services:
 
       # Apollo
       APOLLO_INTROSPECTION: 'true'
-      APOLLO_CSRF_PREVENTION: 'false'
 
       # Storage
       STORAGE_PROVIDER: local

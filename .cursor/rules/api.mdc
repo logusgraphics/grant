@@ -18,7 +18,7 @@ Both layers call **handlers** only; handlers never expose repositories to the tr
 ## Handlers (`apps/api/src/handlers`)
 
 - Extend base class `CacheHandler`; set cache on queries by scope (tenant); invalidate cache on mutations.
-- Orchestrate **services** from request context; start transactions (e.g. via `TransactionManager`) when operations must be atomic.
+- Orchestrate **services** from request context; start transactions (e.g. via `ITransactionalConnection.withTransaction()`) when operations must be atomic.
 - **Never access repositories directly.** Handler input args must align with API contracts from `@grantjs/schema` (e.g. `params: QueryGroupsArgs & SelectedFields<Group>`).
 
 ## Services (`apps/api/src/services`)
@@ -56,8 +56,8 @@ These rules prevent cross-layer coupling. See AGENTS.md for the full table.
 Before implementing in these areas, read the referenced doc for detailed patterns:
 
 - **Caching**: `docs/advanced-topics/caching.md` — strategy-based caching, adapter pattern, scope-based invalidation.
-- **Transactions**: `docs/advanced-topics/transactions.md` — TransactionManager usage, rollback behavior.
+- **Transactions**: `docs/advanced-topics/transactions.md` — ITransactionalConnection / DrizzleTransactionalConnection usage, rollback behavior.
 - **Audit logging**: `docs/advanced-topics/audit-logging.md` — AuditService contract, what to log, compliance.
 - **Field selection**: `docs/advanced-topics/field-selection.md` — GraphQL field selection optimization.
-- **REST endpoints**: `docs/development/rest-api.md` — adding routes, OpenAPI integration, Swagger.
+- **REST endpoints**: `docs/contributing/rest-api.md` — adding routes, OpenAPI integration, Swagger.
 - **Error handling**: `docs/api-reference/error-handling.md` — error types, HTTP codes, localized messages.

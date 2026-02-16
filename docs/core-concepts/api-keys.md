@@ -1,45 +1,108 @@
 ---
 title: API Keys
-description: User-scoped and project-level API keys, scopes, and token exchange
+description: Client credentials for programmatic access to Grant
 ---
 
 # API Keys
 
-Grant supports two kinds of API keys: **user-scoped** (bound to a project and user) and **project-level** (bound to an account or organization project with a role). Both use the same exchange endpoint and JWT shape; scope and authorization differ by tenant.
+API keys let external services authenticate with Grant using client credentials. Each key is a `clientId` + `clientSecret` pair that can be exchanged for a short-lived JWT access token.
 
-## Scopes and Tenants
+## Lifecycle
 
-API keys are created and exchanged with a **scope** that identifies the tenant and context:
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant Grant as Grant API
+    participant App as Your Service
 
-| Tenant                                                                 | Scope ID format                  | Use case                                                                           |
-| ---------------------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------- |
-| **AccountProject**                                                     | `accountId:projectId`            | Personal-account project; key impersonates an account role for that project only.  |
-| **OrganizationProject**                                                | `organizationId:projectId`       | Organization project; key impersonates an organization role for that project only. |
-| **AccountProjectUser** / **OrganizationProjectUser** / **ProjectUser** | Per-tenant (e.g. project + user) | External systems; token represents a specific user in a project.                   |
+    Admin->>Grant: Create API key (scope, role)
+    Grant-->>Admin: clientId + clientSecret
 
-Project-level keys (**AccountProject**, **OrganizationProject**) do **not** represent a user. They impersonate a **parent-tenant role** (e.g. account owner, organization viewer) with **effective scope limited to that single project**. The key cannot access other projects or parent-tenant resources outside that project.
+    Note over Admin: Store credentials securely.<br/>The secret is shown only once.
+
+    App->>Grant: POST /auth/token<br/>{clientId, clientSecret, scope}
+    Grant-->>App: {accessToken, expiresIn}
+
+    App->>Grant: Authorization: Bearer {accessToken}
+    Grant-->>App: Authorized response
+```
+
+## Scoping
+
+Every API key is created within a specific scope. The scope determines which project and tenant context the key operates in:
+
+| Scope                   | Format of `scope.id`       | Use case                                           |
+| ----------------------- | -------------------------- | -------------------------------------------------- |
+| **ProjectUser**         | `projectId:userId`         | Key acts as a specific user within a project       |
+| **AccountProject**      | `accountId:projectId`      | Key acts on behalf of a personal account's project |
+| **OrganizationProject** | `organizationId:projectId` | Key acts on behalf of an organization's project    |
+
+For `AccountProject` and `OrganizationProject` scopes, the key is also associated with a **role** that determines its permissions. If no role is specified at creation, the creating user's current role is used.
 
 ## Token Exchange
 
-**Endpoint:** `POST /api/auth/token`
+The primary integration point is the token exchange endpoint:
 
-**Body:** `clientId`, `clientSecret`, and `scope` (object with `tenant` and `id` matching the key’s scope).
+```bash
+POST /auth/token
+Content-Type: application/json
 
-**Response:** `accessToken`, `expiresIn`. No refresh token for API keys.
+{
+  "clientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "clientSecret": "base64url-encoded-secret",
+  "scope": {
+    "tenant": "OrganizationProject",
+    "id": "org-id:project-id"
+  }
+}
+```
 
-The JWT includes `scope` (e.g. `accountProject:accountId:projectId`) and `jti` (API key ID). Authorization uses these to resolve the key’s role and enforce project-only access for project-level keys.
+**Response:**
 
-## Creating API Keys
+```json
+{
+  "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ii4uLiJ9...",
+  "expiresIn": 900
+}
+```
 
-- **User-scoped keys:** Created in the context of a project user; bound to that user and project.
-- **Project-level keys:** Created with a **role** (e.g. `account_role_id` for AccountProject, `organization_role_id` for OrganizationProject). Only users who can create API keys in that scope (e.g. ApiKey.Create) can create them; they may only assign roles they can assign.
+The returned token is a standard RS256 JWT signed with the project's JWKS signing key. It includes:
 
-Project-level keys are stored in pivot tables (`account_project_api_keys`, `organization_project_api_keys`) linking the API key to the project and the chosen role.
+| Claim   | Value                                 |
+| ------- | ------------------------------------- |
+| `sub`   | User ID associated with the key       |
+| `iss`   | JWKS issuer URL for the project scope |
+| `aud`   | Grant instance URL                    |
+| `jti`   | API key ID                            |
+| `type`  | `ApiKey`                              |
+| `scope` | The requested scope object            |
+| `exp`   | Expiration timestamp                  |
+
+External services can verify these tokens using the JWKS endpoint published at the issuer URL. See [Security > JWKS and Signing Keys](/architecture/security#jwks-and-signing-keys) for endpoint patterns.
+
+## REST Endpoints
+
+| Method   | Path                   | Permission      | Description                       |
+| -------- | ---------------------- | --------------- | --------------------------------- |
+| `GET`    | `/api-keys`            | `ApiKey:Query`  | List keys (paginated, searchable) |
+| `POST`   | `/api-keys`            | `ApiKey:Create` | Create a new key                  |
+| `POST`   | `/api-keys/:id/revoke` | `ApiKey:Revoke` | Revoke an active key              |
+| `DELETE` | `/api-keys/:id`        | `ApiKey:Delete` | Soft- or hard-delete a key        |
+| `POST`   | `/auth/token`          | —               | Exchange credentials for a JWT    |
+
+The exchange endpoint (`/auth/token`) is not permission-guarded — it authenticates via the client credentials themselves.
 
 ## Security
 
-- Secrets are hashed; never returned after creation.
-- Keys can be revoked and (optionally) expired.
-- Token `sub` for project-level keys is a sentinel (e.g. API key ID) for auditing; authorization is by scope + role from the pivot.
+- **Secret shown once** — the `clientSecret` is returned only at creation time. It is hashed with bcrypt before storage and cannot be retrieved again.
+- **Revocation** — revoked keys are immediately rejected on exchange. Revocation records who revoked the key and when.
+- **Expiration** — keys can have an optional `expiresAt` date. Expired keys are rejected on exchange.
+- **Audit logging** — all key operations (create, revoke, delete, exchange) are recorded in the audit log with scope metadata.
 
-See [REST API - Authentication](/api-reference/rest-api#authentication) for request/response details and [RBAC/ACL](/architecture/rbac-acl) for permissions on API Key resources.
+---
+
+**Related:**
+
+- [Security > JWKS and Signing Keys](/architecture/security#jwks-and-signing-keys) — Token verification and key rotation
+- [Resources](/core-concepts/resources) — API key resource actions
+- [RBAC System](/architecture/rbac) — Role-based permission evaluation

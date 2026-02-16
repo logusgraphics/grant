@@ -769,7 +769,7 @@ Grant's i18n/l10n implementation provides:
 
 - [Error Standardization Guide](/api-reference/error-handling) - Complete error class reference
 - [Email Service](/advanced-topics/email-service) - Email localization examples
-- [Development Guide](/development/guide) - Adding new features with i18n
+- [Development Guide](/contributing/guide) - Adding new features with i18n
 - [API Reference](/api-reference/rest-api) - REST API error responses
 
 ---
@@ -778,7 +778,7 @@ Grant's i18n/l10n implementation provides:
 
 Want to add a new language or improve translations?
 
-1. Check the [Development Guide](/development/guide)
+1. Check the [Development Guide](/contributing/guide)
 2. Follow the "Adding a New Language" section above
 3. Submit a PR with both API and Web translations
 4. Include tests for new translations
@@ -787,4 +787,4 @@ Want to add a new language or improve translations?
 
 ---
 
-**Questions?** Check the [FAQ](/troubleshooting/faq) or [file an issue](https://github.com/logusgraphics/grant/issues).
+**Questions?** [File an issue](https://github.com/logusgraphics/grant/issues) or check the [Development Guide](/contributing/guide).

@@ -203,7 +203,7 @@ export const handleGithubCallbackQuerySchema = z.object({
     example: 'abc123def456...',
   }),
   state: z.string().optional().openapi({
-    description: 'State token for CSRF protection',
+    description: 'State token for OAuth flow validation',
     example: 'state-token-123',
   }),
   error: z.string().optional().openapi({

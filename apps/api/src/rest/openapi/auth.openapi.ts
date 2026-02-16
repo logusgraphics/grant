@@ -3,6 +3,8 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from '@/lib/zod-openapi.lib';
 import {
   authenticationErrorResponseSchema,
+  cliCallbackRequestSchema,
+  cliCallbackResultSchema,
   errorResponseSchema,
   isAuthorizedRequestSchema,
   isAuthorizedResponseSchema,
@@ -525,14 +527,14 @@ and either logs in an existing user or creates a new account.
 
 ### Query Parameters
 - \`code\` (required): Authorization code from GitHub
-- \`state\` (required): CSRF protection token
+- \`state\` (required): OAuth state validation token
 - \`error\` (optional): Error code from GitHub if authorization was denied
 - \`error_description\` (optional): Error description from GitHub
 
 ### Flow Types
 
 #### Login/Register Flow
-1. Validates the state token (CSRF protection)
+1. Validates the state token
 2. Exchanges authorization code for access token
 3. Fetches user information from GitHub
 4. Checks for existing user by GitHub ID or email
@@ -541,7 +543,7 @@ and either logs in an existing user or creates a new account.
 7. Redirects to frontend \`/auth/callback\` with access and refresh tokens in the URL fragment (and \`next\` for destination); frontend stores tokens and redirects to destination
 
 #### Connect Flow (action=connect)
-1. Validates the state token (CSRF protection)
+1. Validates the state token
 2. Exchanges authorization code for access token
 3. Fetches user information from GitHub
 4. Links GitHub authentication method to the authenticated user's account
@@ -562,7 +564,7 @@ and either logs in an existing user or creates a new account.
           example: 'abc123def456...',
         }),
         state: z.string().optional().openapi({
-          description: 'CSRF protection token',
+          description: 'OAuth state validation token',
           example: 'random-state-token',
         }),
         error: z.string().optional().openapi({
@@ -669,6 +671,49 @@ You can provide additional context to help with condition evaluation:
       },
       500: {
         description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  // POST /api/auth/cli-callback — Exchange CLI one-time code for session tokens
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/cli-callback',
+    tags: ['Authentication'],
+    summary: 'Exchange CLI one-time code for session tokens',
+    description:
+      'Used by the Grant CLI after a GitHub OAuth redirect to localhost. ' +
+      'Exchanges the one-time code for access and refresh tokens. ' +
+      'The code is single-use and short-lived (60 seconds).',
+    security: [],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: cliCallbackRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Tokens and accounts returned',
+        content: {
+          'application/json': {
+            schema: z.object({
+              success: z.literal(true),
+              data: cliCallbackResultSchema,
+            }),
+          },
+        },
+      },
+      400: {
+        description: 'Invalid or expired code',
         content: {
           'application/json': {
             schema: errorResponseSchema,

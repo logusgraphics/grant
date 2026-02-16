@@ -13,7 +13,6 @@ Grant can be self-hosted using:
 
 - **Docker Compose** - For local development and small deployments
 - **AWS** - Using CloudFormation templates for production deployments
-- **Kubernetes** - For large-scale, cloud-agnostic deployments (coming soon)
 
 ## Deployment Options
 
@@ -183,7 +182,6 @@ APP_PORT=4000
 DB_URL=postgresql://user:pass@host:5432/grant
 
 # Security
-JWT_SECRET=your-secure-secret-min-32-chars
 SECURITY_FRONTEND_URL=https://yourdomain.com
 ```
 
@@ -230,9 +228,8 @@ sudo certbot --nginx -d api.yourdomain.com
 
 ### Application Security
 
-- Rotate JWT secrets regularly
+- Enable automatic signing key rotation (see JWT configuration)
 - Use environment-specific secrets
-- Enable CSRF protection
 - Enable rate limiting
 - Monitor for suspicious activity
 
@@ -287,7 +284,7 @@ pm2 restart grant-api
 
 ### Common Issues
 
-See the **[Troubleshooting](/troubleshooting/deployment)** guide for common deployment issues.
+For common deployment issues, check [Docker Deployment](/deployment/docker) and [Configuration](/getting-started/configuration), or [file an issue](https://github.com/logusgraphics/grant/issues).
 
 ### Support
 

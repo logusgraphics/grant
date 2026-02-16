@@ -1,80 +1,136 @@
 ---
 title: Architecture Overview
-description: Understanding the system design and core components of Grant
+description: System design, package structure, and request lifecycle of the Grant Platform
 ---
 
 # Architecture Overview
 
-Grant follows a modern, scalable architecture designed for multi-tenancy and high performance.
+Grant is a multi-tenant RBAC platform organized as a TypeScript monorepo. It follows hexagonal architecture (ports and adapters) with strict layer boundaries and dependency inversion across packages.
 
-## System Architecture
+## System Overview
 
 ```mermaid
-graph TB
-    subgraph "Client Applications"
-        Web[Web App]
-        Mobile[Mobile App]
-        API_Client[API Client]
+graph LR
+    subgraph Clients
+        Web["Web Dashboard<br/><small>Next.js · Apollo Client</small>"]
+        App["Your Application<br/><small>@grantjs/client · @grantjs/server</small>"]
     end
 
-    subgraph "Grant"
-        Gateway[API Gateway]
-        Auth[Authentication Service]
-        RBAC[RBAC Engine]
-        DB[(PostgreSQL)]
-    end
+    API["<b>Grant API</b><br/>GraphQL · REST / OpenAPI"]
 
-    subgraph "Infrastructure"
-        AWS[AWS Cloud]
-        Docker[Docker Containers]
-        CF[CloudFormation]
-    end
+    PG[("PostgreSQL")]
+    Redis[("Redis")]
+    Store[("Object Storage<br/><small>S3 / Local</small>")]
 
-    Web --> Gateway
-    Mobile --> Gateway
-    API_Client --> Gateway
-
-    Gateway --> Auth
-    Gateway --> RBAC
-    Auth --> DB
-    RBAC --> DB
-
-    Gateway --> AWS
-    Auth --> Docker
-    RBAC --> Docker
-    DB --> AWS
+    Web -->|GraphQL| API
+    App -->|"GraphQL / REST"| API
+    API --> PG
+    API -.-> Redis
+    API -.-> Store
 ```
 
-## Core Components
+The platform ships two deployable applications and a set of shared packages:
 
-### Frontend Layer
+| Component                      | Description                                                                                                    |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| **Grant API** (`apps/api`)     | Express server exposing both a GraphQL API (Apollo Server) and a REST API with OpenAPI / Swagger documentation |
+| **Web Dashboard** (`apps/web`) | Next.js 15 (App Router) admin interface with i18n and permission-aware UI                                      |
+| **PostgreSQL**                 | Primary data store with Row-Level Security for tenant isolation                                                |
+| **Redis**                      | Optional — caching, session storage, and job queues (BullMQ)                                                   |
+| **Object Storage**             | Optional — file and image uploads via S3-compatible storage or local filesystem                                |
 
-- **Web App** - Next.js frontend with authentication and user management
-- **Mobile App** - React Native mobile application (future)
-- **API Client** - SDK for integrating with external applications
+## Monorepo Packages
 
-### API Layer
+All shared code lives under `packages/@grantjs/`. The dependency graph is a strict DAG — no circular imports are allowed.
 
-- **API Server** - Apollo GraphQL server with comprehensive RBAC/ACL
-- **Authentication Service** - JWT-based authentication with multiple providers
-- **RBAC Engine** - Permission evaluation and access control
+```mermaid
+graph BT
+    schema["<b>@grantjs/schema</b><br/>Codegen types · Operations"]
+    core["<b>@grantjs/core</b><br/>Ports · Interfaces · Exceptions"]
 
-### Data Layer
+    constants["@grantjs/constants"]
+    db["@grantjs/database"]
+    logger["@grantjs/logger"]
+    errors["@grantjs/errors"]
+    cache["@grantjs/cache"]
+    storage["@grantjs/storage"]
+    email["@grantjs/email"]
+    jobs["@grantjs/jobs"]
 
-- **Database** - PostgreSQL with Drizzle ORM and migration system
-- **Cache Layer** - Redis for session management and performance
-- **File Storage** - AWS S3 for document and asset storage
+    core --> schema
+    constants --> core
+    db --> core
+    logger --> core
+    errors --> core
+    cache --> core
+    storage --> core
+    email --> core
+    jobs --> core
+```
 
-### Core Packages
+| Package                | Role                                                                                                                                                                                                                                                        |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **@grantjs/schema**    | GraphQL schema definitions, operation documents, and generated TypeScript types. Single source of truth for API contracts — types are imported from here, never redefined.                                                                                  |
+| **@grantjs/core**      | Domain ports (`ILogger`, `ICacheAdapter`, `IStorageAdapter`, `IEmailAdapter`, `IJobAdapter`), the exception hierarchy (`GrantException` → `NotFoundError`, `ValidationError`, …), and the RBAC engine (`Grant`, `PermissionChecker`, `ConditionEvaluator`). |
+| **@grantjs/database**  | Drizzle ORM schemas, relationships, migrations, and seed scripts. Accepts an optional `ILogger` via config.                                                                                                                                                 |
+| **@grantjs/constants** | Canonical permission, role, and group definitions used by the database seeder and the authorization layer.                                                                                                                                                  |
+| **@grantjs/logger**    | Pino-based implementation of `ILoggerFactory` / `ILogger` from core.                                                                                                                                                                                        |
+| **@grantjs/errors**    | `HttpException` and `mapDomainToHttp()` — maps domain exceptions to HTTP status codes for the transport layer.                                                                                                                                              |
+| **@grantjs/cache**     | Memory and Redis cache adapters implementing `ICacheAdapter`.                                                                                                                                                                                               |
+| **@grantjs/storage**   | Local filesystem and S3 adapters implementing `IFileStorageService`.                                                                                                                                                                                        |
+| **@grantjs/email**     | SMTP, SES, Mailgun, Mailjet, and console adapters implementing `IEmailAdapter`.                                                                                                                                                                             |
+| **@grantjs/jobs**      | node-cron and BullMQ adapters implementing `IJobAdapter`.                                                                                                                                                                                                   |
+| **@grantjs/client**    | Browser SDK — React hooks and components for permission-based UI rendering.                                                                                                                                                                                 |
+| **@grantjs/server**    | Server SDK — middleware guards for Express, Fastify, NestJS, and Next.js.                                                                                                                                                                                   |
+| **@grantjs/cli**       | CLI tool for setup, authentication, and typings generation for `@grantjs/server`.                                                                                                                                                                           |
 
-- **Core Package** - Shared RBAC/ACL logic and middleware
-- **Schema Package** - GraphQL schema and generated types
-- **Database Package** - Database schemas, migrations, and utilities
-- **Constants Package** - Shared constants and enums
+::: tip Dependency inversion rule
+Adapter packages accept `ILogger` / `ILoggerFactory` via constructor injection. They never import `@grantjs/logger` directly.
+:::
+
+## API Request Lifecycle
+
+Every request — GraphQL or REST — flows through the same layered pipeline:
+
+```mermaid
+flowchart TB
+    Req([HTTP Request]) --> MW["<b>Middleware</b><br/><small>Authentication · Context creation · RLS setup</small>"]
+    MW --> Transport
+
+    subgraph Transport["Transport Layer"]
+        GQL["GraphQL Resolver"]
+        REST["REST Route"]
+    end
+
+    Transport -->|"RBAC guard"| Handler["<b>Handler</b><br/><small>Orchestration · Caching · Transactions</small>"]
+    Handler --> Service["<b>Service</b><br/><small>Business logic · Validation · Audit logging</small>"]
+    Service --> Repo["<b>Repository</b><br/><small>Drizzle ORM · Field selection · RLS enforcement</small>"]
+    Repo --> DB[("PostgreSQL")]
+```
+
+### Layer responsibilities
+
+| Layer            | Location                             | Allowed dependencies                                                        |
+| ---------------- | ------------------------------------ | --------------------------------------------------------------------------- |
+| **Transport**    | `graphql/resolvers/`, `rest/routes/` | Handlers only — never services or repositories                              |
+| **Handlers**     | `handlers/`                          | Services only — never repositories                                          |
+| **Services**     | `services/`                          | Repositories and adapter ports (cache, email, storage, jobs)                |
+| **Repositories** | `repositories/`                      | Database schemas from `@grantjs/database` only — never services or handlers |
+
+### Composition root
+
+Dependency injection is wired in `middleware/context.middleware.ts`. On every request the middleware:
+
+1. Creates repository, service, and handler instances
+2. Sets up a per-request RLS transaction context (when enabled)
+3. Builds the `Grant` RBAC engine instance via `GrantService`
+4. Attaches the full context — `{ grant, user, handlers, resourceResolvers, origin, locale }` — to the request
+
+Background jobs and startup tasks use a separate `lib/app-context.lib.ts` factory that builds the same object graph outside the HTTP lifecycle.
 
 ## Multi-Tenancy Model
 
-Our account-based multi-tenancy ensures complete isolation between organizations:
+Grant uses account-based multi-tenancy. Each account is a fully isolated tenant with its own organizations, projects, and users:
 
 ```mermaid
 graph LR
@@ -82,14 +138,14 @@ graph LR
         A1[Organization A]
         A2[Project Alpha]
         A3[Project Beta]
-        A4[Users A1-A10]
+        A4[Users A1–A10]
     end
 
     subgraph "Account: Beta Inc"
         B1[Organization B]
         B2[Project Gamma]
         B3[Project Delta]
-        B4[Users B1-B15]
+        B4[Users B1–B15]
     end
 
     A1 --> A2
@@ -107,9 +163,14 @@ graph LR
     A4 -.->|Isolated| B4
 ```
 
-## Permission Flow
+Isolation is enforced at two layers:
 
-Here's how permissions are evaluated in Grant:
+- **Application layer** — every query is scoped to the authenticated user's account via tenant-aware repositories
+- **Database layer** — PostgreSQL Row-Level Security policies on all pivot tables ensure isolation even if application logic is bypassed
+
+See [Multi-Tenancy](/architecture/multi-tenancy) for the full data model and scoping rules.
+
+## Permission Evaluation
 
 ```mermaid
 flowchart TD
@@ -128,111 +189,53 @@ flowchart TD
     style Deny stroke:#ef4444,stroke-width:2px
 ```
 
+The RBAC engine evaluates in this order: authenticate → resolve roles → check permissions → evaluate scope conditions. Conditions support attribute-based rules (e.g. "only if the user owns the resource") on top of the role-based model. See [RBAC](/architecture/rbac) for the full permission model.
+
 ## Technology Stack
 
 ### Backend
 
-- **Node.js** - Runtime environment
-- **TypeScript** - Type-safe development
-- **Apollo Server** - GraphQL API server
-- **Drizzle ORM** - Type-safe database operations
-- **PostgreSQL** - Primary database
-- **Redis** - Caching and session storage
+| Technology        | Purpose                                  |
+| ----------------- | ---------------------------------------- |
+| **Node.js**       | Runtime                                  |
+| **TypeScript**    | Type-safe development (strict mode)      |
+| **Express**       | HTTP framework                           |
+| **Apollo Server** | GraphQL engine                           |
+| **Drizzle ORM**   | Type-safe database access and migrations |
+| **PostgreSQL**    | Primary database with RLS                |
+| **Redis**         | Caching, sessions, job queues            |
+| **Pino**          | Structured JSON logging                  |
+| **Zod**           | Runtime schema validation                |
 
 ### Frontend
 
-- **Next.js** - React framework
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
-- **Apollo Client** - GraphQL client
-- **React Hook Form** - Form management
-- **Zod** - Schema validation
+| Technology                | Purpose                      |
+| ------------------------- | ---------------------------- |
+| **Next.js 15**            | React framework (App Router) |
+| **React 19**              | UI library                   |
+| **TypeScript**            | Type safety                  |
+| **Apollo Client**         | GraphQL data layer           |
+| **Tailwind CSS**          | Utility-first styling        |
+| **next-intl**             | Internationalization         |
+| **Zustand**               | Client state management      |
+| **React Hook Form + Zod** | Form handling and validation |
 
 ### Infrastructure
 
-- **Docker** - Containerization
-- **AWS** - Cloud infrastructure
-- **CloudFormation** - Infrastructure as code
-- **GitHub Actions** - CI/CD pipeline
+| Technology                  | Purpose                                |
+| --------------------------- | -------------------------------------- |
+| **Docker / Docker Compose** | Containerization and local development |
+| **GitHub Actions**          | CI/CD pipeline                         |
 
 ## Design Principles
 
-### 1. Type Safety First
+1. **Type safety across the stack** — Types generated from the GraphQL schema (`@grantjs/schema`) are the single source of truth used by resolvers, handlers, services, repositories, and the web client.
 
-- Full TypeScript coverage across the stack
-- Generated types from GraphQL schema
-- Compile-time error checking
+2. **Hexagonal architecture** — Domain logic depends only on ports defined in `@grantjs/core`. Infrastructure adapters (database, cache, storage, email, jobs, logging) are injected at the composition root and can be swapped without changing business logic.
 
-### 2. Modular Architecture
+3. **Security by default** — Multi-tenant isolation via RLS, RBAC on every endpoint, bcrypt password hashing, JWT/JWKS signing with key rotation, and comprehensive audit logging.
 
-- Monorepo structure with shared packages
-- Clear separation of concerns
-- Reusable components and utilities
-
-### 3. Security by Design
-
-- Multi-tenant isolation
-- Role-based access control
-- Comprehensive audit logging
-- Input validation and sanitization
-
-### 4. Performance Optimization
-
-- Efficient database queries
-- Caching strategies
-- Optimized GraphQL field selection
-- CDN for static assets
-
-### 5. Developer Experience
-
-- Comprehensive documentation
-- Type-safe APIs
-- Hot reloading in development
-- Automated testing and deployment
-
-## Scalability Considerations
-
-### Horizontal Scaling
-
-- Stateless API servers
-- Database read replicas
-- Load balancing across instances
-- Microservices architecture (future)
-
-### Performance Optimization
-
-- Database indexing strategies
-- Query optimization
-- Caching layers
-- CDN integration
-
-### Monitoring and Observability
-
-- Application performance monitoring
-- Error tracking and alerting
-- Business metrics and analytics
-- Health checks and uptime monitoring
-
-## Future Architecture Evolution
-
-### Phase 1: Current Monolith
-
-- Single API server
-- Shared database
-- Basic multi-tenancy
-
-### Phase 2: Service Separation
-
-- Separate authentication service
-- Dedicated RBAC service
-- Event-driven architecture
-
-### Phase 3: Microservices
-
-- Domain-driven service boundaries
-- Event sourcing for audit trails
-- Advanced caching strategies
-- Global distribution
+4. **Strict layer boundaries** — Each package has a single responsibility and explicit imports. Handlers never touch repositories; repositories never touch services. The composition root (`context.middleware.ts`) is the only place that wires layers together.
 
 ---
 

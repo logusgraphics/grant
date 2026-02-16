@@ -1,11 +1,11 @@
 ---
-title: RBAC/ACL Model
+title: RBAC Model
 description: Comprehensive documentation of resources, actions, and role-based permissions in Grant
 ---
 
-# RBAC/ACL Model
+# RBAC Model
 
-This document provides a complete mapping of resources, actions, and role-based permissions for the Grant, following standard RBAC (Role-Based Access Control) principles.
+This document provides a complete mapping of resources, actions, and role-based permissions for Grant, following standard RBAC (Role-Based Access Control) principles.
 
 ## Overview
 
@@ -64,11 +64,11 @@ The following tables identify all resources in the Grant and the actions that **
 
 ### Relationship Resources
 
-| Resource                    | Actions                                                                | Description                                 |
-| --------------------------- | ---------------------------------------------------------------------- | ------------------------------------------- |
-| **Organization Member**     | `read`, `update`, `remove`, `query`                                    | Users belonging to an organization          |
-| **Organization Invitation** | `create`, `read`, `query`, `accept`, `revoke`, `resend-email`, `renew` | Invitations for users to join organizations |
-| **Project User**            | `read`, `query`                                                        | Users belonging to a project                |
+| Resource                    | Actions                                                      | Description                                 |
+| --------------------------- | ------------------------------------------------------------ | ------------------------------------------- |
+| **Organization Member**     | `read`, `update`, `remove`, `query`                          | Users belonging to an organization          |
+| **Organization Invitation** | `create`, `read`, `query`, `revoke`, `resend-email`, `renew` | Invitations for users to join organizations |
+| **Project User**            | `read`, `query`                                              | Users belonging to a project                |
 
 ### Session & Authentication Resources (Authorization-Required Actions Only)
 
@@ -142,10 +142,12 @@ These roles apply within an organization scope:
 
 ### Project-Level Role Inheritance
 
-Project roles are inherited from organization membership/role:
+Projects do not have their own standard roles or groups. Instead, a user's effective role within a project is inherited from their organization membership:
 
-- **Account Projects**: Always fallback to Owner role (since accounts only have Owner role)
-- **Organization Projects**: Inherit role from organization membership (Owner → Owner, Admin → Admin, Dev → Dev, Viewer → Viewer)
+- **Account Projects**: The account owner always has the Owner role.
+- **Organization Projects**: The user's organization role applies (Owner → Owner, Admin → Admin, Dev → Dev, Viewer → Viewer).
+
+Users can define their own roles, groups, permissions, resources, API keys, and signing keys inside projects. The platform provides the RBAC primitives but does not prescribe a fixed project-level structure.
 
 ## Step 2.5: Groups - Role + Resource Combinations
 
@@ -153,7 +155,7 @@ Groups serve as the bridge between roles and permissions. They are defined as **
 
 ### Group Naming Convention
 
-Groups follow the pattern: `{Role} {Resource}` (e.g., "Organization Owner", "Project Dev", "Account Admin")
+Groups follow the pattern: `{Role} {Resource}` (e.g., "Organization Owner", "Organization Dev", "Personal Account Owner")
 
 ### Standard Groups
 
@@ -175,9 +177,8 @@ Groups are created by combining each role with each resource type, following bus
 
 **Project-Level**:
 
-- **All four role groups exist** - Project roles are inherited from organization membership/role
-- **Account Projects**: Always fallback to Owner role (since accounts only have Owner role)
-- **Organization Projects**: Inherit role from organization membership
+- The platform does **not** ship standard project-level groups. Project authorization is inherited from the user's organization-level role (see [Project-Level Role Inheritance](#project-level-role-inheritance) below).
+- Users can create their own groups, roles, permissions, resources, API keys, and signing keys within projects, but these are user-defined — the platform is not opinionated about project-level structure.
 
 #### Account-Level Groups
 
@@ -195,15 +196,6 @@ Groups are created by combining each role with each resource type, following bus
 | `Organization Dev`    | Dev    | Organization | Developer access to organization resources   |
 | `Organization Viewer` | Viewer | Organization | Read-only access to organization resources   |
 
-#### Project-Level Groups
-
-| Group Name       | Role   | Resource | Description                             |
-| ---------------- | ------ | -------- | --------------------------------------- |
-| `Project Owner`  | Owner  | Project  | Full control over project and resources |
-| `Project Admin`  | Admin  | Project  | Administrative access to project        |
-| `Project Dev`    | Dev    | Project  | Developer access to project resources   |
-| `Project Viewer` | Viewer | Project  | Read-only access to project resources   |
-
 ### Group Structure
 
 The permission flow follows this hierarchy:
@@ -215,8 +207,8 @@ User → Role → Group → Permission → Resource
 **Example Flow:**
 
 1. User is assigned the **Organization Owner** role in an Organization scope
-2. The **Organization Owner** role is linked to multiple groups (e.g., "Organization Owner", "User Owner", "Project Owner")
-3. Each group contains specific permissions (e.g., "Organization Owner" group contains `create`, `read`, `update`, `delete`, `query` permissions for Organization resource)
+2. The **Organization Owner** role is linked to multiple groups (e.g., "Organization Owner", "User Owner", "Resource Owner")
+3. Each group contains specific permissions (e.g., "Organization Owner" group contains `update`, `delete` permissions for the Organization resource)
 4. When evaluating access, the system checks all role-group combinations for the user
 
 ## Step 3: Permission Mapping to Groups
@@ -252,7 +244,7 @@ These groups are assigned to all roles, providing basic authenticated user permi
 | `Tag Common`                        | Tag                        | `query`                      | Basic tag viewing for all authenticated users                                 |
 | `API Key Common`                    | API Key                    | `query`, `exchange`          | Basic API key access for all authenticated users                              |
 | `Organization Member Common`        | Organization Member        | `read`, `query`              | Basic organization member viewing for all authenticated users                 |
-| `Organization Invitation Common`    | Organization Invitation    | `read`, `query`, `accept`    | Basic organization invitation access for all authenticated users              |
+| `Organization Invitation Common`    | Organization Invitation    | `query`                      | Basic organization invitation access for all authenticated users              |
 | `Project User Common`               | Project User               | `read`, `query`              | Basic project user viewing for all authenticated users                        |
 | `User Session Common`               | User Session               | `read`, `query`              | Basic user session viewing (own sessions only, enforced by condition)         |
 | `User Authentication Method Common` | User Authentication Method | `read`, `query`              | Basic authentication method viewing (own methods only, enforced by condition) |
@@ -286,7 +278,9 @@ These groups contain permissions specific to certain roles:
 | `Organization Dev`    | Organization | _(no additional permissions)_ | —                  | Dev has same organization access as common groups    |
 | `Organization Viewer` | Organization | _(no additional permissions)_ | —                  | Viewer has same organization access as common groups |
 
-#### Project Groups
+#### Project Resource Groups
+
+These groups control what organization-level roles can do **with** the Project resource (create, update, delete projects). They are not project-scope groups — see [Project-Level Role Inheritance](#project-level-role-inheritance).
 
 | Group Name       | Resource | Permissions                   | Assigned To        | Description                                     |
 | ---------------- | -------- | ----------------------------- | ------------------ | ----------------------------------------------- |
@@ -528,7 +522,6 @@ The following tables map each action to the roles that have permission to perfor
 | `create`       | `organization-invitation` |         ✅         |         ✅         |        ❌        |         ❌          |
 | `read`         | `organization-invitation` |         ✅         |         ✅         |        ✅        |         ✅          |
 | `query`        | `organization-invitation` |         ✅         |         ✅         |        ✅        |         ✅          |
-| `accept`       | `organization-invitation` |         ✅         |         ✅         |        ✅        |         ✅          |
 | `revoke`       | `organization-invitation` |         ✅         |         ✅         |        ❌        |         ❌          |
 | `resend-email` | `organization-invitation` |         ✅         |         ✅         |        ❌        |         ❌          |
 | `renew`        | `organization-invitation` |         ✅         |         ✅         |        ❌        |         ❌          |
@@ -575,7 +568,7 @@ All actions use kebab-case naming:
 - `export-data` - Export user data (GDPR compliance)
 - `renew` - Renew organization invitation
 - `remove` - Remove organization member
-- `accept`, `revoke`, `resend-email` - Organization invitation operations
+- `revoke`, `resend-email` - Organization invitation operations
 - `revoke`, `exchange` - API key operations
 
 ### Resource Identification
@@ -609,8 +602,6 @@ While Grant currently implements a flat role model, the permission mapping above
 - **Dev** has development permissions (superset of Viewer)
 - **Viewer** has read-only permissions
 
-This allows for future implementation of role hierarchies if needed.
-
 ### Self-Management Permissions
 
 Certain permissions are scoped to self-management via conditions:
@@ -634,7 +625,7 @@ The following operations only require authentication and are handled separately 
 When evaluating permissions, the system follows this flow:
 
 1. **Get User Roles**: Retrieve all roles assigned to the user in the appropriate scope (account/organization/project)
-2. **Get Role Groups**: For each role, retrieve all groups assigned to that role (e.g., "Organization Owner", "User Admin", "Project Dev")
+2. **Get Role Groups**: For each role, retrieve all groups assigned to that role (e.g., "Organization Owner", "User Admin", "Resource Dev")
 3. **Get Group Permissions**: For each group, retrieve all permissions assigned to that group
 4. **Generate Combinations**: Create all possible role-group combinations for the user
 5. **Match Permissions**: Check if any permission matches the requested action and resource
@@ -673,4 +664,3 @@ User → [Role1, Role2, ...] → [Group1, Group2, ...] → [Permission1, Permiss
 - [Data Model](/architecture/data-model) - Database schema and entity relationships
 - [Multi-Tenancy](/architecture/multi-tenancy) - Multi-tenant isolation and scoping
 - [Security](/architecture/security) - Security architecture and best practices
-- [ACL Engine Implementation](/implementation-plans/acl-engine) - Authorization engine implementation details

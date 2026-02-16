@@ -173,10 +173,6 @@ NODE_ENV=development
 NEXT_PUBLIC_API_URL="http://localhost:4000/graphql"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
-# Authentication
-JWT_SECRET="your-jwt-secret-key"
-JWT_EXPIRES_IN="7d"
-
 # Optional: External Services
 REDIS_URL="redis://localhost:6379"
 AWS_ACCESS_KEY_ID="your-access-key"
@@ -192,7 +188,6 @@ Create environment files for different environments:
 
 ```bash
 DATABASE_URL="postgresql://postgres:password@localhost:5432/grant"
-JWT_SECRET="local-development-secret"
 NODE_ENV="development"
 ```
 
@@ -200,7 +195,6 @@ NODE_ENV="development"
 
 ```bash
 DATABASE_URL="postgresql://user:password@prod-db:5432/grant"
-JWT_SECRET="production-secret-key"
 NODE_ENV="production"
 REDIS_URL="redis://prod-redis:6379"
 ```
@@ -313,10 +307,10 @@ DEBUG="grant:*"
 
 After successful installation:
 
-1. **[Configuration Guide](/configuration)** - Configure your Grant instance
-2. **[Quick Start Guide](/quick-start)** - Get up and running quickly
-3. **[Development Guide](/development/guide)** - Learn about development practices
-4. **[API Reference](/api/)** - Explore the GraphQL API
+1. **[Configuration Guide](/getting-started/configuration)** - Configure your Grant instance
+2. **[Quick Start Guide](/getting-started/quick-start)** - Get up and running quickly
+3. **[Integration Guide](/integration/guide)** - Learn to protect your API endpoints
+4. **[REST API Reference](/api-reference/rest-api)** - Explore the API
 
 ## Support
 
@@ -328,4 +322,4 @@ If you encounter issues during installation:
 
 ---
 
-**Next:** Learn about [Configuration](/configuration) to customize your Grant installation.
+**Next:** Learn about [Configuration](/getting-started/configuration) to customize your Grant installation.

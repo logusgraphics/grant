@@ -180,4 +180,4 @@ See the [@grantjs/client README](https://github.com/logusgraphics/grant/tree/mai
 
 - **Package README:** [@grantjs/client](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/client) – Installation, React setup, useGrant, GrantGate, API reference.
 - **REST API:** [REST API](/api-reference/rest-api) – Auth and `is-authorized` endpoint.
-- **RBAC/ACL:** [RBAC/ACL](/architecture/rbac-acl) – Resources and actions used in permission checks.
+- **RBAC:** [RBAC](/architecture/rbac) – Resources and actions used in permission checks.

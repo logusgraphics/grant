@@ -45,8 +45,6 @@
     "permissions",
     "rbac",
     "role-based-access-control",
-    "acl",
-    "access-control-list",
     "express",
     "fastify",
     "nestjs",

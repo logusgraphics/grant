@@ -1,10 +1,15 @@
+---
+title: Error Handling
+description: Error response format, status codes, error codes, and localization
+---
+
 # Error Handling
 
-Grant provides standardized error handling across all API endpoints with proper HTTP status codes and internationalization support.
+All Grant API errors follow a consistent format across both REST and GraphQL, with machine-readable codes and automatic localization.
 
-## Error Response Format
+## Response Format
 
-All API errors follow a consistent structure:
+**REST:**
 
 ```json
 {
@@ -16,491 +21,153 @@ All API errors follow a consistent structure:
 }
 ```
 
-## HTTP Status Codes
-
-| Status Code | Error Class           | Description           | Example                  |
-| ----------- | --------------------- | --------------------- | ------------------------ |
-| **400**     | `BadRequestError`     | Malformed request     | Invalid request format   |
-| **400**     | `ValidationError`     | Invalid input         | Missing required field   |
-| **401**     | `AuthenticationError` | Authentication failed | Invalid credentials      |
-| **403**     | `AuthorizationError`  | Permission denied     | Insufficient permissions |
-| **404**     | `NotFoundError`       | Resource not found    | User not found           |
-| **409**     | `ConflictError`       | Resource conflict     | Email already exists     |
-| **500**     | `ApiError`            | Internal server error | Unexpected error         |
-
-## Error Codes
-
-All errors include a machine-readable `code` field:
-
-```json
-{
-  "error": "User not found",
-  "code": "NOT_FOUND"
-}
-```
-
-### Common Error Codes
-
-| Code               | Status | Description             |
-| ------------------ | ------ | ----------------------- |
-| `UNAUTHENTICATED`  | 401    | User not authenticated  |
-| `FORBIDDEN`        | 403    | User lacks permission   |
-| `NOT_FOUND`        | 404    | Resource doesn't exist  |
-| `BAD_USER_INPUT`   | 400    | Invalid input data      |
-| `CONFLICT`         | 409    | Resource already exists |
-| `VALIDATION_ERROR` | 400    | Validation failed       |
-| `INTERNAL_ERROR`   | 500    | Server error            |
-
-## Localized Errors
-
-All errors are automatically localized based on the `Accept-Language` header:
-
-```bash
-# English
-curl -H "Accept-Language: en" \
-     http://localhost:4000/api/users/invalid-id
-
-# Response:
-{
-  "error": "User not found",
-  "code": "NOT_FOUND"
-}
-
-# German
-curl -H "Accept-Language: de" \
-     http://localhost:4000/api/users/invalid-id
-
-# Response:
-{
-  "error": "Benutzer nicht gefunden",
-  "code": "NOT_FOUND"
-}
-```
-
-**Supported Languages:**
-
-- 🇬🇧 English (`en`) - Default
-- 🇩🇪 German (`de`)
-
-See [Internationalization Guide](/advanced-topics/internationalization) for details.
-
-## Authentication Errors (401)
-
-### Invalid Credentials
-
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "wrong"
-}
-```
-
-```json
-{
-  "error": "Invalid email or password",
-  "code": "UNAUTHENTICATED"
-}
-```
-
-### Invalid Token
-
-```http
-GET /api/users/me
-Authorization: Bearer invalid_token
-```
-
-```json
-{
-  "error": "Invalid or expired token",
-  "code": "UNAUTHENTICATED"
-}
-```
-
-### User Not Verified
-
-```json
-{
-  "error": "Please verify your email before logging in",
-  "code": "UNAUTHENTICATED"
-}
-```
-
-## Authorization Errors (403)
-
-### Insufficient Permissions
-
-```http
-DELETE /api/organizations/123
-Authorization: Bearer valid_token
-```
-
-```json
-{
-  "error": "You are not authorized to perform this action",
-  "code": "FORBIDDEN"
-}
-```
-
-## Not Found Errors (404)
-
-### Resource Not Found
-
-```http
-GET /api/users/invalid-id
-```
-
-```json
-{
-  "error": "User not found",
-  "code": "NOT_FOUND"
-}
-```
-
-### Organization Not Found
-
-```http
-GET /api/organizations/invalid-id
-```
-
-```json
-{
-  "error": "Organization not found",
-  "code": "NOT_FOUND"
-}
-```
-
-## Validation Errors (400)
-
-### Missing Required Field
-
-```http
-POST /api/organizations
-Content-Type: application/json
-
-{
-  "name": ""
-}
-```
-
-```json
-{
-  "error": "Organization name is required",
-  "code": "VALIDATION_ERROR",
-  "extensions": {
-    "field": "name"
-  }
-}
-```
-
-### Invalid Format
-
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "email": "not-an-email",
-  "password": "123"
-}
-```
-
-```json
-{
-  "error": "Invalid email format",
-  "code": "VALIDATION_ERROR",
-  "extensions": {
-    "field": "email"
-  }
-}
-```
-
-## Conflict Errors (409)
-
-### Duplicate Resource
-
-```http
-POST /api/users
-Content-Type: application/json
-
-{
-  "email": "existing@example.com",
-  "password": "password123"
-}
-```
-
-```json
-{
-  "error": "A User with this email already exists",
-  "code": "CONFLICT",
-  "extensions": {
-    "resource": "User",
-    "field": "email"
-  }
-}
-```
-
-### Duplicate Association
-
-```http
-POST /api/organizations/123/roles
-Content-Type: application/json
-
-{
-  "roleId": "role-123"
-}
-```
-
-```json
-{
-  "error": "Organization already has this role",
-  "code": "CONFLICT",
-  "extensions": {
-    "resource": "OrganizationRole",
-    "field": "roleId"
-  }
-}
-```
-
-## Bad Request Errors (400)
-
-### Invalid Request Format
-
-```http
-POST /api/organizations
-Content-Type: application/json
-
-{
-  invalid json
-}
-```
-
-```json
-{
-  "error": "Invalid request format",
-  "code": "BAD_USER_INPUT"
-}
-```
-
-### Invalid Query Parameter
-
-```http
-GET /api/users?page=invalid
-```
-
-```json
-{
-  "error": "Invalid query parameter",
-  "code": "BAD_USER_INPUT",
-  "extensions": {
-    "field": "page"
-  }
-}
-```
-
-## Internal Server Errors (500)
-
-```json
-{
-  "error": "Internal server error",
-  "code": "INTERNAL_ERROR"
-}
-```
-
-**Note**: In development mode, stack traces are included:
-
-```json
-{
-  "error": "Internal server error",
-  "code": "INTERNAL_ERROR",
-  "stack": "Error: ...\n    at ..."
-}
-```
-
-## GraphQL Errors
-
-GraphQL errors follow the same structure within the `errors` array:
+**GraphQL:**
 
 ```json
 {
   "data": null,
   "errors": [
     {
-      "message": "User not found",
-      "extensions": {
-        "code": "NOT_FOUND"
-      }
+      "message": "Localized error message",
+      "extensions": { "code": "ERROR_CODE" }
     }
   ]
 }
 ```
 
-## Error Handling in Client Applications
+The `code` field is stable and safe for programmatic handling. The `error`/`message` field is human-readable and localized.
 
-### JavaScript/TypeScript
+## HTTP Status Codes
 
-```typescript
-try {
-  const response = await fetch('/api/users/123');
+| Status  | Error Class           | Description                                                   |
+| ------- | --------------------- | ------------------------------------------------------------- |
+| **400** | `BadRequestError`     | Malformed request or invalid JSON                             |
+| **400** | `ValidationError`     | Input validation failed (field-level details in `extensions`) |
+| **401** | `AuthenticationError` | Missing, invalid, or expired token                            |
+| **403** | `AuthorizationError`  | Token valid but insufficient permissions                      |
+| **404** | `NotFoundError`       | Resource does not exist or is not accessible                  |
+| **409** | `ConflictError`       | Duplicate resource (e.g., email already exists)               |
+| **429** | —                     | Rate limit exceeded (`Retry-After` header included)           |
+| **500** | `ApiError`            | Internal server error                                         |
 
-  if (!response.ok) {
-    const error = await response.json();
+## Error Codes
 
-    switch (error.code) {
-      case 'NOT_FOUND':
-        console.log('User not found');
-        break;
-      case 'UNAUTHENTICATED':
-        console.log('Please log in');
-        break;
-      case 'FORBIDDEN':
-        console.log('Permission denied');
-        break;
-      default:
-        console.log('Error:', error.error);
-    }
-  }
-} catch (err) {
-  console.error('Network error:', err);
+| Code                  | Status | When                                           |
+| --------------------- | ------ | ---------------------------------------------- |
+| `BAD_USER_INPUT`      | 400    | Invalid JSON or malformed request body         |
+| `VALIDATION_ERROR`    | 400    | Zod schema validation failed                   |
+| `UNAUTHENTICATED`     | 401    | No token, expired token, revoked session       |
+| `FORBIDDEN`           | 403    | User lacks the required permission             |
+| `NOT_FOUND`           | 404    | Entity not found in the requested scope        |
+| `CONFLICT`            | 409    | Unique constraint violation                    |
+| `RATE_LIMIT_EXCEEDED` | 429    | Too many requests — check `Retry-After` header |
+| `INTERNAL_ERROR`      | 500    | Unexpected server error                        |
+
+## Error Examples
+
+### Authentication (401)
+
+```http
+GET /api/users
+Authorization: Bearer <expired_token>
+```
+
+```json
+{ "error": "Invalid or expired token", "code": "UNAUTHENTICATED" }
+```
+
+### Authorization (403)
+
+```http
+DELETE /api/organizations/<id>
+Authorization: Bearer <valid_token>
+```
+
+```json
+{ "error": "You are not authorized to perform this action", "code": "FORBIDDEN" }
+```
+
+### Not Found (404)
+
+```http
+GET /api/users/<nonexistent_id>
+```
+
+```json
+{ "error": "User not found", "code": "NOT_FOUND" }
+```
+
+### Validation (400)
+
+```http
+POST /api/organizations
+{ "name": "" }
+```
+
+```json
+{
+  "error": "Organization name is required",
+  "code": "VALIDATION_ERROR",
+  "extensions": { "field": "name" }
 }
 ```
 
-### React with Apollo Client
+### Conflict (409)
 
-```typescript
-import { useMutation } from '@apollo/client';
+```http
+POST /api/users
+{ "email": "existing@example.com", ... }
+```
 
-function CreateOrganization() {
-  const [createOrg, { error }] = useMutation(CREATE_ORGANIZATION);
-
-  if (error) {
-    // Error message is already localized!
-    const { message, extensions } = error.graphQLErrors[0];
-
-    if (extensions?.code === 'CONFLICT') {
-      return <div>Organization already exists</div>;
-    }
-
-    return <div>Error: {message}</div>;
-  }
-
-  return <button onClick={() => createOrg()}>Create</button>;
+```json
+{
+  "error": "A User with this email already exists",
+  "code": "CONFLICT",
+  "extensions": { "resource": "User", "field": "email" }
 }
 ```
 
-### Axios
+### Rate Limit (429)
 
-```typescript
-import axios from 'axios';
-
-try {
-  await axios.post('/api/organizations', data);
-} catch (error) {
-  if (error.response) {
-    const { error: message, code } = error.response.data;
-
-    // Handle specific errors
-    if (code === 'VALIDATION_ERROR') {
-      console.log('Validation failed:', message);
-    }
-  }
-}
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 60
 ```
 
-## Best Practices
-
-### 1. Always Check HTTP Status Code
-
-```typescript
-// ✅ Good
-if (response.status === 404) {
-  console.log('Not found');
-}
-
-// ❌ Bad
-if (response.data.error.includes('not found')) {
-  console.log('Not found');
-}
+```json
+{ "error": "Too many requests", "code": "RATE_LIMIT_EXCEEDED" }
 ```
 
-### 2. Use Error Codes, Not Messages
+### Internal Error (500)
 
-```typescript
-// ✅ Good - error codes are stable
-if (error.code === 'NOT_FOUND') {
-  // Handle not found
-}
-
-// ❌ Bad - messages can change and are localized
-if (error.error === 'User not found') {
-  // This breaks in German!
-}
+```json
+{ "error": "Internal server error", "code": "INTERNAL_ERROR" }
 ```
 
-### 3. Handle Localization in Client
+In development mode, the response includes a `stack` field with the full stack trace.
 
-```typescript
-// ✅ Good - use API error message (already localized)
-<Alert>{error.message}</Alert>
+## Localization
 
-// ❌ Bad - override with hardcoded message
-<Alert>User not found</Alert>
+Error messages are automatically localized based on the `Accept-Language` header:
+
+```bash
+# English (default)
+curl -H "Accept-Language: en" http://localhost:4000/api/users/invalid-id
+# → { "error": "User not found", "code": "NOT_FOUND" }
+
+# German
+curl -H "Accept-Language: de" http://localhost:4000/api/users/invalid-id
+# → { "error": "Benutzer nicht gefunden", "code": "NOT_FOUND" }
 ```
 
-### 4. Display User-Friendly Messages
+Supported languages: **English** (`en`), **German** (`de`). The `code` field is always the same regardless of language — use it for programmatic handling, and display the `error` message to users.
 
-```typescript
-// ✅ Good
-{error.code === 'UNAUTHENTICATED' && (
-  <Alert>Please log in to continue</Alert>
-)}
-
-// ❌ Bad
-{error.code === 'UNAUTHENTICATED' && (
-  <Alert>ERR_UNAUTHENTICATED: TOKEN_INVALID</Alert>
-)}
-```
-
-## Testing Error Handling
-
-### Test All Error Types
-
-```typescript
-describe('Error Handling', () => {
-  it('returns 404 for non-existent user', async () => {
-    const response = await request(app).get('/api/users/invalid-id');
-
-    expect(response.status).toBe(404);
-    expect(response.body.code).toBe('NOT_FOUND');
-    expect(response.body.error).toBe('User not found');
-  });
-
-  it('returns localized errors', async () => {
-    const response = await request(app).get('/api/users/invalid-id').set('Accept-Language', 'de');
-
-    expect(response.body.error).toBe('Benutzer nicht gefunden');
-  });
-});
-```
-
-## Related Documentation
-
-- **[Internationalization Guide](/advanced-topics/internationalization)** - Multi-language error messages
-- **[REST API Reference](/api-reference/rest-api)** - Complete REST API documentation
-- **[GraphQL API Reference](/api-reference/graphql)** - GraphQL error handling
-- **[Development Guide](/development/guide)** - Adding new error types
+See [Internationalization](/advanced-topics/internationalization) for adding languages.
 
 ---
 
-## Summary
+**Related:**
 
-✅ **Consistent Structure** - All errors follow the same format  
-✅ **Proper Status Codes** - Correct HTTP status for each error type  
-✅ **Machine-Readable Codes** - Use `code` field for programmatic handling  
-✅ **Localized Messages** - Automatic translation based on `Accept-Language`  
-✅ **Type Safe** - TypeScript types for all error classes  
-✅ **Extensible** - Easy to add new error types
-
-**Key Takeaway**: Use `code` field for logic, display `error` message to users, and always check HTTP status codes.
+- [REST API](/api-reference/rest-api) — Swagger UI and endpoint reference
+- [Transport Layers](/api-reference/transport-layers) — Error format differences between REST and GraphQL
+- [Internationalization](/advanced-topics/internationalization) — Adding error translations

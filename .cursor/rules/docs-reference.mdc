@@ -12,8 +12,8 @@ When working on a topic below, read the linked doc for detailed patterns, conven
 | Topic | Doc |
 |-------|-----|
 | Multi-tenancy, tenant scoping, entity ownership | `docs/architecture/multi-tenancy.md` |
-| RBAC/ACL, permissions, roles, groups | `docs/architecture/rbac-acl.md` |
-| Authentication, JWT, sessions, JWKS, CSRF | `docs/architecture/security.md` |
+| RBAC, permissions, roles, groups | `docs/architecture/rbac.md` |
+| Authentication, JWT, sessions, JWKS | `docs/architecture/security.md` |
 | Database schema, entity relationships, ER diagrams | `docs/architecture/data-model.md` |
 | System overview, tech stack, design principles | `docs/architecture/overview.md` |
 | File/image storage adapter pattern | `docs/architecture/file-storage.md` |
@@ -31,8 +31,8 @@ When working on a topic below, read the linked doc for detailed patterns, conven
 
 | Topic | Doc |
 |-------|-----|
-| Caching strategy (memory/Redis), adapter pattern | `docs/advanced-topics/caching.md`, `docs/advanced-topics/caching-setup.md` |
-| Database transactions, TransactionManager | `docs/advanced-topics/transactions.md` |
+| Caching strategy (memory/Redis), adapter pattern | `docs/advanced-topics/caching.md` |
+| Database transactions, ITransactionalConnection | `docs/advanced-topics/transactions.md` |
 | Audit logging, compliance trail | `docs/advanced-topics/audit-logging.md` |
 | GraphQL field selection optimization | `docs/advanced-topics/field-selection.md` |
 | Internationalization (i18n/l10n) | `docs/advanced-topics/internationalization.md` |
@@ -45,9 +45,9 @@ When working on a topic below, read the linked doc for detailed patterns, conven
 
 | Topic | Doc |
 |-------|-----|
-| Project structure, GraphQL/UI patterns | `docs/development/guide.md` |
-| Adding REST endpoints with OpenAPI | `docs/development/rest-api.md` |
-| Testing (Vitest, unit/integration) | `docs/development/testing.md` |
+| Project structure, GraphQL/UI patterns | `docs/contributing/guide.md` |
+| Adding REST endpoints with OpenAPI | `docs/contributing/rest-api.md` |
+| Testing (Vitest, unit/integration) | `docs/contributing/testing.md` |
 | Error handling, HTTP codes, localization | `docs/api-reference/error-handling.md` |
 | REST API conventions, Swagger UI | `docs/api-reference/rest-api.md` |
 | Environment variables, configuration | `docs/getting-started/configuration.md` |

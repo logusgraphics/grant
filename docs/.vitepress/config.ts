@@ -7,16 +7,16 @@ const __dirname = dirname(__filename);
 
 export default withMermaid({
   title: 'Grant',
-  description: 'Open-source, multi-tenant RBAC/ACL platform with self-hosting capabilities',
+  description: 'Open-source, multi-tenant RBAC platform with self-hosting capabilities',
 
   // Site configuration
   base: '/',
   lang: 'en-US',
 
-  // Ignore dead links during development (docs are being built incrementally)
-  ignoreDeadLinks: true,
+  // Catch broken internal links but allow localhost URLs used in examples
+  ignoreDeadLinks: [/^https?:\/\/localhost/],
 
-  // Exclude implementation plans from build (internal documentation only)
+  // Exclude internal-only directories from build
   srcExclude: ['**/implementation-plans/**'],
 
   // Head configuration
@@ -29,7 +29,7 @@ export default withMermaid({
       'meta',
       {
         property: 'og:description',
-        content: 'Open-source, multi-tenant RBAC/ACL platform with self-hosting capabilities',
+        content: 'Open-source, multi-tenant RBAC platform with self-hosting capabilities',
       },
     ],
     ['meta', { property: 'og:image', content: '/grant-logo.svg' }],
@@ -39,7 +39,7 @@ export default withMermaid({
       'meta',
       {
         name: 'twitter:description',
-        content: 'Open-source, multi-tenant RBAC/ACL platform with self-hosting capabilities',
+        content: 'Open-source, multi-tenant RBAC platform with self-hosting capabilities',
       },
     ],
     ['meta', { name: 'twitter:image', content: '/grant-logo.svg' }],
@@ -58,8 +58,7 @@ export default withMermaid({
       { text: 'Home', link: '/' },
       { text: 'Getting Started', link: '/getting-started/introduction' },
       { text: 'API Reference', link: '/api-reference/rest-api' },
-      { text: 'Self-Hosting', link: '/self-hosting/README' },
-      { text: 'SaaS', link: '/saas/README' },
+      { text: 'Self-Hosting', link: '/deployment/self-hosting' },
       { text: 'GitHub', link: 'https://github.com/logusgraphics/grant' },
     ],
 
@@ -80,7 +79,7 @@ export default withMermaid({
           items: [
             { text: 'Overview', link: '/architecture/overview' },
             { text: 'Multi-Tenancy', link: '/architecture/multi-tenancy' },
-            { text: 'RBAC/ACL System', link: '/architecture/rbac-acl' },
+            { text: 'RBAC System', link: '/architecture/rbac' },
             { text: 'Data Model', link: '/architecture/data-model' },
             { text: 'Security', link: '/architecture/security' },
             { text: 'File Storage', link: '/architecture/file-storage' },
@@ -99,15 +98,22 @@ export default withMermaid({
           ],
         },
         {
-          text: 'Development',
+          text: 'Integration',
           items: [
-            { text: 'Development Guide', link: '/development/guide' },
-            { text: 'Server SDK', link: '/development/server-sdk' },
-            { text: 'Client SDK', link: '/development/client-sdk' },
-            { text: 'Grant CLI', link: '/development/cli' },
-            { text: 'REST API', link: '/development/rest-api' },
-            { text: 'Testing', link: '/development/testing' },
-            { text: 'Security Audit', link: '/development/security-audit' },
+            { text: 'Integration Guide', link: '/integration/guide' },
+            { text: 'Server SDK', link: '/integration/server-sdk' },
+            { text: 'Client SDK', link: '/integration/client-sdk' },
+            { text: 'Grant CLI', link: '/integration/cli' },
+          ],
+        },
+        {
+          text: 'Contributing',
+          collapsed: true,
+          items: [
+            { text: 'Development Guide', link: '/contributing/guide' },
+            { text: 'Adding REST Endpoints', link: '/contributing/rest-api' },
+            { text: 'Testing', link: '/contributing/testing' },
+            { text: 'Security Audit', link: '/contributing/security-audit' },
           ],
         },
         {
@@ -120,36 +126,19 @@ export default withMermaid({
           ],
         },
         {
-          text: 'Business Model',
-          items: [
-            { text: 'Open Source vs SaaS', link: '/business-model/open-source-vs-saas' },
-            { text: 'Feature Comparison', link: '/business-model/feature-comparison' },
-            { text: 'License Strategy', link: '/business-model/license-strategy' },
-            { text: 'Recommendations', link: '/business-model/recommendations' },
-          ],
-        },
-        {
-          text: 'SaaS & Enterprise',
-          items: [
-            { text: 'SaaS Features', link: '/saas/README' },
-            { text: 'Migration Guide', link: '/migration/README' },
-          ],
-        },
-        {
           text: 'API Reference',
           items: [
             { text: 'REST API', link: '/api-reference/rest-api' },
+            { text: 'Transport Layers', link: '/api-reference/transport-layers' },
             { text: 'Error Handling', link: '/api-reference/error-handling' },
           ],
         },
         {
           text: 'Advanced Topics',
           items: [
-            { text: 'Internationalization (i18n)', link: '/advanced-topics/internationalization' },
             { text: 'Caching System', link: '/advanced-topics/caching' },
-            { text: 'Cache Setup Guide', link: '/advanced-topics/caching-setup' },
             { text: 'Email Service & Adapters', link: '/advanced-topics/email-service' },
-            { text: 'Job Scheduling & Background Tasks', link: '/advanced-topics/job-scheduling' },
+            { text: 'Job Scheduling', link: '/advanced-topics/job-scheduling' },
             { text: 'Privacy Settings', link: '/advanced-topics/privacy-settings' },
             { text: 'Field Selection', link: '/advanced-topics/field-selection' },
             { text: 'Audit Logging', link: '/advanced-topics/audit-logging' },
@@ -179,7 +168,7 @@ export default withMermaid({
     // Footer
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024 Logus Graphics',
+      copyright: 'Copyright © 2024-2026 Logus Graphics',
     },
 
     // Search

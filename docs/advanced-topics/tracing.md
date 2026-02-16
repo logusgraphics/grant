@@ -39,7 +39,7 @@ gantt
 - **Auto-instrumentation**: Automatically traces HTTP, GraphQL, PostgreSQL, Redis
 - **Standard**: Industry-standard observability framework
 - **Flexible**: Easy to add custom spans and attributes
-- **Future-proof**: Backed by CNCF and major cloud providers
+- **Industry-backed**: CNCF project supported by major cloud providers
 
 ## Architecture
 
@@ -706,8 +706,7 @@ tracer.startActiveSpan('operation', (span) => {
 ## Next Steps
 
 - **Add custom metrics**: [Metrics Guide](/advanced-topics/metrics)
-- **Set up dashboards**: [Monitoring Guide](/advanced-topics/monitoring)
-- **Configure alerts**: [Alerting Guide](/advanced-topics/alerting)
+- **Set up dashboards and alerts**: [Metrics & Monitoring](/advanced-topics/metrics)
 
 ## Resources
 

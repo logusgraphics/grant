@@ -1,7 +1,7 @@
 {
   "name": "@grantjs/core",
   "version": "1.0.0",
-  "description": "Core RBAC/ACL system for the Grant",
+  "description": "Core RBAC system for Grant",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "type": "module",
@@ -18,7 +18,6 @@
   ],
   "keywords": [
     "rbac",
-    "acl",
     "permissions",
     "multi-tenant",
     "nodejs",

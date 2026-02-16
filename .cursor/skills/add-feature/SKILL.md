@@ -58,7 +58,7 @@ Feature: [entity name]
 
 - Extend `CacheHandler`. Constructor receives `cache`, `services`, `db`.
 - Query methods: scope IDs via cache, delegate to services, return page result.
-- Mutation methods: wrap in `TransactionManager.withTransaction()`, orchestrate services, update cache.
+- Mutation methods: wrap in `ITransactionalConnection.withTransaction()`, orchestrate services, update cache.
 - Args: use generated types from `@grantjs/schema` (e.g. `QueryGroupsArgs & SelectedFields<Group>`).
 - **Never access repositories directly.**
 - Reference: `groups.handler.ts`.

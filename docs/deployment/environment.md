@@ -42,9 +42,6 @@ APP_PORT=4000
 DB_URL=postgresql://grant_user:grant_password@localhost:5432/grant
 DB_LOG_QUERIES=true
 
-# JWT (development-only secrets)
-JWT_SECRET=dev-secret-key-not-for-production
-
 # Cache (in-memory for single instance)
 CACHE_STRATEGY=memory
 
@@ -55,7 +52,6 @@ APOLLO_INCLUDE_STACKTRACE=true
 
 # Security (relaxed for development)
 SECURITY_FRONTEND_URL=http://localhost:3000
-SECURITY_ENABLE_CSRF=false
 SECURITY_ENABLE_RATE_LIMIT=false
 ```
 
@@ -91,9 +87,6 @@ APP_PORT=4000
 DB_URL=postgresql://user:pass@staging-db.amazonaws.com:5432/grant
 DB_LOG_QUERIES=false
 
-# JWT (staging-specific secret)
-JWT_SECRET=staging-secret-min-32-chars-random
-
 # Cache (Redis for multi-instance)
 CACHE_STRATEGY=redis
 REDIS_HOST=staging-redis.cache.amazonaws.com
@@ -108,7 +101,6 @@ APOLLO_INCLUDE_STACKTRACE=false
 
 # Security (production-like)
 SECURITY_FRONTEND_URL=https://staging.yourdomain.com
-SECURITY_ENABLE_CSRF=true
 SECURITY_ENABLE_RATE_LIMIT=true
 SECURITY_RATE_LIMIT_MAX=1000  # Higher than prod for testing
 ```
@@ -130,9 +122,6 @@ DB_POOL_MAX=20
 DB_POOL_MIN=5
 DB_LOG_QUERIES=false
 
-# JWT (strong random secret, rotated quarterly)
-JWT_SECRET=production-secret-min-32-chars-cryptographically-random
-
 # Cache (Redis cluster)
 CACHE_STRATEGY=redis
 REDIS_HOST=prod-redis-cluster.cache.amazonaws.com
@@ -143,12 +132,10 @@ REDIS_ENABLE_TLS=true
 # GraphQL/Apollo (security hardened)
 APOLLO_INTROSPECTION=false
 APOLLO_PLAYGROUND=false
-APOLLO_CSRF_PREVENTION=true
 APOLLO_INCLUDE_STACKTRACE=false
 
 # Security (strict)
 SECURITY_FRONTEND_URL=https://yourdomain.com
-SECURITY_ENABLE_CSRF=true
 SECURITY_ENABLE_HELMET=true
 SECURITY_ENABLE_RATE_LIMIT=true
 SECURITY_RATE_LIMIT_MAX=100
@@ -218,7 +205,6 @@ jobs:
           ./scripts/deploy-staging.sh
         env:
           DB_URL: ${{ secrets.STAGING_DB_URL }}
-          JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
           REDIS_PASSWORD: ${{ secrets.STAGING_REDIS_PASSWORD }}
 ```
 
@@ -229,10 +215,8 @@ Store sensitive values in your CI/CD platform:
 **GitHub Secrets:**
 
 - `STAGING_DB_URL`
-- `STAGING_JWT_SECRET`
 - `STAGING_REDIS_PASSWORD`
 - `PRODUCTION_DB_URL`
-- `PRODUCTION_JWT_SECRET`
 - `PRODUCTION_REDIS_PASSWORD`
 
 ## Validation

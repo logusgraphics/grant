@@ -136,7 +136,7 @@ node packages/@grantjs/cli/dist/index.mjs version
 
 **Interactive TUI:** Run `grant start` (and any prompts) in a real terminal so the process has a TTY. Running via IDE "Run" or in CI often has no stdin and prompts will not work.
 
-**Documentation:** [Grant CLI](https://github.com/logusgraphics/grant/blob/main/docs/development/cli.md) in the official docs.
+**Documentation:** [Grant CLI](https://github.com/logusgraphics/grant/blob/main/docs/integration/cli.md) in the official docs.
 
 **Publishing:** See [RELEASE.md](./RELEASE.md) for versioning and npm publish (Changesets).
 

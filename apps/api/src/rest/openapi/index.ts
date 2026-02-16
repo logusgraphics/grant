@@ -13,12 +13,15 @@
  * - groups.openapi.ts: Group endpoints
  * - permissions.openapi.ts: Permission endpoints
  * - tags.openapi.ts: Tag endpoints
+ * - jwks.openapi.ts: JWKS discovery endpoints
+ * - signing-keys.openapi.ts: Signing key management endpoints
  */
 
 export { registerApiKeysOpenApi } from './api-keys.openapi';
 export { registerAuthEndpoints } from './auth.openapi';
 export { generateOpenApiDocument, initializeOpenApiRegistry, registry } from './config.openapi';
 export { registerGroupsOpenApi } from './groups.openapi';
+export { registerJwksOpenApi } from './jwks.openapi';
 export { registerMeEndpoints } from './me.openapi';
 export { registerOrganizationInvitationsOpenApi } from './organization-invitations.openapi';
 export { registerOrganizationMembersOpenApi } from './organization-members.openapi';
@@ -27,5 +30,6 @@ export { registerPermissionsOpenApi } from './permissions.openapi';
 export { registerProjectsOpenApi } from './projects.openapi';
 export { registerResourcesOpenApi } from './resources.openapi';
 export { registerRolesOpenApi } from './roles.openapi';
+export { registerSigningKeysOpenApi } from './signing-keys.openapi';
 export { registerTagsOpenApi } from './tags.openapi';
 export { registerUserEndpoints } from './users.openapi';

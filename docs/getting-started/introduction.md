@@ -1,6 +1,6 @@
 # What is Grant?
 
-Grant is an open-source, multi-tenant RBAC/ACL (Role-Based Access Control / Access Control List) platform designed to provide comprehensive identity and access management for modern applications.
+Grant is an open-source, multi-tenant RBAC (Role-Based Access Control) platform designed to provide comprehensive identity and access management for modern applications.
 
 ## Key Features
 
@@ -25,10 +25,10 @@ Grant is an open-source, multi-tenant RBAC/ACL (Role-Based Access Control / Acce
 - **Comprehensive SDK** for Express, Nest, Fastify, and more
 - **Rich documentation** with examples and best practices
 
-### Deployment Options
+### Deployment
 
-- **Self-hosting** with Docker
-- **Docker containers** for easy deployment
+- **Self-hosted** -- deploy on your own infrastructure with Docker Compose or AWS CloudFormation
+- **No vendor lock-in** -- MIT licensed, you own your data
 
 ## Use Cases
 
@@ -76,7 +76,7 @@ Ready to get started with Grant? Here are your next steps:
 1. **[Quick Start Guide](/getting-started/quick-start)** - Get up and running in minutes
 2. **[Architecture Deep Dive](/architecture/overview)** - Understand the system design
 3. **[Self-Hosting Setup](/deployment/self-hosting)** - Deploy on your infrastructure
-4. **[API Reference](/api-reference/)** - Explore the GraphQL API
+4. **[API Reference](/api-reference/rest-api)** - Explore the REST and GraphQL API
 
 ## Community & Support
 

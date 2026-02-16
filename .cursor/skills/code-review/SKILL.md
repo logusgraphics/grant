@@ -42,7 +42,7 @@ Code Review:
 
 - Extends `CacheHandler`.
 - Queries scope IDs from cache; invalidates cache on mutations.
-- Mutations wrapped in `TransactionManager.withTransaction()` when atomic.
+- Mutations wrapped in `ITransactionalConnection.withTransaction()` when atomic.
 - Args follow pattern: `QueryXArgs & SelectedFields<X>`.
 
 ### Service conventions

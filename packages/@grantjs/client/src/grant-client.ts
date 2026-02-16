@@ -167,7 +167,7 @@ export class GrantClient {
 
     if (response.status !== 401) return response;
 
-    // Cookie-based refresh (HttpOnly refresh cookie). Body-based refresh is not supported (security: CSRF / third-party).
+    // Cookie-based refresh (HttpOnly refresh cookie). Body-based refresh is not supported.
     // Module-level shared promise so all 401s (any client instance) coalesce into one refresh.
     if (this.config.onRefreshWithCredentials) {
       if (!sharedCredentialsRefreshPromise) {

@@ -30,7 +30,6 @@ export const GroupKey = {
   TagCommon: 'TagCommon',
   ApiKeyCommon: 'APIKeyCommon',
   OrganizationMemberCommon: 'OrganizationMemberCommon',
-  OrganizationInvitationOrganizationAccountOwner: 'OrganizationInvitationOrganizationAccountOwner',
   OrganizationInvitationCommon: 'OrganizationInvitationCommon',
   ProjectUserCommon: 'ProjectUserCommon',
   UserSessionCommon: 'UserSessionCommon',
@@ -231,11 +230,6 @@ const GROUPS: Record<GroupKey, GroupTemplate> = {
     resource: ResourceSlug.OrganizationMember,
     permissions: [ResourceAction.Read, ResourceAction.Query],
     assignedRoles: ORGANIZATION_ROLES,
-  },
-  [GroupKey.OrganizationInvitationOrganizationAccountOwner]: {
-    resource: ResourceSlug.OrganizationInvitation,
-    permissions: [ResourceAction.Accept],
-    assignedRoles: [RoleKey.OrganizationAccountOwner],
   },
   [GroupKey.OrganizationInvitationCommon]: {
     resource: ResourceSlug.OrganizationInvitation,

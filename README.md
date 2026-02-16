@@ -1,6 +1,6 @@
 # Grant
 
-An open-source, multi-tenant RBAC/ACL platform with self-hosting capabilities via AWS CloudFormation.
+An open-source, multi-tenant RBAC platform with self-hosting capabilities via AWS CloudFormation.
 
 ## Compliance
 
@@ -16,7 +16,7 @@ An open-source, multi-tenant RBAC/ACL platform with self-hosting capabilities vi
 
 ## 🚀 Features
 
-- **Multi-tenant RBAC/ACL** - Organization and project-level access control
+- **Multi-tenant RBAC** - Organization and project-level access control
 - **Self-hosting** - Deploy with AWS CloudFormation templates
 - **Containerized** - Docker containers for web and API
 - **Scalable** - Auto-scaling with AWS Fargate
@@ -36,7 +36,7 @@ An open-source, multi-tenant RBAC/ACL platform with self-hosting capabilities vi
 
 ### Published Packages (npm)
 
-- **`@grantjs/core`** - Core RBAC/ACL system
+- **`@grantjs/core`** - Core RBAC system
 
 ### Self-Hosting Components
 
@@ -134,7 +134,7 @@ pnpm --filter @grantjs/core dev
 ### SaaS Enterprise (Hosted)
 
 - **Managed Platform** - Fully hosted solution
-- **Enterprise Features** - Advanced RBAC/ACL
+- **Enterprise Features** - Advanced RBAC
 - **Premium Support** - 24/7 assistance
 - **Custom Integrations** - SSO, LDAP, SAML
 
@@ -144,7 +144,7 @@ pnpm --filter @grantjs/core dev
 
 - **Free Forever** - Complete self-hosting
 - **Community Support** - GitHub issues, Discord
-- **Core Features** - Basic RBAC/ACL
+- **Core Features** - Basic RBAC
 
 ### SaaS Enterprise
 

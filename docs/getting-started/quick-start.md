@@ -1,208 +1,155 @@
 # Quick Start
 
-Get Grant up and running in minutes! This guide covers the fastest ways to start using Grant.
+Get Grant running locally in under 10 minutes: clone, start infrastructure, run the app.
 
-## Choose Your Path
+## Prerequisites
 
-### Option 1: Self-Hosting (Recommended)
+- **Node.js** 20+ and **pnpm** (`npm install -g pnpm` if you don't have it)
+- **Docker** and **Docker Compose**
 
-Deploy Grant on your own infrastructure with full control and customization.
-
-### Option 2: SaaS Trial
-
-Try our hosted solution with a free trial account.
-
-### Option 3: Local Development
-
-Set up a local development environment for contributing or testing.
-
-## Self-Hosting Setup
-
-### Prerequisites
-
-- **AWS Account** with appropriate permissions
-- **AWS CLI** configured with your credentials
-- **Docker** (for local testing)
-
-### 1. Launch CloudFormation Stack
-
-```bash
-# Clone the repository
-git clone https://github.com/logusgraphics/grant.git
-cd grant
-
-# Launch the CloudFormation stack
-aws cloudformation create-stack \
-  --stack-name grant \
-  --template-body file://infrastructure/cloudformation/main.yaml \
-  --parameters file://infrastructure/cloudformation/parameters/dev.json \
-  --capabilities CAPABILITY_IAM
-```
-
-### 2. Configure Parameters
-
-The CloudFormation template will prompt you for:
-
-- **Database credentials** - PostgreSQL username and password
-- **Domain name** - Your custom domain (optional)
-- **Environment** - Development, staging, or production
-- **Instance sizes** - Based on your expected load
-
-### 3. Access Your Deployment
-
-Once the stack is deployed, you'll receive:
-
-- **Web App URL** - Your Grant frontend
-- **API URL** - GraphQL API endpoint
-- **Admin credentials** - Initial admin account
-
-### 4. Initial Configuration
-
-1. **Login** with the provided admin credentials
-2. **Create your organization** and first project
-3. **Configure authentication** (JWT, OAuth, etc.)
-4. **Set up your first users** and roles
-
-## SaaS Trial
-
-### 1. Sign Up
-
-Visit [grant.logus.graphics](https://grant.logus.graphics) and create a free trial account.
-
-### 2. Create Organization
-
-- **Organization name** - Your company or project name
-- **Initial project** - Your first integration environment
-- **Admin user** - Your account details
-
-### 3. Configure Your Project
-
-- **Add users** to your project
-- **Define roles** and permissions
-- **Set up integrations** with your applications
-
-### 4. Test the API
-
-Use the built-in GraphQL playground to test queries and mutations:
-
-```graphql
-# Test query
-query GetUsers {
-  users {
-    id
-    name
-    email
-    roles {
-      name
-      permissions {
-        action
-        scope
-      }
-    }
-  }
-}
-```
-
-## Local Development
-
-### Prerequisites
-
-- **Node.js** 18+ and **pnpm**
-- **PostgreSQL** 14+
-- **Docker** (optional, for database)
-
-### 1. Clone and Install
+## 1. Clone the repository
 
 ```bash
 git clone https://github.com/logusgraphics/grant.git
 cd grant
+```
+
+## 2. Start infrastructure
+
+Grant needs PostgreSQL and Redis. Docker Compose handles both:
+
+```bash
+docker compose up -d
+```
+
+Verify everything is healthy:
+
+```bash
+docker compose ps
+```
+
+You should see `grant-postgres` and `grant-redis` running with status `healthy`.
+
+## 3. Install dependencies
+
+```bash
 pnpm install
 ```
 
-### 2. Database Setup
+## 4. Configure environment
+
+Copy the example environment files:
 
 ```bash
-# Start PostgreSQL with Docker
-docker run --name grant-postgres \
-  -e POSTGRES_PASSWORD=password \
-  -e POSTGRES_DB=grant \
-  -p 5432:5432 \
-  -d postgres:14
-
-# Set environment variables
-export DATABASE_URL="postgresql://postgres:password@localhost:5432/grant"
-
-# Run migrations
-pnpm db:migrate
-
-# Seed with sample data
-pnpm db:seed
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
 ```
 
-### 3. Start Development Servers
+The defaults work out of the box for local development. The key variables:
+
+| File            | Variable              | Default                                                          | Purpose                            |
+| --------------- | --------------------- | ---------------------------------------------------------------- | ---------------------------------- |
+| `.env`          | `POSTGRES_PASSWORD`   | `grant_password`                                                 | Docker Compose PostgreSQL password |
+| `apps/api/.env` | `DB_URL`              | `postgresql://grant_user:grant_password@localhost:5432/grant_db` | API database connection            |
+| `apps/api/.env` | `APP_URL`             | `http://localhost:4000`                                          | API base URL (JWT issuer)          |
+| `apps/web/.env` | `NEXT_PUBLIC_API_URL` | `http://localhost:4000`                                          | Frontend API URL                   |
+
+::: tip
+For production, update passwords, enable rate limiting, and configure a real email provider. See the [Configuration Guide](/getting-started/configuration) for all options.
+:::
+
+## 5. Run database migrations and seed
 
 ```bash
-# Start all services
+# Create database tables
+pnpm --filter @grantjs/database db:migrate
+
+# Seed roles, permissions, groups, system user, and signing keys
+pnpm --filter @grantjs/database db:seed
+```
+
+Expected output:
+
+```
+🌱 Starting database seeding...
+   ✓ Permissions, roles, and groups
+   ✓ System user + system signing key
+📝 Seeding permissions...
+✅ Seeding completed successfully!
+```
+
+## 6. Start development servers
+
+```bash
 pnpm dev
-
-# Or start individually
-pnpm dev:api    # API server on :4000
-pnpm dev:web    # Web app on :3000
 ```
 
-### 4. Access Development Environment
+This starts both services:
 
-- **Web App**: http://localhost:3000
-- **API**: http://localhost:4000/graphql
-- **GraphQL Playground**: http://localhost:4000/graphql
+| Service | URL                                            | Description        |
+| ------- | ---------------------------------------------- | ------------------ |
+| **API** | [http://localhost:4000](http://localhost:4000) | GraphQL + REST API |
+| **Web** | [http://localhost:3000](http://localhost:3000) | Next.js frontend   |
+
+## 7. Create your first account
+
+1. Open [http://localhost:3000](http://localhost:3000) in your browser
+2. Click **Sign Up** to create your account
+3. Fill in your name, email, and password
+4. You'll be taken to the dashboard where you can create your first organization and project
+
+::: info
+In development mode, the email provider is set to `console` -- verification emails are printed to the API terminal output instead of being sent.
+:::
+
+## What's running
+
+```
+┌─────────────────────────────────────────────────┐
+│  Browser → localhost:3000 (Next.js)             │
+│     ↓                                           │
+│  API → localhost:4000 (Apollo Server + REST)    │
+│     ↓                                           │
+│  PostgreSQL → localhost:5432 (Docker)           │
+│  Redis → localhost:6379 (Docker)                │
+└─────────────────────────────────────────────────┘
+```
+
+## Stopping everything
+
+```bash
+# Stop the dev servers (Ctrl+C in the terminal running pnpm dev)
+
+# Stop infrastructure
+docker compose down
+
+# To also remove data volumes
+docker compose down -v
+```
 
 ## Next Steps
 
-### For Self-Hosting
+- **[Architecture Overview](/architecture/overview)** -- Understand the system design
+- **[RBAC System](/architecture/rbac)** -- Learn the permission model
+- **[Server SDK](/integration/server-sdk)** -- Protect your own routes with `@grantjs/server`
+- **[Client SDK](/integration/client-sdk)** -- Permission-based UI with `@grantjs/client`
+- **[Self-Hosting Guide](/deployment/self-hosting)** -- Deploy to production
 
-- **[Configuration Guide](/configuration)** - Detailed configuration options
-- **[Deployment Guide](/deployment/self-hosting)** - Production deployment
-- **[Monitoring Setup](/deployment/monitoring)** - Logging and metrics
+## Troubleshooting
 
-### For SaaS Users
+### Docker containers won't start
 
-- **[SaaS Features](/enterprise/saas-features)** - Available features and limitations
-- **[API Integration](/api-reference/)** - Connect your applications
-- **[User Management](/core-concepts/users-roles)** - Managing users and roles
+- Make sure ports 5432 (PostgreSQL) and 6379 (Redis) are not already in use
+- Run `docker compose logs postgres` or `docker compose logs redis` to check for errors
 
-### For Developers
+### Database migration fails
 
-- **[Development Guide](/development/guide)** - Project structure and workflow
-- **[API Reference](/api-reference/)** - Complete GraphQL API documentation
-- **[Contributing](/development/contributing)** - How to contribute
+- Verify PostgreSQL is running: `docker compose ps`
+- Check the `DB_URL` in `apps/api/.env` matches the credentials in `.env`
 
-## Common Issues
+### `pnpm dev` fails to start
 
-### Database Connection Issues
-
-- Verify PostgreSQL is running and accessible
-- Check connection string format
-- Ensure database exists and user has permissions
-
-### CloudFormation Deployment Issues
-
-- Check AWS CLI configuration
-- Verify IAM permissions for CloudFormation
-- Review CloudFormation events for specific errors
-
-### Local Development Issues
-
-- Ensure all dependencies are installed (`pnpm install`)
-- Check Node.js version compatibility
-- Verify environment variables are set correctly
-
-## Getting Help
-
-- **Documentation** - Comprehensive guides and API reference
-- **GitHub Issues** - Bug reports and feature requests
-- **Discord Community** - Real-time help and discussions
-- **Email Support** - support@grant.logus.graphics
-
----
-
-**Ready to dive deeper?** Check out the [Architecture Overview](/architecture/overview) to understand how Grant works under the hood.
+- Ensure all dependencies are installed: `pnpm install`
+- Check Node.js version: `node --version` (requires 20+)
+- Verify environment files exist: `ls apps/api/.env apps/web/.env`

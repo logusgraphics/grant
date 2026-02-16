@@ -40,9 +40,6 @@ At minimum, you need to set:
 # Database connection (required)
 DB_URL="postgresql://grant_user:grant_password@localhost:5432/grant"
 
-# JWT secret (MUST change in production)
-JWT_SECRET="your-super-secret-key-change-in-production"
-
 # Frontend URL for CORS (required in production)
 SECURITY_FRONTEND_URL="http://localhost:3000"
 ```
@@ -69,18 +66,17 @@ You'll see a configuration summary on startup:
 
 All environment variables follow a **prefix-based naming convention** for clarity and organization:
 
-| Prefix       | Purpose                        | Examples                                            |
-| ------------ | ------------------------------ | --------------------------------------------------- |
-| `APP_*`      | Application-level settings     | `APP_PORT`                                          |
-| `DB_*`       | Database configuration         | `DB_URL`, `DB_POOL_MAX`                             |
-| `JWT_*`      | JWT authentication             | `JWT_SECRET`, `JWT_ACCESS_TOKEN_EXPIRATION_MINUTES` |
-| `AUTH_*`     | Authentication & authorization | `AUTH_OTP_VALIDITY_MINUTES`                         |
-| `CACHE_*`    | Cache strategy & settings      | `CACHE_STRATEGY`, `CACHE_DEFAULT_TTL`               |
-| `REDIS_*`    | Redis configuration            | `REDIS_HOST`, `REDIS_PORT`                          |
-| `SECURITY_*` | Security settings              | `SECURITY_FRONTEND_URL`, `SECURITY_ENABLE_CSRF`     |
-| `APOLLO_*`   | GraphQL/Apollo settings        | `APOLLO_INTROSPECTION`                              |
-| `FEATURE_*`  | Feature flags (future)         | `FEATURE_AUDIT_LOGGING`                             |
-| (none)       | Standard Node.js               | `NODE_ENV`                                          |
+| Prefix       | Purpose                        | Examples                                                          |
+| ------------ | ------------------------------ | ----------------------------------------------------------------- |
+| `APP_*`      | Application-level settings     | `APP_PORT`                                                        |
+| `DB_*`       | Database configuration         | `DB_URL`, `DB_POOL_MAX`                                           |
+| `JWT_*`      | JWT authentication             | `JWT_ACCESS_TOKEN_EXPIRATION_MINUTES`, `JWT_JWKS_MAX_AGE_SECONDS` |
+| `AUTH_*`     | Authentication & authorization | `AUTH_OTP_VALIDITY_MINUTES`                                       |
+| `CACHE_*`    | Cache strategy & settings      | `CACHE_STRATEGY`, `CACHE_DEFAULT_TTL`                             |
+| `REDIS_*`    | Redis configuration            | `REDIS_HOST`, `REDIS_PORT`                                        |
+| `SECURITY_*` | Security settings              | `SECURITY_FRONTEND_URL`, `SECURITY_ENABLE_RATE_LIMIT`             |
+| `APOLLO_*`   | GraphQL/Apollo settings        | `APOLLO_INTROSPECTION`                                            |
+| (none)       | Standard Node.js               | `NODE_ENV`                                                        |
 
 ### Why Use Prefixes?
 
@@ -132,24 +128,19 @@ The old `DATABASE_URL` variable is still supported for backward compatibility, b
 JSON Web Token authentication settings:
 
 ```bash
-# JWT secret key for signing tokens (REQUIRED - change in production!)
-JWT_SECRET="your-super-secret-key-change-in-production"
-
 # Access token expiration in minutes (default: 15)
 JWT_ACCESS_TOKEN_EXPIRATION_MINUTES=15
 
 # Refresh token expiration in days (default: 30)
 JWT_REFRESH_TOKEN_EXPIRATION_DAYS=30
+
+# JWKS cache max age in seconds (default: 3600)
+JWT_JWKS_MAX_AGE_SECONDS=3600
 ```
 
-::: warning Production Security
-In production, `JWT_SECRET` **must** be:
-
-- At least 32 characters long
-- Cryptographically random
-- Never committed to version control
-- Rotated regularly
-  :::
+::: tip Signing Keys
+The platform uses RS256/JWKS with database-stored signing keys. Signing keys are automatically managed in the database and rotated as needed. No symmetric `JWT_SECRET` is required.
+:::
 
 ### Authentication Settings
 
@@ -233,9 +224,6 @@ SECURITY_FRONTEND_URL=http://localhost:3000
 # Example: https://app.example.com,https://admin.example.com
 SECURITY_ADDITIONAL_ORIGINS=
 
-# Enable CSRF protection (default: true in production)
-SECURITY_ENABLE_CSRF=false
-
 # Enable Helmet security headers (default: true)
 SECURITY_ENABLE_HELMET=true
 
@@ -274,9 +262,6 @@ GraphQL and Apollo Server settings:
 ```bash
 # Enable GraphQL introspection (default: true in development)
 APOLLO_INTROSPECTION=true
-
-# Enable CSRF prevention (default: true in production)
-APOLLO_CSRF_PREVENTION=false
 
 # Enable GraphQL playground (default: true in development)
 APOLLO_PLAYGROUND=true
@@ -361,7 +346,6 @@ Optimized for local development with debugging enabled:
 NODE_ENV=development
 APP_PORT=4000
 DB_URL=postgresql://grant_user:grant_password@localhost:5432/grant
-JWT_SECRET=dev-secret-key
 CACHE_STRATEGY=memory
 DB_LOG_QUERIES=true
 APOLLO_INTROSPECTION=true
@@ -377,7 +361,6 @@ Hardened for production with security features enabled:
 NODE_ENV=production
 APP_PORT=4000
 DB_URL=postgresql://prod_user:secure_password@db.example.com:5432/grant
-JWT_SECRET=your-production-secret-min-32-chars
 CACHE_STRATEGY=redis
 REDIS_HOST=redis.example.com
 REDIS_PORT=6379
@@ -388,7 +371,6 @@ APOLLO_INTROSPECTION=false
 APOLLO_PLAYGROUND=false
 APOLLO_INCLUDE_STACKTRACE=false
 SECURITY_FRONTEND_URL=https://yourdomain.com
-SECURITY_ENABLE_CSRF=true
 SECURITY_ENABLE_RATE_LIMIT=true
 ```
 
@@ -400,7 +382,6 @@ Isolated configuration for testing:
 NODE_ENV=test
 APP_PORT=4001
 DB_URL=postgresql://test_user:test_pass@localhost:5432/grant_test
-JWT_SECRET=test-secret-key
 CACHE_STRATEGY=memory
 ```
 
@@ -441,10 +422,10 @@ Use `.env.example` as a template for documentation.
 
 ### 2. Use Strong Secrets in Production
 
-- **JWT_SECRET**: Minimum 32 characters, cryptographically random
 - **REDIS_PASSWORD**: Strong password, regularly rotated
 - **Database passwords**: Use strong, unique passwords
 - **Rotate secrets regularly** (every 90 days recommended)
+- **Signing keys**: Automatically managed in the database with RS256/JWKS
 
 ```bash
 # Generate a secure secret
@@ -458,7 +439,7 @@ Use the appropriate prefix for all new variables:
 ```bash
 # ✅ Good
 DB_POOL_MAX=20
-JWT_SECRET=...
+JWT_ACCESS_TOKEN_EXPIRATION_MINUTES=15
 CACHE_STRATEGY=redis
 
 # ❌ Bad
@@ -521,7 +502,7 @@ When adding configuration:
 
 ```
 Error: Configuration validation failed:
-  - JWT_SECRET must be set to a secure value in production
+  - Database URL is required
 ```
 
 **Solutions**:
@@ -575,12 +556,11 @@ All old variable names still work! Migration is optional but recommended.
 ## Related Documentation
 
 - **[Docker Deployment](/deployment/docker)** - Docker Compose infrastructure setup
-- **[Cache System Setup](/advanced-topics/caching-setup)** - Detailed caching configuration
-- **[Caching System](/advanced-topics/caching)** - Cache system architecture
+- **[Caching System](/advanced-topics/caching)** - Cache system architecture and configuration
 - **[Installation Guide](/getting-started/installation)** - Initial setup instructions
 - **[Quick Start](/getting-started/quick-start)** - Get started quickly
-- **[Development Guide](/development/guide)** - Development best practices
-- **[Security Audit](/development/security-audit)** - Security considerations
+- **[Integration Guide](/integration/guide)** - Protect your API endpoints
+- **[Security Audit](/contributing/security-audit)** - Security considerations
 
 ## Support
 
@@ -593,4 +573,4 @@ Need help with configuration?
 
 ---
 
-**Next:** Learn about the [Development Guide](/development/guide) to understand development practices.
+**Next:** Follow the [Integration Guide](/integration/guide) to protect your API endpoints with Grant.

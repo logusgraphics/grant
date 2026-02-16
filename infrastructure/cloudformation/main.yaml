@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Grant - Multi-tenant RBAC/ACL system'
+Description: 'Grant - Multi-tenant RBAC system'
 
 Parameters:
   Environment:

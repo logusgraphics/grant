@@ -2,7 +2,7 @@
 
 Browser SDK for Grant authorization platform. Provides a lightweight client for permission checks with React hooks and components for conditional UI rendering.
 
-**Documentation:** [Client SDK](https://github.com/logusgraphics/grant/blob/main/docs/development/client-sdk.md) in the official docs.
+**Documentation:** [Client SDK](https://github.com/logusgraphics/grant/blob/main/docs/integration/client-sdk.md) in the official docs.
 
 ## Features
 

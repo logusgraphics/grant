@@ -9,7 +9,7 @@
  * related fields; the middleware reads config.security (this same object), so tests drive behavior.
  *
  * Benchmarks: optional timing and req/s reporting for "under limit" vs "at limit" runs.
- * For load testing (autocannon, k6), see docs/development/testing.md.
+ * For load testing (autocannon, k6), see docs/contributing/testing.md.
  */
 
 import { InMemoryCacheAdapter } from '@grantjs/cache/memory';

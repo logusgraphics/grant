@@ -765,7 +765,6 @@ If logging causes performance issues:
 
 - **Add metrics**: [Metrics Guide](/advanced-topics/metrics)
 - **Enable tracing**: [Tracing Guide](/advanced-topics/tracing)
-- **Set up alerts**: [Monitoring Guide](/advanced-topics/monitoring)
 
 ## Resources
 

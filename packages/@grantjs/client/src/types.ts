@@ -37,8 +37,7 @@ export interface GrantClientConfig {
    * response for the new `accessToken`, (3) update your app token storage (e.g. set the new access token so
    * `getAccessToken` returns it), and optionally call the same logic you pass to `onTokenRefresh`. Return `true`
    * if refresh succeeded so the client can retry the request.
-   * Refresh tokens are not sent in the request body; the API uses only the refresh cookie. Body-based refresh
-   * is not supported (CSRF and third-party hardening could be added later, but not in MVP).
+   * Refresh tokens are not sent in the request body; the API uses only the HttpOnly refresh cookie.
    */
   onRefreshWithCredentials?: () => Promise<boolean>;
 

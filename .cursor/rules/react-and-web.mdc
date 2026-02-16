@@ -44,5 +44,5 @@ Some modules differ but stay consistent (e.g. `components/features/settings`, `c
 ## Deep-dive docs
 
 - **Internationalization**: `docs/advanced-topics/internationalization.md` — i18n/l10n setup, translation patterns, locale support.
-- **Client SDK**: `docs/development/client-sdk.md` — `@grantjs/client` React hooks, `useGrant`, `<GrantGate>`.
-- **UI and GraphQL patterns**: `docs/development/guide.md` — project structure, component and hook conventions.
+- **Client SDK**: `docs/integration/client-sdk.md` — `@grantjs/client` React hooks, `useGrant`, `<GrantGate>`.
+- **UI and GraphQL patterns**: `docs/contributing/guide.md` — project structure, component and hook conventions.

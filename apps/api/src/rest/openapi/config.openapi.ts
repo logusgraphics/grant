@@ -17,6 +17,7 @@ import {
 import { registerApiKeysOpenApi } from './api-keys.openapi';
 import { registerAuthEndpoints } from './auth.openapi';
 import { registerGroupsOpenApi } from './groups.openapi';
+import { registerJwksOpenApi } from './jwks.openapi';
 import { registerMeEndpoints } from './me.openapi';
 import { registerOrganizationInvitationsOpenApi } from './organization-invitations.openapi';
 import { registerOrganizationMembersOpenApi } from './organization-members.openapi';
@@ -25,6 +26,7 @@ import { registerPermissionsOpenApi } from './permissions.openapi';
 import { registerProjectsOpenApi } from './projects.openapi';
 import { registerResourcesOpenApi } from './resources.openapi';
 import { registerRolesOpenApi } from './roles.openapi';
+import { registerSigningKeysOpenApi } from './signing-keys.openapi';
 import { registerTagsOpenApi } from './tags.openapi';
 import { registerUserEndpoints } from './users.openapi';
 
@@ -69,6 +71,8 @@ function registerAllEndpoints() {
   registerPermissionsOpenApi(registry);
   registerResourcesOpenApi(registry);
   registerTagsOpenApi(registry);
+  registerJwksOpenApi(registry);
+  registerSigningKeysOpenApi(registry);
 }
 
 /**
@@ -164,6 +168,14 @@ export function generateOpenApiDocument() {
       {
         name: 'Tags',
         description: 'Tag management endpoints',
+      },
+      {
+        name: 'JWKS',
+        description: 'JSON Web Key Set discovery endpoints for JWT verification',
+      },
+      {
+        name: 'Signing Keys',
+        description: 'Project signing key management and rotation endpoints',
       },
     ],
     externalDocs: {

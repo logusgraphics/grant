@@ -8,7 +8,7 @@
     "email": "ale@logus.graphics",
     "url": "https://logus.graphics"
   },
-  "description": "Multi-tenant RBAC/ACL platform with monorepo architecture",
+  "description": "Multi-tenant RBAC platform with monorepo architecture",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
