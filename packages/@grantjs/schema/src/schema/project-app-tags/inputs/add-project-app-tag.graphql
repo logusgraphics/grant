@@ -1,0 +1,5 @@
+input AddProjectAppTagInput {
+  projectAppId: ID!
+  tagId: ID!
+  isPrimary: Boolean
+}

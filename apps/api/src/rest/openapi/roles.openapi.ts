@@ -119,6 +119,13 @@ The role is created within the specified scope:
 You can optionally assign tags to the role:
 - \`tagIds\`: Array of tag UUIDs
 - \`primaryTagId\`: UUID of the primary tag (must be included in tagIds)
+
+### Groups
+You can optionally assign groups to the role:
+- \`groupIds\`: Array of group UUIDs
+
+### Metadata
+Optional key-value metadata can be provided via \`metadata\` (JSON object).
     `.trim(),
     request: {
       body: {
@@ -176,11 +183,17 @@ You can optionally assign tags to the role:
     description: `
 Update an existing role's details.
 
-All fields are optional - only provide the fields you want to update.
+All fields are optional - only provide the fields you want to update. Scope is provided via query parameters.
 
 ### Tags
 - \`tagIds\`: Replace all tags with new array
 - \`primaryTagId\`: Set or update the primary tag (must be included in tagIds)
+
+### Groups
+- \`groupIds\`: Replace all groups with new array
+
+### Metadata
+Optional key-value metadata can be provided via \`metadata\` (JSON object).
     `.trim(),
     request: {
       params: roleParamsSchema,

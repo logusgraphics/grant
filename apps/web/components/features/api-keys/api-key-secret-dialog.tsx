@@ -1,16 +1,20 @@
 'use client';
 
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { CopyToClipboard } from '@/components/common';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getApiBaseUrl } from '@/lib/constants';
 
 export interface ApiKeySecretDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clientId: string;
   clientSecret: string;
+  /** Scope for server-side integration (tenant + id). When set, included in downloaded credentials. */
+  scope?: { tenant: string; id: string } | null;
 }
 
 export function ApiKeySecretDialog({
@@ -18,6 +22,7 @@ export function ApiKeySecretDialog({
   onOpenChange,
   clientId,
   clientSecret,
+  scope,
 }: ApiKeySecretDialogProps) {
   const t = useTranslations('user.apiKeys.secretDialog');
 
@@ -27,6 +32,27 @@ export function ApiKeySecretDialog({
 
   const handleEscapeKeyDown = (event: KeyboardEvent) => {
     event.preventDefault();
+  };
+
+  const handleDownloadCredentials = () => {
+    const apiBaseUrl = getApiBaseUrl().replace(/\/$/, '');
+    const credentials = {
+      clientId,
+      clientSecret,
+      scope: scope ?? null,
+      apiBaseUrl,
+      /** Endpoint to exchange client_id + client_secret for a JWT (POST). */
+      tokenUrl: `${apiBaseUrl}/api/auth/token`,
+    };
+    const blob = new Blob([JSON.stringify(credentials, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `api-key-credentials-${clientId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -69,6 +95,16 @@ export function ApiKeySecretDialog({
               <CopyToClipboard text={clientSecret} size="sm" variant="outline" />
             </div>
           </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleDownloadCredentials}
+          >
+            <Download className="size-4" />
+            {t('downloadCredentials')}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

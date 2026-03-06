@@ -30,6 +30,9 @@ export interface IRoleService {
     params: Omit<QueryRolesArgs, 'scope' | 'tagIds'> & SelectedFields<Role>
   ): Promise<RolePage>;
 
+  /** Resolve role by id (e.g. for ProjectApp.signUpRole). */
+  getRoleById(id: string, transaction?: unknown): Promise<Role | null>;
+
   createRole(
     params: Omit<CreateRoleInput, 'scope' | 'tagIds' | 'groupIds'>,
     transaction?: unknown

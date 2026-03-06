@@ -3,6 +3,12 @@
     "common": {
       "unknownError": "Ein unbekannter Fehler ist aufgetreten"
     },
+    "validation": {
+      "invalidUrl": "Muss eine gültige URL sein",
+      "redirectUrisMinOne": "Mindestens eine Weiterleitungs-URI ist erforderlich",
+      "nameTooLong": "Name ist zu lang",
+      "signUpRoleRequired": "Rolle für neue Nutzer ist erforderlich, wenn Registrierung erlaubt ist."
+    },
     "notFound": {
       "title": "Seite nicht gefunden",
       "description": "Die gesuchte Seite existiert nicht oder wurde verschoben. Überprüfen Sie die URL oder navigieren Sie zurück.",
@@ -105,6 +111,8 @@
     "loading": "Wird geladen...",
     "noItemsAvailable": "Keine Einträge verfügbar",
     "noTagsAvailable": "Keine Tags verfügbar",
+    "yes": "Ja",
+    "no": "Nein",
     "redirecting": "Wird weitergeleitet...",
     "error": "Fehler",
     "organizations": {
@@ -152,7 +160,8 @@
       "account": "Account",
       "settings": "Einstellungen",
       "backToOrganization": "Zurück zur Organisation",
-      "signingKeys": "Signierungsschlüssel (JWKS)"
+      "signingKeys": "Signierungsschlüssel (JWKS)",
+      "projectApps": "Apps"
     }
   },
   "theme": {
@@ -242,7 +251,20 @@
       "errorUnknown": "Ein unbekannter Fehler ist aufgetreten",
       "verificationRequired": "E-Mail-Verification erforderlich",
       "verifyEmailDescription": "Bitte verifizieren Sie Ihre E-Mail für vollen Zugriff",
-      "redirecting": "Weiterleitung zum Dashboard..."
+      "redirecting": "Weiterleitung zum Dashboard...",
+      "oauthErrors": {
+        "accountCreationFailed": "Anmeldung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder nutzen Sie eine andere Anmeldemethode.",
+        "accountExists": "Es existiert bereits ein Konto mit dieser Anmeldemethode. Melden Sie sich stattdessen damit an.",
+        "signUpDisabled": "Registrierung ist für diese App deaktiviert. Bitte nutzen Sie ein bestehendes Konto oder wenden Sie sich an den App-Betreiber.",
+        "invalidState": "Dieser Anmeldelink ist abgelaufen oder wurde bereits genutzt. Bitte starten Sie die Anmeldung erneut.",
+        "userNotInProject": "Ihr Konto ist kein Mitglied des Projekts dieser App. Bitten Sie den Projektinhaber, Sie hinzuzufügen, oder nutzen Sie ein Konto mit Zugriff.",
+        "scopeResolutionFailed": "Ihr Zugriff für diese App konnte nicht ermittelt werden. Bitte wenden Sie sich an den Support.",
+        "redirectUriInvalid": "Die Weiterleitungs-URL der App ist ungültig oder nicht erlaubt. Bitte wenden Sie sich an den App-Betreiber.",
+        "oauthNotConfigured": "Anmeldung ist nicht konfiguriert. Bitte wenden Sie sich an den Support.",
+        "githubUserInfoFailed": "GitHub-Informationen konnten nicht abgerufen werden. Bitte versuchen Sie es erneut.",
+        "githubUnavailable": "GitHub ist vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
+        "oauthError": "Anmeldung wurde abgebrochen oder ist fehlgeschlagen. Bitte versuchen Sie es erneut."
+      }
     },
     "register": {
       "title": "Identität erstellen",
@@ -426,6 +448,62 @@
         "error": "GitHub-Authentifizierung fehlgeschlagen",
         "errorDescription": "Bei der GitHub-Authentifizierung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
       }
+    },
+    "projectOAuth": {
+      "entry": {
+        "loading": "Laden…",
+        "signInTitle": "Anmelden",
+        "missingClientId": "client_id fehlt",
+        "missingParams": "client_id oder redirect_uri fehlt.",
+        "backToLogin": "Zurück zur Anmeldung",
+        "signInTo": "Bei {appName} anmelden",
+        "thisApp": "diese App",
+        "requestingAccess": "Diese App möchte auf Ihr Konto zugreifen.",
+        "requestedPermissions": "Angeforderte Berechtigungen",
+        "signInWith": "Anmelden mit",
+        "email": "E-Mail",
+        "github": "GitHub",
+        "failedToLoad": "App konnte nicht geladen werden"
+      },
+      "email": {
+        "title": "Mit E-Mail anmelden",
+        "description": "Geben Sie Ihre E-Mail-Adresse ein, wir senden Ihnen einen Anmeldelink.",
+        "emailLabel": "E-Mail",
+        "emailPlaceholder": "sie@beispiel.de",
+        "emailRequired": "E-Mail ist erforderlich",
+        "invalidEmail": "Ungültige E-Mail-Adresse",
+        "sendLink": "Anmeldelink senden",
+        "sending": "Wird gesendet…",
+        "checkEmailTitle": "E-Mail prüfen",
+        "checkEmailDescription": "Wir haben Ihnen einen Anmeldelink gesendet. Klicken Sie auf den Link in der E-Mail, um fortzufahren.",
+        "missingParams": "client_id oder redirect_uri fehlt.",
+        "backToLogin": "Zurück zur Anmeldung",
+        "requestFailed": "Anfrage fehlgeschlagen",
+        "somethingWentWrong": "Etwas ist schiefgelaufen"
+      },
+      "consent": {
+        "loading": "Laden…",
+        "title": "Einwilligung",
+        "missingToken": "consent_token fehlt",
+        "signedInAs": "Angemeldet als",
+        "wantsAccess": "{appName} möchte auf Ihr Konto zugreifen",
+        "thisApp": "Diese App",
+        "reviewPermissions": "Prüfen Sie die Berechtigungen unten und erlauben oder verweigern Sie den Zugriff.",
+        "permissions": "Berechtigungen",
+        "allow": "Erlauben",
+        "deny": "Verweigern",
+        "redirecting": "Weiterleitung…",
+        "failedToLoad": "Laden fehlgeschlagen",
+        "approveFailed": "Zustimmung fehlgeschlagen",
+        "denyFailed": "Ablehnung fehlgeschlagen"
+      },
+      "relay": {
+        "completing": "Anmeldung wird abgeschlossen…",
+        "complete": "Anmeldung abgeschlossen. Dieses Fenster wird geschlossen.",
+        "noOpener": "Diese Seite sollte als Popup der App geöffnet werden.",
+        "closeTab": "Sie können diesen Tab schließen.",
+        "error": "Ergebnis konnte nicht gesendet werden"
+      }
     }
   },
   "users": {
@@ -463,6 +541,7 @@
       "email": "E-Mail",
       "roles": "Rollen",
       "tags": "Tags",
+      "authMethods": "Anmeldemethoden",
       "metadata": "Metadaten",
       "showMetadata": "Metadaten anzeigen",
       "primaryTag": "Haupt-Tag",
@@ -542,6 +621,7 @@
       "email": "E-Mail",
       "roles": "Rollen",
       "tags": "Tags",
+      "authMethods": "Anmeldemethoden",
       "audit": "Audit",
       "created": "Erstellt",
       "updated": "Aktualisiert",
@@ -557,7 +637,8 @@
       "title": "Benutzerinformationen",
       "userId": "Benutzer-ID",
       "created": "Erstellt",
-      "updated": "Aktualisiert"
+      "updated": "Aktualisiert",
+      "authMethods": "Anmeldemethoden"
     },
     "roles": {
       "title": "Rollen",
@@ -691,7 +772,8 @@
         "warning": "Dies ist das letzte Mal, dass Sie das Client-Geheimnis einsehen können. Stellen Sie sicher, dass Sie es jetzt kopieren und sicher aufbewahren.",
         "clientId": "Client-ID",
         "clientSecret": "Client-Geheimnis",
-        "close": "Ich habe meine Anmeldedaten gespeichert"
+        "close": "Ich habe meine Anmeldedaten gespeichert",
+        "downloadCredentials": "Anmeldedaten herunterladen"
       }
     },
     "groups": {
@@ -863,6 +945,122 @@
       "organizationAdmin": "Administrativer Zugriff zur Verwaltung von Organisationseinstellungen und Mitgliedern",
       "organizationDev": "Entwicklerzugriff zur Verwaltung von Projekten und Ressourcen",
       "organizationViewer": "Nur-Lese-Zugriff zum Anzeigen von Organisationsressourcen"
+    }
+  },
+  "projectApps": {
+    "common": {
+      "yes": "Ja",
+      "no": "Nein"
+    },
+    "title": "Apps",
+    "empty": {
+      "title": "Keine Apps",
+      "description": "Erstellen Sie eine OAuth-App für dieses Projekt für Anmeldung oder API-Zugriff."
+    },
+    "limit": "Einträge pro Seite",
+    "search": {
+      "placeholder": "Nach Name oder Client-ID suchen..."
+    },
+    "noSearchResults": {
+      "title": "Keine passenden Apps",
+      "description": "Versuchen Sie, die Suche anzupassen."
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "name": "Name",
+      "createdAt": "Erstellt"
+    },
+    "view": {
+      "table": "Tabelle",
+      "card": "Karten"
+    },
+    "table": {
+      "name": "Name",
+      "clientId": "Client-ID",
+      "redirectUris": "Weiterleitungs-URIs",
+      "enabledProviders": "Auth-Anbieter",
+      "allowSignUp": "Registrierung erlauben",
+      "signUpRole": "Rolle für neue Nutzer",
+      "scopes": "Bereiche",
+      "tags": "Tags",
+      "audit": "Audit",
+      "createdAt": "Erstellt",
+      "updatedAt": "Aktualisiert"
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Anzeigename der App",
+      "redirectUris": "Weiterleitungs-URIs",
+      "redirectUrisPlaceholder": "Weiterleitungs-URI hinzufügen (z. B. https://app.example.com/callback)",
+      "enabledProviders": "Auth-Anbieter",
+      "noProvidersAvailable": "Keine Anbieter verfügbar",
+      "scopes": "Bereiche",
+      "scopesPlaceholder": "Bereich hinzufügen (z. B. openid)",
+      "noScopesAvailable": "Keine Projektberechtigungen verfügbar. Fügen Sie zuerst Berechtigungen zum Projekt hinzu.",
+      "allowSignUp": "Registrierung erlauben",
+      "signUpRole": "Rolle für neue Nutzer",
+      "signUpRolePlaceholder": "Rolle auswählen",
+      "tags": "Tags",
+      "primaryTag": "Primärer Tag",
+      "tagsLoading": "Tags werden geladen...",
+      "noTagsAvailable": "Keine Tags verfügbar"
+    },
+    "providers": {
+      "email": "E-Mail",
+      "github": "GitHub"
+    },
+    "createDialog": {
+      "title": "App erstellen",
+      "description": "Registrieren Sie eine OAuth-App für dieses Projekt. Sie erhalten eine Client-ID und optional ein Client-Geheimnis.",
+      "trigger": "App erstellen",
+      "confirm": "Erstellen",
+      "cancel": "Abbrechen",
+      "submitting": "Wird erstellt..."
+    },
+    "editDialog": {
+      "title": "App bearbeiten",
+      "description": "App-Name, Weiterleitungs-URIs oder Bereiche aktualisieren.",
+      "confirm": "Speichern",
+      "cancel": "Abbrechen",
+      "submitting": "Wird gespeichert..."
+    },
+    "deleteDialog": {
+      "title": "App löschen",
+      "description": "Möchten Sie \"{name}\" wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "confirm": "Löschen"
+    },
+    "secretDialog": {
+      "title": "App erstellt",
+      "warning": "Speichern Sie das Client-Geheimnis jetzt. Sie können es nicht erneut einsehen.",
+      "clientId": "Client-ID",
+      "clientSecret": "Client-Geheimnis",
+      "downloadCredentials": "Anmeldedaten herunterladen"
+    },
+    "testDialog": {
+      "title": "App testen",
+      "description": "Wählen Sie eine Weiterleitungs-URI und optional Bereiche, dann starten Sie den Projekt-OAuth-Flow.",
+      "redirectUri": "Weiterleitungs-URI",
+      "redirectUriPlaceholder": "Weiterleitungs-URI wählen",
+      "scopes": "Bereiche (optional)",
+      "scopesLoading": "Bereiche werden geladen...",
+      "noScopesAvailable": "Keine Bereiche verfügbar",
+      "noRedirectUris": "Diese App hat keine Weiterleitungs-URIs. Fügen Sie mindestens eine in den App-Einstellungen hinzu, um zu testen.",
+      "cancel": "Abbrechen",
+      "confirm": "App testen"
+    },
+    "actions": {
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "test": "App testen"
+    },
+    "notifications": {
+      "createSuccess": "Projekt-App erstellt",
+      "createError": "Projekt-App konnte nicht erstellt werden",
+      "updateSuccess": "Projekt-App aktualisiert",
+      "updateError": "Projekt-App konnte nicht aktualisiert werden",
+      "deleteSuccess": "Projekt-App gelöscht",
+      "deleteError": "Projekt-App konnte nicht gelöscht werden"
     }
   },
   "resources": {

@@ -29,6 +29,7 @@ export const ResourceSlug = {
   Account: 'Account',
   Organization: 'Organization',
   Project: 'Project',
+  ProjectApp: 'ProjectApp',
   Resource: 'Resource',
   Role: 'Role',
   Group: 'Group',
@@ -71,6 +72,14 @@ const RESOURCES: Record<ResourceSlug, ResourceTemplate> = {
     ],
   },
   [ResourceSlug.Project]: {
+    actions: [
+      ResourceAction.Create,
+      ResourceAction.Update,
+      ResourceAction.Delete,
+      ResourceAction.Query,
+    ],
+  },
+  [ResourceSlug.ProjectApp]: {
     actions: [
       ResourceAction.Create,
       ResourceAction.Update,

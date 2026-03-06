@@ -185,15 +185,20 @@ export class UserAuthenticationMethodRepository
     return result.items[0] || null;
   }
 
+  /**
+   * Find auth method by email (case-insensitive).
+   * Checks Email provider by providerId, then GitHub provider by providerData.email.
+   */
   async findByEmail(
     email: string,
     transaction?: Transaction
   ): Promise<UserAuthenticationMethod | null> {
+    const emailNorm = email.trim().toLowerCase();
     const emailProviderResult = await this.query(
       {
         filters: [
           { field: 'provider', operator: 'eq', value: UserAuthenticationMethodProvider.Email },
-          { field: 'providerId', operator: 'eq', value: email },
+          { field: 'providerId', operator: 'ilike', value: emailNorm },
         ],
         limit: 1,
       },
@@ -210,8 +215,8 @@ export class UserAuthenticationMethodRepository
           { field: 'provider', operator: 'eq', value: UserAuthenticationMethodProvider.Github },
           {
             field: 'providerData.email' as keyof UserAuthenticationMethodModel,
-            operator: 'eq',
-            value: email,
+            operator: 'ilike',
+            value: emailNorm,
           },
         ],
         limit: 1,

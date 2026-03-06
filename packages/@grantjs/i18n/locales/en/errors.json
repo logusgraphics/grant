@@ -85,6 +85,7 @@
     "slugMin2": "Slug must be at least 2 characters",
     "actionRequired": "Action is required",
     "actionTooLong": "Action too long",
+    "actionInvalidFormat": "Action must contain only letters, numbers, hyphens, and plus (no spaces)",
     "resourceRequired": "Resource slug is required",
     "scopeIdRequired": "Scope ID is required",
     "scopeIdInvalid": "Invalid scope ID: must be a UUID or multiple UUIDs separated by colons",
@@ -139,7 +140,9 @@
     "projectIdRequired": "Project ID is required",
     "tagIdRequired": "Tag ID is required",
     "groupIdsRequired": "Group IDs are required",
-    "tagIdsRequired": "Tag IDs are required"
+    "tagIdsRequired": "Tag IDs are required",
+    "redirectUrisMinOne": "At least one redirect URI is required",
+    "invalidProjectAppId": "Invalid project app ID"
   },
   "notFound": {
     "resource": "{{resource}} not found",
@@ -151,7 +154,8 @@
     "project": "Project not found",
     "account": "Account not found",
     "group": "Group not found",
-    "permission": "Permission not found"
+    "permission": "Permission not found",
+    "projectApp": "Project app not found"
   },
   "conflict": {
     "duplicateEntry": "A {{resource}} with this {{field}} already exists",

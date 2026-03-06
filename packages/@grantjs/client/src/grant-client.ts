@@ -3,6 +3,7 @@ import type {
   AuthorizationResult,
   PermissionQueryOptions,
   Scope,
+  SignInWithProjectAppOptions,
 } from './types';
 
 /**
@@ -57,6 +58,42 @@ export class GrantClient {
     options?: PermissionQueryOptions
   ): Promise<boolean> {
     return this.can(resource, action, options);
+  }
+
+  // ============================================================================
+  // Public API - Project OAuth (sign-in with project app)
+  // ============================================================================
+
+  /**
+   * Start project-app OAuth flow (redirect only).
+   * Navigates the current window to the Grant OAuth entry page; after sign-in and consent,
+   * the user is redirected to the app's `redirect_uri` with token in the URL fragment.
+   *
+   * Requires `config.frontendUrl` and `redirectUri`.
+   */
+  async signInWithProjectApp(options: SignInWithProjectAppOptions): Promise<void> {
+    const frontendUrl = this.config.frontendUrl;
+    if (!frontendUrl) {
+      throw new Error('GrantClient: frontendUrl is required for signInWithProjectApp');
+    }
+    const locale = options.locale ?? 'en';
+    const redirectUri = options.redirectUri;
+    if (!redirectUri) {
+      throw new Error('redirectUri is required for signInWithProjectApp');
+    }
+
+    const entryPath = `/${locale}/auth/project`;
+    const params = new URLSearchParams({
+      client_id: options.clientId,
+      redirect_uri: redirectUri,
+      state: options.state ?? '',
+    });
+    if (options.scope) params.set('scope', options.scope);
+
+    const entryUrl = `${frontendUrl.replace(/\/$/, '')}${entryPath}?${params.toString()}`;
+    if (typeof window !== 'undefined') {
+      window.location.href = entryUrl;
+    }
   }
 
   /**

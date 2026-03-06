@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { User } from '@grantjs/schema';
-import { Calendar, Fingerprint, Pencil } from 'lucide-react';
+import { Calendar, Fingerprint, Github, LogIn, Mail, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Avatar, CopyToClipboard, EditableText } from '@/components/common';
@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { useScopeFromParams } from '@/hooks';
 import { useUserMutations } from '@/hooks/users';
 import { getInitials } from '@/lib/utils';
+
+import type { LucideIcon } from 'lucide-react';
 
 interface UserInfoProps {
   user: User;
@@ -33,8 +35,20 @@ function isValidImageUrl(url: string | null | undefined): url is string {
   );
 }
 
+function getAuthMethodIcon(provider: string): LucideIcon {
+  switch (provider.toLowerCase()) {
+    case 'email':
+      return Mail;
+    case 'github':
+      return Github;
+    default:
+      return LogIn;
+  }
+}
+
 export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
   const t = useTranslations('user.info');
+  const tProjectApps = useTranslations('projectApps');
   const scope = useScopeFromParams();
   const { uploadUserPicture, updateUser } = useUserMutations();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -100,6 +114,26 @@ export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
               <span className="font-semibold">{user.id}</span>
               <CopyToClipboard text={user.id} size="sm" variant="ghost" />
             </div>
+            {(user.authenticationMethods?.length ?? 0) > 0 &&
+              user.authenticationMethods!.map((m) => {
+                const Icon = getAuthMethodIcon(m.provider);
+                return (
+                  <div
+                    key={`${m.provider}-${m.providerId}`}
+                    className="inline-flex items-center gap-2 text-sm"
+                  >
+                    <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-muted-foreground">
+                      {tProjectApps(
+                        `providers.${m.provider}` as 'providers.email' | 'providers.github'
+                      )}
+                      :
+                    </span>
+                    <span className="font-semibold">{m.providerId}</span>
+                    <CopyToClipboard text={m.providerId} size="sm" variant="ghost" />
+                  </div>
+                );
+              })}
             <div className="inline-flex items-center gap-4 text-sm">
               <div className="inline-flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />

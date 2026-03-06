@@ -11,6 +11,8 @@ import { OrganizationInvitationsHandler } from './organization-invitations.handl
 import { OrganizationMembersHandler } from './organization-members.handler';
 import { OrganizationHandler } from './organizations.handler';
 import { PermissionHandler } from './permissions.handler';
+import { ProjectAppsHandler } from './project-apps.handler';
+import { ProjectOAuthHandler } from './project-oauth.handler';
 import { ProjectHandler } from './projects.handler';
 import { ResourceHandler } from './resources.handler';
 import { RoleHandler } from './roles.handler';
@@ -18,15 +20,41 @@ import { SigningKeysHandler } from './signing-keys.handler';
 import { TagHandler } from './tags.handler';
 import { UserHandler } from './users.handler';
 
-import type { ITransactionalConnection } from '@grantjs/core';
+import type { Grant, ITransactionalConnection } from '@grantjs/core';
 
 export type Handlers = ReturnType<typeof createHandlers>;
 
 export function createHandlers(
   cache: IEntityCacheAdapter,
   services: Services,
-  db: ITransactionalConnection<Transaction>
+  db: ITransactionalConnection<Transaction>,
+  grant: Grant
 ) {
+  const userHandler = new UserHandler(
+    services.userTags,
+    services.users,
+    services.organizationUsers,
+    services.projectUsers,
+    services.userRoles,
+    services.fileStorage,
+    cache,
+    services,
+    db
+  );
+  const authHandler = new AuthHandler(
+    services.userAuthenticationMethods,
+    services.users,
+    services.accounts,
+    services.accountRoles,
+    services.userRoles,
+    services.userSessions,
+    services.email,
+    services.auth,
+    cache,
+    services,
+    db
+  );
+
   return {
     me: new MeHandler(
       services.me,
@@ -56,18 +84,24 @@ export function createHandlers(
       db
     ),
     signingKeys: new SigningKeysHandler(services.signingKeys, cache, services, db),
-    auth: new AuthHandler(
-      services.userAuthenticationMethods,
-      services.users,
-      services.accounts,
-      services.accountRoles,
+    auth: authHandler,
+    projectOAuth: new ProjectOAuthHandler(
+      services.projectApps,
+      services.projectPermissions,
+      services.projectUsers,
       services.userRoles,
-      services.userSessions,
-      services.email,
-      services.auth,
+      services.accountProjects,
+      services.organizationProjects,
+      services.accounts,
+      services.organizationUsers,
+      authHandler,
+      services.githubOAuth,
+      grant,
       cache,
-      services,
-      db
+      services.email,
+      services.users,
+      services.userAuthenticationMethods,
+      userHandler
     ),
     groups: new GroupHandler(
       services.groupTags,
@@ -147,6 +181,13 @@ export function createHandlers(
       services,
       db
     ),
+    projectApps: new ProjectAppsHandler(
+      services.projectApps,
+      services.projectAppTags,
+      cache,
+      services,
+      db
+    ),
     resources: new ResourceHandler(
       services.resourceTags,
       services.resources,
@@ -185,16 +226,6 @@ export function createHandlers(
       services,
       db
     ),
-    users: new UserHandler(
-      services.userTags,
-      services.users,
-      services.organizationUsers,
-      services.projectUsers,
-      services.userRoles,
-      services.fileStorage,
-      cache,
-      services,
-      db
-    ),
+    users: userHandler,
   };
 }

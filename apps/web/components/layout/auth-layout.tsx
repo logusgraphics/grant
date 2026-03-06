@@ -8,6 +8,18 @@ interface AuthLayoutProps {
   description?: string;
 }
 
+/**
+ * Minimal single-column layout for auth pages when embedded in popup/iframe (?display=popup).
+ * No right panel, no main app nav; centered content only.
+ */
+export function AuthLayoutStandalone({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm">{children}</div>
+    </div>
+  );
+}
+
 export function AuthLayout({ children, title, description }: AuthLayoutProps) {
   const t = useTranslations('auth');
 

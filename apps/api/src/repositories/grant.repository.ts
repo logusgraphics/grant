@@ -25,8 +25,8 @@ import {
   userRoles,
   users,
 } from '@grantjs/database';
-import { Permission, Scope, Tenant } from '@grantjs/schema';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { Permission, Scope, Tenant, TokenType } from '@grantjs/schema';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
@@ -83,6 +83,8 @@ export class GrantRepository implements IGrantRepository {
     }
 
     const db = transaction || this.db;
+    const actionNorm = action.trim().toLowerCase();
+    const slugNorm = resourceSlug.trim().toLowerCase();
 
     const permissionsWithResources = await db
       .select({
@@ -115,8 +117,8 @@ export class GrantRepository implements IGrantRepository {
       .where(
         and(
           inArray(permissions.id, permissionIds),
-          eq(permissions.action, action),
-          eq(resources.slug, resourceSlug),
+          sql`lower(${permissions.action}) = ${actionNorm}`,
+          sql`lower(${resources.slug}) = ${slugNorm}`,
           isNull(permissions.deletedAt)
         )
       );
@@ -138,10 +140,11 @@ export class GrantRepository implements IGrantRepository {
   public async getUserRoles(
     userId: string,
     scope: Scope,
-    transaction?: Transaction
+    transaction?: Transaction,
+    options?: { tokenType?: TokenType }
   ): Promise<ExecutionContextRole[]> {
     const db = transaction || this.db;
-    const roleIds = await this.getUserRoleIdsInScope(userId, scope, transaction);
+    const roleIds = await this.getUserRoleIdsInScope(userId, scope, transaction, options);
 
     if (roleIds.length === 0) {
       return [];
@@ -161,10 +164,11 @@ export class GrantRepository implements IGrantRepository {
   public async getUserGroups(
     userId: string,
     scope: Scope,
-    transaction?: Transaction
+    transaction?: Transaction,
+    options?: { tokenType?: TokenType }
   ): Promise<ExecutionContextGroup[]> {
     const db = transaction || this.db;
-    const roleIds = await this.getUserRoleIdsInScope(userId, scope, transaction);
+    const roleIds = await this.getUserRoleIdsInScope(userId, scope, transaction, options);
 
     if (roleIds.length === 0) {
       return [];
@@ -190,9 +194,12 @@ export class GrantRepository implements IGrantRepository {
   public async getUserRoleIdsInScope(
     userId: string,
     scope: Scope,
-    transaction?: Transaction
+    transaction?: Transaction,
+    options?: { tokenType?: TokenType }
   ): Promise<string[]> {
     const db = transaction || this.db;
+    const useProjectRolesOnly =
+      options?.tokenType === TokenType.ProjectApp || options?.tokenType === TokenType.ApiKey;
 
     switch (scope.tenant) {
       case Tenant.Account: {
@@ -281,7 +288,29 @@ export class GrantRepository implements IGrantRepository {
             );
           }
         }
-        // User path: session user or fallback when no project key — resolve user's roles in this account/project
+        // User path: Session uses account-level roles for project (dashboard); ProjectApp/ApiKey use project_roles only.
+        if (useProjectRolesOnly) {
+          const accountProjectRolesResult = await db
+            .select({ roleId: roles.id })
+            .from(userRoles)
+            .innerJoin(roles, eq(userRoles.roleId, roles.id))
+            .innerJoin(
+              projectRoles,
+              and(
+                eq(projectRoles.roleId, roles.id),
+                eq(projectRoles.projectId, projectId),
+                isNull(projectRoles.deletedAt)
+              )
+            )
+            .where(
+              and(
+                eq(userRoles.userId, userId),
+                isNull(userRoles.deletedAt),
+                isNull(roles.deletedAt)
+              )
+            );
+          return accountProjectRolesResult.map((r: { roleId: string }) => r.roleId);
+        }
         const accountRolesResult = await db
           .select({ roleId: roles.id })
           .from(userRoles)
@@ -349,8 +378,30 @@ export class GrantRepository implements IGrantRepository {
             );
           }
         }
-        // User path: session user or fallback when no project key — resolve user's roles in this org/project
-        const projectRolesResult = await db
+        // User path: Session uses org-level roles for project (dashboard); ProjectApp/ApiKey use project_roles only.
+        if (useProjectRolesOnly) {
+          const projectRolesResult = await db
+            .select({ roleId: roles.id })
+            .from(userRoles)
+            .innerJoin(roles, eq(userRoles.roleId, roles.id))
+            .innerJoin(
+              projectRoles,
+              and(
+                eq(projectRoles.roleId, roles.id),
+                eq(projectRoles.projectId, projectId),
+                isNull(projectRoles.deletedAt)
+              )
+            )
+            .where(
+              and(
+                eq(userRoles.userId, userId),
+                isNull(userRoles.deletedAt),
+                isNull(roles.deletedAt)
+              )
+            );
+          return projectRolesResult.map((r: { roleId: string }) => r.roleId);
+        }
+        const orgProjectRolesResult = await db
           .select({ roleId: roles.id })
           .from(userRoles)
           .innerJoin(roles, eq(userRoles.roleId, roles.id))
@@ -390,7 +441,7 @@ export class GrantRepository implements IGrantRepository {
               isNull(organizationProjects.deletedAt)
             )
           );
-        return projectRolesResult.map((r: { roleId: string }) => r.roleId);
+        return orgProjectRolesResult.map((r: { roleId: string }) => r.roleId);
       }
 
       case Tenant.ProjectUser: {

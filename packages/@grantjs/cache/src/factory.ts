@@ -36,6 +36,7 @@ const entityTypes = [
   'resources',
   'tags',
   'projects',
+  'projectApps',
   'apiKeys',
   'signingKeys',
   'oauth',

@@ -1,0 +1,50 @@
+query GetProjectApps(
+  $scope: Scope!
+  $page: Int
+  $limit: Int
+  $search: String
+  $sort: ProjectAppSortInput
+  $ids: [ID!]
+  $tagIds: [ID!]
+) {
+  projectApps(
+    scope: $scope
+    page: $page
+    limit: $limit
+    search: $search
+    sort: $sort
+    ids: $ids
+    tagIds: $tagIds
+  ) {
+    projectApps {
+      id
+      projectId
+      clientId
+      name
+      redirectUris
+      scopes
+      enabledProviders
+      allowSignUp
+      signUpRoleId
+      signUpRole {
+        id
+        name
+      }
+      createdAt
+      updatedAt
+      deletedAt
+      project {
+        id
+        name
+      }
+      tags {
+        id
+        name
+        color
+        isPrimary
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+}

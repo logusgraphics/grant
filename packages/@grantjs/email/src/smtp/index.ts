@@ -1,16 +1,16 @@
+import { GrantException } from '@grantjs/core';
 import nodemailer, { Transporter } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
+import type { EmailTemplates } from '../templates';
 import type {
   IEmailService,
   ILogger,
   SendInvitationParams,
   SendOtpParams,
   SendPasswordResetParams,
+  SendProjectOAuthMagicLinkParams,
 } from '@grantjs/core';
-import { GrantException } from '@grantjs/core';
-
-import type { EmailTemplates } from '../templates';
 
 export interface SmtpConfig {
   host: string;
@@ -116,6 +116,28 @@ export class SmtpEmailAdapter implements IEmailService {
     } catch (error) {
       throw new GrantException(
         `Failed to send password reset email: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'EMAIL_SEND_ERROR',
+        error instanceof Error ? error : undefined
+      );
+    }
+  }
+
+  async sendProjectOAuthMagicLink(params: SendProjectOAuthMagicLinkParams): Promise<void> {
+    const subject = this.templates.getProjectOAuthMagicLinkEmailSubject(params);
+    const html = this.templates.getProjectOAuthMagicLinkEmailHtml(params);
+    const text = this.templates.getProjectOAuthMagicLinkEmailText(params);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to: params.to,
+        subject,
+        text,
+        html,
+      });
+    } catch (error) {
+      throw new GrantException(
+        `Failed to send project OAuth magic link: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'EMAIL_SEND_ERROR',
         error instanceof Error ? error : undefined
       );

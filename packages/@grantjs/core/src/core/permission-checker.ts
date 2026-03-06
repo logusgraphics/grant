@@ -125,7 +125,7 @@ export class PermissionChecker {
   }
 
   public async check(params: CheckPermissionParams): Promise<AuthorizationResult> {
-    const { userId, scope, permission, context } = params;
+    const { userId, scope, permission, context, tokenType } = params;
 
     const resourceSlug = permission.resource;
     const resolvedResource = context.resource;
@@ -135,7 +135,8 @@ export class PermissionChecker {
       userId,
       scope,
       resourceSlug,
-      action
+      action,
+      tokenType
     );
 
     if (permissions.length === 0) {
@@ -157,8 +158,8 @@ export class PermissionChecker {
     }
 
     const user = await this.authorizationService.getUser(userId, scope);
-    const roles = await this.authorizationService.getUserRoles(userId, scope);
-    const groups = await this.authorizationService.getUserGroups(userId, scope);
+    const roles = await this.authorizationService.getUserRoles(userId, scope, tokenType);
+    const groups = await this.authorizationService.getUserGroups(userId, scope, tokenType);
 
     for (const conditionalPermission of conditionalPermissions) {
       const { authorized, context } = await this.evaluatePermissionCondition({

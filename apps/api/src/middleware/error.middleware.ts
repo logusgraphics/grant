@@ -25,10 +25,12 @@ export function errorHandler(error: Error, req: Request, res: Response, _next: N
 
   if (httpError) {
     const localizedMessage = translateError(req, httpError);
+    const is4xx = httpError.statusCode >= 400 && httpError.statusCode < 500;
 
     res.status(httpError.statusCode).json({
       error: localizedMessage,
       code: httpError.code,
+      ...(is4xx && error instanceof GrantException && { details: error.message }),
       ...(httpError.translationKey && { translationKey: httpError.translationKey }),
       ...(httpError.translationParams && { translationParams: httpError.translationParams }),
       ...(httpError.extensions && { extensions: httpError.extensions }),

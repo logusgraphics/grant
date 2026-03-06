@@ -78,7 +78,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
         const scopedRepositories = createRepositories(scopedDb);
         const services = createServices(scopedRepositories, user, scopedDb, cache, grant);
         const txConnection = new DrizzleTransactionalConnection(scopedDb);
-        const handlers = createHandlers(cache, services, txConnection);
+        const handlers = createHandlers(cache, services, txConnection, grant);
         const resourceResolvers = createResourceResolvers();
 
         (req as ContextRequest).context = {
@@ -108,7 +108,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
       // Unscoped / system / RLS-disabled: no transaction, use global db.
       const services = createServices(repositories, user, db, cache, grant);
       const txConnection = new DrizzleTransactionalConnection(db);
-      const handlers = createHandlers(cache, services, txConnection);
+      const handlers = createHandlers(cache, services, txConnection, grant);
       const resourceResolvers = createResourceResolvers();
 
       (req as ContextRequest).context = {

@@ -31,6 +31,7 @@ export type DialogFieldType =
   | 'switch'
   | 'collapsible-group'
   | 'slug'
+  | 'action-slug'
   | 'actions'
   | 'select'
   | 'json';
@@ -51,6 +52,8 @@ export interface DialogRelationship<T = unknown> {
   loading: boolean;
   loadingText: string;
   emptyText: string;
+  /** Optional custom component when items are empty (e.g. Alert). Rendered instead of emptyText. */
+  emptyComponent?: React.ReactNode;
   error?: string;
   renderComponent: (props: any) => React.ReactNode;
 }
@@ -76,4 +79,6 @@ export interface DialogField {
   dependsOn?: string;
   getOptions?: (dependsOnValue: string) => DialogFieldOption[];
   getType?: (dependsOnValue: string) => DialogFieldType;
+  /** For type 'actions': normalizer applied to each chip value (e.g. slugifyAction). */
+  normalizeValue?: (value: string) => string;
 }

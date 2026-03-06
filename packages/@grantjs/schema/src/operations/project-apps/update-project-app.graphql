@@ -1,0 +1,20 @@
+mutation UpdateProjectApp($id: ID!, $input: UpdateProjectAppInput!) {
+  updateProjectApp(id: $id, input: $input) {
+    id
+    projectId
+    clientId
+    name
+    redirectUris
+    scopes
+    enabledProviders
+    allowSignUp
+    signUpRoleId
+    createdAt
+    updatedAt
+    deletedAt
+    project {
+      id
+      name
+    }
+  }
+}

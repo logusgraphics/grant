@@ -3,6 +3,7 @@ import { GroupSortableField, SortOrder } from '@grantjs/schema';
 import { z } from '@/lib/zod-openapi.lib';
 import {
   createSuccessResponseSchema,
+  jsonSchema,
   listQuerySchema,
   scopeSchema,
   tenantSchema,
@@ -70,6 +71,10 @@ export const createGroupRequestSchema = z.object({
     description: 'Description of the group',
     example: 'Development and engineering staff',
   }),
+  metadata: jsonSchema.optional().openapi({
+    description: 'Arbitrary key-value metadata for the group',
+    example: { department: 'engineering', tier: 'premium' },
+  }),
   scope: scopeSchema,
   permissionIds: z
     .array(z.string())
@@ -106,6 +111,10 @@ export const updateGroupRequestSchema = z.object({
   description: z.string().optional().openapi({
     description: 'Updated description of the group',
     example: 'Senior development and engineering staff',
+  }),
+  metadata: jsonSchema.optional().openapi({
+    description: 'Arbitrary key-value metadata for the group',
+    example: { department: 'engineering', tier: 'premium' },
   }),
   permissionIds: z
     .array(z.string())

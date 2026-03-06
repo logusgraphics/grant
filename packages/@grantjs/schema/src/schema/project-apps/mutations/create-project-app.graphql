@@ -1,0 +1,6 @@
+extend type Mutation {
+  """
+  Create an OAuth app for a project. Allows project users to sign in with providers (e.g. GitHub) and receive tokens scoped to the project.
+  """
+  createProjectApp(input: CreateProjectAppInput!): CreateProjectAppResult!
+}

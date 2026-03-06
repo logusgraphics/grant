@@ -22,6 +22,13 @@ export interface SendPasswordResetParams {
   locale?: string;
 }
 
+export interface SendProjectOAuthMagicLinkParams {
+  to: string;
+  magicLinkUrl: string;
+  appName?: string;
+  locale?: string;
+}
+
 export interface IEmailService {
   /**
    * Send an organization invitation email
@@ -37,4 +44,9 @@ export interface IEmailService {
    * Send a password reset email with reset token
    */
   sendPasswordReset(params: SendPasswordResetParams): Promise<void>;
+
+  /**
+   * Send a project OAuth magic link (sign-in link for project app)
+   */
+  sendProjectOAuthMagicLink(params: SendProjectOAuthMagicLinkParams): Promise<void>;
 }

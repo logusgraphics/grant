@@ -160,6 +160,31 @@ AUTH_MAX_FAILED_LOGIN_ATTEMPTS=5
 AUTH_LOCKOUT_DURATION_MINUTES=15
 ```
 
+### GitHub OAuth Configuration
+
+Used for **platform sign-in/up** (GitHub login on the main app) and **Project App sign-in/up** (GitHub as a provider for project OAuth). One GitHub OAuth App can serve both flows.
+
+```bash
+# Client ID from your GitHub OAuth App
+GITHUB_CLIENT_ID=
+
+# Client Secret from your GitHub OAuth App
+GITHUB_CLIENT_SECRET=
+
+# Platform callback (default: {APP_URL}/api/auth/github/callback)
+GITHUB_CALLBACK_URL=http://localhost:4000/api/auth/github/callback
+
+# Project-app callback (default: {APP_URL}/api/auth/project/callback)
+GITHUB_PROJECT_CALLBACK_URL=http://localhost:4000/api/auth/project/callback
+```
+
+**Configuring the GitHub OAuth App:** GitHub OAuth Apps allow only **one** Authorization callback URL. To support both platform and project-app callbacks, set that single URL to the **base path** (not a full callback path):
+
+- **Local:** `http://localhost:4000/api/auth`
+- **Production:** `https://api.yourdomain.com/api/auth`
+
+GitHub accepts the registered URL and any subpath, so both `/api/auth/github/callback` and `/api/auth/project/callback` will be valid. See [Security → Configuring the GitHub OAuth app](/architecture/security#configuring-the-github-oauth-app) for step-by-step instructions.
+
 ### Cache Configuration
 
 Caching strategy for performance optimization:

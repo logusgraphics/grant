@@ -7,7 +7,7 @@ import type {
   ExecutionContextRole,
   ExecutionContextUser,
 } from '../../types';
-import type { Permission, Scope } from '@grantjs/schema';
+import type { Permission, Scope, TokenType } from '@grantjs/schema';
 
 export interface IGrantRepository {
   getUser(userId: string, scope?: Scope, transaction?: unknown): Promise<ExecutionContextUser>;
@@ -22,16 +22,23 @@ export interface IGrantRepository {
   getUserRoles(
     userId: string,
     scope: Scope,
-    transaction?: unknown
+    transaction?: unknown,
+    options?: { tokenType?: TokenType }
   ): Promise<ExecutionContextRole[]>;
 
   getUserGroups(
     userId: string,
     scope: Scope,
-    transaction?: unknown
+    transaction?: unknown,
+    options?: { tokenType?: TokenType }
   ): Promise<ExecutionContextGroup[]>;
 
-  getUserRoleIdsInScope(userId: string, scope: Scope, transaction?: unknown): Promise<string[]>;
+  getUserRoleIdsInScope(
+    userId: string,
+    scope: Scope,
+    transaction?: unknown,
+    options?: { tokenType?: TokenType }
+  ): Promise<string[]>;
 
   getGroupIdsForRoles(roleIds: string[], transaction?: unknown): Promise<string[]>;
 

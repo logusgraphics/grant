@@ -1,12 +1,12 @@
+import type { EmailTemplates } from '../templates';
 import type {
   IEmailService,
   ILogger,
   SendInvitationParams,
   SendOtpParams,
   SendPasswordResetParams,
+  SendProjectOAuthMagicLinkParams,
 } from '@grantjs/core';
-
-import type { EmailTemplates } from '../templates';
 
 /**
  * Console email adapter for development
@@ -54,6 +54,20 @@ export class ConsoleEmailAdapter implements IEmailService {
     this.logger.info({
       msg: '📧 PASSWORD RESET EMAIL (Console Adapter - Development Mode)',
       emailType: 'password-reset',
+      from: this.from,
+      to: params.to,
+      subject,
+      text,
+    });
+  }
+
+  async sendProjectOAuthMagicLink(params: SendProjectOAuthMagicLinkParams): Promise<void> {
+    const subject = this.templates.getProjectOAuthMagicLinkEmailSubject(params);
+    const text = this.templates.getProjectOAuthMagicLinkEmailText(params);
+
+    this.logger.info({
+      msg: '📧 PROJECT OAUTH MAGIC LINK (Console Adapter - Development Mode)',
+      emailType: 'project-oauth-magic-link',
       from: this.from,
       to: params.to,
       subject,

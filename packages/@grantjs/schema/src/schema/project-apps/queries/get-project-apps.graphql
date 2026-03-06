@@ -1,0 +1,14 @@
+extend type Query {
+  """
+  List OAuth apps for the given project scope. Allowed scopes: accountProject, organizationProject.
+  """
+  projectApps(
+    scope: Scope!
+    page: Int
+    limit: Int
+    search: String
+    sort: ProjectAppSortInput
+    ids: [ID!]
+    tagIds: [ID!]
+  ): ProjectAppPage!
+}

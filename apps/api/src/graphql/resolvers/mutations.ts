@@ -15,6 +15,7 @@ import * as organizationInvitationMutations from './organization-invitations/mut
 import * as organizationMemberMutations from './organization-members/mutations';
 import * as organizationMutations from './organizations/mutations';
 import * as permissionMutations from './permissions/mutations';
+import * as projectAppMutations from './project-apps/mutations';
 import * as projectMutations from './projects/mutations';
 import * as resourceMutations from './resources/mutations';
 import * as roleMutations from './roles/mutations';
@@ -344,6 +345,41 @@ export const Mutation = {
     authorizeGraphQLResolver(
       { resource: ResourceSlug.ApiKey, action: ResourceAction.Query },
       signingKeyMutations.rotateSigningKey!
+    )
+  ),
+
+  // Project apps (OAuth apps per project; scoped)
+  createProjectApp: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      {
+        resource: ResourceSlug.ProjectApp,
+        action: ResourceAction.Create,
+        resourceResolver: 'projectApp',
+      },
+      projectAppMutations.createProjectApp!
+    )
+  ),
+  updateProjectApp: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      {
+        resource: ResourceSlug.ProjectApp,
+        action: ResourceAction.Update,
+        resourceResolver: 'projectApp',
+      },
+      projectAppMutations.updateProjectApp!
+    )
+  ),
+  deleteProjectApp: requireEmailVerificationGraphQL(
+    ALLOW_PERSONAL,
+    authorizeGraphQLResolver(
+      {
+        resource: ResourceSlug.ProjectApp,
+        action: ResourceAction.Delete,
+        resourceResolver: 'projectApp',
+      },
+      projectAppMutations.deleteProjectApp!
     )
   ),
 } as const;

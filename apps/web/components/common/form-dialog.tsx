@@ -281,6 +281,7 @@ export function FormDialog<TFormValues extends Record<string, any>>({
             placeholder={field.placeholder ? t(field.placeholder) : undefined}
             disabled={isSubmitting}
             error={hasError ? (error?.message as string) : undefined}
+            normalizeValue={field.normalizeValue}
           />
         </div>
       );
@@ -428,6 +429,19 @@ export function FormDialog<TFormValues extends Record<string, any>>({
                   className={hasError ? 'border-red-500' : ''}
                   disabled={isSubmitting}
                 />
+              ) : fieldType === 'action-slug' ? (
+                <Input
+                  type="text"
+                  placeholder={field.placeholder ? t(field.placeholder) : t(field.label)}
+                  className={hasError ? 'border-red-500' : ''}
+                  disabled={isSubmitting}
+                  value={formField.value ?? ''}
+                  onBlur={formField.onBlur}
+                  onChange={(e) => {
+                    const filtered = e.target.value.replace(/[^A-Za-z0-9+-]/g, '');
+                    formField.onChange(filtered);
+                  }}
+                />
               ) : fieldType === 'select' ? (
                 <Select
                   value={formField.value || ''}
@@ -557,6 +571,7 @@ export function FormDialog<TFormValues extends Record<string, any>>({
                     loading: relationship.loading,
                     loadingText: t(relationship.loadingText),
                     emptyText: t(relationship.emptyText),
+                    emptyComponent: relationship.emptyComponent,
                     error: relationship.error,
                     disabled: isSubmitting,
                   })}

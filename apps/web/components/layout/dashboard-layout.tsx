@@ -47,7 +47,7 @@ export function DashboardLayout({
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 flex flex-col max-w-screen">{children}</div>
+          <div className="flex-1 flex flex-col max-w-screen overflow-auto">{children}</div>
 
           {/* Sticky Footer */}
           {footer && (

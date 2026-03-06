@@ -4,6 +4,22 @@ import type { Scope } from '@grantjs/schema';
 export type { Scope, Tenant } from '@grantjs/schema';
 
 /**
+ * Options for project-app OAuth sign-in (redirect only).
+ */
+export interface SignInWithProjectAppOptions {
+  /** Project app client_id */
+  clientId: string;
+  /** Callback URL; user is redirected here with token in the URL fragment after consent */
+  redirectUri: string;
+  /** Optional scope (if app supports dynamic scope) */
+  scope?: string;
+  /** Optional state to round-trip */
+  state?: string;
+  /** Locale for entry URL (e.g. 'en'). Default 'en'. */
+  locale?: string;
+}
+
+/**
  * Configuration for the Grant client
  */
 export interface GrantClientConfig {
@@ -11,6 +27,12 @@ export interface GrantClientConfig {
    * Grant API URL (e.g., "https://api.grant.com")
    */
   apiUrl: string;
+
+  /**
+   * Grant web app (frontend) URL for project OAuth entry (e.g. "https://app.grant.com").
+   * Required for signInWithProjectApp. Entry URL: {frontendUrl}/{locale}/auth/project.
+   */
+  frontendUrl?: string;
 
   /**
    * Function to get the current access token

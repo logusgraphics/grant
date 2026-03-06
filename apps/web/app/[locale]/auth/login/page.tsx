@@ -40,6 +40,7 @@ export default function LoginPage() {
 
   const redirectParam = searchParams.get('redirect');
   const emailParam = searchParams.get('email');
+  const errorParam = searchParams.get('error');
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -79,8 +80,31 @@ export default function LoginPage() {
     return <FullPageLoader />;
   }
 
+  const oauthErrorKey =
+    errorParam &&
+    [
+      'accountCreationFailed',
+      'accountExists',
+      'signUpDisabled',
+      'invalidState',
+      'userNotInProject',
+      'scopeResolutionFailed',
+      'redirectUriInvalid',
+      'oauthNotConfigured',
+      'githubUserInfoFailed',
+      'githubUnavailable',
+      'oauthError',
+    ].includes(errorParam)
+      ? `login.oauthErrors.${errorParam}`
+      : null;
+
   return (
     <div className="space-y-6">
+      {oauthErrorKey && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+          <p className="text-sm text-destructive">{t(oauthErrorKey)}</p>
+        </div>
+      )}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">{t('login.title')}</h1>
         <p className="text-gray-500">{t('login.description')}</p>

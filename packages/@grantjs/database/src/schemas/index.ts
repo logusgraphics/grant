@@ -21,6 +21,8 @@ export * from './organization-users.schema';
 export * from './organizations.schema';
 export * from './permission-tags.schema';
 export * from './permissions.schema';
+export * from './project-apps.schema';
+export * from './project-app-tags.schema';
 export * from './project-groups.schema';
 export * from './project-permissions.schema';
 export * from './project-resources.schema';

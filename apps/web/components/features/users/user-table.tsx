@@ -23,11 +23,19 @@ import { UserNavigationButton } from './user-navigation-button';
 
 export function UserTable() {
   const t = useTranslations('users');
+  const tProjectApps = useTranslations('projectApps');
 
   const limit = useUsersStore((state) => state.limit);
   const search = useUsersStore((state) => state.search);
   const users = useUsersStore((state) => state.users);
   const loading = useUsersStore((state) => state.loading);
+
+  const transformAuthMethodsToBadges = (user: User) =>
+    (user.authenticationMethods ?? []).map((m) => ({
+      id: `${m.provider}:${m.providerId}`,
+      label: tProjectApps(`providers.${m.provider}` as 'providers.email' | 'providers.github'),
+      title: m.providerId,
+    }));
 
   const transformRolesToBadges = (user: User) => {
     return (user.roles || []).map((role) => ({
@@ -77,6 +85,14 @@ export function UserTable() {
       render: (user: User) => <ScrollBadges items={transformRolesToBadges(user)} height={60} />,
     },
     {
+      key: 'authMethods',
+      header: t('table.authMethods'),
+      width: '140px',
+      render: (user: User) => (
+        <ScrollBadges items={transformAuthMethodsToBadges(user)} height={60} />
+      ),
+    },
+    {
       key: 'tags',
       header: t('table.tags'),
       width: '150px',
@@ -103,6 +119,7 @@ export function UserTable() {
       { key: 'avatar', type: 'avatar-only' },
       { key: 'name', type: 'text' },
       { key: 'roles', type: 'list' },
+      { key: 'authMethods', type: 'list' },
       { key: 'tags', type: 'list' },
       { key: 'audit', type: 'audit' },
       { key: 'navigation', type: 'icon' },

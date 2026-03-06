@@ -3,6 +3,12 @@
     "common": {
       "unknownError": "An unknown error occurred"
     },
+    "validation": {
+      "invalidUrl": "Must be a valid URL",
+      "redirectUrisMinOne": "At least one redirect URI is required",
+      "nameTooLong": "Name too long",
+      "signUpRoleRequired": "Sign-up role is required when allow sign-up is enabled."
+    },
     "notFound": {
       "title": "Page Not Found",
       "description": "The page you're looking for doesn't exist or has been moved. Check the URL or navigate back to safety.",
@@ -105,6 +111,8 @@
     "loading": "Loading...",
     "noItemsAvailable": "No items available",
     "noTagsAvailable": "No tags available",
+    "yes": "Yes",
+    "no": "No",
     "redirecting": "Redirecting...",
     "error": "Error",
     "organizations": {
@@ -152,7 +160,8 @@
       "account": "Account",
       "settings": "Settings",
       "backToOrganization": "Back to Organization",
-      "signingKeys": "Signing Keys (JWKS)"
+      "signingKeys": "Signing Keys (JWKS)",
+      "projectApps": "Apps"
     }
   },
   "theme": {
@@ -242,7 +251,20 @@
       "errorUnknown": "An unknown error occurred",
       "verificationRequired": "Email verification needed",
       "verifyEmailDescription": "Please verify your email to access all features",
-      "redirecting": "Redirecting to dashboard..."
+      "redirecting": "Redirecting to dashboard...",
+      "oauthErrors": {
+        "accountCreationFailed": "We couldn't complete sign-in. Please try again or use a different sign-in method.",
+        "accountExists": "An account with this sign-in method already exists. Try signing in with that method instead.",
+        "signUpDisabled": "Sign-up is disabled for this app. Please use an existing account or contact the app owner.",
+        "invalidState": "This sign-in link has expired or was already used. Please start the sign-in process again.",
+        "userNotInProject": "Your account is not a member of this app's project. Ask the project owner to add you, or use an account that has access.",
+        "scopeResolutionFailed": "We couldn't determine your access for this app. Please contact support.",
+        "redirectUriInvalid": "The app's redirect URL is invalid or not allowed. Please contact the app owner.",
+        "oauthNotConfigured": "Sign-in is not configured. Please contact support.",
+        "githubUserInfoFailed": "We couldn't get your GitHub information. Please try again.",
+        "githubUnavailable": "GitHub is temporarily unavailable. Please try again later.",
+        "oauthError": "Sign-in was cancelled or failed. Please try again."
+      }
     },
     "register": {
       "title": "Create Account",
@@ -426,6 +448,62 @@
         "error": "Failed to authenticate with GitHub",
         "errorDescription": "An error occurred during GitHub authentication. Please try again."
       }
+    },
+    "projectOAuth": {
+      "entry": {
+        "loading": "Loading…",
+        "signInTitle": "Sign in",
+        "missingClientId": "Missing client_id",
+        "missingParams": "Missing client_id or redirect_uri.",
+        "backToLogin": "Back to login",
+        "signInTo": "Sign in to {appName}",
+        "thisApp": "this app",
+        "requestingAccess": "This app is requesting access to your account.",
+        "requestedPermissions": "Requested permissions",
+        "signInWith": "Sign in with",
+        "email": "Email",
+        "github": "GitHub",
+        "failedToLoad": "Failed to load app"
+      },
+      "email": {
+        "title": "Sign in with email",
+        "description": "Enter your email and we'll send you a sign-in link.",
+        "emailLabel": "Email",
+        "emailPlaceholder": "you@example.com",
+        "emailRequired": "Email is required",
+        "invalidEmail": "Invalid email",
+        "sendLink": "Send sign-in link",
+        "sending": "Sending…",
+        "checkEmailTitle": "Check your email",
+        "checkEmailDescription": "We sent you a sign-in link. Click the link in the email to continue.",
+        "missingParams": "Missing client_id or redirect_uri.",
+        "backToLogin": "Back to login",
+        "requestFailed": "Request failed",
+        "somethingWentWrong": "Something went wrong"
+      },
+      "consent": {
+        "loading": "Loading…",
+        "title": "Consent",
+        "missingToken": "Missing consent_token",
+        "signedInAs": "Signed in as",
+        "wantsAccess": "{appName} wants to access your account",
+        "thisApp": "This app",
+        "reviewPermissions": "Review the permissions below and allow or deny access.",
+        "permissions": "Permissions",
+        "allow": "Allow",
+        "deny": "Deny",
+        "redirecting": "Redirecting…",
+        "failedToLoad": "Failed to load",
+        "approveFailed": "Approve failed",
+        "denyFailed": "Deny failed"
+      },
+      "relay": {
+        "completing": "Completing sign-in…",
+        "complete": "Sign-in complete. This window will close.",
+        "noOpener": "This page should be opened as a popup from the app.",
+        "closeTab": "You can close this tab.",
+        "error": "Failed to send result"
+      }
     }
   },
   "users": {
@@ -463,6 +541,7 @@
       "email": "Email",
       "roles": "Roles",
       "tags": "Tags",
+      "authMethods": "Auth methods",
       "metadata": "Metadata",
       "showMetadata": "Show metadata",
       "primaryTag": "Primary Tag",
@@ -542,6 +621,7 @@
       "email": "Email",
       "roles": "Roles",
       "tags": "Tags",
+      "authMethods": "Auth methods",
       "audit": "Audit",
       "created": "Created",
       "updated": "Updated",
@@ -557,7 +637,8 @@
       "title": "User Information",
       "userId": "User ID",
       "created": "Created",
-      "updated": "Updated"
+      "updated": "Updated",
+      "authMethods": "Authentication methods"
     },
     "roles": {
       "title": "Roles",
@@ -691,7 +772,8 @@
         "warning": "This is the last time you'll be able to view the client secret. Make sure to copy it now and store it securely.",
         "clientId": "Client ID",
         "clientSecret": "Client Secret",
-        "close": "I've Saved My Credentials"
+        "close": "I've Saved My Credentials",
+        "downloadCredentials": "Download credentials"
       }
     },
     "groups": {
@@ -863,6 +945,122 @@
       "organizationAdmin": "Administrative access to manage organization settings and members",
       "organizationDev": "Developer access to manage projects and resources",
       "organizationViewer": "Read-only access to view organization resources"
+    }
+  },
+  "projectApps": {
+    "common": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "title": "Apps",
+    "empty": {
+      "title": "No apps",
+      "description": "Create an OAuth app for this project to enable sign-in or API access."
+    },
+    "limit": "Items per page",
+    "search": {
+      "placeholder": "Search by name or client ID..."
+    },
+    "noSearchResults": {
+      "title": "No matching apps",
+      "description": "Try adjusting your search."
+    },
+    "sort": {
+      "label": "Sort by",
+      "name": "Name",
+      "createdAt": "Created"
+    },
+    "view": {
+      "table": "Table",
+      "card": "Cards"
+    },
+    "table": {
+      "name": "Name",
+      "clientId": "Client ID",
+      "redirectUris": "Redirect URIs",
+      "enabledProviders": "Auth providers",
+      "allowSignUp": "Allow sign-up",
+      "signUpRole": "Sign-up role",
+      "scopes": "Scopes",
+      "tags": "Tags",
+      "audit": "Audit",
+      "createdAt": "Created",
+      "updatedAt": "Updated"
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "App display name",
+      "redirectUris": "Redirect URIs",
+      "redirectUrisPlaceholder": "Add redirect URI (e.g. https://app.example.com/callback)",
+      "enabledProviders": "Auth providers",
+      "noProvidersAvailable": "No providers available",
+      "scopes": "Scopes",
+      "scopesPlaceholder": "Add scope (e.g. openid)",
+      "noScopesAvailable": "No project permissions available. Add permissions to the project first.",
+      "allowSignUp": "Allow sign-up",
+      "signUpRole": "Sign-up role",
+      "signUpRolePlaceholder": "Select role for new users",
+      "tags": "Tags",
+      "primaryTag": "Primary Tag",
+      "tagsLoading": "Loading tags...",
+      "noTagsAvailable": "No tags available"
+    },
+    "providers": {
+      "email": "Email",
+      "github": "GitHub"
+    },
+    "createDialog": {
+      "title": "Create app",
+      "description": "Register an OAuth app for this project. You will receive a client ID and optionally a client secret.",
+      "trigger": "Create app",
+      "confirm": "Create",
+      "cancel": "Cancel",
+      "submitting": "Creating..."
+    },
+    "editDialog": {
+      "title": "Edit app",
+      "description": "Update app name, redirect URIs, or scopes.",
+      "confirm": "Save",
+      "cancel": "Cancel",
+      "submitting": "Saving..."
+    },
+    "deleteDialog": {
+      "title": "Delete app",
+      "description": "Are you sure you want to delete \"{name}\"? This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "secretDialog": {
+      "title": "App created",
+      "warning": "Save the client secret now. You will not be able to see it again.",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret",
+      "downloadCredentials": "Download credentials"
+    },
+    "testDialog": {
+      "title": "Test app",
+      "description": "Choose a redirect URI and optional scopes, then open the project OAuth flow.",
+      "redirectUri": "Redirect URI",
+      "redirectUriPlaceholder": "Select redirect URI",
+      "scopes": "Scopes (optional)",
+      "scopesLoading": "Loading scopes...",
+      "noScopesAvailable": "No scopes available",
+      "noRedirectUris": "This app has no redirect URIs. Add at least one in the app settings to test.",
+      "cancel": "Cancel",
+      "confirm": "Test app"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "test": "Test app"
+    },
+    "notifications": {
+      "createSuccess": "Project app created",
+      "createError": "Failed to create project app",
+      "updateSuccess": "Project app updated",
+      "updateError": "Failed to update project app",
+      "deleteSuccess": "Project app deleted",
+      "deleteError": "Failed to delete project app"
     }
   },
   "resources": {

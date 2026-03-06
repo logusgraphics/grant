@@ -1,279 +1,319 @@
 ---
 title: Integration Guide
-description: Step-by-step tutorial to protect your API endpoints with Grant
+description: Step-by-step interactive tutorial — set up RBAC resources, permissions, roles, users, and API keys in Grant
+cbf: true
 ---
+
+<script setup>
+import { computed } from 'vue'
+import { useApiState } from '../.vitepress/theme/composables/useApiState'
+
+const { state } = useApiState()
+
+const flow = computed(() => state.selectedFlow)
+const isOrg = computed(() => flow.value === 'organization')
+const isPersonal = computed(() => flow.value === 'personal')
+const hasFlow = computed(() => !!flow.value)
+
+/* ── Scope helpers ──────────────────────────────────────── */
+
+function projectScope() {
+  return isPersonal.value
+    ? { tenant: 'account', id: '{ACCOUNT_ID}' }
+    : { tenant: 'organization', id: '{ORG_ID}' }
+}
+
+function resourceScope() {
+  return isPersonal.value
+    ? { tenant: 'accountProject', id: '{ACCOUNT_ID}:{PROJECT_ID}' }
+    : { tenant: 'organizationProject', id: '{ORG_ID}:{PROJECT_ID}' }
+}
+
+function userScope() {
+  return isPersonal.value
+    ? { tenant: 'accountProjectUser', id: '{ACCOUNT_ID}:{PROJECT_ID}:{PROJ_USER_ID}' }
+    : { tenant: 'organizationProjectUser', id: '{ORG_ID}:{PROJECT_ID}:{PROJ_USER_ID}' }
+}
+
+/* ── Body builders ──────────────────────────────────────── */
+
+const orgBody = computed(() => JSON.stringify({
+  name: 'Acme Corp',
+  scope: { tenant: 'account', id: '{ACCOUNT_ID}' },
+}))
+
+const step2Body = computed(() => JSON.stringify({
+  name: 'My App',
+  scope: projectScope(),
+}))
+
+const step3Body = computed(() => JSON.stringify({
+  name: 'Document',
+  slug: 'document',
+  actions: ['Create', 'Read', 'Update', 'Delete', 'Query'],
+  scope: resourceScope(),
+}))
+
+function permBody(name, action) {
+  return computed(() => JSON.stringify({
+    name,
+    action,
+    resourceId: '{RESOURCE_ID}',
+    scope: resourceScope(),
+  }))
+}
+const perm4Create = permBody('Create Documents', 'create')
+const perm4Read   = permBody('Read Documents',   'read')
+const perm4Update = permBody('Update Documents', 'update')
+const perm4Delete = permBody('Delete Documents', 'delete')
+const perm4Query  = permBody('Query Documents',  'query')
+
+const step5Body = computed(() => JSON.stringify({
+  name: 'DocumentFullAccess',
+  permissionIds: ['{PERM_CREATE}', '{PERM_READ}', '{PERM_UPDATE}', '{PERM_DELETE}', '{PERM_QUERY}'],
+  scope: resourceScope(),
+}))
+
+const step6Body = computed(() => JSON.stringify({
+  name: 'DocumentEditor',
+  groupIds: ['{GROUP_ID}'],
+  scope: resourceScope(),
+}))
+
+const step7Body = computed(() => JSON.stringify({
+  name: 'Demo User',
+  roleIds: ['{ROLE_ID}'],
+  scope: resourceScope(),
+}))
+
+const step8Body = computed(() => JSON.stringify({
+  name: 'Demo User Key',
+  scope: userScope(),
+}))
+
+const step9Body = computed(() => JSON.stringify({
+  clientId: '{CLIENT_ID}',
+  clientSecret: '{CLIENT_SECRET}',
+  scope: { tenant: 'projectUser', id: '{PROJECT_ID}:{PROJ_USER_ID}' },
+}))
+
+const step10Body = computed(() => JSON.stringify({
+  name: 'Documents App',
+  redirectUris: ['http://localhost:3004/callback'],
+  scopes: ['document:create', 'document:read', 'document:update', 'document:delete', 'document:query'],
+  enabledProviders: ['email', 'github'],
+  allowSignUp: true,
+  signUpRoleId: '{ROLE_ID}',
+  scope: resourceScope(),
+}))
+
+const oauthState = computed(() => Math.random().toString(36).slice(2, 10))
+const frontendUrl = computed(() => {
+  try {
+    const url = new URL(state.baseUrl || 'http://localhost:4000')
+    url.port = '3000'
+    return url.origin
+  } catch { return 'http://localhost:3000' }
+})
+const authUrl = computed(() => {
+  const clientId = state.variables.APP_CLIENT_ID || ''
+  const redirect = encodeURIComponent('http://localhost:3004/callback')
+  return `${frontendUrl.value}/en/auth/project?client_id=${clientId}&redirect_uri=${redirect}&state=${oauthState.value}`
+})
+</script>
 
 # Integration Guide
 
-This tutorial walks you from a running Grant instance to a fully protected API endpoint. By the end you will have created a resource with permissions, issued an API key, exchanged it for a JWT, and wired `@grantjs/server` middleware to guard your Express routes.
+This tutorial walks you from a running Grant instance to a fully configured RBAC setup: resources, permissions, roles, a project user, and a JWT access token. By the end you will have everything needed to integrate the [Server SDK](/integration/server-sdk) or [Client SDK](/integration/client-sdk) into your application.
 
 ::: info Prerequisites
-
 - Grant running locally — see [Quick Start](/getting-started/quick-start)
-- An authenticated session (log in via the web dashboard or `POST /api/auth/login`)
-- A personal account (created automatically at registration)
-- `curl` and a terminal
-  :::
+- `curl` and a terminal (optional — you can run every request from this page)
+:::
 
-Throughout this guide, replace placeholder UUIDs with the actual IDs returned by each step. Variables are shown as `$ORG_ID`, `$PROJECT_ID`, etc.
+## Step 1 — Setup
 
-## Step 1 — Create an Organization
+Every API call on this page has a **Run** button. Configure the connection below, then work through the steps — responses and IDs are captured automatically so each step feeds into the next.
 
-Organizations are optional — you can scope everything to your personal account instead. If you want multi-user collaboration, create one:
+<ApiConfig />
 
-```bash
-curl -s -X POST http://localhost:4000/api/organizations \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "name": "Acme Corp",
-    "scope": { "tenant": "account", "id": "'$ACCOUNT_ID'" }
-  }'
-```
+<FlowSelector />
 
-Save the returned `id` as `$ORG_ID`.
+<div v-if="!hasFlow" class="vp-doc">
+
+::: warning Select an account
+Choose **Personal** or **Organization** above to continue.
+:::
+
+</div>
+
+<div v-if="hasFlow">
+
+<div v-if="isOrg">
+
+### Create an Organization
+
+Organizations group users, projects, resources, and roles. Create one under your account:
+
+<ApiTryIt
+  method="POST"
+  path="/api/organizations"
+  :body="orgBody"
+  :inputs="['ACCOUNT_ID']"
+  :captures="{ ORG_ID: 'data.id' }"
+/>
+
+The returned `id` is saved as **ORG_ID** for the following steps.
+
+</div>
 
 ## Step 2 — Create a Project
 
-Projects are isolated environments that hold resources, roles, and API keys. Create one scoped to your organization (or personal account):
+Projects are isolated environments that hold resources, roles, and API keys.
 
-```bash
-curl -s -X POST http://localhost:4000/api/projects \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "name": "My App",
-    "scope": { "tenant": "organization", "id": "'$ORG_ID'" }
-  }'
-```
+<div v-if="isPersonal">
 
-Save the returned `id` as `$PROJECT_ID`.
+Create one scoped to your personal account:
+
+</div>
+<div v-if="isOrg">
+
+Create one scoped to the organization you just created:
+
+</div>
+
+<ApiTryIt
+  method="POST"
+  path="/api/projects"
+  :body="step2Body"
+  :captures="{ PROJECT_ID: 'data.id' }"
+/>
 
 ## Step 3 — Create a Resource
 
-A resource declares what entity your application protects and which actions are available. Create a `Document` resource to match the [Server SDK examples](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/server/examples):
+A resource declares what entity your application protects and which actions are available. Create a `Document` resource:
 
-```bash
-curl -s -X POST http://localhost:4000/api/resources \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "name": "Document",
-    "slug": "document",
-    "actions": ["Create", "Read", "Update", "Delete", "Query"],
-    "scope": { "tenant": "organizationProject", "id": "'$ORG_ID:$PROJECT_ID'" }
-  }'
-```
-
-Save the returned `id` as `$RESOURCE_ID`.
+<ApiTryIt
+  method="POST"
+  path="/api/resources"
+  :body="step3Body"
+  :captures="{ RESOURCE_ID: 'data.id' }"
+/>
 
 ## Step 4 — Create Permissions
 
-Create one permission for each action on the resource. Here is `Document:Query` — repeat for `Create`, `Read`, `Update`, `Delete`:
+Create one permission for each action on the resource. Run all five blocks below — each captures the permission ID needed in Step 5.
 
-```bash
-curl -s -X POST http://localhost:4000/api/permissions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "name": "Query Documents",
-    "action": "Query",
-    "scope": { "tenant": "organizationProject", "id": "'$ORG_ID:$PROJECT_ID'" }
-  }'
-```
+**Create**
 
-Save each returned `id`. You will need all five for the next step.
+<ApiTryIt method="POST" path="/api/permissions" :body="perm4Create" :captures="{ PERM_CREATE: 'data.id' }" />
+
+**Read**
+
+<ApiTryIt method="POST" path="/api/permissions" :body="perm4Read" :captures="{ PERM_READ: 'data.id' }" />
+
+**Update**
+
+<ApiTryIt method="POST" path="/api/permissions" :body="perm4Update" :captures="{ PERM_UPDATE: 'data.id' }" />
+
+**Delete**
+
+<ApiTryIt method="POST" path="/api/permissions" :body="perm4Delete" :captures="{ PERM_DELETE: 'data.id' }" />
+
+**Query**
+
+<ApiTryIt method="POST" path="/api/permissions" :body="perm4Query" :captures="{ PERM_QUERY: 'data.id' }" />
 
 ## Step 5 — Create a Group
 
-A group bundles related permissions. Create a `DocumentFullAccess` group with all five permission IDs:
+A group bundles related permissions. Create a `DocumentFullAccess` group with all five permission IDs from Step 4:
 
-```bash
-curl -s -X POST http://localhost:4000/api/groups \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "name": "DocumentFullAccess",
-    "permissionIds": ["'$PERM_CREATE'", "'$PERM_READ'", "'$PERM_UPDATE'", "'$PERM_DELETE'", "'$PERM_QUERY'"],
-    "scope": { "tenant": "organizationProject", "id": "'$ORG_ID:$PROJECT_ID'" }
-  }'
-```
-
-Save the returned `id` as `$GROUP_ID`.
+<ApiTryIt
+  method="POST"
+  path="/api/groups"
+  :body="step5Body"
+  :captures="{ GROUP_ID: 'data.id' }"
+/>
 
 ## Step 6 — Create a Role with the Group
 
-Create a role and assign the group to it. This step uses the **GraphQL API** because the REST role endpoint does not yet accept `groupIds`:
+Create a role and assign the group to it:
 
-```graphql
-mutation {
-  createRole(
-    input: {
-      name: "DocumentEditor"
-      groupIds: ["<GROUP_ID>"]
-      scope: { tenant: organizationProject, id: "<ORG_ID>:<PROJECT_ID>" }
-    }
-  ) {
-    id
-    name
-  }
-}
-```
+<ApiTryIt
+  method="POST"
+  path="/api/roles"
+  :body="step6Body"
+  :captures="{ ROLE_ID: 'data.id' }"
+/>
 
-Send this via the GraphQL playground at `http://localhost:4000/graphql` or with curl:
+## Step 7 — Create a Project User
 
-```bash
-curl -s -X POST http://localhost:4000/graphql \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "query": "mutation($input: CreateRoleInput!) { createRole(input: $input) { id name } }",
-    "variables": {
-      "input": {
-        "name": "DocumentEditor",
-        "groupIds": ["'$GROUP_ID'"],
-        "scope": { "tenant": "organizationProject", "id": "'$ORG_ID:$PROJECT_ID'" }
-      }
-    }
-  }'
-```
+Create a user inside the project with the role from Step 6. The role's groups carry the permissions, so the user inherits full Document access:
 
-Save the returned `id` as `$ROLE_ID`.
+<ApiTryIt
+  method="POST"
+  path="/api/users"
+  :body="step7Body"
+  :captures="{ PROJ_USER_ID: 'data.id' }"
+/>
 
-## Step 7 — Assign the Role to a User
+## Step 8 — Create a User API Key
 
-Assign the role to yourself (or another user) via GraphQL:
+Create an API key scoped to the project user. Unlike project-level keys, user keys resolve permissions from the user's roles — no `roleId` needed. The response includes the `clientSecret` — **store it now, it is shown only once**:
 
-```bash
-curl -s -X POST http://localhost:4000/graphql \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "query": "mutation($input: AddUserRoleInput!) { addUserRole(input: $input) { userId roleId } }",
-    "variables": {
-      "input": {
-        "userId": "'$USER_ID'",
-        "roleId": "'$ROLE_ID'"
-      }
-    }
-  }'
-```
-
-## Step 8 — Create an API Key
-
-Create an API key scoped to the project. The response includes the `clientSecret` — **store it now, it is shown only once**:
-
-```bash
-curl -s -X POST http://localhost:4000/api/api-keys \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{
-    "name": "My App Key",
-    "scope": { "tenant": "organizationProject", "id": "'$ORG_ID:$PROJECT_ID'" },
-    "roleId": "'$ROLE_ID'"
-  }'
-```
-
-Save `clientId` and `clientSecret` from the response.
+<ApiTryIt
+  method="POST"
+  path="/api/api-keys"
+  :body="step8Body"
+  :captures="{ CLIENT_ID: 'data.clientId', CLIENT_SECRET: 'data.clientSecret' }"
+/>
 
 ## Step 9 — Exchange for a Token
 
 Exchange the API key credentials for a JWT access token:
 
-```bash
-curl -s -X POST http://localhost:4000/api/auth/token \
-  -H "Content-Type: application/json" \
-  -d '{
-    "clientId": "'$CLIENT_ID'",
-    "clientSecret": "'$CLIENT_SECRET'",
-    "scope": { "tenant": "organizationProject", "id": "'$ORG_ID:$PROJECT_ID'" }
-  }'
-```
+<ApiTryIt
+  method="POST"
+  path="/api/auth/token"
+  :body="step9Body"
+  :captures="{ API_TOKEN: 'data.accessToken' }"
+/>
 
-The response contains an `accessToken` (RS256 JWT) and `expiresIn` (seconds). This token carries the user's permissions for the project scope.
+The response contains an `accessToken` (RS256 JWT) and `expiresIn` (seconds). The token carries the permissions from the user's roles. You can now use this token with the [Server SDK](/integration/server-sdk) or any HTTP client to authorize requests against your protected endpoints.
 
-## Step 10 — Guard Your Endpoints
+## Step 10 — Create a Project App
 
-Install the server SDK and wire the middleware into your Express app:
+A Project App is an OAuth client that lets users sign in or sign up through Grant and be redirected back to your application with a token. Create one with all Document scopes, email and GitHub providers, and the role from Step 6 as the sign-up/default role:
 
-```bash
-npm install @grantjs/server
-```
+<ApiTryIt
+  method="POST"
+  path="/api/project-apps"
+  :body="step10Body"
+  :captures="{ APP_CLIENT_ID: 'data.clientId' }"
+/>
 
-```typescript
-import { GrantClient } from '@grantjs/server';
-import { grant } from '@grantjs/server/express';
-import express from 'express';
+<div v-if="state.variables.APP_CLIENT_ID" class="api-tryit-auth-redirect">
 
-const app = express();
-app.use(express.json());
+The app was created with **client_id** <code>{{ state.variables.APP_CLIENT_ID }}</code>. Click below to open the Project OAuth sign-in flow — you'll be redirected to the Grant UI to authenticate, grant consent, and then back to the callback URL with an access token.
 
-const grantClient = new GrantClient({
-  apiUrl: 'http://localhost:4000',
-});
+<a :href="authUrl" target="_blank" rel="noopener" class="api-tryit-auth-btn">
+  Open Sign-in Flow →
+</a>
 
-// Guard: only users with Document:Query permission can list
-app.get(
-  '/documents',
-  grant(grantClient, { resource: 'document', action: 'query' }),
-  (_req, res) => {
-    res.json({ data: [{ id: '1', title: 'Hello World' }] });
-  }
-);
+::: tip
+Make sure the Grant **web app** is running at <code>{{ frontendUrl }}</code> (see [Quick Start](/getting-started/quick-start)). The callback URL `http://localhost:3004/callback` matches the [client example](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/client/examples) — or point it at your own app.
+:::
 
-// Guard: only users with Document:Create permission can create
-app.post(
-  '/documents',
-  grant(grantClient, { resource: 'document', action: 'create' }),
-  (req, res) => {
-    res.status(201).json({ data: { id: Date.now(), title: req.body.title } });
-  }
-);
-
-app.listen(3000);
-```
-
-Test it with the token from Step 9:
-
-```bash
-# Should succeed (200)
-curl -s http://localhost:3000/documents \
-  -H "Authorization: Bearer $ACCESS_TOKEN"
-
-# Should succeed (201)
-curl -s -X POST http://localhost:3000/documents \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{"title": "New Document"}'
-
-# Should fail (401 — no token)
-curl -s http://localhost:3000/documents
-```
-
-## What Happens Under the Hood
-
-```mermaid
-sequenceDiagram
-    participant App as Your App
-    participant SDK as @grantjs/server
-    participant Grant as Grant API
-
-    App->>SDK: Incoming request
-    SDK->>SDK: Extract Bearer token
-    SDK->>Grant: POST /api/auth/is-authorized
-    Note right of Grant: Verify token, evaluate RBAC
-    Grant-->>SDK: { authorized: true }
-    SDK-->>App: next() — proceed to handler
-```
-
-The `grant()` middleware extracts the token from the `Authorization` header, sends it to Grant's authorization endpoint along with the resource and action, and either calls `next()` (authorized) or returns `401`/`403` (denied).
+</div>
 
 ## Next Steps
 
-- Add [resource resolvers](/integration/server-sdk#resource-resolvers) for condition-based permissions on update/delete. See [Permission Conditions](/core-concepts/permission-conditions) for condition syntax
-- Protect React components with the [Client SDK](/integration/client-sdk) (`GrantGate`, `useGrant`)
-- Explore the full [Server SDK reference](/integration/server-sdk) for Fastify, Next.js, and NestJS integrations
-- Browse the [example apps](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/server/examples) for complete implementations
+- **Guard your endpoints** — integrate the [Server SDK](/integration/server-sdk) (`@grantjs/server`) to verify tokens and enforce permissions in Express, Fastify, Next.js, or NestJS
+- **Protect your frontend** — use the [Client SDK](/integration/client-sdk) (`@grantjs/client`) with `GrantGate`, `useGrant`, and [Project OAuth](/architecture/security#project-oauth) for user sign-in/sign-up flows
+- **Add conditions** — attach [Permission Conditions](/core-concepts/permission-conditions) and [resource resolvers](/integration/server-sdk#resource-resolvers) for fine-grained access control on update/delete
+- **Explore examples** — browse the [server examples](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/server/examples) and [client example](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/client/examples) (Next.js with Project OAuth and Document permission checks)
+
+</div>
 
 ---
 
@@ -282,4 +322,6 @@ The `grant()` middleware extracts the token from the `Authorization` header, sen
 - [Quick Start](/getting-started/quick-start) — Get Grant running locally
 - [Resources](/core-concepts/resources) — Built-in resources and custom resource creation
 - [API Keys](/core-concepts/api-keys) — Token exchange and scoping details
+- [Server SDK](/integration/server-sdk) — Middleware integration for backend frameworks
+- [Client SDK](/integration/client-sdk) — React hooks, permission gates, and Project OAuth
 - [RBAC System](/architecture/rbac) — How permissions are evaluated

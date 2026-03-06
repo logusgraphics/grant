@@ -27,6 +27,7 @@ export { registerOrganizationInvitationsOpenApi } from './organization-invitatio
 export { registerOrganizationMembersOpenApi } from './organization-members.openapi';
 export { registerOrganizationsOpenApi } from './organizations.openapi';
 export { registerPermissionsOpenApi } from './permissions.openapi';
+export { registerProjectAppsOpenApi } from './project-apps.openapi';
 export { registerProjectsOpenApi } from './projects.openapi';
 export { registerResourcesOpenApi } from './resources.openapi';
 export { registerRolesOpenApi } from './roles.openapi';

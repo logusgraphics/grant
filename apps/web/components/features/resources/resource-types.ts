@@ -1,6 +1,12 @@
 import { Resource } from '@grantjs/schema';
 import { z } from 'zod';
 
+/** Action slug: lowercase, letters, digits, hyphens and plus only (matches API validation). */
+const actionSlugSchema = z
+  .string()
+  .min(1, 'errors.validation.actionRequired')
+  .regex(/^[a-z0-9+-]+$/, 'errors.validation.actionInvalidFormat');
+
 export const createResourceSchema = z.object({
   name: z.string().min(2, 'errors.validation.labelMin2'),
   slug: z
@@ -9,7 +15,7 @@ export const createResourceSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens')
     .optional(),
   description: z.string().optional(),
-  actions: z.array(z.string()).optional(),
+  actions: z.array(actionSlugSchema).optional(),
   isActive: z.boolean().optional(),
   tagIds: z.array(z.string()).optional(),
   primaryTagId: z.string().optional(),
@@ -23,7 +29,7 @@ export const editResourceSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens')
     .optional(),
   description: z.string().optional(),
-  actions: z.array(z.string()).optional(),
+  actions: z.array(actionSlugSchema).optional(),
   isActive: z.boolean().optional(),
   tagIds: z.array(z.string()).optional(),
   primaryTagId: z.string().optional(),

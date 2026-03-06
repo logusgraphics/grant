@@ -8,7 +8,7 @@ import type {
   ExecutionContextUser,
   SessionSigningKey,
 } from '../../types';
-import type { Permission, Scope } from '@grantjs/schema';
+import type { Permission, Scope, TokenType } from '@grantjs/schema';
 
 // ---------------------------------------------------------------------------
 // IGrantService
@@ -34,12 +34,27 @@ export interface IGrantService {
     userId: string,
     scope: Scope,
     resourceSlug: string,
-    action: string
+    action: string,
+    tokenType?: TokenType
   ): Promise<Permission[]>;
 
-  getUserRoles(userId: string, scope: Scope): Promise<ExecutionContextRole[]>;
+  /**
+   * Return which of the candidate scope slugs (resource:action) the user is granted in the given scope.
+   * Used for project-app token scope intersection.
+   */
+  getGrantedScopeSlugs(userId: string, scope: Scope, candidateSlugs: string[]): Promise<string[]>;
 
-  getUserGroups(userId: string, scope: Scope): Promise<ExecutionContextGroup[]>;
+  getUserRoles(
+    userId: string,
+    scope: Scope,
+    tokenType?: TokenType
+  ): Promise<ExecutionContextRole[]>;
+
+  getUserGroups(
+    userId: string,
+    scope: Scope,
+    tokenType?: TokenType
+  ): Promise<ExecutionContextGroup[]>;
 
   getUser(userId: string, scope?: Scope): Promise<ExecutionContextUser>;
 }

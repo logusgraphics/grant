@@ -115,6 +115,9 @@ The group is created within the specified scope:
 - \`scope.id\`: The UUID of the scope (account, organization, or project)
 - \`scope.tenant\`: The tenant type (\`account\`, \`organization\`, or \`project\`)
 
+### Metadata
+Optional key-value metadata can be provided via \`metadata\` (JSON object).
+
 ### Permissions
 You can optionally assign permissions to the group:
 - \`permissionIds\`: Array of permission UUIDs
@@ -181,6 +184,9 @@ You can optionally assign tags to the group:
 Update an existing group's details.
 
 All fields are optional - only provide the fields you want to update.
+
+### Metadata
+Optional key-value metadata can be provided via \`metadata\` (JSON object).
 
 ### Permissions
 - \`permissionIds\`: Replace all permissions with new array

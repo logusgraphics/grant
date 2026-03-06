@@ -4,62 +4,72 @@ import { Scope, Tenant } from '@grantjs/schema';
 
 import { useEmailVerificationStatus } from './use-email-verification-status';
 
+export interface UseRequiresEmailVerificationForMutationOptions {
+  /**
+   * When true (default), unverified users are allowed in personal account/project context.
+   * When false, email verification is required even in personal context (matches API
+   * BLOCK_UNVERIFIED / allowPersonalContext: false for org-only flows).
+   */
+  allowPersonalContext?: boolean;
+}
+
 /**
- * Hook to determine if email verification is required for mutations in the given scope
+ * Hook to determine if email verification is required for mutations in the given scope.
+ * Mirrors API guards: requireEmailVerificationRest/requireEmailVerificationGraphQL.
  *
  * **Rules:**
- * - Personal accounts/projects: Email verification NOT required (allow mutations)
- * - Organization accounts/projects: Email verification REQUIRED (block mutations)
  * - Verified users: Always allowed
+ * - Organization context: Verification required
+ * - Personal context: Depends on allowPersonalContext (default true = not required)
  *
- * @param scope - The scope to check (optional, will return false if not provided)
+ * @param scope - The scope to check (optional; if missing, returns true unless allowPersonalContext is used for a known-personal flow)
+ * @param options - Optional. allowPersonalContext (default true) — when false, require verification even in personal context
  * @returns `true` if email verification is required, `false` otherwise
  *
  * @example
  * ```tsx
  * const scope = useScopeFromParams();
  * const requiresVerification = useRequiresEmailVerificationForMutation(scope);
+ * if (requiresVerification) return <div>Please verify your email</div>;
+ * ```
  *
- * if (requiresVerification) {
- *   return <div>Please verify your email to use this feature</div>;
- * }
+ * @example Block unverified even in personal context (e.g. org-only UI)
+ * ```tsx
+ * const requiresVerification = useRequiresEmailVerificationForMutation(scope, { allowPersonalContext: false });
  * ```
  */
-export function useRequiresEmailVerificationForMutation(scope: Scope | null | undefined): boolean {
+export function useRequiresEmailVerificationForMutation(
+  scope: Scope | null | undefined,
+  options: UseRequiresEmailVerificationForMutationOptions = {}
+): boolean {
+  const { allowPersonalContext = true } = options;
   const { isVerified } = useEmailVerificationStatus();
 
-  // If verified, no verification required
   if (isVerified) {
     return false;
   }
 
-  // If no scope provided, default to requiring verification (conservative approach)
   if (!scope) {
     return true;
   }
 
-  // Check if scope is in organization context
   const isOrganizationContext =
     scope.tenant === Tenant.Organization ||
     scope.tenant === Tenant.OrganizationProject ||
     scope.tenant === Tenant.OrganizationProjectUser;
 
-  // Check if scope is in personal account context
   const isPersonalAccountContext =
     scope.tenant === Tenant.Account ||
     scope.tenant === Tenant.AccountProject ||
     scope.tenant === Tenant.AccountProjectUser;
 
-  // Organization context: require verification
   if (isOrganizationContext) {
     return true;
   }
 
-  // Personal account context: do not require verification
   if (isPersonalAccountContext) {
-    return false;
+    return !allowPersonalContext;
   }
 
-  // Unknown context: default to requiring verification (conservative approach)
   return true;
 }

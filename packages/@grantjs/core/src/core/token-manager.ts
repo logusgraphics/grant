@@ -93,10 +93,17 @@ export class TokenManager {
     if (!options?.ignoreExpiration && claims.exp && Date.now() >= claims.exp * 1000) {
       return false;
     }
-    if (claims.type !== TokenType.Session && claims.type !== TokenType.ApiKey) {
+    if (
+      claims.type !== TokenType.Session &&
+      claims.type !== TokenType.ApiKey &&
+      claims.type !== TokenType.ProjectApp
+    ) {
       return false;
     }
-    if (claims.type === TokenType.ApiKey && !claims.scope) {
+    if (
+      (claims.type === TokenType.ApiKey || claims.type === TokenType.ProjectApp) &&
+      !claims.scope
+    ) {
       return false;
     }
     return true;
@@ -127,6 +134,27 @@ export class TokenManager {
     return this.signWithKey(jwtPayload, key);
   }
 
+  /**
+   * Sign a project-app scoped token (e.g. from project OAuth callback).
+   * Same key resolution as API key; payload includes type ProjectApp and granted scopes.
+   */
+  async signProjectAppToken(
+    payload: ApiKeyTokenPayload & { scopes: string[] },
+    options?: SignApiKeyTokenOptions
+  ): Promise<string> {
+    const getKey = this.grantService.getSigningKeyForScope;
+    if (!getKey) {
+      throw new NoSessionSigningKeyError('Project app token signing not implemented');
+    }
+    const scopeForKey = options?.signingScope ?? payload.scope;
+    const key = await this.grantService.getSigningKeyForScope(scopeForKey, options?.transaction);
+    if (!key) {
+      throw new NoSessionSigningKeyError('No signing key found for scope');
+    }
+    const jwtPayload = { ...payload, type: TokenType.ProjectApp, scopes: payload.scopes };
+    return this.signWithKey(jwtPayload, key);
+  }
+
   private payloadToClaims(decoded: Record<string, unknown>): TokenClaims {
     return {
       sub: decoded.sub as string,
@@ -138,6 +166,7 @@ export class TokenManager {
       type: decoded.type as TokenType,
       scope: decoded.scope as Scope | undefined,
       isVerified: decoded.isVerified as boolean | undefined,
+      scopes: Array.isArray(decoded.scopes) ? (decoded.scopes as string[]) : undefined,
     };
   }
 

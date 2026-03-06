@@ -92,6 +92,27 @@ export class ProjectPermissionService implements IProjectPermissionService {
     );
   }
 
+  public async getAllowedScopeSlugsForProject(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<string[]> {
+    await this.projectExists(projectId, transaction);
+    return this.projectPermissionRepository.getScopeSlugsForProject(projectId, transaction);
+  }
+
+  public async getScopeSlugLabelsForProject(
+    projectId: string,
+    scopeSlugs: string[],
+    transaction?: Transaction
+  ): Promise<{ slug: string; name: string; description: string | null }[]> {
+    await this.projectExists(projectId, transaction);
+    return this.projectPermissionRepository.getScopeSlugLabelsForProject(
+      projectId,
+      scopeSlugs,
+      transaction
+    );
+  }
+
   public async addProjectPermission(
     params: AddProjectPermissionInput,
     transaction?: Transaction

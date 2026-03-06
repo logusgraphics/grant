@@ -114,5 +114,12 @@ export const notFoundErrorResponseSchema = z.object({
   code: z.literal('NOT_FOUND'),
 });
 
+/** Action slug: lowercase, trimmed, only letters, digits, hyphens and plus (no spaces). */
+export const actionSlugSchema = z
+  .string()
+  .min(1, 'errors.validation.actionRequired')
+  .transform((val) => val.trim().toLowerCase())
+  .pipe(z.string().regex(/^[a-z0-9+-]+$/, 'errors.validation.actionInvalidFormat'));
+
 /** Generic JSON object (string keys, unknown values). */
 export const jsonSchema = z.record(z.string(), z.unknown());

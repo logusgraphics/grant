@@ -130,6 +130,49 @@ The API verifies Bearer tokens **in-process** — it does not call its own JWKS 
 
 The JWKS HTTP endpoints exist for **external verifiers** (your backend services, API gateways, etc.). Responses include a `Cache-Control: public, max-age=…` header so consumers can cache them.
 
+### Project OAuth
+
+Projects can register **OAuth apps** (ProjectApp) so that project users can sign in with a provider (e.g. GitHub) and receive tokens scoped to that project, without using API keys. This follows the same **global user + scoped authorization** model: the user is resolved globally (find or create by provider/email), then membership is checked against `project_users`, and a JWT is issued with project scope.
+
+**Flow:**
+
+1. **Authorize:** The tenant app (SPA) redirects the user to `GET /api/auth/project/authorize?client_id={ProjectApp.clientId}&redirect_uri={allowed URI}&state={optional}`. The API loads the ProjectApp by `client_id`, validates `redirect_uri` against the app’s allowed list, stores state in cache, and redirects the user to the provider (e.g. GitHub) with a state that identifies the project flow.
+2. **Callback:** The provider redirects to `GET /api/auth/project/callback?code=…&state=…`. The API decodes state, loads the ProjectApp, exchanges the code for a provider token (using the project callback URL), resolves the global user (find by provider, link by email, or create), checks `project_users` membership, resolves scope (`accountProjectUser` or `organizationProjectUser`), signs a JWT with the **project signing key** (same as API key tokens), and redirects to the app’s `redirect_uri` with the access token in the URL fragment.
+
+**Token shape (project OAuth):**
+
+- `sub` — global user id
+- `aud` — ProjectApp `client_id` (so only that app accepts the token)
+- `iss` — project JWKS issuer (same as API key tokens: `{APP_URL}/acc/{accId}/prj/{projectId}` or `…/org/{orgId}/prj/{projectId}`)
+- `scope` — `accountProjectUser` or `organizationProjectUser` with id `accountId:projectId:userId` or `orgId:projectId:userId`
+- `type` — `apiKey` (no app scopes) or `projectApp` (when app has `scopes`; authorization capped by `scopes` claim)
+- `scopes` — (when `type === projectApp`) granted resource:action list
+- `exp`, `iat`, `jti` — standard claims
+
+**Security:**
+
+- `redirect_uri` is validated strictly against the ProjectApp’s `redirect_uris` on both authorize and callback.
+- State is stored in cache with a short TTL (e.g. 10 minutes) and deleted after use.
+- The provider (e.g. GitHub) must have the platform callback URL(s) registered. See [Configuring the GitHub OAuth app](#configuring-the-github-oauth-app) below.
+- **Enabled providers:** Each ProjectApp can set `enabledProviders` (e.g. `['github','email']`). If set, only those providers are allowed for authorize; if empty or null, all configured providers are allowed. Configure `PROJECT_OAUTH_EMAIL_ENTRY_URL` for the email entry page (default: `{SECURITY_FRONTEND_URL}/auth/project/email`).
+- **Email flow:** For `provider=email`, authorize redirects to the email entry URL; the app posts to `POST /api/auth/project/email/request` (client_id, redirect_uri, state, email); the API sends a magic link to the callback; callback validates the one-time token and resolves the user by email.
+- **Project-app token type:** When the app has `scopes` configured (resource:action strings), the issued token has `type: projectApp` and a `scopes` claim (intersection of app scopes and user's project permissions). Authorization is capped to those scopes; session and API key tokens are not capped.
+- **Extensibility:** Providers are implemented via `IProjectOAuthProvider`; adding a new provider (e.g. Google) requires implementing the interface, registering in the handler, and adding callback handling.
+
+**Related:** ProjectApp is created via GraphQL `createProjectApp` (scope: accountProject or organizationProject). Multi-provider flow (GitHub, email magic link), optional `enabledProviders` per app, and project-app token type with scope capping are described above.
+
+#### Configuring the GitHub OAuth app
+
+GitHub OAuth Apps support only **one** Authorization callback URL in the app settings. To support both **platform sign-in/up** (`/api/auth/github/callback`) and **Project App sign-in/up** (`/api/auth/project/callback`) with the same app, use a **base path** as the callback URL. GitHub accepts the registered URL and any **subpath** of it ([Redirect URLs](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#redirect-urls)).
+
+1. In [GitHub → Settings → Developer settings → OAuth Apps](https://github.com/settings/developers), create or edit your OAuth App.
+2. Set **Authorization callback URL** to the API base path for auth, **not** a full callback path:
+   - **Local:** `http://localhost:4000/api/auth`
+   - **Production:** `https://api.yourdomain.com/api/auth` (replace with your API base URL + `/api/auth`).
+3. Ensure `GITHUB_CALLBACK_URL` and `GITHUB_PROJECT_CALLBACK_URL` in your API config use paths under that base (defaults are `{APP_URL}/api/auth/github/callback` and `{APP_URL}/api/auth/project/callback`, which are subpaths of `{APP_URL}/api/auth`).
+
+No separate OAuth app is needed per project-app; one GitHub OAuth app serves both platform and project-app flows.
+
 ### Configuration
 
 | Variable                                    | Default      | Description                                   |

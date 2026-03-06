@@ -3,6 +3,7 @@ import { PermissionSortableField, SortOrder } from '@grantjs/schema';
 
 import { z } from '@/lib/zod-openapi.lib';
 import {
+  actionSlugSchema,
   createSuccessResponseSchema,
   listQuerySchema,
   scopeIdSchema,
@@ -77,9 +78,14 @@ export const createPermissionRequestSchema = z.object({
     description: 'Description of the permission',
     example: 'Allows reading user data',
   }),
-  action: z.string().min(1, 'errors.validation.actionRequired').openapi({
-    description: 'Action identifier for the permission',
-    example: 'users:read',
+  action: actionSlugSchema.openapi({
+    description:
+      'Action identifier for the permission (lowercase, letters, digits, hyphens, plus only; no spaces)',
+    example: 'read',
+  }),
+  resourceId: z.string().uuid().nullable().optional().openapi({
+    description: 'ID of the resource this permission applies to',
+    example: '123e4567-e89b-12d3-a456-426614174001',
   }),
   scope: scopeSchema,
   tagIds: z
@@ -119,9 +125,14 @@ export const updatePermissionRequestSchema = z.object({
     description: 'Updated description of the permission',
     example: 'Allows reading all user data across the system',
   }),
-  action: z.string().min(1, 'errors.validation.actionRequired').optional().openapi({
-    description: 'Updated action identifier for the permission',
-    example: 'users:read:all',
+  action: actionSlugSchema.optional().openapi({
+    description:
+      'Updated action identifier for the permission (lowercase, letters, digits, hyphens, plus only; no spaces)',
+    example: 'read',
+  }),
+  resourceId: z.string().uuid().nullable().optional().openapi({
+    description: 'ID of the resource this permission applies to',
+    example: '123e4567-e89b-12d3-a456-426614174001',
   }),
   tagIds: z
     .array(z.string())

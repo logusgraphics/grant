@@ -1,0 +1,3 @@
+extend type Mutation {
+  deleteProjectApp(id: ID!, scope: Scope!): ProjectApp!
+}

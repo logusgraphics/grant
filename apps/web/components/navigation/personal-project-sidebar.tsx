@@ -9,6 +9,7 @@ import {
   Fingerprint,
   FolderOpen,
   Group,
+  LayoutGrid,
   CopyCheck,
   Package,
   Shield,
@@ -62,6 +63,11 @@ export function PersonalProjectSidebar({ ...props }: ComponentProps<typeof Sideb
           title: t('signingKeys'),
           url: `/dashboard/accounts/${accountId}/projects/${projectId}/signing-keys`,
           icon: Fingerprint,
+        },
+        {
+          title: t('projectApps'),
+          url: `/dashboard/accounts/${accountId}/projects/${projectId}/apps`,
+          icon: LayoutGrid,
         },
         {
           title: t('roles'),

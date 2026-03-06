@@ -6,7 +6,7 @@ import {
   type ExecutionContextRole,
   type ExecutionContextUser,
 } from '@grantjs/core';
-import { Permission, Scope } from '@grantjs/schema';
+import { Permission, Scope, TokenType } from '@grantjs/schema';
 
 import { config } from '@/config';
 import {
@@ -110,9 +110,12 @@ export class GrantService implements IGrantService {
     userId: string,
     scope: Scope,
     resourceSlug: string,
-    action: string
+    action: string,
+    tokenType?: TokenType
   ): Promise<Permission[]> {
-    const roleIds = await this.grantRepository.getUserRoleIdsInScope(userId, scope);
+    const roleIds = await this.grantRepository.getUserRoleIdsInScope(userId, scope, undefined, {
+      tokenType,
+    });
 
     if (roleIds.length === 0) {
       return [];
@@ -133,18 +136,51 @@ export class GrantService implements IGrantService {
     return this.grantRepository.getPermissionsByIds(permissionIds, action, resourceSlug);
   }
 
-  async getUserRoles(userId: string, scope: Scope): Promise<ExecutionContextRole[]> {
-    const roleIds = await this.grantRepository.getUserRoleIdsInScope(userId, scope);
+  async getGrantedScopeSlugs(
+    userId: string,
+    scope: Scope,
+    candidateSlugs: string[]
+  ): Promise<string[]> {
+    const granted: string[] = [];
+    for (const slug of candidateSlugs) {
+      const [resource, action] = slug.split(':');
+      if (!resource || !action) continue;
+      const perms = await this.getUserPermissions(
+        userId,
+        scope,
+        resource.trim(),
+        action.trim(),
+        TokenType.ProjectApp
+      );
+      if (perms.length > 0) granted.push(slug);
+    }
+    return granted;
+  }
+
+  async getUserRoles(
+    userId: string,
+    scope: Scope,
+    tokenType?: TokenType
+  ): Promise<ExecutionContextRole[]> {
+    const roleIds = await this.grantRepository.getUserRoleIdsInScope(userId, scope, undefined, {
+      tokenType,
+    });
 
     if (roleIds.length === 0) {
       return [];
     }
 
-    return this.grantRepository.getUserRoles(userId, scope);
+    return this.grantRepository.getUserRoles(userId, scope, undefined, { tokenType });
   }
 
-  async getUserGroups(userId: string, scope: Scope): Promise<ExecutionContextGroup[]> {
-    const roleIds = await this.grantRepository.getUserRoleIdsInScope(userId, scope);
+  async getUserGroups(
+    userId: string,
+    scope: Scope,
+    tokenType?: TokenType
+  ): Promise<ExecutionContextGroup[]> {
+    const roleIds = await this.grantRepository.getUserRoleIdsInScope(userId, scope, undefined, {
+      tokenType,
+    });
 
     if (roleIds.length === 0) {
       return [];
@@ -156,7 +192,7 @@ export class GrantService implements IGrantService {
       return [];
     }
 
-    return this.grantRepository.getUserGroups(userId, scope);
+    return this.grantRepository.getUserGroups(userId, scope, undefined, { tokenType });
   }
 
   async getUser(userId: string, scope?: Scope): Promise<ExecutionContextUser> {

@@ -1,15 +1,15 @@
 import { SESClient, SendEmailCommand, SendEmailCommandInput } from '@aws-sdk/client-ses';
+import { GrantException } from '@grantjs/core';
 
+import type { EmailTemplates } from '../templates';
 import type {
   IEmailService,
   ILogger,
   SendInvitationParams,
   SendOtpParams,
   SendPasswordResetParams,
+  SendProjectOAuthMagicLinkParams,
 } from '@grantjs/core';
-import { GrantException } from '@grantjs/core';
-
-import type { EmailTemplates } from '../templates';
 
 export interface SesConfig {
   clientId: string;
@@ -172,6 +172,46 @@ export class SesEmailAdapter implements IEmailService {
       });
       throw new GrantException(
         `Failed to send password reset email: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'EMAIL_SEND_ERROR',
+        error instanceof Error ? error : undefined
+      );
+    }
+  }
+
+  async sendProjectOAuthMagicLink(params: SendProjectOAuthMagicLinkParams): Promise<void> {
+    const subject = this.templates.getProjectOAuthMagicLinkEmailSubject(params);
+    const html = this.templates.getProjectOAuthMagicLinkEmailHtml(params);
+    const text = this.templates.getProjectOAuthMagicLinkEmailText(params);
+
+    try {
+      const commandInput: SendEmailCommandInput = {
+        Source: this.from,
+        Destination: {
+          ToAddresses: [params.to],
+        },
+        Message: {
+          Subject: {
+            Data: subject,
+            Charset: 'UTF-8',
+          },
+          Body: {
+            Html: {
+              Data: html,
+              Charset: 'UTF-8',
+            },
+            Text: {
+              Data: text,
+              Charset: 'UTF-8',
+            },
+          },
+        },
+      };
+
+      const command = new SendEmailCommand(commandInput);
+      await this.sesClient.send(command);
+    } catch (error) {
+      throw new GrantException(
+        `Failed to send project OAuth magic link: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'EMAIL_SEND_ERROR',
         error instanceof Error ? error : undefined
       );

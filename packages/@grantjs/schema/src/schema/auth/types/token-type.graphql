@@ -1,5 +1,6 @@
 enum TokenType {
   session
   apiKey
+  projectApp
   system
 }

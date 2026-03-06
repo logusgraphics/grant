@@ -1,0 +1,6 @@
+extend type Mutation {
+  """
+  Update an existing project app (name, redirect URIs, scopes).
+  """
+  updateProjectApp(id: ID!, input: UpdateProjectAppInput!): ProjectApp!
+}

@@ -3,6 +3,7 @@ import {
   UserAuthenticationMethodProvider,
 } from '@grantjs/schema';
 
+import { PROJECT_OAUTH_PROVIDERS } from '@/config/env.config';
 import { z } from '@/lib/zod-openapi.lib';
 import { accountSchema, accountTypeSchema } from '@/rest/schemas/accounts.schemas';
 import { createSuccessResponseSchema } from '@/rest/schemas/common.schemas';
@@ -231,4 +232,98 @@ export const cliCallbackResultSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
   accounts: z.array(accountSchema),
+});
+
+/** Project OAuth provider: subset of UserAuthenticationMethodProvider (from schema) supported in project-app authorize flow. */
+export const projectOAuthProviderSchema = z.enum(
+  PROJECT_OAUTH_PROVIDERS as unknown as [string, ...string[]]
+);
+
+export const projectAuthorizeQuerySchema = z.object({
+  client_id: z.string().min(1, 'client_id required'),
+  redirect_uri: z.string().url('redirect_uri must be a valid URL'),
+  state: z.string().optional(),
+  /** Auth provider (default: github). */
+  provider: projectOAuthProviderSchema.optional().default('github'),
+  /** Optional space-delimited scopes (subset of app-configured scopes). */
+  scope: z.string().optional(),
+});
+
+export const projectCallbackQuerySchema = z
+  .object({
+    /** GitHub OAuth code (when provider=github). */
+    code: z.string().optional(),
+    /** One-time token from magic link (when provider=email). */
+    token: z.string().optional(),
+    /** State from authorize; required for both flows. */
+    state: z.string().min(1, 'state required'),
+    /** Optional: for error redirect back to entry (email flow magic link includes these). */
+    client_id: z.string().optional(),
+    redirect_uri: z.string().url().optional(),
+  })
+  .refine(
+    (data) => (data.code != null && data.code !== '') !== (data.token != null && data.token !== ''),
+    { message: 'Either code (GitHub) or token (email) is required', path: ['code'] }
+  );
+
+export const projectEmailRequestSchema = z.object({
+  client_id: z.string().min(1, 'client_id required'),
+  redirect_uri: z.string().url('redirect_uri must be a valid URL'),
+  /** Optional; when omitted or empty, server generates state for this email flow (e.g. direct link to email page). */
+  state: z.string().optional(),
+  email: z.string().email('email must be a valid email address'),
+  client_state: z.string().optional(),
+  /** Optional space-delimited scopes (subset of app-configured scopes). */
+  scope: z.string().optional(),
+});
+
+/** Query for GET project app public info (OAuth entry/consent UI). */
+export const projectAppInfoQuerySchema = z.object({
+  client_id: z.string().min(1, 'client_id required'),
+  /** Optional space-delimited scopes; response scopes are intersection with app-configured scopes. */
+  scope: z.string().optional(),
+  /** Optional redirect_uri; when provided, validated against app allowlist (returns 400 if not allowed). */
+  redirect_uri: z.string().optional(),
+});
+
+/** Scope with labels for consent screen. */
+export const projectAppInfoScopeSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+});
+
+export const projectAppInfoResponseSchema = z.object({
+  name: z.string().nullable(),
+  enabledProviders: z.array(z.string()).nullable(),
+  scopes: z.array(projectAppInfoScopeSchema),
+});
+
+/** Body for POST consent/approve. */
+export const projectConsentApproveBodySchema = z.object({
+  consent_token: z.string().min(1, 'consent_token required'),
+});
+
+/** Body for POST consent/deny. */
+export const projectConsentDenyBodySchema = z.object({
+  consent_token: z.string().min(1, 'consent_token required'),
+});
+
+/** Query for GET project consent info (consent page). */
+export const projectConsentInfoQuerySchema = z.object({
+  consent_token: z.string().min(1, 'consent_token required'),
+});
+
+/** User display for consent page (who is consenting). */
+export const projectConsentInfoUserSchema = z.object({
+  displayName: z.string(),
+  email: z.string().nullable(),
+  pictureUrl: z.string().url().nullable(),
+});
+
+/** Response for GET project consent info. */
+export const projectConsentInfoResponseSchema = z.object({
+  name: z.string().nullable(),
+  scopes: z.array(projectAppInfoScopeSchema),
+  user: projectConsentInfoUserSchema.nullable(),
 });

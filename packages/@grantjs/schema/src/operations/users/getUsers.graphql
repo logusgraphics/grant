@@ -39,6 +39,10 @@ query GetUsers(
         color
         isPrimary
       }
+      authenticationMethods {
+        provider
+        providerId
+      }
     }
     totalCount
     hasNextPage

@@ -20,6 +20,7 @@ import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useResourceMutations } from '@/hooks/resources';
 import { useTags } from '@/hooks/tags';
+import { slugifyAction } from '@/lib/slugify';
 import { useResourcesStore } from '@/stores/resources.store';
 
 import { ResourceCreateFormValues, createResourceSchema } from './resource-types';
@@ -66,6 +67,7 @@ export function ResourceCreateDialog() {
       placeholder: 'form.actionsPlaceholder',
       type: 'actions',
       info: 'form.actionsInfo',
+      normalizeValue: slugifyAction,
     },
     {
       name: 'isActive',

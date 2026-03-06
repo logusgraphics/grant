@@ -17,6 +17,7 @@ import type {
   IOrganizationRoleService,
   IOrganizationTagService,
   IOrganizationUserService,
+  IProjectAppService,
   IProjectGroupService,
   IProjectPermissionService,
   IProjectResourceService,
@@ -46,6 +47,7 @@ export interface ScopeServices {
   organizationPermissions: IOrganizationPermissionService;
   projectPermissions: IProjectPermissionService;
   projectResources: IProjectResourceService;
+  projectApps: IProjectAppService;
   accountTags: IAccountTagService;
   organizationTags: IOrganizationTagService;
   projectTags: IProjectTagService;
@@ -210,6 +212,23 @@ export class CacheHandler implements IScopedIdProvider {
             organizationId: scope.id,
           });
         projectIds = organizationProjects.map((op) => op.projectId);
+        break;
+      }
+      case Tenant.OrganizationProject: {
+        const { organizationId } = this.extractOrganizationProjectFromScope(scope);
+        const organizationProjects =
+          await this.scopeServices.organizationProjects.getOrganizationProjects({
+            organizationId,
+          });
+        projectIds = organizationProjects.map((op) => op.projectId);
+        break;
+      }
+      case Tenant.AccountProject: {
+        const { accountId } = this.extractAccountProjectFromScope(scope);
+        const accountProjects = await this.scopeServices.accountProjects.getAccountProjects({
+          accountId,
+        });
+        projectIds = accountProjects.map((ap) => ap.projectId);
         break;
       }
       default:
@@ -453,6 +472,30 @@ export class CacheHandler implements IScopedIdProvider {
     return resourceIds;
   }
 
+  async getScopedProjectAppIds(scope: Scope): Promise<string[]> {
+    const cacheKey = this.createCacheKey(scope);
+
+    const cachedProjectApps = await this.cache.projectApps.get(cacheKey);
+    if (cachedProjectApps) {
+      return Array.from(cachedProjectApps.values());
+    }
+
+    const projectId = this.extractProjectIdFromScope(scope);
+    const projectIds = await this.getScopedProjectIds(scope);
+    if (!projectIds.includes(projectId)) {
+      return [];
+    }
+
+    const page = await this.scopeServices.projectApps.getProjectApps({
+      projectId,
+      page: 1,
+      limit: -1,
+    });
+    const projectAppIds = page.projectApps.map((app) => app.id);
+    await this.cache.projectApps.set(cacheKey, new Set(projectAppIds));
+    return projectAppIds;
+  }
+
   async getScopedTagIds(scope: Scope): Promise<string[]> {
     const cacheKey = this.createCacheKey(scope);
 
@@ -610,6 +653,14 @@ export class CacheHandler implements IScopedIdProvider {
     await this.removeIdFromCache(this.cache.projects, scope, projectId);
   }
 
+  async addProjectAppIdToScopeCache(scope: Scope, projectAppId: string): Promise<void> {
+    await this.addIdToCache(this.cache.projectApps, scope, projectAppId);
+  }
+
+  async removeProjectAppIdFromScopeCache(scope: Scope, projectAppId: string): Promise<void> {
+    await this.removeIdFromCache(this.cache.projectApps, scope, projectAppId);
+  }
+
   async addApiKeyIdToScopeCache(scope: Scope, apiKeyId: string): Promise<void> {
     await this.addIdToCache(this.cache.apiKeys, scope, apiKeyId);
   }
@@ -630,17 +681,39 @@ export class CacheHandler implements IScopedIdProvider {
     await this.cache.groups.clear();
   }
 
+  /**
+   * Builds cache key for authorization results. For project-app tokens, include a signature of
+   * grantedScopes so different OAuth grants (different consented scopes) do not share cache entries.
+   */
   protected getAuthorizationCacheKey(
     userId: string,
     scope: Scope,
     permission: { resource: string; action: string },
-    context?: { resource?: Record<string, unknown> | null }
+    context?: { resource?: Record<string, unknown> | null },
+    grantedScopes?: string[]
   ): string {
     const contextHash = context?.resource
       ? createHash('sha256').update(JSON.stringify(context.resource)).digest('hex').substring(0, 8)
       : 'none';
-
-    return `${AUTH_RESULT_CACHE_KEY_PREFIX}${userId}:${scope.tenant}:${scope.id}:${permission.resource}:${permission.action}:${contextHash}`;
+    const resourceNorm = permission.resource.trim().toLowerCase();
+    const actionNorm = permission.action.trim().toLowerCase();
+    const scopePart = `${scope.tenant}:${scope.id}`;
+    const grantedPart =
+      grantedScopes && grantedScopes.length > 0
+        ? createHash('sha256')
+            .update(
+              [...grantedScopes]
+                .map((s) => (s ?? '').trim().toLowerCase())
+                .sort()
+                .join(',')
+            )
+            .digest('hex')
+            .substring(0, 16)
+        : '';
+    const key = grantedPart
+      ? `${AUTH_RESULT_CACHE_KEY_PREFIX}${userId}:${scopePart}:${grantedPart}:${resourceNorm}:${actionNorm}:${contextHash}`
+      : `${AUTH_RESULT_CACHE_KEY_PREFIX}${userId}:${scopePart}:${resourceNorm}:${actionNorm}:${contextHash}`;
+    return key;
   }
 
   protected async getAuthorizationResult<T = AuthorizationResult>(
@@ -690,6 +763,11 @@ export class CacheHandler implements IScopedIdProvider {
   async invalidateProjectsCacheForScope(scope: Scope): Promise<void> {
     const cacheKey = this.createCacheKey(scope);
     await this.cache.projects.delete(cacheKey);
+  }
+
+  async invalidateProjectAppsCacheForScope(scope: Scope): Promise<void> {
+    const cacheKey = this.createCacheKey(scope);
+    await this.cache.projectApps.delete(cacheKey);
   }
 
   async invalidateApiKeysCacheForScope(scope: Scope): Promise<void> {

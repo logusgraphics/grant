@@ -15,6 +15,7 @@
  */
 
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@grantjs/i18n';
+import { UserAuthenticationMethodProvider } from '@grantjs/schema';
 import * as dotenv from 'dotenv';
 
 import { ConfigurationError } from '@/lib/errors';
@@ -191,6 +192,12 @@ export const GITHUB_OAUTH_CONFIG = {
   /** GitHub OAuth callback URL */
   callbackUrl: getEnv('GITHUB_CALLBACK_URL', 'http://localhost:4000/api/auth/github/callback'),
 
+  /** GitHub OAuth callback URL for project app flow (must be registered in GitHub app) */
+  projectCallbackUrl: getEnv(
+    'GITHUB_PROJECT_CALLBACK_URL',
+    'http://localhost:4000/api/auth/project/callback'
+  ),
+
   /** GitHub OAuth authorization URL */
   authorizationUrl: getEnv('GITHUB_AUTHORIZATION_URL', 'https://github.com/login/oauth/authorize'),
 
@@ -214,6 +221,40 @@ export const GITHUB_OAUTH_CONFIG = {
 
   /** TTL in seconds for CLI OAuth callback payloads stored in cache */
   cliCallbackTtlSeconds: getEnvNumber('OAUTH_CLI_CALLBACK_TTL_SECONDS', 60),
+} as const;
+
+/**
+ * Subset of UserAuthenticationMethodProvider (schema) that is supported in the project OAuth flow.
+ * Single source of truth: schema enum; this list defines which are implemented for project apps.
+ */
+export const PROJECT_OAUTH_PROVIDERS = [
+  UserAuthenticationMethodProvider.Github,
+  UserAuthenticationMethodProvider.Email,
+] as const;
+export type ProjectOAuthProvider = (typeof PROJECT_OAUTH_PROVIDERS)[number];
+
+export const PROJECT_OAUTH_CONFIG = {
+  /**
+   * URL for project-scoped email auth entry (provider=email).
+   * Tenant app or frontend hosts the "enter email" page; user is redirected here with client_id, redirect_uri, state.
+   * Handler injects default locale (e.g. /en/) when building redirects; if set via env, include locale in path for next-intl.
+   */
+  emailEntryUrl: getEnv(
+    'PROJECT_OAUTH_EMAIL_ENTRY_URL',
+    process.env.SECURITY_FRONTEND_URL
+      ? `${process.env.SECURITY_FRONTEND_URL}/auth/project/email`
+      : 'http://localhost:3000/auth/project/email'
+  ),
+  /**
+   * URL for project-scoped OAuth consent (post-auth). Frontend page that shows scopes and Allow/Deny.
+   * Handler injects default locale (e.g. /en/) when building redirects; if set via env, include locale in path for next-intl.
+   */
+  consentUrl: getEnv(
+    'PROJECT_OAUTH_CONSENT_URL',
+    process.env.SECURITY_FRONTEND_URL
+      ? `${process.env.SECURITY_FRONTEND_URL}/auth/project/consent`
+      : 'http://localhost:3000/auth/project/consent'
+  ),
 } as const;
 
 // ============================================================================
@@ -869,6 +910,7 @@ export const config = {
   auth: AUTH_CONFIG,
   token: TOKEN_CONFIG,
   githubOAuth: GITHUB_OAUTH_CONFIG,
+  projectOAuth: PROJECT_OAUTH_CONFIG,
   cache: CACHE_CONFIG,
   redis: REDIS_CONFIG,
   security: SECURITY_CONFIG,

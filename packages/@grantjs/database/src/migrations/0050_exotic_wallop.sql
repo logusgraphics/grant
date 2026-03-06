@@ -1,0 +1,1 @@
+ALTER TABLE "project_apps" ADD COLUMN "enabled_providers" jsonb;

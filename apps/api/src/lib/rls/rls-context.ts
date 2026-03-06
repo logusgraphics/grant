@@ -56,6 +56,12 @@ export function hasRlsKeys(ctx: RlsContext): boolean {
  * Uses SET LOCAL so variables are transaction-scoped and automatically
  * cleaned up on COMMIT/ROLLBACK — no leaking to other requests.
  *
+ * Always sets all three variables so that unused ones are explicitly cleared
+ * (empty string). Policies use NULLIF(..., '') IS NULL to treat empty as
+ * "no filter", so clearing avoids stale values from connection pool reuse
+ * that could hide rows (e.g. account-scoped request seeing project_permissions
+ * only for a previously set project_id).
+ *
  * Also switches to the restricted role so RLS policies are enforced
  * (the table owner role bypasses RLS by default in PostgreSQL).
  */
@@ -63,15 +69,24 @@ export async function setRlsContext(tx: Transaction, ctx: RlsContext): Promise<v
   const roleName = config.security.rlsRestrictedRole;
   await tx.execute(sql.raw(`SET LOCAL ROLE ${roleName}`));
 
-  if (ctx.organizationId) {
-    await tx.execute(
-      sql`SELECT set_config('app.current_organization_id', ${ctx.organizationId}, true)`
-    );
-  }
-  if (ctx.projectId) {
-    await tx.execute(sql`SELECT set_config('app.current_project_id', ${ctx.projectId}, true)`);
-  }
-  if (ctx.accountId) {
-    await tx.execute(sql`SELECT set_config('app.current_account_id', ${ctx.accountId}, true)`);
-  }
+  const orgVal = ctx.organizationId ?? '';
+  const projectVal = ctx.projectId ?? '';
+  const accountVal = ctx.accountId ?? '';
+
+  await tx.execute(sql`SELECT set_config('app.current_organization_id', ${orgVal}, true)`);
+  await tx.execute(sql`SELECT set_config('app.current_project_id', ${projectVal}, true)`);
+  await tx.execute(sql`SELECT set_config('app.current_account_id', ${accountVal}, true)`);
+}
+
+/**
+ * Set only app.current_project_id in the current transaction (SET LOCAL).
+ * Use when a single operation must see rows for a specific project while
+ * the request scope is account/org (e.g. deleteProject must update
+ * project_permissions for the project being deleted).
+ */
+export async function setProjectIdInTransaction(
+  tx: Transaction,
+  projectId: string | ''
+): Promise<void> {
+  await tx.execute(sql`SELECT set_config('app.current_project_id', ${projectId}, true)`);
 }

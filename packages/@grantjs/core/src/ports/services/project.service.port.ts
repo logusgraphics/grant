@@ -129,6 +129,16 @@ export interface IProjectPermissionService {
     transaction?: unknown
   ): Promise<ProjectPermission[]>;
 
+  /** Returns allowed OAuth scope slugs (resource:action) for the project. */
+  getAllowedScopeSlugsForProject(projectId: string, transaction?: unknown): Promise<string[]>;
+
+  /** Returns name and description for each scope slug that exists in the project. */
+  getScopeSlugLabelsForProject(
+    projectId: string,
+    scopeSlugs: string[],
+    transaction?: unknown
+  ): Promise<{ slug: string; name: string; description: string | null }[]>;
+
   addProjectPermission(
     params: AddProjectPermissionInput,
     transaction?: unknown

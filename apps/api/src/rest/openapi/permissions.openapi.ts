@@ -121,6 +121,9 @@ The permission is created within the specified scope:
 The action field defines what operation this permission grants:
 - \`action\`: A string describing the action (e.g., "read:users", "write:projects", "delete:groups")
 
+### Resource
+- \`resourceId\`: Optional UUID of the resource this permission applies to (null for global permissions).
+
 ### Tags
 You can optionally assign tags to the permission:
 - \`tagIds\`: Array of tag UUIDs
@@ -186,6 +189,9 @@ All fields are optional - only provide the fields you want to update.
 
 ### Action
 - \`action\`: Update the action string (e.g., "read:users", "write:projects")
+
+### Resource
+- \`resourceId\`: Optional UUID of the resource this permission applies to (null for global permissions).
 
 ### Tags
 - \`tagIds\`: Replace all tags with new array

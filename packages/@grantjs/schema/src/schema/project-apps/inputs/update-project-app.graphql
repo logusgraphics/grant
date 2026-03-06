@@ -1,0 +1,29 @@
+input UpdateProjectAppInput {
+  scope: Scope!
+  """
+  Display name for the app.
+  """
+  name: String
+  """
+  Allowed redirect URIs for OAuth callback. If provided, at least one required.
+  """
+  redirectUris: [String!]
+  """
+  Optional OAuth scopes the app may request.
+  """
+  scopes: [String!]
+  """
+  Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers.
+  """
+  enabledProviders: [String!]
+  """
+  Allow new users to sign up when authenticating via this app.
+  """
+  allowSignUp: Boolean
+  """
+  Role to assign to users who sign up via this app. Required when allowSignUp is true; must be a role in the project.
+  """
+  signUpRoleId: ID
+  tagIds: [ID!]
+  primaryTagId: ID
+}

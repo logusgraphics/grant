@@ -27,12 +27,15 @@ apps/api/tests/
 │   ├── middleware/             # Rate limiting, request-logging middleware logic
 │   │   ├── rate-limit.middleware.test.ts
 │   │   └── request-logging.middleware.test.ts
-│   ├── handlers/               # Handler optional requestLogger behavior
-│   │   └── auth.handler.request-logger.test.ts
+│   ├── handlers/               # Handler optional requestLogger, project OAuth
+│   │   ├── auth.handler.project-oauth.test.ts
+│   │   ├── auth.handler.request-logger.test.ts
+│   │   └── project-oauth.handler.test.ts
 │   ├── services/              # Audit service tenant scoping
 │   └── jobs/                  # Tenant job context validation
 ├── integration/
 │   ├── i18n.integration.test.ts          # REST error body includes translationKey and localized error
+│   ├── project-oauth.integration.test.ts # Project OAuth authorize, email request, email callback
 │   ├── rate-limit.integration.test.ts   # HTTP-level rate limit tests
 │   ├── observability.integration.test.ts   # Metrics endpoint, telemetry/analytics/tracing adapters
 │   └── request-logging.integration.test.ts   # Request-scoped logger and requestId in log payload
@@ -43,6 +46,8 @@ apps/api/tests/
     │   ├── multi-tenant.e2e.test.ts     # Cross-tenant isolation
     │   ├── negative-rbac.e2e.test.ts    # Authorization boundaries
     │   ├── negative-auth.e2e.test.ts    # Authentication rejection
+    │   ├── project-apps.e2e.test.ts     # Project app CRUD (create, list, update, delete) via GraphQL
+    │   ├── project-oauth.e2e.test.ts   # Project OAuth authorize, email request, email callback
     │   └── user-onboarding.e2e.test.ts  # User onboarding flow
     └── compliance/
         ├── soc2-access-control.e2e.test.ts
@@ -109,6 +114,20 @@ Observability is covered at two levels:
 - **E2E** (`observability.e2e.test.ts`) — GET /metrics against the real API container. The E2E stack enables metrics (`METRICS_ENABLED=true` in `docker-compose.e2e.yml`); telemetry and analytics are set to noop/disabled. Full E2E for log-push or analytics would require a test backend (e.g. mock HTTP receiver).
 
 **Request logging:** Unit tests (`request-logging.middleware.test.ts`) assert requestId and request-scoped logger on `req`, and the completion log payload on `res.finish`. Handler unit test (`auth.handler.request-logger.test.ts`) asserts that when `requestLogger` is passed, the handler uses it for error logs. Integration test (`request-logging.integration.test.ts`) uses a minimal Express app with the middleware and one route that calls `getRequestLogger(req).info(...)`; it asserts the log payload includes `requestId` and the event message.
+
+## Project OAuth testing
+
+Project OAuth (authorize, email magic link, callback) is covered at three levels:
+
+- **Unit** (`tests/unit/handlers/project-oauth.handler.test.ts`, `auth.handler.project-oauth.test.ts`) — Handler logic in isolation with mocked services, cache, grant, GitHub OAuth, and email. Asserts: `initiateProjectAuthorize` (NotFound, BadRequest for redirect_uri/provider, 302 URL for github vs email), `requestProjectEmailMagicLink` (validation, cache set, email send), `handleProjectCallback` (GitHub: state validation, user resolution, token signing), `handleProjectCallbackEmailFlow` (token/state validation, user resolution), `resolveUserIdFromGithubForProject` and `resolveUserIdFromEmailForProject` (find by provider/email, link or create user).
+- **Integration** (`tests/integration/project-oauth.integration.test.ts`) — Minimal Express app with auth routes and real `ProjectOAuthHandler` backed by in-memory cache and mocked dependencies. Asserts: GET authorize → 302 with Location (GitHub or email entry URL), POST email/request → 202, GET callback with token/state (payload injected in cache) → 302 with Location fragment containing `access_token`. Redirects are asserted without following (Supertest does not follow redirects by default).
+- **E2E** (`tests/e2e/scenarios/project-oauth.e2e.test.ts`) — Real API, DB, and Redis. Reuses project-app setup (org, project, project app with `enabledProviders`). Asserts: authorize 302 for github and email, email/request 202, then **Redis helper** (`tests/e2e/helpers/redis-e2e.ts`) reads the one-time token from E2E Redis (key pattern `grant:oauth:oauth:project-email-token:*`), and GET callback with that token and state → 302 with `access_token` in fragment. The user must be in `project_users` (DB helper `addProjectUserForE2e` in `db-tokens.ts`).
+
+**Redirect handling:** Supertest does not follow redirects by default; assert on `res.status === 302` and `res.headers.location`. No need to follow the redirect to validate the flow.
+
+**E2E Redis:** Set `E2E_REDIS_HOST`, `E2E_REDIS_PORT` (default 6380), and `E2E_REDIS_PASSWORD` if your E2E Redis is not at `localhost:6380` with password `grant_redis_password` (see `docker-compose.e2e.yml`).
+
+**GitHub callback E2E:** Full GitHub OAuth flow (user authorizes in browser) is not automated in E2E; it is covered by unit and integration tests with mocked GitHub exchange. To run a full GitHub flow E2E, use a test GitHub OAuth app or a mock OAuth server (see project OAuth testing strategy).
 
 ## i18n Testing
 

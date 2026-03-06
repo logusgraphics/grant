@@ -42,10 +42,15 @@ export const searchSchema = z
     'errors.validation.searchMin2'
   );
 
+/** Action slug: lowercase, trimmed, letters, digits, hyphen, plus only (no spaces). */
+const ACTION_SLUG_REGEX = /^[a-z0-9+-]+$/;
+
 export const actionSchema = z
   .string()
   .min(1, 'errors.validation.actionRequired')
-  .max(255, 'errors.validation.actionTooLong');
+  .max(255, 'errors.validation.actionTooLong')
+  .transform((val) => val.trim().toLowerCase())
+  .pipe(z.string().regex(ACTION_SLUG_REGEX, 'errors.validation.actionInvalidFormat'));
 
 export const tenantSchema = z.enum(Object.values(Tenant) as [Tenant, ...Tenant[]]);
 

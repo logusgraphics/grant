@@ -21,6 +21,12 @@ import {
   resendVerificationResponseSchema,
   resetPasswordRequestSchema,
   resetPasswordResponseSchema,
+  projectAppInfoQuerySchema,
+  projectAppInfoResponseSchema,
+  projectConsentApproveBodySchema,
+  projectConsentDenyBodySchema,
+  projectConsentInfoQuerySchema,
+  projectConsentInfoResponseSchema,
   validationErrorResponseSchema,
   verifyEmailRequestSchema,
   verifyEmailResponseSchema,
@@ -602,6 +608,356 @@ and either logs in an existing user or creates a new account.
         content: {
           'application/json': {
             schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/auth/project/authorize
+   * Initiate project-scoped OAuth (e.g. GitHub) for a project app
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/auth/project/authorize',
+    tags: ['Authentication'],
+    summary: 'Initiate project OAuth',
+    description: `
+Initiate the project-scoped OAuth flow. Used by project applications (ProjectApp) to let end users sign in with a provider (e.g. GitHub) and receive a JWT scoped to that project.
+
+The user is redirected to the provider; after authorization, the provider redirects to \`/api/auth/project/callback\` with an authorization code.
+
+### Query Parameters
+- \`client_id\` (required): The project app client ID (from ProjectApp).
+- \`redirect_uri\` (required): URL to redirect to after successful authentication. Must be registered in the project app's redirect URIs.
+- \`state\` (optional): Opaque value echoed back in the callback for CSRF protection.
+- \`scope\` (optional): Space-delimited scopes to request; must be a subset of the app's configured scopes. If omitted, all app scopes are used.
+- \`provider\` (optional): Auth provider (e.g. \`github\`, \`email\`). Default: \`github\`.
+
+### Flow
+1. Validates client_id and redirect_uri against the project app.
+2. Stores state in cache and redirects to the provider (e.g. GitHub).
+3. User authorizes; provider redirects to \`/api/auth/project/callback\` with code and state.
+4. Callback exchanges code, resolves/creates user, checks project membership, issues project-scoped JWT, redirects to \`redirect_uri\` with token in fragment.
+    `.trim(),
+    request: {
+      query: z.object({
+        client_id: z.string().min(1).openapi({
+          description: 'Project app client ID',
+          example: '550e8400-e29b-41d4-a716-446655440000',
+        }),
+        redirect_uri: z.string().url().openapi({
+          description: 'Redirect URI (must be in project app allowlist)',
+          example: 'https://myapp.example.com/callback',
+        }),
+        state: z.string().optional().openapi({
+          description: 'Opaque state for CSRF protection',
+          example: 'random-state-token',
+        }),
+        scope: z.string().optional().openapi({
+          description: 'Space-delimited scopes (subset of app-configured scopes)',
+          example: 'organization:read user:read',
+        }),
+        provider: z.enum(['github', 'email']).optional().openapi({
+          description: 'Auth provider',
+          default: 'github',
+        }),
+      }),
+    },
+    responses: {
+      302: {
+        description: 'Redirect to provider authorization page',
+      },
+      400: {
+        description: 'Invalid client_id, redirect_uri, or validation error',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/project/email/request
+   * Request a project OAuth magic link (email provider)
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/project/email/request',
+    tags: ['Authentication'],
+    summary: 'Request project OAuth magic link',
+    description: `
+Request a magic link for project-scoped sign-in via email. Used when the project app uses \`provider=email\` and the user has been redirected to the email entry page (with client_id, redirect_uri, state from the authorize step).
+
+Sends an email containing a one-time link to \`/api/auth/project/callback?token=...&state=...\`. When the user clicks the link, the callback resolves the user by email, checks project membership, and issues a project-scoped JWT.
+
+### Request body
+- \`client_id\` (required): Project app client ID.
+- \`redirect_uri\` (required): Must match the value used in the authorize step and be in the app's allowlist.
+- \`state\` (required): State from the authorize step (echoed back in the callback).
+- \`email\` (required): User's email address.
+- \`client_state\` (optional): Optional opaque value to pass through to the app in the callback fragment.
+- \`scope\` (optional): Space-delimited scopes to request (subset of app-configured scopes). If omitted, all app scopes are used.
+    `.trim(),
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: z.object({
+              client_id: z.string().min(1),
+              redirect_uri: z.string().url(),
+              state: z.string().min(1),
+              email: z.string().email(),
+              client_state: z.string().optional(),
+              scope: z.string().optional(),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      202: {
+        description: 'Magic link email sent (or accepted; no body for security)',
+      },
+      400: {
+        description: 'Invalid client_id, redirect_uri, or email',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/auth/project/callback
+   * Handle project-scoped OAuth callback (GitHub code or email magic-link token)
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/auth/project/callback',
+    tags: ['Authentication'],
+    summary: 'Project OAuth callback',
+    description: `
+Handle the callback for project-scoped OAuth. Supports two flows:
+
+**GitHub:** \`code\` and \`state\` from the provider. Exchanges code, resolves/creates user by GitHub, verifies project membership, issues JWT.
+
+**Email:** \`token\` and \`state\` from the magic link. Validates one-time token, resolves/creates user by email, verifies project membership, issues JWT.
+
+After authentication, redirects to the consent page (\`PROJECT_OAUTH_CONSENT_URL\`) with \`consent_token\` in query. The user approves or denies; then the frontend calls consent/approve or consent/deny to complete the flow.
+
+### Query Parameters (GitHub flow)
+- \`code\` (required when GitHub): Authorization code from the provider.
+- \`state\` (required): State from the authorize step.
+
+### Query Parameters (Email flow)
+- \`token\` (required when email): One-time token from the magic link.
+- \`state\` (required): State from the authorize step.
+    `.trim(),
+    request: {
+      query: z.object({
+        code: z.string().optional().openapi({
+          description: 'Authorization code from the provider (GitHub flow)',
+        }),
+        token: z.string().optional().openapi({
+          description: 'One-time token from magic link (email flow)',
+        }),
+        state: z.string().min(1).openapi({
+          description: 'State from the authorize step',
+          example: 'random-state-token',
+        }),
+      }),
+    },
+    responses: {
+      302: {
+        description: 'Redirect to consent page with consent_token, or to app redirect_uri on error',
+      },
+      400: {
+        description: 'Invalid state, code, or validation error',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'User not in project or OAuth failed',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/auth/project/app-info
+   * Public project app info for OAuth entry/consent UI
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/auth/project/app-info',
+    tags: ['Authentication'],
+    summary: 'Project app public info',
+    description:
+      'Returns app name, enabled providers, and scopes with name/description for the OAuth entry or consent UI. If query param `scope` is provided (space-delimited), returned scopes are the intersection with the app-configured scopes. No authentication required.',
+    request: {
+      query: projectAppInfoQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'App info',
+        content: {
+          'application/json': {
+            schema: z.object({
+              success: z.literal(true),
+              data: projectAppInfoResponseSchema,
+            }),
+          },
+        },
+      },
+      404: {
+        description: 'Project app not found',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/auth/project/consent-info
+   * Consent page: app name, scopes, and current user display for the consent_token
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/auth/project/consent-info',
+    tags: ['Authentication'],
+    summary: 'Consent info',
+    description:
+      'Returns app name, scopes (with labels), and current user display (name, email, pictureUrl) for the consent page. Validates consent_token but does not consume it.',
+    request: {
+      query: projectConsentInfoQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Consent info',
+        content: {
+          'application/json': {
+            schema: z.object({
+              success: z.literal(true),
+              data: projectConsentInfoResponseSchema,
+            }),
+          },
+        },
+      },
+      401: {
+        description: 'Invalid or expired consent token',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/project/consent/approve
+   * Approve consent and get redirect URL with token
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/project/consent/approve',
+    tags: ['Authentication'],
+    summary: 'Approve consent',
+    description:
+      'Consumes the consent token, issues the project-scoped JWT, and returns the redirect URL to the app with access_token in fragment.',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: projectConsentApproveBodySchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Redirect URL to app with token in fragment',
+        content: {
+          'application/json': {
+            schema: z.object({
+              success: z.literal(true),
+              data: z.object({ redirectUrl: z.string().url() }),
+            }),
+          },
+        },
+      },
+      401: {
+        description: 'Invalid or expired consent token',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/project/consent/deny
+   * Deny consent and get redirect URL with error
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/project/consent/deny',
+    tags: ['Authentication'],
+    summary: 'Deny consent',
+    description:
+      'Consumes the consent token and returns the redirect URL to the app with error=access_denied in fragment.',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: projectConsentDenyBodySchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Redirect URL to app with error in fragment',
+        content: {
+          'application/json': {
+            schema: z.object({
+              success: z.literal(true),
+              data: z.object({ redirectUrl: z.string().url() }),
+            }),
+          },
+        },
+      },
+      401: {
+        description: 'Invalid or expired consent token',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
           },
         },
       },

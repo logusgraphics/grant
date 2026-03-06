@@ -1,0 +1,1 @@
+ALTER TABLE "project_apps" ADD COLUMN "allow_sign_up" boolean DEFAULT true NOT NULL;

@@ -2,6 +2,7 @@ import { ResourceSortableField, SortOrder } from '@grantjs/schema';
 
 import { z } from '@/lib/zod-openapi.lib';
 import {
+  actionSlugSchema,
   createSuccessResponseSchema,
   listQuerySchema,
   scopeIdSchema,
@@ -73,10 +74,11 @@ export const createResourceRequestSchema = z.object({
     example: 'Documents uploaded by users',
   }),
   actions: z
-    .array(z.string())
+    .array(actionSlugSchema)
     .optional()
     .openapi({
-      description: 'Array of actions available for this resource',
+      description:
+        'Array of actions available for this resource (lowercase, letters/digits/dashes/plus only)',
       example: ['read', 'write', 'delete'],
     }),
   isActive: z.boolean().optional().default(true).openapi({
@@ -84,6 +86,17 @@ export const createResourceRequestSchema = z.object({
     example: true,
   }),
   scope: scopeSchema,
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the resource',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the resource',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  }),
 });
 
 export const createResourceResponseSchema = createSuccessResponseSchema(resourceSchema);
@@ -113,15 +126,27 @@ export const updateResourceRequestSchema = z.object({
     example: 'Documents and files uploaded by users',
   }),
   actions: z
-    .array(z.string())
+    .array(actionSlugSchema)
     .optional()
     .openapi({
-      description: 'Updated array of actions available for this resource',
+      description:
+        'Updated array of actions available for this resource (lowercase, letters/digits/dashes/plus only)',
       example: ['read', 'write', 'delete', 'share'],
     }),
   isActive: z.boolean().optional().openapi({
     description: 'Updated active status of the resource',
     example: true,
+  }),
+  tagIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of tag IDs to assign to the resource',
+      example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  primaryTagId: z.string().optional().openapi({
+    description: 'Primary tag ID for the resource',
+    example: '123e4567-e89b-12d3-a456-426614174001',
   }),
 });
 

@@ -167,6 +167,28 @@ export async function getMemberRoleId(organizationId: string): Promise<string | 
 }
 
 // ---------------------------------------------------------------------------
+// Project users (for project OAuth E2E: user must be in project_users)
+// ---------------------------------------------------------------------------
+
+/**
+ * Add a user to a project by inserting into project_users.
+ * Used in project OAuth E2E so the callback can resolve scope and issue a token.
+ * Uses WHERE NOT EXISTS because the table has a partial unique index (WHERE deleted_at IS NULL)
+ * which cannot be referenced by ON CONFLICT (project_id, user_id).
+ */
+export async function addProjectUserForE2e(projectId: string, userId: string): Promise<void> {
+  const conn = getConnection();
+  await conn`
+    INSERT INTO project_users (project_id, user_id)
+    SELECT ${projectId}::uuid, ${userId}::uuid
+    WHERE NOT EXISTS (
+      SELECT 1 FROM project_users
+      WHERE project_id = ${projectId}::uuid AND user_id = ${userId}::uuid AND deleted_at IS NULL
+    )
+  `;
+}
+
+// ---------------------------------------------------------------------------
 // Generic query helper
 // ---------------------------------------------------------------------------
 

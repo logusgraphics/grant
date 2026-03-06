@@ -57,3 +57,58 @@ export function extractScopeFromRequest(req: Request): Scope | null {
 
   return null;
 }
+
+/**
+ * Resolver request: Express Request (REST) or GraphQL resolver args.
+ * Use when the same resolver is called from both transports (REST passes req, GraphQL passes args).
+ */
+function isExpressRequest(request: Request | Record<string, unknown>): request is Request {
+  const r = request as Request;
+  return typeof r?.get === 'function' && r.body !== undefined;
+}
+
+/**
+ * Extract scope from either Express Request (REST) or resolver args (GraphQL).
+ * Scope must include both id and tenant; no default tenant is applied.
+ */
+export function extractScopeFromResolverRequest(
+  request: Request | Record<string, unknown>
+): Scope | null {
+  if (isExpressRequest(request)) {
+    return extractScopeFromRequest(request);
+  }
+
+  const r = request as Record<string, unknown>;
+  const fromScope = r?.scope;
+  if (
+    fromScope &&
+    typeof fromScope === 'object' &&
+    typeof (fromScope as { id?: string }).id === 'string' &&
+    typeof (fromScope as { tenant?: string }).tenant === 'string'
+  ) {
+    const scope = fromScope as { id: string; tenant: string };
+    return { id: scope.id, tenant: scope.tenant as Tenant };
+  }
+  const fromInput =
+    r?.input && typeof r.input === 'object'
+      ? (r.input as { scope?: { id: string; tenant?: string } }).scope
+      : undefined;
+  if (
+    fromInput &&
+    typeof fromInput === 'object' &&
+    typeof fromInput.id === 'string' &&
+    typeof fromInput.tenant === 'string'
+  ) {
+    return { id: fromInput.id, tenant: fromInput.tenant as Tenant };
+  }
+  const scopeId =
+    r?.query && typeof r.query === 'object'
+      ? (r.query as { scopeId?: string; tenant?: string }).scopeId
+      : undefined;
+  const tenant =
+    r?.query && typeof r.query === 'object' ? (r.query as { tenant?: string }).tenant : undefined;
+  if (typeof scopeId === 'string' && typeof tenant === 'string') {
+    return { id: scopeId, tenant: tenant as Tenant };
+  }
+  return null;
+}

@@ -15,6 +15,7 @@ export type {
   SendInvitationParams,
   SendOtpParams,
   SendPasswordResetParams,
+  SendProjectOAuthMagicLinkParams,
 } from '@grantjs/core';
 
 // Templates stay in the API

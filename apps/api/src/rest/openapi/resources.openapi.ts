@@ -130,6 +130,11 @@ You can define custom actions for the resource:
 - \`actions\`: Array of action strings (e.g., ["read", "write", "delete", "share"])
 - If not provided, default actions will be used: ["read", "write", "update", "delete"]
 
+### Tags
+You can optionally assign tags to the resource:
+- \`tagIds\`: Array of tag UUIDs
+- \`primaryTagId\`: UUID of the primary tag (must be included in tagIds)
+
 ### Slug
 The slug must be URL-friendly:
 - Only lowercase letters, numbers, and hyphens
@@ -208,6 +213,10 @@ All fields are optional - only provide the fields you want to update.
 ### Active Status
 - \`isActive\`: Toggle the resource's active status
 - Setting to \`false\` prevents the resource from being used in new permissions
+
+### Tags
+- \`tagIds\`: Replace all tags with new array
+- \`primaryTagId\`: Set or update the primary tag (must be included in tagIds)
     `.trim(),
     request: {
       params: resourceParamsSchema,

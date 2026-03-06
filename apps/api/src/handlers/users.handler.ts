@@ -13,6 +13,7 @@ import {
 } from '@grantjs/schema';
 
 import { IEntityCacheAdapter } from '@/lib/cache';
+import { BadRequestError, NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
@@ -179,37 +180,42 @@ export class UserHandler extends CacheHandler {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const userId = params.id;
       const scope = params.scope;
-      const [userTags, userRoles] = await Promise.all([
-        this.userTags.getUserTags({ userId }, tx),
-        this.userRoles.getUserRoles({ userId }, tx),
-      ]);
 
-      const tagIds = userTags.map((ut) => ut.tagId);
-      const roleIds = userRoles.map((ur) => ur.roleId);
       switch (scope.tenant) {
-        case Tenant.Organization:
+        case Tenant.Organization: {
+          const [userTags, userRoles] = await Promise.all([
+            this.userTags.getUserTags({ userId }, tx),
+            this.userRoles.getUserRoles({ userId }, tx),
+          ]);
+          const tagIds = userTags.map((ut) => ut.tagId);
+          const roleIds = userRoles.map((ur) => ur.roleId);
           await this.organizationUsers.removeOrganizationUser(
             { organizationId: scope.id, userId },
             tx
           );
-          break;
+          await Promise.all([
+            ...tagIds.map((tagId) => this.userTags.removeUserTag({ userId, tagId }, tx)),
+            ...roleIds.map((roleId) => this.userRoles.removeUserRole({ userId, roleId }, tx)),
+          ]);
+          await this.removeUserIdFromScopeCache(scope, userId);
+          return await this.users.deleteUser(params, tx);
+        }
         case Tenant.OrganizationProject:
         case Tenant.AccountProject: {
           const projectId = this.extractProjectIdFromScope(scope);
           await this.projectUsers.removeProjectUser({ projectId, userId }, tx);
           await this.invalidateProjectUserRoleCache(userId);
-          break;
+          await this.removeUserIdFromScopeCache(scope, userId);
+          const page = await this.users.getUsers({ ids: [userId], limit: 1 });
+          const user = page.users?.[0];
+          if (!user) {
+            throw new NotFoundError('User');
+          }
+          return user;
         }
+        default:
+          throw new BadRequestError(`Unsupported tenant type: ${scope.tenant}`);
       }
-
-      await Promise.all([
-        ...tagIds.map((tagId) => this.userTags.removeUserTag({ userId, tagId }, tx)),
-        ...roleIds.map((roleId) => this.userRoles.removeUserRole({ userId, roleId }, tx)),
-      ]);
-
-      await this.removeUserIdFromScopeCache(scope, userId);
-
-      return await this.users.deleteUser(params, tx);
     });
   }
 
@@ -235,6 +241,41 @@ export class UserHandler extends CacheHandler {
       return usersPage.users[0].tags || [];
     }
     return [];
+  }
+
+  /**
+   * Returns role IDs that the user has in the given scope (project or organization).
+   * Used by User.roles field resolver to avoid leaking global roles.
+   */
+  public async getUserRoleIdsInScope(userId: string, scope: Scope): Promise<string[]> {
+    switch (scope.tenant) {
+      case Tenant.Account:
+        return [];
+      case Tenant.Organization: {
+        const [orgRoles, userRoleRows] = await Promise.all([
+          this.scopeServices.organizationRoles.getOrganizationRoles({
+            organizationId: scope.id,
+          }),
+          this.scopeServices.userRoles.getUserRoles({ userId }),
+        ]);
+        const scopeRoleIds = new Set(orgRoles.map((or) => or.roleId));
+        return userRoleRows.map((ur) => ur.roleId).filter((roleId) => scopeRoleIds.has(roleId));
+      }
+      case Tenant.OrganizationProject:
+      case Tenant.AccountProject:
+      case Tenant.OrganizationProjectUser:
+      case Tenant.AccountProjectUser: {
+        const projectId = this.extractProjectIdFromScope(scope);
+        const [projectRoles, userRoleRows] = await Promise.all([
+          this.scopeServices.projectRoles.getProjectRoles({ projectId }),
+          this.scopeServices.userRoles.getUserRoles({ userId }),
+        ]);
+        const scopeRoleIds = new Set(projectRoles.map((pr) => pr.roleId));
+        return userRoleRows.map((ur) => ur.roleId).filter((roleId) => scopeRoleIds.has(roleId));
+      }
+      default:
+        return [];
+    }
   }
 
   public async getUserRoles(

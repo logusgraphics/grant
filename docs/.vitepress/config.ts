@@ -115,6 +115,7 @@ export default withMermaid({
             { text: 'Adding REST Endpoints', link: '/contributing/rest-api' },
             { text: 'Testing', link: '/contributing/testing' },
             { text: 'Security Audit', link: '/contributing/security-audit' },
+            { text: 'Interactive API docs', link: '/contributing/interactive-api-docs' },
           ],
         },
         {

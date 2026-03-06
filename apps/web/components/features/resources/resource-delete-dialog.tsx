@@ -30,7 +30,7 @@ export function ResourceDeleteDialog() {
     return null;
   }
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (id: string, _name: string) => {
     await deleteResource({ id, scope: scope! });
   };
 

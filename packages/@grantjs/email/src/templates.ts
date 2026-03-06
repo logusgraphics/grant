@@ -1,4 +1,9 @@
-import type { SendInvitationParams, SendOtpParams, SendPasswordResetParams } from '@grantjs/core';
+import type {
+  SendInvitationParams,
+  SendOtpParams,
+  SendPasswordResetParams,
+  SendProjectOAuthMagicLinkParams,
+} from '@grantjs/core';
 
 /**
  * Template rendering functions that adapters use to produce email content.
@@ -14,4 +19,7 @@ export interface EmailTemplates {
   getPasswordResetEmailSubject(params: SendPasswordResetParams): string;
   getPasswordResetEmailHtml(params: SendPasswordResetParams): string;
   getPasswordResetEmailText(params: SendPasswordResetParams): string;
+  getProjectOAuthMagicLinkEmailSubject(params: SendProjectOAuthMagicLinkParams): string;
+  getProjectOAuthMagicLinkEmailHtml(params: SendProjectOAuthMagicLinkParams): string;
+  getProjectOAuthMagicLinkEmailText(params: SendProjectOAuthMagicLinkParams): string;
 }

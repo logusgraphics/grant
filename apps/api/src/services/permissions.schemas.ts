@@ -63,7 +63,7 @@ export const permissionSchema = baseEntitySchema.extend({
   description: descriptionSchema.nullable(),
   action: actionSchema,
   resourceId: idSchema.nullable(),
-  resource: resourceSchema.optional(),
+  resource: resourceSchema.nullable().optional(),
   condition: permissionConditionSchema.nullable().optional(),
   tags: z.array(tagSchema).optional(),
 });

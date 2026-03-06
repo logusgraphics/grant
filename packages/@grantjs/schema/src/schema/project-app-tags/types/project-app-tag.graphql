@@ -1,0 +1,9 @@
+type ProjectAppTag implements Auditable {
+  id: ID!
+  projectAppId: ID!
+  tagId: ID!
+  isPrimary: Boolean!
+  createdAt: Date!
+  updatedAt: Date!
+  deletedAt: Date
+}

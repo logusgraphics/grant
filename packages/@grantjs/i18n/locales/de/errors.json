@@ -85,6 +85,7 @@
     "slugMin2": "Slug muss mindestens 2 Zeichen lang sein",
     "actionRequired": "Aktion ist erforderlich",
     "actionTooLong": "Aktion ist zu lang",
+    "actionInvalidFormat": "Aktion darf nur Buchstaben, Ziffern, Bindestriche und Plus enthalten (keine Leerzeichen)",
     "resourceRequired": "Ressourcen-Slug ist erforderlich",
     "scopeIdRequired": "Bereichs-ID ist erforderlich",
     "scopeIdInvalid": "Ungültige Bereichs-ID: muss eine UUID oder mehrere durch Doppelpunkte getrennte UUIDs sein",
@@ -139,7 +140,9 @@
     "projectIdRequired": "Projekt-ID ist erforderlich",
     "tagIdRequired": "Tag-ID ist erforderlich",
     "groupIdsRequired": "Gruppen-IDs sind erforderlich",
-    "tagIdsRequired": "Tag-IDs sind erforderlich"
+    "tagIdsRequired": "Tag-IDs sind erforderlich",
+    "redirectUrisMinOne": "Mindestens eine Weiterleitungs-URI ist erforderlich",
+    "invalidProjectAppId": "Ungültige Projekt-App-ID"
   },
   "notFound": {
     "resource": "{{resource}} nicht gefunden",
@@ -151,7 +154,8 @@
     "project": "Projekt nicht gefunden",
     "account": "Konto nicht gefunden",
     "group": "Gruppe nicht gefunden",
-    "permission": "Berechtigung nicht gefunden"
+    "permission": "Berechtigung nicht gefunden",
+    "projectApp": "Projekt-App nicht gefunden"
   },
   "conflict": {
     "duplicateEntry": "Ein {{resource}} mit diesem {{field}} existiert bereits",

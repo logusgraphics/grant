@@ -52,6 +52,17 @@ import { organizationUsers, organizationUsersRelations } from './organization-us
 import { organizations, organizationsRelations } from './organizations.schema';
 import { permissionTags, permissionTagsRelations } from './permission-tags.schema';
 import { permissions, permissionsRelations } from './permissions.schema';
+import {
+  projectAppTagAuditLogs,
+  projectAppTags,
+  projectAppTagsRelations,
+} from './project-app-tags.schema';
+import {
+  projectAppAuditLogs,
+  projectAppAuditLogsRelations,
+  projectApps,
+  projectAppsRelations,
+} from './project-apps.schema';
 import { projectGroups, projectGroupsRelations } from './project-groups.schema';
 import { projectPermissions, projectPermissionsRelations } from './project-permissions.schema';
 import {
@@ -124,6 +135,10 @@ export const schema = {
   organizations,
   permissionTags,
   permissions,
+  projectAppAuditLogs,
+  projectAppTagAuditLogs,
+  projectAppTags,
+  projectApps,
   projectGroups,
   resources,
   resourceAuditLogs,
@@ -171,6 +186,9 @@ export const schema = {
   organizationsRelations,
   permissionTagsRelations,
   permissionsRelations,
+  projectAppAuditLogsRelations,
+  projectAppTagsRelations,
+  projectAppsRelations,
   projectGroupsRelations,
   resourcesRelations,
   resourceAuditLogsRelations,

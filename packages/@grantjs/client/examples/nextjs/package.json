@@ -1,0 +1,23 @@
+{
+  "name": "example-nextjs-client",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e .env.development -- next dev",
+    "build": "next build",
+    "start": "dotenv -e .env -- next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@grantjs/client": "workspace:*",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "dotenv-cli": "^7.4.0",
+    "typescript": "^5.0.0"
+  }
+}

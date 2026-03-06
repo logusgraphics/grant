@@ -10,6 +10,7 @@ import * as organizationInvitationQueries from './organization-invitations/queri
 import * as organizationMemberQueries from './organization-members/queries';
 import * as organizationQueries from './organizations/queries';
 import * as permissionQueries from './permissions/queries';
+import * as projectAppQueries from './project-apps/queries';
 import * as projectQueries from './projects/queries';
 import * as resourceQueries from './resources/queries';
 import * as roleQueries from './roles/queries';
@@ -52,6 +53,15 @@ export const Query = {
   projects: authorizeGraphQLResolver(
     { resource: ResourceSlug.Project, action: ResourceAction.Query },
     projectQueries.getProjects!
+  ),
+  // Project apps (OAuth apps per project; scoped)
+  projectApps: authorizeGraphQLResolver(
+    {
+      resource: ResourceSlug.ProjectApp,
+      action: ResourceAction.Query,
+      resourceResolver: 'projectApp',
+    },
+    projectAppQueries.projectApps!
   ),
   // Users (scoped)
   users: authorizeGraphQLResolver(

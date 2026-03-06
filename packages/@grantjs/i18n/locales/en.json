@@ -85,6 +85,7 @@
       "slugMin2": "Slug must be at least 2 characters",
       "actionRequired": "Action is required",
       "actionTooLong": "Action too long",
+      "actionInvalidFormat": "Action must contain only letters, numbers, hyphens, and plus (no spaces)",
       "resourceRequired": "Resource slug is required",
       "scopeIdRequired": "Scope ID is required",
       "scopeIdInvalid": "Invalid scope ID: must be a UUID or multiple UUIDs separated by colons",

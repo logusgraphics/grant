@@ -79,6 +79,27 @@ export class GitHubOAuthService implements IGitHubOAuthService {
     return `${config.githubOAuth.authorizationUrl}?${params.toString()}`;
   }
 
+  /**
+   * Build GitHub authorization URL for project OAuth flow.
+   * Uses projectCallbackUrl so GitHub redirects to our project callback.
+   */
+  getProjectAuthorizationUrl(state: string): string {
+    const context = 'GitHubOAuthService.getProjectAuthorizationUrl';
+    const validatedState = validateInput(oauthStateTokenSchema, state, context);
+    if (!config.githubOAuth.clientId) {
+      throw new ConfigurationError('GitHub OAuth is not configured');
+    }
+    const projectCallbackUrl =
+      config.githubOAuth.projectCallbackUrl ?? config.githubOAuth.callbackUrl;
+    const params = new URLSearchParams({
+      client_id: config.githubOAuth.clientId,
+      redirect_uri: projectCallbackUrl,
+      scope: config.githubOAuth.scopes.join(' '),
+      state: validatedState,
+    });
+    return `${config.githubOAuth.authorizationUrl}?${params.toString()}`;
+  }
+
   async exchangeCodeForToken(code: string): Promise<string> {
     const context = 'GitHubOAuthService.exchangeCodeForToken';
 
@@ -88,7 +109,19 @@ export class GitHubOAuthService implements IGitHubOAuthService {
       throw new ConfigurationError('GitHub OAuth is not configured');
     }
 
-    const redirectUri = config.githubOAuth.callbackUrl;
+    return this.exchangeCodeForTokenWithRedirect(validatedCode, config.githubOAuth.callbackUrl);
+  }
+
+  /**
+   * Exchange authorization code for access token using a specific redirect_uri.
+   * Used by project OAuth flow where redirect_uri is the project callback URL.
+   */
+  async exchangeCodeForTokenWithRedirect(code: string, redirectUri: string): Promise<string> {
+    const context = 'GitHubOAuthService.exchangeCodeForTokenWithRedirect';
+    const validatedCode = validateInput(githubAuthorizationCodeSchema, code, context);
+    if (!config.githubOAuth.clientId || !config.githubOAuth.clientSecret) {
+      throw new ConfigurationError('GitHub OAuth is not configured');
+    }
 
     try {
       const response = await fetch(config.githubOAuth.tokenUrl, {

@@ -47,6 +47,14 @@ export class ResourceService implements IResourceService {
     return existingResources.resources[0];
   }
 
+  public async getResourceById(id: string, transaction?: Transaction): Promise<Resource | null> {
+    try {
+      return await this.getResource(id, transaction);
+    } catch {
+      return null;
+    }
+  }
+
   public async getResources(
     params: Omit<QueryResourcesArgs, 'scope'> & SelectedFields<Resource>
   ): Promise<ResourcePage> {

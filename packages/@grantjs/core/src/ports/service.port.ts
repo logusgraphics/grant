@@ -18,6 +18,10 @@ export type {
   IAccountProjectApiKeyService,
 } from './services/account.service.port';
 export type {
+  IProjectAppService,
+  IProjectAppTagService,
+} from './services/project-app.service.port';
+export type {
   IApiKeyService,
   ISigningKeyService,
   SigningKeyResult,

@@ -8,6 +8,7 @@ export * from './grant.service.port';
 export * from './account.service.port';
 export * from './organization.service.port';
 export * from './project.service.port';
+export * from './project-app.service.port';
 export * from './api-key.service.port';
 export * from './auth.service.port';
 export * from './file-storage.service.port';

@@ -1,15 +1,15 @@
+import { GrantException } from '@grantjs/core';
 import Mailjet, { Client } from 'node-mailjet';
 
+import type { EmailTemplates } from '../templates';
 import type {
   IEmailService,
   ILogger,
   SendInvitationParams,
   SendOtpParams,
   SendPasswordResetParams,
+  SendProjectOAuthMagicLinkParams,
 } from '@grantjs/core';
-import { GrantException } from '@grantjs/core';
-
-import type { EmailTemplates } from '../templates';
 
 export interface MailjetConfig {
   apiKey: string;
@@ -139,6 +139,39 @@ export class MailjetEmailAdapter implements IEmailService {
     } catch (error) {
       throw new GrantException(
         `Failed to send password reset email: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'EMAIL_SEND_ERROR',
+        error instanceof Error ? error : undefined
+      );
+    }
+  }
+
+  async sendProjectOAuthMagicLink(params: SendProjectOAuthMagicLinkParams): Promise<void> {
+    const subject = this.templates.getProjectOAuthMagicLinkEmailSubject(params);
+    const html = this.templates.getProjectOAuthMagicLinkEmailHtml(params);
+    const text = this.templates.getProjectOAuthMagicLinkEmailText(params);
+
+    try {
+      await this.client.post('send', { version: 'v3.1' }).request({
+        Messages: [
+          {
+            From: {
+              Email: this.from,
+              Name: this.fromName,
+            },
+            To: [
+              {
+                Email: params.to,
+              },
+            ],
+            Subject: subject,
+            TextPart: text,
+            HTMLPart: html,
+          },
+        ],
+      });
+    } catch (error) {
+      throw new GrantException(
+        `Failed to send project OAuth magic link: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'EMAIL_SEND_ERROR',
         error instanceof Error ? error : undefined
       );

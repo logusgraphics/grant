@@ -243,6 +243,12 @@ export type AddPermissionTagInput = {
   tagId: Scalars['ID']['input'];
 };
 
+export type AddProjectAppTagInput = {
+  isPrimary?: InputMaybe<Scalars['Boolean']['input']>;
+  projectAppId: Scalars['ID']['input'];
+  tagId: Scalars['ID']['input'];
+};
+
 export type AddProjectGroupInput = {
   groupId: Scalars['ID']['input'];
   projectId: Scalars['ID']['input'];
@@ -379,6 +385,7 @@ export enum AuthorizationReason {
   PermissionFoundConditionNotMet = 'PERMISSION_FOUND_CONDITION_NOT_MET',
   PermissionGrantedConditionMet = 'PERMISSION_GRANTED_CONDITION_MET',
   PermissionGrantedNoCondition = 'PERMISSION_GRANTED_NO_CONDITION',
+  ScopeNotGranted = 'SCOPE_NOT_GRANTED',
 }
 
 export type AuthorizationResult = {
@@ -494,6 +501,40 @@ export type CreatePermissionInput = {
   resourceId?: InputMaybe<Scalars['ID']['input']>;
   scope: Scope;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type CreateProjectAppInput = {
+  /** Allow new users to sign up when authenticating via this app. Default true. */
+  allowSignUp?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: InputMaybe<Array<Scalars['String']['input']>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  primaryTagId?: InputMaybe<Scalars['ID']['input']>;
+  /** Allowed redirect URIs for OAuth callback. At least one required. */
+  redirectUris: Array<Scalars['String']['input']>;
+  scope: Scope;
+  /** Optional OAuth scopes the app may request. */
+  scopes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Role to assign to users who sign up via this app. Required when allowSignUp is true; must be a role in the project. */
+  signUpRoleId?: InputMaybe<Scalars['ID']['input']>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type CreateProjectAppResult = {
+  __typename?: 'CreateProjectAppResult';
+  /** Whether new users can sign up when authenticating via this app. */
+  allowSignUp?: Maybe<Scalars['Boolean']['output']>;
+  clientId: Scalars['String']['output'];
+  /** Shown only once at creation. Null for public clients. */
+  clientSecret?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Date']['output'];
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: Maybe<Array<Scalars['String']['output']>>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  redirectUris: Array<Scalars['String']['output']>;
+  /** Role assigned to users who sign up via this app. */
+  signUpRoleId?: Maybe<Scalars['ID']['output']>;
 };
 
 export type CreateProjectInput = {
@@ -750,6 +791,8 @@ export type Mutation = {
   createOrganization: Organization;
   createPermission: Permission;
   createProject: Project;
+  /** Create an OAuth app for a project. Allows project users to sign in with providers (e.g. GitHub) and receive tokens scoped to the project. */
+  createProjectApp: CreateProjectAppResult;
   createResource: Resource;
   createRole: Role;
   createTag: Tag;
@@ -761,6 +804,7 @@ export type Mutation = {
   deleteOrganization: Organization;
   deletePermission: Permission;
   deleteProject: Project;
+  deleteProjectApp: ProjectApp;
   deleteResource: Resource;
   deleteRole: Role;
   deleteTag: Tag;
@@ -793,6 +837,8 @@ export type Mutation = {
   updateOrganizationMember: OrganizationMember;
   updatePermission: Permission;
   updateProject: Project;
+  /** Update an existing project app (name, redirect URIs, scopes). */
+  updateProjectApp: ProjectApp;
   updateResource: Resource;
   updateRole: Role;
   updateTag: Tag;
@@ -832,6 +878,10 @@ export type MutationCreatePermissionArgs = {
 
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
+};
+
+export type MutationCreateProjectAppArgs = {
+  input: CreateProjectAppInput;
 };
 
 export type MutationCreateResourceArgs = {
@@ -878,6 +928,11 @@ export type MutationDeletePermissionArgs = {
 };
 
 export type MutationDeleteProjectArgs = {
+  id: Scalars['ID']['input'];
+  scope: Scope;
+};
+
+export type MutationDeleteProjectAppArgs = {
   id: Scalars['ID']['input'];
   scope: Scope;
 };
@@ -993,6 +1048,11 @@ export type MutationUpdatePermissionArgs = {
 export type MutationUpdateProjectArgs = {
   id: Scalars['ID']['input'];
   input: UpdateProjectInput;
+};
+
+export type MutationUpdateProjectAppArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateProjectAppInput;
 };
 
 export type MutationUpdateResourceArgs = {
@@ -1355,6 +1415,61 @@ export type Project = Auditable & {
   users?: Maybe<Array<User>>;
 };
 
+export type ProjectApp = Auditable & {
+  __typename?: 'ProjectApp';
+  /** Whether new users can sign up when authenticating via this app. Default true. */
+  allowSignUp?: Maybe<Scalars['Boolean']['output']>;
+  clientId: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: Maybe<Array<Scalars['String']['output']>>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  project?: Maybe<Project>;
+  projectId: Scalars['ID']['output'];
+  redirectUris: Array<Scalars['String']['output']>;
+  scopes?: Maybe<Array<Scalars['String']['output']>>;
+  /** Resolved role for signUpRoleId (for display). */
+  signUpRole?: Maybe<Role>;
+  /** Role assigned to users who sign up via this app. Required when allowSignUp is true. */
+  signUpRoleId?: Maybe<Scalars['ID']['output']>;
+  tags?: Maybe<Array<Tag>>;
+  updatedAt: Scalars['Date']['output'];
+};
+
+export type ProjectAppPage = PaginatedResults & {
+  __typename?: 'ProjectAppPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  projectApps: Array<ProjectApp>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export enum ProjectAppSearchableField {
+  Name = 'name',
+}
+
+export type ProjectAppSortInput = {
+  field: ProjectAppSortableField;
+  order: SortOrder;
+};
+
+export enum ProjectAppSortableField {
+  CreatedAt = 'createdAt',
+  Name = 'name',
+}
+
+export type ProjectAppTag = Auditable & {
+  __typename?: 'ProjectAppTag';
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  projectAppId: Scalars['ID']['output'];
+  tagId: Scalars['ID']['output'];
+  updatedAt: Scalars['Date']['output'];
+};
+
 export type ProjectGroup = Auditable & {
   __typename?: 'ProjectGroup';
   createdAt: Scalars['Date']['output'];
@@ -1509,6 +1624,8 @@ export type Query = {
   organizationMembers: OrganizationMemberPage;
   organizations: OrganizationPage;
   permissions: PermissionPage;
+  /** List OAuth apps for the given project scope. Allowed scopes: accountProject, organizationProject. */
+  projectApps: ProjectAppPage;
   projects: ProjectPage;
   resources: ResourcePage;
   roles: RolePage;
@@ -1587,6 +1704,16 @@ export type QueryPermissionsArgs = {
   scope: Scope;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<PermissionSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type QueryProjectAppsArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  scope: Scope;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ProjectAppSortInput>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
@@ -1731,6 +1858,11 @@ export type QueryOrganizationUsersInput = {
 
 export type QueryPermissionTagsInput = {
   permissionId?: InputMaybe<Scalars['ID']['input']>;
+  tagId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryProjectAppTagsInput = {
+  projectAppId?: InputMaybe<Scalars['ID']['input']>;
   tagId?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -1890,6 +2022,11 @@ export type RemoveOrganizationUserInput = {
 
 export type RemovePermissionTagInput = {
   permissionId: Scalars['ID']['input'];
+  tagId: Scalars['ID']['input'];
+};
+
+export type RemoveProjectAppTagInput = {
+  projectAppId: Scalars['ID']['input'];
   tagId: Scalars['ID']['input'];
 };
 
@@ -2227,6 +2364,7 @@ export enum Tenant {
 
 export enum TokenType {
   ApiKey = 'apiKey',
+  ProjectApp = 'projectApp',
   Session = 'session',
   System = 'system',
 }
@@ -2318,6 +2456,30 @@ export type UpdatePermissionInput = {
 export type UpdatePermissionTagInput = {
   isPrimary: Scalars['Boolean']['input'];
   permissionId: Scalars['ID']['input'];
+  tagId: Scalars['ID']['input'];
+};
+
+export type UpdateProjectAppInput = {
+  /** Allow new users to sign up when authenticating via this app. */
+  allowSignUp?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Display name for the app. */
+  name?: InputMaybe<Scalars['String']['input']>;
+  primaryTagId?: InputMaybe<Scalars['ID']['input']>;
+  /** Allowed redirect URIs for OAuth callback. If provided, at least one required. */
+  redirectUris?: InputMaybe<Array<Scalars['String']['input']>>;
+  scope: Scope;
+  /** Optional OAuth scopes the app may request. */
+  scopes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Role to assign to users who sign up via this app. Required when allowSignUp is true; must be a role in the project. */
+  signUpRoleId?: InputMaybe<Scalars['ID']['input']>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type UpdateProjectAppTagInput = {
+  isPrimary: Scalars['Boolean']['input'];
+  projectAppId: Scalars['ID']['input'];
   tagId: Scalars['ID']['input'];
 };
 
@@ -3670,6 +3832,113 @@ export type UpdatePermissionMutation = {
   };
 };
 
+export type CreateProjectAppMutationVariables = Exact<{
+  input: CreateProjectAppInput;
+}>;
+
+export type CreateProjectAppMutation = {
+  __typename?: 'Mutation';
+  createProjectApp: {
+    __typename?: 'CreateProjectAppResult';
+    id: string;
+    clientId: string;
+    clientSecret?: string | null;
+    name?: string | null;
+    redirectUris: Array<string>;
+    enabledProviders?: Array<string> | null;
+    allowSignUp?: boolean | null;
+    signUpRoleId?: string | null;
+    createdAt: Date;
+  };
+};
+
+export type DeleteProjectAppMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  scope: Scope;
+}>;
+
+export type DeleteProjectAppMutation = {
+  __typename?: 'Mutation';
+  deleteProjectApp: {
+    __typename?: 'ProjectApp';
+    id: string;
+    name?: string | null;
+    redirectUris: Array<string>;
+    scopes?: Array<string> | null;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt?: Date | null;
+  };
+};
+
+export type GetProjectAppsQueryVariables = Exact<{
+  scope: Scope;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ProjectAppSortInput>;
+  ids?: InputMaybe<Array<Scalars['ID']['input']> | Scalars['ID']['input']>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']> | Scalars['ID']['input']>;
+}>;
+
+export type GetProjectAppsQuery = {
+  __typename?: 'Query';
+  projectApps: {
+    __typename?: 'ProjectAppPage';
+    totalCount: number;
+    hasNextPage: boolean;
+    projectApps: Array<{
+      __typename?: 'ProjectApp';
+      id: string;
+      projectId: string;
+      clientId: string;
+      name?: string | null;
+      redirectUris: Array<string>;
+      scopes?: Array<string> | null;
+      enabledProviders?: Array<string> | null;
+      allowSignUp?: boolean | null;
+      signUpRoleId?: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+      deletedAt?: Date | null;
+      signUpRole?: { __typename?: 'Role'; id: string; name: string } | null;
+      project?: { __typename?: 'Project'; id: string; name: string } | null;
+      tags?: Array<{
+        __typename?: 'Tag';
+        id: string;
+        name: string;
+        color: string;
+        isPrimary?: boolean | null;
+      }> | null;
+    }>;
+  };
+};
+
+export type UpdateProjectAppMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateProjectAppInput;
+}>;
+
+export type UpdateProjectAppMutation = {
+  __typename?: 'Mutation';
+  updateProjectApp: {
+    __typename?: 'ProjectApp';
+    id: string;
+    projectId: string;
+    clientId: string;
+    name?: string | null;
+    redirectUris: Array<string>;
+    scopes?: Array<string> | null;
+    enabledProviders?: Array<string> | null;
+    allowSignUp?: boolean | null;
+    signUpRoleId?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt?: Date | null;
+    project?: { __typename?: 'Project'; id: string; name: string } | null;
+  };
+};
+
 export type CreateProjectMutationVariables = Exact<{
   input: CreateProjectInput;
 }>;
@@ -3702,6 +3971,31 @@ export type DeleteProjectMutation = {
     description?: string | null;
     createdAt: Date;
     updatedAt: Date;
+  };
+};
+
+export type GetProjectAppFormDataQueryVariables = Exact<{
+  scope: Scope;
+  projectId: Scalars['ID']['input'];
+}>;
+
+export type GetProjectAppFormDataQuery = {
+  __typename?: 'Query';
+  projects: {
+    __typename?: 'ProjectPage';
+    projects: Array<{
+      __typename?: 'Project';
+      id: string;
+      roles?: Array<{ __typename?: 'Role'; id: string; name: string }> | null;
+      permissions?: Array<{
+        __typename?: 'Permission';
+        id: string;
+        name: string;
+        description?: string | null;
+        action: string;
+        resource?: { __typename?: 'Resource'; id: string; slug: string } | null;
+      }> | null;
+    }>;
   };
 };
 
@@ -4147,6 +4441,11 @@ export type GetUsersQuery = {
         name: string;
         color: string;
         isPrimary?: boolean | null;
+      }> | null;
+      authenticationMethods?: Array<{
+        __typename?: 'UserAuthenticationMethod';
+        provider: UserAuthenticationMethodProvider;
+        providerId: string;
       }> | null;
     }>;
   };
@@ -7449,6 +7748,365 @@ export const UpdatePermissionDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdatePermissionMutation, UpdatePermissionMutationVariables>;
+export const CreateProjectAppDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateProjectApp' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'CreateProjectAppInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createProjectApp' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientSecret' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'redirectUris' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enabledProviders' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'allowSignUp' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'signUpRoleId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateProjectAppMutation, CreateProjectAppMutationVariables>;
+export const DeleteProjectAppDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteProjectApp' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteProjectApp' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'redirectUris' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'scopes' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deletedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteProjectAppMutation, DeleteProjectAppMutationVariables>;
+export const GetProjectAppsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetProjectApps' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ProjectAppSortInput' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'ids' } },
+          type: {
+            kind: 'ListType',
+            type: {
+              kind: 'NonNullType',
+              type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'tagIds' } },
+          type: {
+            kind: 'ListType',
+            type: {
+              kind: 'NonNullType',
+              type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectApps' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'page' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'search' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sort' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'ids' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'ids' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'tagIds' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'tagIds' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'projectApps' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'clientId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'redirectUris' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'scopes' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'enabledProviders' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'allowSignUp' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'signUpRoleId' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'signUpRole' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'deletedAt' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'project' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'tags' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'color' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'isPrimary' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetProjectAppsQuery, GetProjectAppsQueryVariables>;
+export const UpdateProjectAppDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateProjectApp' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UpdateProjectAppInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateProjectApp' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'clientId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'redirectUris' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'scopes' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enabledProviders' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'allowSignUp' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'signUpRoleId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deletedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'project' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateProjectAppMutation, UpdateProjectAppMutationVariables>;
 export const CreateProjectDocument = {
   kind: 'Document',
   definitions: [
@@ -7556,6 +8214,113 @@ export const DeleteProjectDocument = {
     },
   ],
 } as unknown as DocumentNode<DeleteProjectMutation, DeleteProjectMutationVariables>;
+export const GetProjectAppFormDataDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetProjectAppFormData' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'projectId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'ids' },
+                value: {
+                  kind: 'ListValue',
+                  values: [{ kind: 'Variable', name: { kind: 'Name', value: 'projectId' } }],
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: { kind: 'IntValue', value: '1' },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'projects' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'roles' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'permissions' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'action' } },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'resource' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                  { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetProjectAppFormDataQuery, GetProjectAppFormDataQueryVariables>;
 export const GetProjectsDocument = {
   kind: 'Document',
   definitions: [
@@ -9073,6 +9838,17 @@ export const GetUsersDocument = {
                             { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                             { kind: 'Field', name: { kind: 'Name', value: 'color' } },
                             { kind: 'Field', name: { kind: 'Name', value: 'isPrimary' } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authenticationMethods' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'providerId' } },
                           ],
                         },
                       },

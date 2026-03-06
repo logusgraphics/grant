@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 export interface BadgeItem {
   id: string;
   label: string;
+  /** Optional tooltip (e.g. native `title` attribute); when not set, falls back to label. */
+  title?: string;
   variant?: 'default' | 'secondary' | 'destructive' | 'outline'; // Badge variant
   className?: string; // Custom className for this specific badge
   [key: string]: any; // Allow any additional properties
@@ -69,7 +71,7 @@ export function ScrollBadges({
             <Badge
               key={item.id}
               variant={item.variant || defaultVariant}
-              title={item.label}
+              title={item.title ?? item.label}
               className={cn(
                 item.className,
                 showAsRound && 'w-3 h-3 rounded-full p-0 border-2 bg-transparent',

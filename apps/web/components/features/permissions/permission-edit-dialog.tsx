@@ -65,8 +65,8 @@ export function PermissionEditDialog() {
     }));
   };
 
-  const getActionType = (resourceId: string): 'text' | 'select' => {
-    if (!resourceId || resourceId === '__none__') return 'text';
+  const getActionType = (resourceId: string): 'action-slug' | 'select' => {
+    if (!resourceId || resourceId === '__none__') return 'action-slug';
     return 'select';
   };
 

@@ -45,6 +45,10 @@ export class ResourceHandler extends CacheHandler {
     super(cache, scopeServices);
   }
 
+  public async getResourceById(id: string): Promise<Resource | null> {
+    return this.resources.getResourceById(id);
+  }
+
   public async getResources(
     params: QueryResourcesArgs & SelectedFields<Resource>
   ): Promise<ResourcePage> {

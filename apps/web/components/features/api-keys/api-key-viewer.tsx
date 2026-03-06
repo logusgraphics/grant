@@ -251,6 +251,7 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
           }}
           clientId={createdApiKey.clientId}
           clientSecret={createdApiKey.clientSecret}
+          scope={scope ? { tenant: scope.tenant, id: scope.id } : null}
         />
       )}
     </>

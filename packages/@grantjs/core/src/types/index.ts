@@ -21,9 +21,10 @@ export interface TokenClaims {
   exp: number; // Expiration timestamp
   iat: number; // Issued at timestamp
   jti: string; // JWT ID (API key ID or session ID)
-  type: TokenType; // Token type: TokenType.Session or TokenType.ApiKey
-  scope?: Scope; // Optional: Required for API key tokens, optional for user session tokens
+  type: TokenType; // Token type: Session, ApiKey, or ProjectApp
+  scope?: Scope; // Optional: Required for API key and project-app tokens
   isVerified?: boolean; // Optional: Email verification status (session tokens only)
+  scopes?: string[]; // Optional: Granted scope list for project-app tokens (resource:action)
   [key: string]: unknown; // Allow additional JWT claims
 }
 
@@ -138,6 +139,8 @@ export interface CheckPermissionParams {
   scope: Scope;
   permission: IsAuthorizedPermissionInput;
   context: IsAuthorizedContextInput;
+  /** When Session, project scope may use org/account role fallback; when ProjectApp/ApiKey, use project_roles only. */
+  tokenType?: TokenType;
 }
 
 export interface EvaluatePermissionConditionParams {
@@ -187,12 +190,23 @@ export interface GrantService {
     userId: string,
     scope: Scope,
     resourceSlug: string,
-    action: string
+    action: string,
+    tokenType?: TokenType
   ): Promise<Permission[]>;
 
-  getUserRoles(userId: string, scope: Scope): Promise<ExecutionContextRole[]>;
+  getGrantedScopeSlugs(userId: string, scope: Scope, candidateSlugs: string[]): Promise<string[]>;
 
-  getUserGroups(userId: string, scope: Scope): Promise<ExecutionContextGroup[]>;
+  getUserRoles(
+    userId: string,
+    scope: Scope,
+    tokenType?: TokenType
+  ): Promise<ExecutionContextRole[]>;
+
+  getUserGroups(
+    userId: string,
+    scope: Scope,
+    tokenType?: TokenType
+  ): Promise<ExecutionContextGroup[]>;
 
   getUser(userId: string, scope?: Scope): Promise<ExecutionContextUser>;
 
@@ -216,7 +230,8 @@ export interface GrantAuth {
   userId: string;
   tokenId: string;
   expiresAt: number;
-  type: TokenType; // Token type: TokenType.Session or TokenType.ApiKey
-  scope?: Scope; // Required for API key tokens, optional for session tokens
+  type: TokenType; // Token type: Session, ApiKey, or ProjectApp
+  scope?: Scope; // Required for API key and project-app tokens
   isVerified?: boolean; // Email verification status (session tokens only, always true for API keys)
+  grantedScopes?: string[]; // For project-app tokens: allowed resource:action list; permissions are capped by this
 }

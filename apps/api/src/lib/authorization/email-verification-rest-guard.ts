@@ -21,7 +21,11 @@ export function requireEmailVerificationRest(options: EmailVerificationRestGuard
 
     const { user, handlers } = contextReq.context;
 
-    if (user!.type === TokenType.ApiKey || user!.isVerified) {
+    if (
+      user!.type === TokenType.ApiKey ||
+      user!.type === TokenType.ProjectApp ||
+      user!.isVerified
+    ) {
       return next();
     }
 

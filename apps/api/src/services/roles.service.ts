@@ -60,6 +60,14 @@ export class RoleService implements IRoleService {
     return existingRoles.roles[0];
   }
 
+  public async getRoleById(id: string, transaction?: Transaction): Promise<Role | null> {
+    try {
+      return await this.getRole(id);
+    } catch {
+      return null;
+    }
+  }
+
   public async getRoles(
     params: Omit<QueryRolesArgs, 'scope' | 'tagIds'> & SelectedFields<Role>
   ): Promise<RolePage> {

@@ -54,6 +54,7 @@ function createMockGrantService(): GrantService {
     getUserPermissions: vi.fn(),
     getUserRoles: vi.fn(),
     getUserGroups: vi.fn(),
+    getGrantedScopeSlugs: vi.fn().mockResolvedValue([]),
     getUser: vi.fn(),
     getSessionSigningKey: vi.fn().mockResolvedValue({ kid: TEST_KID, privateKeyPem }),
     getVerificationKey: vi
@@ -427,6 +428,74 @@ describe('Grant', () => {
 
       expect(result.authorized).toBe(true);
       expect(result.reason).toBe(AuthorizationReason.PermissionGrantedNoCondition);
+    });
+
+    it('should use token scope (accountProject) for permission check when project-app token has project scope', async () => {
+      const permission: Permission = {
+        id: 'perm-1',
+        name: 'Read Documents',
+        action: 'read',
+        resourceId: 'resource-1',
+        condition: null,
+      } as Permission;
+
+      const mockService = createMockGrantService();
+      mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
+
+      const grant = new Grant(mockService, jwtTokenProvider);
+
+      const token = createValidToken(TokenType.ProjectApp, {
+        tenant: Tenant.AccountProject,
+        id: 'acc-1:proj-1',
+      });
+      await grant.authenticate(`Bearer ${token}`);
+
+      await grant.isAuthorized(
+        { resource: 'document', action: 'read' },
+        { resource: null }
+      );
+
+      expect(mockService.getUserPermissions).toHaveBeenCalledWith(
+        'user-123',
+        { tenant: Tenant.AccountProject, id: 'acc-1:proj-1' },
+        'document',
+        'read',
+        TokenType.ProjectApp
+      );
+    });
+
+    it('should use token scope (organizationProject) for permission check when project-app token has project scope', async () => {
+      const permission: Permission = {
+        id: 'perm-1',
+        name: 'Read Documents',
+        action: 'read',
+        resourceId: 'resource-1',
+        condition: null,
+      } as Permission;
+
+      const mockService = createMockGrantService();
+      mockService.getUserPermissions = vi.fn().mockResolvedValue([permission]);
+
+      const grant = new Grant(mockService, jwtTokenProvider);
+
+      const token = createValidToken(TokenType.ProjectApp, {
+        tenant: Tenant.OrganizationProject,
+        id: 'org-1:proj-1',
+      });
+      await grant.authenticate(`Bearer ${token}`);
+
+      await grant.isAuthorized(
+        { resource: 'document', action: 'read' },
+        { resource: null }
+      );
+
+      expect(mockService.getUserPermissions).toHaveBeenCalledWith(
+        'user-123',
+        { tenant: Tenant.OrganizationProject, id: 'org-1:proj-1' },
+        'document',
+        'read',
+        TokenType.ProjectApp
+      );
     });
   });
 });

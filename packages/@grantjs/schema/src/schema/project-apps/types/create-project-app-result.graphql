@@ -1,0 +1,23 @@
+type CreateProjectAppResult {
+  id: ID!
+  clientId: String!
+  """
+  Shown only once at creation. Null for public clients.
+  """
+  clientSecret: String
+  name: String
+  redirectUris: [String!]!
+  """
+  Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers.
+  """
+  enabledProviders: [String!]
+  """
+  Whether new users can sign up when authenticating via this app.
+  """
+  allowSignUp: Boolean
+  """
+  Role assigned to users who sign up via this app.
+  """
+  signUpRoleId: ID
+  createdAt: Date!
+}

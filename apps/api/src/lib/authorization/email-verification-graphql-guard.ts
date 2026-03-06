@@ -36,7 +36,11 @@ export function requireEmailVerificationGraphQL<
 
     const { user, handlers } = ctx;
 
-    if (user!.type === TokenType.ApiKey || user!.isVerified) {
+    if (
+      user!.type === TokenType.ApiKey ||
+      user!.type === TokenType.ProjectApp ||
+      user!.isVerified
+    ) {
       return resolverFn(parent, args, context, info);
     }
 

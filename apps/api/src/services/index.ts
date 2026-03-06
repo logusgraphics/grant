@@ -23,6 +23,8 @@ import {
   organizationUsersAuditLogs,
   permissionAuditLogs,
   permissionTagAuditLogs,
+  projectAppAuditLogs,
+  projectAppTagAuditLogs,
   projectAuditLogs,
   projectGroupAuditLogs,
   projectPermissionsAuditLogs,
@@ -78,6 +80,8 @@ import { OrganizationUserService } from './organization-users.service';
 import { OrganizationService } from './organizations.service';
 import { PermissionTagService } from './permission-tags.service';
 import { PermissionService } from './permissions.service';
+import { ProjectAppTagService } from './project-app-tags.service';
+import { ProjectAppService } from './project-apps.service';
 import { ProjectGroupService } from './project-groups.service';
 import { ProjectPermissionService } from './project-permissions.service';
 import { ProjectResourceService } from './project-resources.service';
@@ -209,6 +213,16 @@ export function createServices(
     projects: new ProjectService(
       repositories.projectRepository,
       audit(projectAuditLogs, 'projectId', user, db)
+    ),
+    projectApps: new ProjectAppService(
+      repositories.projectAppRepository,
+      audit(projectAppAuditLogs, 'projectAppId', user, db)
+    ),
+    projectAppTags: new ProjectAppTagService(
+      repositories.projectAppRepository,
+      repositories.tagRepository,
+      repositories.projectAppTagRepository,
+      audit(projectAppTagAuditLogs, 'projectAppTagId', user, db)
     ),
     projectGroups: new ProjectGroupService(
       repositories.projectRepository,

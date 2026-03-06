@@ -1,0 +1,13 @@
+mutation CreateProjectApp($input: CreateProjectAppInput!) {
+  createProjectApp(input: $input) {
+    id
+    clientId
+    clientSecret
+    name
+    redirectUris
+    enabledProviders
+    allowSignUp
+    signUpRoleId
+    createdAt
+  }
+}

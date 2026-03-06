@@ -75,7 +75,7 @@ export default function RegisterPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      const data = await handleRegister({
+      await handleRegister({
         email: values.email,
         password: values.password,
         accountType: values.accountType,
@@ -89,6 +89,8 @@ export default function RegisterPage() {
     }
   };
 
+  // React Hook Form watch() is not memoizable; disable React Compiler rule for this line.
+  // eslint-disable-next-line react-hooks/incompatible-library -- RHF watch() is safe here for controlled input.
   const passwordValue = form.watch('password') || '';
 
   if (isAuthSuccess) {

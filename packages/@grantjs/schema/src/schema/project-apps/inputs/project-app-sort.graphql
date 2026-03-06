@@ -1,0 +1,4 @@
+input ProjectAppSortInput {
+  field: ProjectAppSortableField!
+  order: SortOrder!
+}

@@ -1,0 +1,5 @@
+type ProjectAppPage implements PaginatedResults {
+  projectApps: [ProjectApp!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}

@@ -41,6 +41,10 @@ export class RoleHandler extends CacheHandler {
     super(cache, scopeServices);
   }
 
+  public async getRoleById(id: string): Promise<Role | null> {
+    return this.roles.getRoleById(id);
+  }
+
   public async getRoles(params: QueryRolesArgs & SelectedFields<Role>): Promise<RolePage> {
     const { scope, page, limit, sort, search, ids, tagIds, requestedFields } = params;
 

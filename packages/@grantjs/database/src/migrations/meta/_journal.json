@@ -337,6 +337,48 @@
       "when": 1771098768122,
       "tag": "0047_hesitant_joystick",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1771930694822,
+      "tag": "0048_gorgeous_scorpion",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1772149629670,
+      "tag": "0049_lyrical_madelyne_pryor",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1772287930563,
+      "tag": "0050_exotic_wallop",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1772368282426,
+      "tag": "0051_flaky_vivisector",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1772530123262,
+      "tag": "0052_tiresome_namora",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1772711578014,
+      "tag": "0053_pale_morg",
+      "breakpoints": true
     }
   ]
 }

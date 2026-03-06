@@ -302,6 +302,25 @@ export function determineErrorCode(error: unknown): string {
     return 'invalidState';
   }
 
+  if (message.includes('sign-up is disabled') || message.includes('sign_up_disabled')) {
+    return 'signUpDisabled';
+  }
+
+  if (message.includes('not a member of this project')) {
+    return 'userNotInProject';
+  }
+
+  if (message.includes('could not resolve scope for project')) {
+    return 'scopeResolutionFailed';
+  }
+
+  if (
+    message.includes('redirect_uri') &&
+    (message.includes('mismatch') || message.includes('not allowed'))
+  ) {
+    return 'redirectUriInvalid';
+  }
+
   if (message.includes('not configured')) {
     return 'oauthNotConfigured';
   }

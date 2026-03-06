@@ -61,7 +61,13 @@ export interface IAuthService {
 export interface IGitHubOAuthService {
   getAuthorizationUrl(state: string, redirectUrl?: string): string;
 
+  /** Project OAuth: authorization URL using project callback (no redirectUrl param). */
+  getProjectAuthorizationUrl(state: string): string;
+
   exchangeCodeForToken(code: string): Promise<string>;
+
+  /** Project OAuth: exchange code using a specific redirect_uri (must match authorize). */
+  exchangeCodeForTokenWithRedirect(code: string, redirectUri: string): Promise<string>;
 
   getUserInfo(accessToken: string): Promise<GitHubUserInfo>;
 

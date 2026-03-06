@@ -8,6 +8,7 @@ import { createOrganizationInvitationsRoutes } from '@/rest/routes/organization-
 import { createOrganizationMembersRoutes } from '@/rest/routes/organization-members.routes';
 import { createOrganizationRoutes } from '@/rest/routes/organizations.routes';
 import { createPermissionsRouter } from '@/rest/routes/permissions.routes';
+import { createProjectAppsRouter } from '@/rest/routes/project-apps.routes';
 import { createProjectsRouter } from '@/rest/routes/projects.routes';
 import { createResourcesRouter } from '@/rest/routes/resources.routes';
 import { createRolesRouter } from '@/rest/routes/roles.routes';
@@ -28,6 +29,7 @@ export function createRestRouter(context: RequestContext): Router {
   router.use('/organization-members', createOrganizationMembersRoutes(context));
   router.use('/organizations', createOrganizationRoutes(context));
   router.use('/permissions', createPermissionsRouter(context));
+  router.use('/project-apps', createProjectAppsRouter(context));
   router.use('/projects', createProjectsRouter(context));
   router.use('/resources', createResourcesRouter(context));
   router.use('/roles', createRolesRouter(context));

@@ -2,6 +2,7 @@ import { UserAuthenticationEmailProviderAction } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
 import { config } from '@/config';
+import type { ProjectOAuthProvider } from '@/config/env.config';
 import { t } from '@/i18n';
 import { authenticateRestRoute } from '@/lib/authorization';
 import { AuthenticationError } from '@/lib/errors';
@@ -14,6 +15,13 @@ import {
   initiateGithubAuthQuerySchema,
   isAuthorizedRequestSchema,
   loginRequestSchema,
+  projectAppInfoQuerySchema,
+  projectAuthorizeQuerySchema,
+  projectCallbackQuerySchema,
+  projectConsentApproveBodySchema,
+  projectConsentDenyBodySchema,
+  projectConsentInfoQuerySchema,
+  projectEmailRequestSchema,
   registerRequestSchema,
   requestPasswordResetRequestSchema,
   resendVerificationRequestSchema,
@@ -373,6 +381,147 @@ export function createAuthRoutes(context: RequestContext) {
     async (req: TypedRequest<{ body: typeof isAuthorizedRequestSchema }>, res: Response) => {
       const result = await context.handlers.auth.isAuthorized(req.body);
       sendSuccessResponse(res, result);
+    }
+  );
+
+  // Project OAuth (tenant app flow): authorize entry and callback
+  router.get(
+    '/project/authorize',
+    validateQuery(projectAuthorizeQuerySchema),
+    async (req: TypedRequest<{ query: typeof projectAuthorizeQuerySchema }>, res: Response) => {
+      const { client_id, redirect_uri, state, provider, scope } = req.query;
+      const result = await context.handlers.projectOAuth.initiateProjectAuthorize(
+        client_id,
+        redirect_uri,
+        state,
+        provider as ProjectOAuthProvider,
+        scope
+      );
+      res.redirect(result.authorizationUrl);
+    }
+  );
+
+  router.post(
+    '/project/email/request',
+    validateBody(projectEmailRequestSchema),
+    async (req: TypedRequest<{ body: typeof projectEmailRequestSchema }>, res: Response) => {
+      const { client_id, redirect_uri, state, email, client_state, scope } = req.body;
+      await context.handlers.projectOAuth.requestProjectEmailMagicLink(
+        client_id,
+        redirect_uri,
+        state,
+        email,
+        client_state,
+        scope
+      );
+      res.status(202).send();
+    }
+  );
+
+  router.get(
+    '/project/callback',
+    validateQuery(projectCallbackQuerySchema),
+    async (req: TypedRequest<{ query: typeof projectCallbackQuerySchema }>, res: Response) => {
+      const { code, token, state } = req.query;
+      try {
+        const result =
+          code != null && code !== ''
+            ? await context.handlers.projectOAuth.handleProjectCallback(code, state)
+            : await context.handlers.projectOAuth.handleProjectCallbackEmailFlow(token!, state);
+        if ('consentUrl' in result) {
+          res.redirect(result.consentUrl);
+          return;
+        }
+        const url = new URL(result.redirectUri);
+        url.hash = `access_token=${encodeURIComponent(result.accessToken)}&expires_in=${result.expiresIn}&token_type=Bearer`;
+        if (result.clientState) url.hash += `&state=${encodeURIComponent(result.clientState)}`;
+        res.redirect(url.toString());
+      } catch (err) {
+        const errorCode = determineErrorCode(err);
+        const locale = config.i18n.defaultLocale;
+        const frontendUrl = config.security.frontendUrl;
+        const {
+          code,
+          token,
+          state,
+          client_id: queryClientId,
+          redirect_uri: queryRedirectUri,
+        } = req.query as {
+          code?: string;
+          token?: string;
+          state?: string;
+          client_id?: string;
+          redirect_uri?: string;
+        };
+        let entryParams: { clientId: string; redirectUri: string; state: string } | null = null;
+        if (queryClientId && queryRedirectUri) {
+          entryParams = {
+            clientId: queryClientId,
+            redirectUri: queryRedirectUri,
+            state: state ?? '',
+          };
+        } else if (state) {
+          entryParams = await context.handlers.projectOAuth.getProjectEntryParamsFromState(state);
+        }
+        if (entryParams) {
+          const entryUrl = new URL(`${frontendUrl}/${locale}/auth/project`);
+          entryUrl.searchParams.set('client_id', entryParams.clientId);
+          entryUrl.searchParams.set('redirect_uri', entryParams.redirectUri);
+          entryUrl.searchParams.set('state', entryParams.state);
+          entryUrl.searchParams.set('error', errorCode);
+          res.redirect(entryUrl.toString());
+        } else {
+          res.redirect(
+            `${frontendUrl}/${locale}/auth/login?error=${encodeURIComponent(errorCode)}`
+          );
+        }
+      }
+    }
+  );
+
+  router.get(
+    '/project/app-info',
+    validateQuery(projectAppInfoQuerySchema),
+    async (req: TypedRequest<{ query: typeof projectAppInfoQuerySchema }>, res: Response) => {
+      const { client_id, scope, redirect_uri } = req.query;
+      const info = await context.handlers.projectOAuth.getProjectAppPublicInfo(
+        client_id,
+        scope,
+        redirect_uri
+      );
+      sendSuccessResponse(res, info);
+    }
+  );
+
+  router.get(
+    '/project/consent-info',
+    validateQuery(projectConsentInfoQuerySchema),
+    async (req: TypedRequest<{ query: typeof projectConsentInfoQuerySchema }>, res: Response) => {
+      const { consent_token } = req.query;
+      const info = await context.handlers.projectOAuth.getProjectConsentInfo(consent_token);
+      sendSuccessResponse(res, info);
+    }
+  );
+
+  router.post(
+    '/project/consent/approve',
+    validateBody(projectConsentApproveBodySchema),
+    async (req: TypedRequest<{ body: typeof projectConsentApproveBodySchema }>, res: Response) => {
+      const { consent_token } = req.body;
+      const { redirectUrl } =
+        await context.handlers.projectOAuth.handleProjectConsentApprove(consent_token);
+      sendSuccessResponse(res, { redirectUrl });
+    }
+  );
+
+  router.post(
+    '/project/consent/deny',
+    validateBody(projectConsentDenyBodySchema),
+    async (req: TypedRequest<{ body: typeof projectConsentDenyBodySchema }>, res: Response) => {
+      const { consent_token } = req.body;
+      const { redirectUrl } =
+        await context.handlers.projectOAuth.handleProjectConsentDeny(consent_token);
+      sendSuccessResponse(res, { redirectUrl });
     }
   );
 

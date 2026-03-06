@@ -24,7 +24,7 @@ import {
 import { config } from '@/config';
 import { translateStatic } from '@/i18n/helpers';
 import { IEntityCacheAdapter } from '@/lib/cache';
-import { AuthenticationError, ConflictError } from '@/lib/errors';
+import { AuthenticationError, BadRequestError, ConflictError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
 import { verifySecret } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -460,7 +460,7 @@ export class AuthHandler extends CacheHandler {
       };
     }
 
-    const { userId, scope, expiresAt } = auth;
+    const { userId, scope, expiresAt, grantedScopes } = auth;
 
     if (!scope) {
       return {
@@ -469,7 +469,13 @@ export class AuthHandler extends CacheHandler {
       };
     }
 
-    const cacheKey = this.getAuthorizationCacheKey(userId, scope, permission, context);
+    const cacheKey = this.getAuthorizationCacheKey(
+      userId,
+      scope,
+      permission,
+      context,
+      grantedScopes
+    );
     const cachedResult = await this.getAuthorizationResult<AuthorizationResult>(cacheKey);
 
     if (cachedResult) {
@@ -562,6 +568,131 @@ export class AuthHandler extends CacheHandler {
         email: null,
       };
     });
+  }
+
+  /**
+   * Resolve global user id from GitHub OAuth callback for project OAuth flow.
+   * Finds existing user by provider or email, links GitHub if needed, or creates user + auth method (no account/session).
+   * When options.allowSignUp is false and no user exists, throws BadRequestError with sign_up_disabled.
+   */
+  public async resolveUserIdFromGithubForProject(
+    githubUser: {
+      id: number;
+      login: string;
+      email: string | null;
+      name: string | null;
+      avatar_url: string;
+    },
+    providerId: string,
+    providerData: Record<string, unknown>,
+    transaction?: Transaction,
+    options?: { allowSignUp?: boolean }
+  ): Promise<string> {
+    const run = async (tx: Transaction) => {
+      const existingAuthMethod =
+        await this.userAuthenticationMethods.getUserAuthenticationMethodByProvider(
+          UserAuthenticationMethodProvider.Github,
+          providerId,
+          undefined,
+          tx
+        );
+      if (existingAuthMethod) return existingAuthMethod.userId;
+
+      if (githubUser.email) {
+        const existingEmailAuthMethod =
+          await this.userAuthenticationMethods.getUserAuthenticationMethodByEmail(
+            githubUser.email,
+            tx
+          );
+        if (existingEmailAuthMethod) {
+          const { providerData: processedProviderData, isVerified } =
+            await this.userAuthenticationMethods.processProvider(
+              UserAuthenticationMethodProvider.Github,
+              providerId,
+              { ...providerData, action: UserAuthenticationEmailProviderAction.Login }
+            );
+          await this.userAuthenticationMethods.createUserAuthenticationMethod(
+            {
+              userId: existingEmailAuthMethod.userId,
+              provider: UserAuthenticationMethodProvider.Github,
+              providerId,
+              providerData: processedProviderData,
+              isVerified,
+            },
+            tx
+          );
+          return existingEmailAuthMethod.userId;
+        }
+      }
+
+      if (options?.allowSignUp === false) {
+        throw new BadRequestError('Sign-up is disabled for this app');
+      }
+
+      const name = githubUser.name ?? githubUser.login ?? 'User';
+      const { providerData: processedProviderData, isVerified } =
+        await this.userAuthenticationMethods.processProvider(
+          UserAuthenticationMethodProvider.Github,
+          providerId,
+          { ...providerData, action: UserAuthenticationEmailProviderAction.Register }
+        );
+      const user = await this.users.createUser({ name }, tx);
+      await this.userAuthenticationMethods.createUserAuthenticationMethod(
+        {
+          userId: user.id,
+          provider: UserAuthenticationMethodProvider.Github,
+          providerId,
+          providerData: processedProviderData,
+          isVerified,
+        },
+        tx
+      );
+      return user.id;
+    };
+
+    if (transaction) return run(transaction);
+    return this.db.withTransaction(run);
+  }
+
+  /**
+   * Resolve global user id from email for project OAuth flow (e.g. magic link).
+   * Finds existing user by email auth method, or creates user + email auth method (no password, magic-link only).
+   * When options.allowSignUp is false and no user exists, throws BadRequestError with sign_up_disabled.
+   */
+  public async resolveUserIdFromEmailForProject(
+    email: string,
+    transaction?: Transaction,
+    options?: { allowSignUp?: boolean }
+  ): Promise<string> {
+    const emailNorm = email.trim().toLowerCase();
+    const run = async (tx: Transaction) => {
+      const existing = await this.userAuthenticationMethods.getUserAuthenticationMethodByEmail(
+        emailNorm,
+        tx
+      );
+      if (existing) return existing.userId;
+
+      if (options?.allowSignUp === false) {
+        throw new BadRequestError('Sign-up is disabled for this app');
+      }
+
+      const name = emailNorm.split('@')[0] || 'User';
+      const user = await this.users.createUser({ name }, tx);
+      await this.userAuthenticationMethods.createUserAuthenticationMethod(
+        {
+          userId: user.id,
+          provider: UserAuthenticationMethodProvider.Email,
+          providerId: emailNorm,
+          providerData: {},
+          isVerified: true,
+        },
+        tx
+      );
+      return user.id;
+    };
+
+    if (transaction) return run(transaction);
+    return this.db.withTransaction(run);
   }
 
   public async isPersonalScope(scope: Scope): Promise<boolean> {

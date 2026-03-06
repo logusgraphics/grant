@@ -23,6 +23,8 @@ import { OrganizationUserRepository } from './organization-users.repository';
 import { OrganizationRepository } from './organizations.repository';
 import { PermissionTagRepository } from './permission-tags.repository';
 import { PermissionRepository } from './permissions.repository';
+import { ProjectAppTagRepository } from './project-app-tags.repository';
+import { ProjectAppRepository } from './project-apps.repository';
 import { ProjectGroupRepository } from './project-groups.repository';
 import { ProjectPermissionRepository } from './project-permissions.repository';
 import { ProjectResourceRepository } from './project-resources.repository';
@@ -71,6 +73,8 @@ export function createRepositories(db: DbSchema) {
     organizationRepository: new OrganizationRepository(db),
     permissionTagRepository: new PermissionTagRepository(db),
     permissionRepository: new PermissionRepository(db),
+    projectAppRepository: new ProjectAppRepository(db),
+    projectAppTagRepository: new ProjectAppTagRepository(db),
     projectGroupRepository: new ProjectGroupRepository(db),
     projectPermissionRepository: new ProjectPermissionRepository(db),
     projectResourceRepository: new ProjectResourceRepository(db),

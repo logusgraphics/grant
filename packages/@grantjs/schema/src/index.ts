@@ -1,4 +1,11 @@
 export * from './generated/graphql';
+export type {
+  ProjectAppPublicInfo,
+  ProjectAppScopeInfo,
+  ProjectConsentInfo,
+  ProjectConsentInfoUser,
+  ProjectConsentRedirectResult,
+} from './project-oauth.types';
 
 export type {
   AccountResolvers,
@@ -8,6 +15,7 @@ export type {
   OrganizationResolvers,
   PermissionResolvers,
   ProjectResolvers,
+  ProjectAppResolvers,
   QueryResolvers,
   RequireFields,
   Resolver,

@@ -1,0 +1,4 @@
+input QueryProjectAppTagsInput {
+  projectAppId: ID
+  tagId: ID
+}

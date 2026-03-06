@@ -47,6 +47,7 @@ export const projectsRelations = relations(projects, ({ many }) => ({
   permissions: many(projectPermissions),
   accounts: many(accountProjects),
   resources: many(projectResources),
+  apps: many(projectApps),
 }));
 
 export const projectAuditLogsRelations = relations(projectAuditLogs, ({ one }) => ({
@@ -64,6 +65,7 @@ export type NewProjectAuditLogModel = typeof projectAuditLogs.$inferInsert;
 import { accountProjectTags } from './account-project-tags.schema';
 import { accountProjects } from './account-projects.schema';
 import { organizationProjectTags } from './organization-project-tags.schema';
+import { projectApps } from './project-apps.schema';
 import { projectGroups } from './project-groups.schema';
 import { projectPermissions } from './project-permissions.schema';
 import { projectResources } from './project-resources.schema';

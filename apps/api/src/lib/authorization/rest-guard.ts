@@ -6,6 +6,7 @@ import { ResourceResolversMap } from '@/resource-resolvers';
 import { ContextRequest } from '@/types';
 
 import { isAuthenticatedRest } from './auth-guard';
+import { extractScopeFromRequest } from './scope-extractor';
 import { ResourceResolver } from './types';
 
 export interface RestGuardOptions {
@@ -27,7 +28,16 @@ export function authorizeRestRoute(options: RestGuardOptions) {
     }
 
     const { context } = contextReq;
-    const scope = context.user?.scope ?? null;
+    let scope = context.user?.scope ?? null;
+
+    // Fallback: scope may not be set on auth for some session flows; derive from request so scoped routes still work.
+    if (!scope) {
+      const requestScope = extractScopeFromRequest(req);
+      if (requestScope && context.user) {
+        (context.user as { scope?: unknown }).scope = requestScope;
+        scope = requestScope;
+      }
+    }
 
     if (!scope) {
       return res.status(400).json({

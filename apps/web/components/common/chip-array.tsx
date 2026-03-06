@@ -19,6 +19,8 @@ export interface ChipArrayProps {
   className?: string;
   allowDuplicates?: boolean;
   chipVariant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  /** Optional normalizer (e.g. slugify) applied when adding a chip. Empty result is not added. */
+  normalizeValue?: (value: string) => string;
 }
 
 export function ChipArray({
@@ -31,8 +33,17 @@ export function ChipArray({
   className,
   allowDuplicates = false,
   chipVariant = 'secondary',
+  normalizeValue,
 }: ChipArrayProps) {
   const [inputValue, setInputValue] = useState('');
+
+  const resolveValue = useCallback(
+    (raw: string): string => {
+      const trimmed = raw.trim();
+      return normalizeValue ? normalizeValue(trimmed) : trimmed;
+    },
+    [normalizeValue]
+  );
 
   const handleKeyDown = useCallback(
     (
@@ -45,11 +56,13 @@ export function ChipArray({
       // Add chip on Space or Tab
       if ((e.key === ' ' || e.key === 'Tab') && inputValue.trim()) {
         e.preventDefault();
-        const trimmedValue = inputValue.trim();
-
-        // Prevent duplicates unless allowed
-        if (allowDuplicates || !currentItems.includes(trimmedValue)) {
-          onChange([...currentItems, trimmedValue]);
+        const value = resolveValue(inputValue);
+        if (!value) {
+          setInputValue('');
+          return;
+        }
+        if (allowDuplicates || !currentItems.includes(value)) {
+          onChange([...currentItems, value]);
           setInputValue('');
         }
       } else if (e.key === 'Backspace' && !inputValue && currentItems.length > 0) {
@@ -57,7 +70,7 @@ export function ChipArray({
         onChange(currentItems.slice(0, -1));
       }
     },
-    [inputValue, disabled, allowDuplicates]
+    [inputValue, disabled, allowDuplicates, resolveValue]
   );
 
   const handleDelete = useCallback(
@@ -66,6 +79,23 @@ export function ChipArray({
       onChange(currentItems.filter((item) => item !== itemToDelete));
     },
     [disabled]
+  );
+
+  const commitCurrentInput = useCallback(
+    (currentItems: string[], onChange: (value: string[]) => void) => {
+      if (disabled || !inputValue.trim()) return;
+      const value = resolveValue(inputValue);
+      if (!value) {
+        setInputValue('');
+        return;
+      }
+      if (allowDuplicates || !currentItems.includes(value)) {
+        onChange([...currentItems, value]);
+        setInputValue('');
+      }
+      setInputValue('');
+    },
+    [inputValue, disabled, allowDuplicates, resolveValue]
   );
 
   return (
@@ -107,6 +137,7 @@ export function ChipArray({
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, items, field.onChange)}
+                  onBlur={() => commitCurrentInput(items, field.onChange)}
                   placeholder={items.length === 0 ? placeholder : ''}
                   disabled={disabled}
                   className="flex-1 min-w-[120px] border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-auto bg-transparent"

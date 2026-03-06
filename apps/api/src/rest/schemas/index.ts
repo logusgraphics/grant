@@ -9,6 +9,7 @@ export * from './organization-invitations.schemas';
 export * from './organization-members.schemas';
 export * from './organizations.schemas';
 export * from './permissions.schemas';
+export * from './project-apps.schemas';
 export * from './projects.schemas';
 export * from './resources.schemas';
 export * from './roles.schemas';

@@ -27,6 +27,9 @@ export interface IResourceService {
     params: Omit<QueryResourcesArgs, 'scope'> & SelectedFields<Resource>
   ): Promise<ResourcePage>;
 
+  /** Resolve resource by id (e.g. for Permission.resource when permission was loaded in scoped context). */
+  getResourceById(id: string, transaction?: unknown): Promise<Resource | null>;
+
   createResource(
     params: Omit<CreateResourceInput, 'scope'>,
     transaction?: unknown

@@ -2,7 +2,7 @@
 
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Tag, User } from '@grantjs/schema';
-import { Shield, Tags, UserPlus } from 'lucide-react';
+import { LogIn, Shield, Tags, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, CardHeader, ScrollBadges } from '@/components/common';
@@ -23,6 +23,14 @@ export function UserCards() {
   const search = useUsersStore((state) => state.search);
   const users = useUsersStore((state) => state.users);
   const loading = useUsersStore((state) => state.loading);
+
+  const tProjectApps = useTranslations('projectApps');
+  const transformAuthMethodsToBadges = (user: User) =>
+    (user.authenticationMethods ?? []).map((m) => ({
+      id: `${m.provider}:${m.providerId}`,
+      label: tProjectApps(`providers.${m.provider}` as 'providers.email' | 'providers.github'),
+      title: m.providerId,
+    }));
 
   const transformRolesToBadges = (user: User) => {
     return (user.roles || []).map((role) => {
@@ -71,6 +79,13 @@ export function UserCards() {
                 text: t('form.roles'),
               },
               value: <ScrollBadges items={transformRolesToBadges(user)} height={80} />,
+            },
+            {
+              label: {
+                icon: <LogIn className="h-3 w-3" />,
+                text: t('form.authMethods'),
+              },
+              value: <ScrollBadges items={transformAuthMethodsToBadges(user)} height={60} />,
             },
             {
               label: {

@@ -1,0 +1,21 @@
+query GetProjectAppFormData($scope: Scope!, $projectId: ID!) {
+  projects(scope: $scope, ids: [$projectId], limit: 1) {
+    projects {
+      id
+      roles {
+        id
+        name
+      }
+      permissions {
+        id
+        name
+        description
+        action
+        resource {
+          id
+          slug
+        }
+      }
+    }
+  }
+}

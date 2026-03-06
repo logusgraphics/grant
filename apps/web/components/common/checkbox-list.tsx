@@ -27,6 +27,8 @@ export interface CheckboxListProps {
   loading?: boolean;
   loadingText?: string;
   emptyText?: string;
+  /** When set, rendered instead of emptyText when items are empty (e.g. Alert). */
+  emptyComponent?: React.ReactNode;
   error?: string;
   maxHeight?: string;
   disabled?: boolean;
@@ -40,6 +42,7 @@ export function CheckboxList({
   loading = false,
   loadingText,
   emptyText,
+  emptyComponent,
   error,
   maxHeight = '200px',
   disabled = false,
@@ -100,7 +103,9 @@ export function CheckboxList({
             {loading ? (
               <div className="text-sm text-muted-foreground">{resolvedLoadingText}</div>
             ) : items.length === 0 ? (
-              <div className="text-sm text-muted-foreground">{resolvedEmptyText}</div>
+              (emptyComponent ?? (
+                <div className="text-sm text-muted-foreground">{resolvedEmptyText}</div>
+              ))
             ) : (
               <div className={cn('space-y-2 overflow-y-auto', `max-h-[${maxHeight}]`)}>
                 {renderItems()}

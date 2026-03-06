@@ -23,6 +23,7 @@ export const GroupKey = {
   AccountProjectPermissionOwner: 'AccountProjectPermissionOwner',
   AccountProjectTagOwner: 'AccountProjectTagOwner',
   AccountProjectApiKeyOwner: 'AccountProjectApiKeyOwner',
+  AccountProjectAppOwner: 'AccountProjectAppOwner',
   ResourceCommon: 'ResourceCommon',
   RoleCommon: 'RoleCommon',
   GroupCommon: 'GroupCommon',
@@ -48,6 +49,9 @@ export const GroupKey = {
   ProjectAdmin: 'ProjectAdmin',
   ProjectDev: 'ProjectDev',
   ProjectViewer: 'ProjectViewer',
+  ProjectAppOwner: 'ProjectAppOwner',
+  ProjectAppAdmin: 'ProjectAppAdmin',
+  ProjectAppDev: 'ProjectAppDev',
   ResourceOwner: 'ResourceOwner',
   ResourceAdmin: 'ResourceAdmin',
   ResourceDev: 'ResourceDev',
@@ -188,6 +192,16 @@ const GROUPS: Record<GroupKey, GroupTemplate> = {
   },
   [GroupKey.AccountProjectApiKeyOwner]: {
     resource: ResourceSlug.ApiKey,
+    permissions: [
+      ResourceAction.Create,
+      ResourceAction.Update,
+      ResourceAction.Delete,
+      ResourceAction.Query,
+    ],
+    assignedRoles: [RoleKey.PersonalAccountOwner, RoleKey.OrganizationAccountOwner],
+  },
+  [GroupKey.AccountProjectAppOwner]: {
+    resource: ResourceSlug.ProjectApp,
     permissions: [
       ResourceAction.Create,
       ResourceAction.Update,
@@ -339,6 +353,37 @@ const GROUPS: Record<GroupKey, GroupTemplate> = {
     resource: ResourceSlug.Project,
     permissions: [],
     assignedRoles: [],
+  },
+
+  [GroupKey.ProjectAppOwner]: {
+    resource: ResourceSlug.ProjectApp,
+    permissions: [
+      ResourceAction.Create,
+      ResourceAction.Update,
+      ResourceAction.Delete,
+      ResourceAction.Query,
+    ],
+    assignedRoles: [RoleKey.OrganizationOwner],
+  },
+  [GroupKey.ProjectAppAdmin]: {
+    resource: ResourceSlug.ProjectApp,
+    permissions: [
+      ResourceAction.Create,
+      ResourceAction.Update,
+      ResourceAction.Delete,
+      ResourceAction.Query,
+    ],
+    assignedRoles: [RoleKey.OrganizationAdmin],
+  },
+  [GroupKey.ProjectAppDev]: {
+    resource: ResourceSlug.ProjectApp,
+    permissions: [
+      ResourceAction.Create,
+      ResourceAction.Update,
+      ResourceAction.Delete,
+      ResourceAction.Query,
+    ],
+    assignedRoles: [RoleKey.OrganizationDev],
   },
 
   [GroupKey.ResourceOwner]: {

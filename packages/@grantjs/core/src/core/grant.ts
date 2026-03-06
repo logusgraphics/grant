@@ -69,8 +69,10 @@ export class Grant {
       exp: expiresAt,
       jti: tokenId,
       isVerified: isVerifiedClaim,
+      scopes: grantedScopes,
     } = claims;
-    const isVerified = type === TokenType.ApiKey ? true : isVerifiedClaim;
+    const isVerified =
+      type === TokenType.ApiKey || type === TokenType.ProjectApp ? true : isVerifiedClaim;
     const scope = requestScope && type === TokenType.Session ? requestScope : tokenScope;
     return {
       userId,
@@ -79,6 +81,7 @@ export class Grant {
       expiresAt,
       tokenId,
       isVerified,
+      grantedScopes: type === TokenType.ProjectApp ? grantedScopes : undefined,
     };
   }
 
@@ -133,6 +136,25 @@ export class Grant {
     return this.tokenManager.signApiKeyToken(payload, options);
   }
 
+  public async signProjectAppToken(
+    payload: ApiKeyTokenPayload & { scopes: string[] },
+    options?: { signingScope?: Scope; transaction?: unknown }
+  ): Promise<string> {
+    return this.tokenManager.signProjectAppToken(payload, options);
+  }
+
+  /**
+   * Return which of the candidate scope slugs (resource:action) the user is granted in the given scope.
+   * Used for project-app token scope intersection.
+   */
+  public async getGrantedScopeSlugs(
+    userId: string,
+    scope: Scope,
+    candidateSlugs: string[]
+  ): Promise<string[]> {
+    return this.grantService.getGrantedScopeSlugs(userId, scope, candidateSlugs);
+  }
+
   public async isAuthorized(
     permission: IsAuthorizedPermissionInput,
     context: IsAuthorizedContextInput,
@@ -142,10 +164,21 @@ export class Grant {
       return { authorized: false, reason: AuthorizationReason.NotAuthenticated };
     }
 
-    const { userId, scope, type } = this.auth!;
+    const { userId, scope, type, grantedScopes } = this.auth!;
 
     if (!scope) {
       return { authorized: false, reason: AuthorizationReason.InvalidScope };
+    }
+
+    // Project-app tokens: cap effective permissions by the token's granted scopes (resource:action).
+    // Compare case-insensitively so "Document:Create" matches granted "document:create" from DB slugs.
+    if (type === TokenType.ProjectApp && grantedScopes && grantedScopes.length > 0) {
+      const slug = `${permission.resource}:${permission.action}`;
+      const slugLower = slug.toLowerCase();
+      const hasScope = grantedScopes.some((s) => (s ?? '').toLowerCase() === slugLower);
+      if (!hasScope) {
+        return { authorized: false, reason: AuthorizationReason.ScopeNotGranted };
+      }
     }
 
     const effectiveScope =
@@ -156,6 +189,7 @@ export class Grant {
       scope: effectiveScope,
       permission,
       context,
+      tokenType: type,
     });
   }
 }

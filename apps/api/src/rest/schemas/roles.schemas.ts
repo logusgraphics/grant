@@ -3,6 +3,7 @@ import { RoleSortableField, SortOrder } from '@grantjs/schema';
 import { z } from '@/lib/zod-openapi.lib';
 import {
   createSuccessResponseSchema,
+  jsonSchema,
   listQuerySchema,
   scopeSchema,
   tenantSchema,
@@ -70,6 +71,10 @@ export const createRoleRequestSchema = z.object({
     description: 'Description of the role',
     example: 'Full access to development resources',
   }),
+  metadata: jsonSchema.optional().openapi({
+    description: 'Arbitrary key-value metadata for the role',
+    example: { department: 'engineering', tier: 'premium' },
+  }),
   scope: scopeSchema,
   tagIds: z
     .array(z.string())
@@ -77,6 +82,13 @@ export const createRoleRequestSchema = z.object({
     .openapi({
       description: 'Array of tag IDs to assign to the role',
       example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  groupIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of group IDs to assign to the role',
+      example: ['123e4567-e89b-12d3-a456-426614174002'],
     }),
   primaryTagId: z.string().optional().openapi({
     description: 'Primary tag ID for the role',
@@ -100,12 +112,23 @@ export const updateRoleRequestSchema = z.object({
     description: 'Updated description of the role',
     example: 'Senior level access to development resources',
   }),
+  metadata: jsonSchema.optional().openapi({
+    description: 'Arbitrary key-value metadata for the role',
+    example: { department: 'engineering', tier: 'premium' },
+  }),
   tagIds: z
     .array(z.string())
     .optional()
     .openapi({
       description: 'Array of tag IDs to assign to the role',
       example: ['123e4567-e89b-12d3-a456-426614174001'],
+    }),
+  groupIds: z
+    .array(z.string())
+    .optional()
+    .openapi({
+      description: 'Array of group IDs to assign to the role',
+      example: ['123e4567-e89b-12d3-a456-426614174002'],
     }),
   primaryTagId: z.string().optional().openapi({
     description: 'Primary tag ID for the role',

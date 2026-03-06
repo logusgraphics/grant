@@ -11,6 +11,7 @@ export type {
   Permission,
   Resource,
   ApiError,
+  SignInWithProjectAppOptions,
   // Re-exported from @grantjs/schema
   Scope,
   Tenant,

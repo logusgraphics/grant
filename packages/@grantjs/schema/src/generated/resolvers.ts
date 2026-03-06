@@ -244,6 +244,12 @@ export type AddPermissionTagInput = {
   tagId: Scalars['ID']['input'];
 };
 
+export type AddProjectAppTagInput = {
+  isPrimary?: InputMaybe<Scalars['Boolean']['input']>;
+  projectAppId: Scalars['ID']['input'];
+  tagId: Scalars['ID']['input'];
+};
+
 export type AddProjectGroupInput = {
   groupId: Scalars['ID']['input'];
   projectId: Scalars['ID']['input'];
@@ -380,6 +386,7 @@ export enum AuthorizationReason {
   PermissionFoundConditionNotMet = 'PERMISSION_FOUND_CONDITION_NOT_MET',
   PermissionGrantedConditionMet = 'PERMISSION_GRANTED_CONDITION_MET',
   PermissionGrantedNoCondition = 'PERMISSION_GRANTED_NO_CONDITION',
+  ScopeNotGranted = 'SCOPE_NOT_GRANTED',
 }
 
 export type AuthorizationResult = {
@@ -495,6 +502,40 @@ export type CreatePermissionInput = {
   resourceId?: InputMaybe<Scalars['ID']['input']>;
   scope: Scope;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type CreateProjectAppInput = {
+  /** Allow new users to sign up when authenticating via this app. Default true. */
+  allowSignUp?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: InputMaybe<Array<Scalars['String']['input']>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  primaryTagId?: InputMaybe<Scalars['ID']['input']>;
+  /** Allowed redirect URIs for OAuth callback. At least one required. */
+  redirectUris: Array<Scalars['String']['input']>;
+  scope: Scope;
+  /** Optional OAuth scopes the app may request. */
+  scopes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Role to assign to users who sign up via this app. Required when allowSignUp is true; must be a role in the project. */
+  signUpRoleId?: InputMaybe<Scalars['ID']['input']>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type CreateProjectAppResult = {
+  __typename?: 'CreateProjectAppResult';
+  /** Whether new users can sign up when authenticating via this app. */
+  allowSignUp?: Maybe<Scalars['Boolean']['output']>;
+  clientId: Scalars['String']['output'];
+  /** Shown only once at creation. Null for public clients. */
+  clientSecret?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Date']['output'];
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: Maybe<Array<Scalars['String']['output']>>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  redirectUris: Array<Scalars['String']['output']>;
+  /** Role assigned to users who sign up via this app. */
+  signUpRoleId?: Maybe<Scalars['ID']['output']>;
 };
 
 export type CreateProjectInput = {
@@ -751,6 +792,8 @@ export type Mutation = {
   createOrganization: Organization;
   createPermission: Permission;
   createProject: Project;
+  /** Create an OAuth app for a project. Allows project users to sign in with providers (e.g. GitHub) and receive tokens scoped to the project. */
+  createProjectApp: CreateProjectAppResult;
   createResource: Resource;
   createRole: Role;
   createTag: Tag;
@@ -762,6 +805,7 @@ export type Mutation = {
   deleteOrganization: Organization;
   deletePermission: Permission;
   deleteProject: Project;
+  deleteProjectApp: ProjectApp;
   deleteResource: Resource;
   deleteRole: Role;
   deleteTag: Tag;
@@ -794,6 +838,8 @@ export type Mutation = {
   updateOrganizationMember: OrganizationMember;
   updatePermission: Permission;
   updateProject: Project;
+  /** Update an existing project app (name, redirect URIs, scopes). */
+  updateProjectApp: ProjectApp;
   updateResource: Resource;
   updateRole: Role;
   updateTag: Tag;
@@ -833,6 +879,10 @@ export type MutationCreatePermissionArgs = {
 
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
+};
+
+export type MutationCreateProjectAppArgs = {
+  input: CreateProjectAppInput;
 };
 
 export type MutationCreateResourceArgs = {
@@ -879,6 +929,11 @@ export type MutationDeletePermissionArgs = {
 };
 
 export type MutationDeleteProjectArgs = {
+  id: Scalars['ID']['input'];
+  scope: Scope;
+};
+
+export type MutationDeleteProjectAppArgs = {
   id: Scalars['ID']['input'];
   scope: Scope;
 };
@@ -994,6 +1049,11 @@ export type MutationUpdatePermissionArgs = {
 export type MutationUpdateProjectArgs = {
   id: Scalars['ID']['input'];
   input: UpdateProjectInput;
+};
+
+export type MutationUpdateProjectAppArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateProjectAppInput;
 };
 
 export type MutationUpdateResourceArgs = {
@@ -1356,6 +1416,61 @@ export type Project = Auditable & {
   users?: Maybe<Array<User>>;
 };
 
+export type ProjectApp = Auditable & {
+  __typename?: 'ProjectApp';
+  /** Whether new users can sign up when authenticating via this app. Default true. */
+  allowSignUp?: Maybe<Scalars['Boolean']['output']>;
+  clientId: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: Maybe<Array<Scalars['String']['output']>>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  project?: Maybe<Project>;
+  projectId: Scalars['ID']['output'];
+  redirectUris: Array<Scalars['String']['output']>;
+  scopes?: Maybe<Array<Scalars['String']['output']>>;
+  /** Resolved role for signUpRoleId (for display). */
+  signUpRole?: Maybe<Role>;
+  /** Role assigned to users who sign up via this app. Required when allowSignUp is true. */
+  signUpRoleId?: Maybe<Scalars['ID']['output']>;
+  tags?: Maybe<Array<Tag>>;
+  updatedAt: Scalars['Date']['output'];
+};
+
+export type ProjectAppPage = PaginatedResults & {
+  __typename?: 'ProjectAppPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  projectApps: Array<ProjectApp>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export enum ProjectAppSearchableField {
+  Name = 'name',
+}
+
+export type ProjectAppSortInput = {
+  field: ProjectAppSortableField;
+  order: SortOrder;
+};
+
+export enum ProjectAppSortableField {
+  CreatedAt = 'createdAt',
+  Name = 'name',
+}
+
+export type ProjectAppTag = Auditable & {
+  __typename?: 'ProjectAppTag';
+  createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  projectAppId: Scalars['ID']['output'];
+  tagId: Scalars['ID']['output'];
+  updatedAt: Scalars['Date']['output'];
+};
+
 export type ProjectGroup = Auditable & {
   __typename?: 'ProjectGroup';
   createdAt: Scalars['Date']['output'];
@@ -1510,6 +1625,8 @@ export type Query = {
   organizationMembers: OrganizationMemberPage;
   organizations: OrganizationPage;
   permissions: PermissionPage;
+  /** List OAuth apps for the given project scope. Allowed scopes: accountProject, organizationProject. */
+  projectApps: ProjectAppPage;
   projects: ProjectPage;
   resources: ResourcePage;
   roles: RolePage;
@@ -1588,6 +1705,16 @@ export type QueryPermissionsArgs = {
   scope: Scope;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<PermissionSortInput>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type QueryProjectAppsArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  scope: Scope;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ProjectAppSortInput>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
@@ -1732,6 +1859,11 @@ export type QueryOrganizationUsersInput = {
 
 export type QueryPermissionTagsInput = {
   permissionId?: InputMaybe<Scalars['ID']['input']>;
+  tagId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type QueryProjectAppTagsInput = {
+  projectAppId?: InputMaybe<Scalars['ID']['input']>;
   tagId?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -1891,6 +2023,11 @@ export type RemoveOrganizationUserInput = {
 
 export type RemovePermissionTagInput = {
   permissionId: Scalars['ID']['input'];
+  tagId: Scalars['ID']['input'];
+};
+
+export type RemoveProjectAppTagInput = {
+  projectAppId: Scalars['ID']['input'];
   tagId: Scalars['ID']['input'];
 };
 
@@ -2228,6 +2365,7 @@ export enum Tenant {
 
 export enum TokenType {
   ApiKey = 'apiKey',
+  ProjectApp = 'projectApp',
   Session = 'session',
   System = 'system',
 }
@@ -2319,6 +2457,30 @@ export type UpdatePermissionInput = {
 export type UpdatePermissionTagInput = {
   isPrimary: Scalars['Boolean']['input'];
   permissionId: Scalars['ID']['input'];
+  tagId: Scalars['ID']['input'];
+};
+
+export type UpdateProjectAppInput = {
+  /** Allow new users to sign up when authenticating via this app. */
+  allowSignUp?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Auth providers enabled for this app (e.g. github, email). Empty/null = all configured providers. */
+  enabledProviders?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Display name for the app. */
+  name?: InputMaybe<Scalars['String']['input']>;
+  primaryTagId?: InputMaybe<Scalars['ID']['input']>;
+  /** Allowed redirect URIs for OAuth callback. If provided, at least one required. */
+  redirectUris?: InputMaybe<Array<Scalars['String']['input']>>;
+  scope: Scope;
+  /** Optional OAuth scopes the app may request. */
+  scopes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Role to assign to users who sign up via this app. Required when allowSignUp is true; must be a role in the project. */
+  signUpRoleId?: InputMaybe<Scalars['ID']['input']>;
+  tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type UpdateProjectAppTagInput = {
+  isPrimary: Scalars['Boolean']['input'];
+  projectAppId: Scalars['ID']['input'];
   tagId: Scalars['ID']['input'];
 };
 
@@ -2732,6 +2894,8 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
     | Permission
     | PermissionTag
     | Project
+    | ProjectApp
+    | ProjectAppTag
     | ProjectGroup
     | ProjectPermission
     | ProjectResource
@@ -2758,6 +2922,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
     | GroupPage
     | OrganizationPage
     | PermissionPage
+    | ProjectAppPage
     | ProjectPage
     | ResourcePage
     | RolePage
@@ -2799,6 +2964,7 @@ export type ResolversTypes = ResolversObject<{
   AddOrganizationTagInput: AddOrganizationTagInput;
   AddOrganizationUserInput: AddOrganizationUserInput;
   AddPermissionTagInput: AddPermissionTagInput;
+  AddProjectAppTagInput: AddProjectAppTagInput;
   AddProjectGroupInput: AddProjectGroupInput;
   AddProjectPermissionInput: AddProjectPermissionInput;
   AddProjectResourceInput: AddProjectResourceInput;
@@ -2834,6 +3000,8 @@ export type ResolversTypes = ResolversObject<{
   CreateOrganizationInput: CreateOrganizationInput;
   CreateOrganizationInvitationInput: CreateOrganizationInvitationInput;
   CreatePermissionInput: CreatePermissionInput;
+  CreateProjectAppInput: CreateProjectAppInput;
+  CreateProjectAppResult: ResolverTypeWrapper<CreateProjectAppResult>;
   CreateProjectInput: CreateProjectInput;
   CreateResourceInput: CreateResourceInput;
   CreateRoleInput: CreateRoleInput;
@@ -2906,6 +3074,12 @@ export type ResolversTypes = ResolversObject<{
   PermissionSortableField: PermissionSortableField;
   PermissionTag: ResolverTypeWrapper<PermissionTag>;
   Project: ResolverTypeWrapper<Project>;
+  ProjectApp: ResolverTypeWrapper<ProjectApp>;
+  ProjectAppPage: ResolverTypeWrapper<ProjectAppPage>;
+  ProjectAppSearchableField: ProjectAppSearchableField;
+  ProjectAppSortInput: ProjectAppSortInput;
+  ProjectAppSortableField: ProjectAppSortableField;
+  ProjectAppTag: ResolverTypeWrapper<ProjectAppTag>;
   ProjectGroup: ResolverTypeWrapper<ProjectGroup>;
   ProjectMembershipExportData: ResolverTypeWrapper<ProjectMembershipExportData>;
   ProjectPage: ResolverTypeWrapper<ProjectPage>;
@@ -2937,6 +3111,7 @@ export type ResolversTypes = ResolversObject<{
   QueryOrganizationTagsInput: QueryOrganizationTagsInput;
   QueryOrganizationUsersInput: QueryOrganizationUsersInput;
   QueryPermissionTagsInput: QueryPermissionTagsInput;
+  QueryProjectAppTagsInput: QueryProjectAppTagsInput;
   QueryProjectGroupsInput: QueryProjectGroupsInput;
   QueryProjectPermissionsInput: QueryProjectPermissionsInput;
   QueryProjectResourcesInput: QueryProjectResourcesInput;
@@ -2968,6 +3143,7 @@ export type ResolversTypes = ResolversObject<{
   RemoveOrganizationTagInput: RemoveOrganizationTagInput;
   RemoveOrganizationUserInput: RemoveOrganizationUserInput;
   RemovePermissionTagInput: RemovePermissionTagInput;
+  RemoveProjectAppTagInput: RemoveProjectAppTagInput;
   RemoveProjectGroupInput: RemoveProjectGroupInput;
   RemoveProjectPermissionInput: RemoveProjectPermissionInput;
   RemoveProjectResourceInput: RemoveProjectResourceInput;
@@ -3027,6 +3203,8 @@ export type ResolversTypes = ResolversObject<{
   UpdateOrganizationTagInput: UpdateOrganizationTagInput;
   UpdatePermissionInput: UpdatePermissionInput;
   UpdatePermissionTagInput: UpdatePermissionTagInput;
+  UpdateProjectAppInput: UpdateProjectAppInput;
+  UpdateProjectAppTagInput: UpdateProjectAppTagInput;
   UpdateProjectInput: UpdateProjectInput;
   UpdateProjectTagInput: UpdateProjectTagInput;
   UpdateResourceInput: UpdateResourceInput;
@@ -3092,6 +3270,7 @@ export type ResolversParentTypes = ResolversObject<{
   AddOrganizationTagInput: AddOrganizationTagInput;
   AddOrganizationUserInput: AddOrganizationUserInput;
   AddPermissionTagInput: AddPermissionTagInput;
+  AddProjectAppTagInput: AddProjectAppTagInput;
   AddProjectGroupInput: AddProjectGroupInput;
   AddProjectPermissionInput: AddProjectPermissionInput;
   AddProjectResourceInput: AddProjectResourceInput;
@@ -3124,6 +3303,8 @@ export type ResolversParentTypes = ResolversObject<{
   CreateOrganizationInput: CreateOrganizationInput;
   CreateOrganizationInvitationInput: CreateOrganizationInvitationInput;
   CreatePermissionInput: CreatePermissionInput;
+  CreateProjectAppInput: CreateProjectAppInput;
+  CreateProjectAppResult: CreateProjectAppResult;
   CreateProjectInput: CreateProjectInput;
   CreateResourceInput: CreateResourceInput;
   CreateRoleInput: CreateRoleInput;
@@ -3182,6 +3363,10 @@ export type ResolversParentTypes = ResolversObject<{
   PermissionSortInput: PermissionSortInput;
   PermissionTag: PermissionTag;
   Project: Project;
+  ProjectApp: ProjectApp;
+  ProjectAppPage: ProjectAppPage;
+  ProjectAppSortInput: ProjectAppSortInput;
+  ProjectAppTag: ProjectAppTag;
   ProjectGroup: ProjectGroup;
   ProjectMembershipExportData: ProjectMembershipExportData;
   ProjectPage: ProjectPage;
@@ -3211,6 +3396,7 @@ export type ResolversParentTypes = ResolversObject<{
   QueryOrganizationTagsInput: QueryOrganizationTagsInput;
   QueryOrganizationUsersInput: QueryOrganizationUsersInput;
   QueryPermissionTagsInput: QueryPermissionTagsInput;
+  QueryProjectAppTagsInput: QueryProjectAppTagsInput;
   QueryProjectGroupsInput: QueryProjectGroupsInput;
   QueryProjectPermissionsInput: QueryProjectPermissionsInput;
   QueryProjectResourcesInput: QueryProjectResourcesInput;
@@ -3242,6 +3428,7 @@ export type ResolversParentTypes = ResolversObject<{
   RemoveOrganizationTagInput: RemoveOrganizationTagInput;
   RemoveOrganizationUserInput: RemoveOrganizationUserInput;
   RemovePermissionTagInput: RemovePermissionTagInput;
+  RemoveProjectAppTagInput: RemoveProjectAppTagInput;
   RemoveProjectGroupInput: RemoveProjectGroupInput;
   RemoveProjectPermissionInput: RemoveProjectPermissionInput;
   RemoveProjectResourceInput: RemoveProjectResourceInput;
@@ -3292,6 +3479,8 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateOrganizationTagInput: UpdateOrganizationTagInput;
   UpdatePermissionInput: UpdatePermissionInput;
   UpdatePermissionTagInput: UpdatePermissionTagInput;
+  UpdateProjectAppInput: UpdateProjectAppInput;
+  UpdateProjectAppTagInput: UpdateProjectAppTagInput;
   UpdateProjectInput: UpdateProjectInput;
   UpdateProjectTagInput: UpdateProjectTagInput;
   UpdateResourceInput: UpdateResourceInput;
@@ -3518,6 +3707,8 @@ export type AuditableResolvers<
     | 'Permission'
     | 'PermissionTag'
     | 'Project'
+    | 'ProjectApp'
+    | 'ProjectAppTag'
     | 'ProjectGroup'
     | 'ProjectPermission'
     | 'ProjectResource'
@@ -3617,6 +3808,22 @@ export type CreateMySecondaryAccountResultResolvers<
 > = ResolversObject<{
   account?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
   accounts?: Resolver<Array<ResolversTypes['Account']>, ParentType, ContextType>;
+}>;
+
+export type CreateProjectAppResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['CreateProjectAppResult'] =
+    ResolversParentTypes['CreateProjectAppResult'],
+> = ResolversObject<{
+  allowSignUp?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  clientId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  clientSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  enabledProviders?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  redirectUris?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  signUpRoleId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
 }>;
 
 export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
@@ -3802,6 +4009,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateProjectArgs, 'input'>
   >;
+  createProjectApp?: Resolver<
+    ResolversTypes['CreateProjectAppResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateProjectAppArgs, 'input'>
+  >;
   createResource?: Resolver<
     ResolversTypes['Resource'],
     ParentType,
@@ -3867,6 +4080,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteProjectArgs, 'id' | 'scope'>
+  >;
+  deleteProjectApp?: Resolver<
+    ResolversTypes['ProjectApp'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteProjectAppArgs, 'id' | 'scope'>
   >;
   deleteResource?: Resolver<
     ResolversTypes['Resource'],
@@ -4019,6 +4238,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateProjectArgs, 'id' | 'input'>
+  >;
+  updateProjectApp?: Resolver<
+    ResolversTypes['ProjectApp'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateProjectAppArgs, 'id' | 'input'>
   >;
   updateResource?: Resolver<
     ResolversTypes['Resource'],
@@ -4312,6 +4537,7 @@ export type PaginatedResultsResolvers<
     | 'GroupPage'
     | 'OrganizationPage'
     | 'PermissionPage'
+    | 'ProjectAppPage'
     | 'ProjectPage'
     | 'ResourcePage'
     | 'RolePage'
@@ -4397,6 +4623,53 @@ export type ProjectResolvers<
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   users?: Resolver<Maybe<Array<ResolversTypes['User']>>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ProjectAppResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ProjectApp'] = ResolversParentTypes['ProjectApp'],
+> = ResolversObject<{
+  allowSignUp?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  clientId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  enabledProviders?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
+  projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  redirectUris?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  scopes?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
+  signUpRole?: Resolver<Maybe<ResolversTypes['Role']>, ParentType, ContextType>;
+  signUpRoleId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ProjectAppPageResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ProjectAppPage'] =
+    ResolversParentTypes['ProjectAppPage'],
+> = ResolversObject<{
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  projectApps?: Resolver<Array<ResolversTypes['ProjectApp']>, ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ProjectAppTagResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ProjectAppTag'] = ResolversParentTypes['ProjectAppTag'],
+> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isPrimary?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  projectAppId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  tagId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -4622,6 +4895,12 @@ export type QueryResolvers<
     ParentType,
     ContextType,
     RequireFields<QueryPermissionsArgs, 'scope'>
+  >;
+  projectApps?: Resolver<
+    ResolversTypes['ProjectAppPage'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryProjectAppsArgs, 'scope'>
   >;
   projects?: Resolver<
     ResolversTypes['ProjectPage'],
@@ -5113,6 +5392,7 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   CreateAccountResult?: CreateAccountResultResolvers<ContextType>;
   CreateApiKeyResult?: CreateApiKeyResultResolvers<ContextType>;
   CreateMySecondaryAccountResult?: CreateMySecondaryAccountResultResolvers<ContextType>;
+  CreateProjectAppResult?: CreateProjectAppResultResolvers<ContextType>;
   Date?: GraphQLScalarType;
   ExchangeApiKeyResult?: ExchangeApiKeyResultResolvers<ContextType>;
   Group?: GroupResolvers<ContextType>;
@@ -5144,6 +5424,9 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   PermissionPage?: PermissionPageResolvers<ContextType>;
   PermissionTag?: PermissionTagResolvers<ContextType>;
   Project?: ProjectResolvers<ContextType>;
+  ProjectApp?: ProjectAppResolvers<ContextType>;
+  ProjectAppPage?: ProjectAppPageResolvers<ContextType>;
+  ProjectAppTag?: ProjectAppTagResolvers<ContextType>;
   ProjectGroup?: ProjectGroupResolvers<ContextType>;
   ProjectMembershipExportData?: ProjectMembershipExportDataResolvers<ContextType>;
   ProjectPage?: ProjectPageResolvers<ContextType>;

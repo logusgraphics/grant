@@ -1,0 +1,4 @@
+input RemoveProjectAppTagInput {
+  projectAppId: ID!
+  tagId: ID!
+}

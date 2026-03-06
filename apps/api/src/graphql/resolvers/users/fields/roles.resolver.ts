@@ -8,6 +8,18 @@ export const userRolesResolver: UserResolvers<GraphqlContext>['roles'] = async (
   context
 ) => {
   const userId = parent.id;
+  const scope = context.user?.scope ?? null;
+
+  if (scope) {
+    const roleIds = await context.handlers.users.getUserRoleIdsInScope(userId, scope);
+    if (roleIds.length === 0) return [];
+    const rolesPage = await context.handlers.roles.getRoles({
+      scope,
+      ids: roleIds,
+      limit: -1,
+    });
+    return rolesPage.roles ?? [];
+  }
 
   if (parent.roles) {
     return parent.roles;

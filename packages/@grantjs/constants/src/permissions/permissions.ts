@@ -299,6 +299,29 @@ const PERMISSION_MAPPING_TEMPLATES: Partial<Record<GroupKey, PermissionMappingTe
     },
   ],
 
+  [GroupKey.AccountProjectAppOwner]: [
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Create,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Delete,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+  ],
+
   [GroupKey.ResourceCommon]: [
     {
       action: ResourceAction.Query,
@@ -563,6 +586,75 @@ const PERMISSION_MAPPING_TEMPLATES: Partial<Record<GroupKey, PermissionMappingTe
     {
       action: ResourceAction.Delete,
       resource: ResourceSlug.Project,
+      condition: null,
+    },
+  ],
+
+  [GroupKey.ProjectAppOwner]: [
+    {
+      action: ResourceAction.Create,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Delete,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+  ],
+
+  [GroupKey.ProjectAppAdmin]: [
+    {
+      action: ResourceAction.Create,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Delete,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+  ],
+
+  [GroupKey.ProjectAppDev]: [
+    {
+      action: ResourceAction.Create,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Delete,
+      resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectApp,
       condition: null,
     },
   ],

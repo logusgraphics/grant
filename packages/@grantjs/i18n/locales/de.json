@@ -85,6 +85,7 @@
       "slugMin2": "Slug muss mindestens 2 Zeichen lang sein",
       "actionRequired": "Aktion ist erforderlich",
       "actionTooLong": "Aktion ist zu lang",
+      "actionInvalidFormat": "Aktion darf nur Buchstaben, Ziffern, Bindestriche und Plus enthalten (keine Leerzeichen)",
       "resourceRequired": "Ressourcen-Slug ist erforderlich",
       "scopeIdRequired": "Bereichs-ID ist erforderlich",
       "scopeIdInvalid": "Ungültige Bereichs-ID: muss eine UUID oder mehrere durch Doppelpunkte getrennte UUIDs sein",

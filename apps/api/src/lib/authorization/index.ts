@@ -1,4 +1,4 @@
-export { extractScopeFromRequest } from './scope-extractor';
+export { extractScopeFromRequest, extractScopeFromResolverRequest } from './scope-extractor';
 export {
   authenticateRestRoute,
   authenticateGraphQLResolver,

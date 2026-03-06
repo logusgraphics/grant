@@ -80,6 +80,8 @@ The returned token is a standard RS256 JWT signed with the project's JWKS signin
 
 External services can verify these tokens using the JWKS endpoint published at the issuer URL. See [Security > JWKS and Signing Keys](/architecture/security#jwks-and-signing-keys) for endpoint patterns.
 
+**Project OAuth:** For user-in-the-loop flows (e.g. tenant SPAs), project apps can use **Project OAuth** instead of API keys: users sign in with a provider (GitHub, email magic link) and receive a project-scoped JWT. Tokens from that flow may have `type: projectApp` and a `scopes` claim when the app restricts permissions; see [Security > Project OAuth](/architecture/security#project-oauth-multi-provider).
+
 ## REST Endpoints
 
 | Method   | Path                   | Permission      | Description                       |

@@ -57,3 +57,4 @@ apps/api/tests/e2e/compliance-report.json
 # File storage
 apps/api/storage/
 *.pem
+.cursor/mcp.json

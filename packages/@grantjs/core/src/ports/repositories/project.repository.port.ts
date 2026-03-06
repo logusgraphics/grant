@@ -2,8 +2,9 @@
  * Project-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
+import type { DeleteParams, SelectedFields } from './common';
 import type {
+  AddProjectAppTagInput,
   AddProjectGroupInput,
   AddProjectPermissionInput,
   AddProjectResourceInput,
@@ -11,10 +12,16 @@ import type {
   AddProjectTagInput,
   AddProjectUserApiKeyInput,
   AddProjectUserInput,
+  CreateProjectAppInput,
+  CreateProjectAppResult,
   CreateProjectInput,
+  MutationDeleteProjectAppArgs,
   MutationDeleteProjectArgs,
   MutationUpdateProjectArgs,
   Project,
+  ProjectApp,
+  ProjectAppPage,
+  ProjectAppTag,
   ProjectGroup,
   ProjectPage,
   ProjectPermission,
@@ -23,6 +30,7 @@ import type {
   ProjectTag,
   ProjectUser,
   ProjectUserApiKey,
+  QueryProjectAppTagsInput,
   QueryProjectGroupsInput,
   QueryProjectPermissionsInput,
   QueryProjectResourcesInput,
@@ -30,7 +38,9 @@ import type {
   QueryProjectTagsInput,
   QueryProjectUserApiKeysInput,
   QueryProjectUsersInput,
+  QueryProjectAppsArgs,
   QueryProjectsArgs,
+  RemoveProjectAppTagInput,
   RemoveProjectGroupInput,
   RemoveProjectPermissionInput,
   RemoveProjectResourceInput,
@@ -38,6 +48,8 @@ import type {
   RemoveProjectTagInput,
   RemoveProjectUserApiKeyInput,
   RemoveProjectUserInput,
+  UpdateProjectAppInput,
+  UpdateProjectAppTagInput,
   UpdateProjectTagInput,
 } from '@grantjs/schema';
 
@@ -131,6 +143,16 @@ export interface IProjectPermissionRepository {
     transaction?: unknown
   ): Promise<ProjectPermission[]>;
 
+  /** Returns allowed OAuth scope slugs (resource:action) for the project. */
+  getScopeSlugsForProject(projectId: string, transaction?: unknown): Promise<string[]>;
+
+  /** Returns permission name and description for each scope slug that exists in the project. */
+  getScopeSlugLabelsForProject(
+    projectId: string,
+    scopeSlugs: string[],
+    transaction?: unknown
+  ): Promise<{ slug: string; name: string; description: string | null }[]>;
+
   addProjectPermission(
     params: AddProjectPermissionInput,
     transaction?: unknown
@@ -183,6 +205,66 @@ export interface IProjectTagRepository {
   softDeleteProjectTag(params: RemoveProjectTagInput, transaction?: unknown): Promise<ProjectTag>;
 
   hardDeleteProjectTag(params: RemoveProjectTagInput, transaction?: unknown): Promise<ProjectTag>;
+}
+
+export interface IProjectAppRepository {
+  getProjectApps(
+    params: Omit<QueryProjectAppsArgs, 'scope'> &
+      SelectedFields<ProjectApp> & { projectId: string } & SelectedFields<ProjectApp>,
+    transaction?: unknown
+  ): Promise<ProjectAppPage>;
+
+  createProjectApp(
+    params: Omit<CreateProjectAppInput, 'scope'> & {
+      projectId: string;
+      clientSecretHash?: string | null;
+    },
+    transaction?: unknown
+  ): Promise<CreateProjectAppResult>;
+
+  getProjectAppById(id: string, transaction?: unknown): Promise<ProjectApp | null>;
+
+  getProjectAppByClientId(clientId: string, transaction?: unknown): Promise<ProjectApp | null>;
+
+  updateProjectApp(
+    params: { id: string; projectId: string } & Omit<UpdateProjectAppInput, 'scope'>,
+    transaction?: unknown
+  ): Promise<ProjectApp>;
+
+  softDeleteProjectApp(
+    params: Omit<MutationDeleteProjectAppArgs, 'scope'> & { projectId: string } & DeleteParams,
+    transaction?: unknown
+  ): Promise<ProjectApp>;
+}
+
+export interface IProjectAppTagRepository {
+  getProjectAppTags(
+    params: QueryProjectAppTagsInput,
+    transaction?: unknown
+  ): Promise<ProjectAppTag[]>;
+
+  getProjectAppTagIntersection(
+    projectAppIds: string[],
+    tagIds: string[],
+    transaction?: unknown
+  ): Promise<ProjectAppTag[]>;
+
+  addProjectAppTag(params: AddProjectAppTagInput, transaction?: unknown): Promise<ProjectAppTag>;
+
+  updateProjectAppTag(
+    params: UpdateProjectAppTagInput,
+    transaction?: unknown
+  ): Promise<ProjectAppTag>;
+
+  softDeleteProjectAppTag(
+    params: RemoveProjectAppTagInput,
+    transaction?: unknown
+  ): Promise<ProjectAppTag>;
+
+  hardDeleteProjectAppTag(
+    params: RemoveProjectAppTagInput,
+    transaction?: unknown
+  ): Promise<ProjectAppTag>;
 }
 
 export interface IProjectUserApiKeyRepository {
