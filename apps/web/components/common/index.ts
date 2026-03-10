@@ -13,6 +13,7 @@ export * from './common-types';
 export * from './copy-to-clipboard';
 export * from './create-dialog';
 export * from './data-table';
+export * from './demo-mode-dialog';
 export * from './delete-dialog';
 export * from './edit-dialog';
 export * from './editable-text';

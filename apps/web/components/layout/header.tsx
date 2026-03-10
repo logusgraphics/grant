@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 import { BookOpen, FileJson, Globe, Menu, Moon, Network, Sun, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Logo } from '@/components/common';
+import { DemoModeDialog, Logo } from '@/components/common';
 import { LanguageSwitcher, ThemeToggle } from '@/components/features/settings';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
@@ -79,6 +79,7 @@ export function Header() {
         {/* Desktop Navigation and Controls */}
         <div className="hidden md:flex md:items-center md:space-x-3">
           <div className="flex items-center gap-4">
+            <DemoModeDialog />
             <a
               href={getDocsUrl()}
               target="_blank"
@@ -125,6 +126,9 @@ export function Header() {
               {/* Dashboard link removed - breadcrumb provides better navigation */}
             </nav>
             <div className="flex flex-col space-y-2">
+              <div className="py-2 -mx-2">
+                <DemoModeDialog />
+              </div>
               <a
                 href={getDocsUrl()}
                 target="_blank"

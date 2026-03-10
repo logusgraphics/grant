@@ -209,13 +209,13 @@ Dev can only delete/revoke their own API keys (enforced by condition) \*
 
 Project App (Apps) are OAuth/consent applications scoped to a project. Account owners get full app management via `Account Project App Owner`; organization roles get app management via Project App Owner/Admin/Dev. There is no Project App Common group — only these role-specific groups grant access.
 
-| Group Name                 | Resource    | Permissions                   | Assigned To                    | Description                                |
-| -------------------------- | ----------- | ------------------------------ | ------------------------------ | ------------------------------------------ |
-| `Account Project App Owner` | Project App | `create` `update` `delete` `query` | Personal/Organization Account Owner | Full app management for account projects   |
-| `Project App Owner`        | Project App | `create` `update` `delete` `query` | Organization Owner             | Full project app management                |
-| `Project App Admin`        | Project App | `create` `update` `delete` `query` | Organization Admin             | Full project app management                |
-| `Project App Dev`         | Project App | `create` `update` `delete` `query` | Organization Dev               | Full project app management                |
-| `Project App Viewer`      | Project App | _(no additional permissions)_  | —                              | Viewer has no project app access by default |
+| Group Name                  | Resource    | Permissions                        | Assigned To                         | Description                                 |
+| --------------------------- | ----------- | ---------------------------------- | ----------------------------------- | ------------------------------------------- |
+| `Account Project App Owner` | Project App | `create` `update` `delete` `query` | Personal/Organization Account Owner | Full app management for account projects    |
+| `Project App Owner`         | Project App | `create` `update` `delete` `query` | Organization Owner                  | Full project app management                 |
+| `Project App Admin`         | Project App | `create` `update` `delete` `query` | Organization Admin                  | Full project app management                 |
+| `Project App Dev`           | Project App | `create` `update` `delete` `query` | Organization Dev                    | Full project app management                 |
+| `Project App Viewer`        | Project App | _(no additional permissions)_      | —                                   | Viewer has no project app access by default |
 
 #### Organization Member Groups
 

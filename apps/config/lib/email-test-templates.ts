@@ -1,10 +1,9 @@
-import type { EmailTemplates } from '@grantjs/email';
 import type {
   SendInvitationParams,
-  SendOtpParams,
   SendPasswordResetParams,
   SendProjectOAuthMagicLinkParams,
 } from '@grantjs/core';
+import type { EmailTemplates } from '@grantjs/email';
 
 const stub = (): string => '';
 

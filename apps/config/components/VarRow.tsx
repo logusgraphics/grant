@@ -383,10 +383,7 @@ export function VarRow({
               <button
                 type="button"
                 className="test-db-btn"
-                disabled={
-                  testGithubOAuthStatus === 'loading' ||
-                  !currentValue?.trim()
-                }
+                disabled={testGithubOAuthStatus === 'loading' || !currentValue?.trim()}
                 onClick={onTestGithubOAuth}
               >
                 <Zap size={14} className="test-db-btn-icon" />

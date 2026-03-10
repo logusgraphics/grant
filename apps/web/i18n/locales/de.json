@@ -140,6 +140,33 @@
       "table": "Tabellenansicht"
     }
   },
+  "demo": {
+    "bannerTitle": "Demo-Umgebung",
+    "bannerMessageWithSchedule": "Dies ist eine kostenlose Demo-Instanz. Daten (Konten, Projekte usw.) können regelmäßig gemäß dem Zeitplan zurückgesetzt werden: {schedule}.",
+    "bannerMessageWithoutSchedule": "Dies ist eine kostenlose Demo-Instanz. Daten (Konten, Projekte usw.) können regelmäßig zurückgesetzt werden.",
+    "dismiss": "Ausblenden",
+    "dialogButton": "Demo-Modus",
+    "understandButton": "Verstanden",
+    "resetIncludes": {
+      "title": "Bei jedem Zurücksetzen werden folgende Daten gelöscht:",
+      "accountsTitle": "Konten",
+      "accountsDescription": "Alle Workspaces und Kontodaten",
+      "usersTitle": "Benutzer",
+      "usersDescription": "Benutzerprofile und Authentifizierungsdaten",
+      "organizationsTitle": "Organisationen",
+      "organizationsDescription": "Organisationen und ihre Einstellungen",
+      "projectsTitle": "Projekte",
+      "projectsDescription": "Projekte und projektspezifische Konfiguration",
+      "rolesTitle": "Rollen",
+      "rolesDescription": "Rollen und Rollenzuweisungen",
+      "groupsTitle": "Gruppen",
+      "groupsDescription": "Gruppen und Gruppenmitgliedschaft",
+      "permissionsTitle": "Berechtigungen",
+      "permissionsDescription": "Berechtigungen und Ressourcenzugriff",
+      "sessionsTitle": "Sitzungen",
+      "sessionsDescription": "Aktive Sitzungen und Anmeldeverlauf"
+    }
+  },
   "dashboard": {
     "navigation": {
       "apiKeys": "API-Schlüssel",
@@ -519,6 +546,7 @@
       },
       "categories": {
         "projects": "Projekte",
+        "projectApps": "Projekt-Apps",
         "users": "Benutzer",
         "roles": "Rollen",
         "groups": "Gruppen",
@@ -534,6 +562,9 @@
         "createProject": "Projekt erstellen",
         "editProject": "Projekt bearbeiten",
         "deleteProject": "Projekt löschen",
+        "createProjectApp": "Projekt-App erstellen",
+        "editProjectApp": "Projekt-App bearbeiten",
+        "deleteProjectApp": "Projekt-App löschen",
         "createUser": "Benutzer erstellen",
         "editUser": "Benutzer bearbeiten",
         "deleteUser": "Benutzer löschen",

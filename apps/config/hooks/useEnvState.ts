@@ -14,7 +14,7 @@ export function useEnvState() {
   const [data, setData] = useState<EnvStateResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<EnvCategoryId>('docker');
+  const [activeTab, setActiveTab] = useState<EnvCategoryId>('main');
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [editingMulti, setEditingMulti] = useState<Record<string, string[]>>({});
   const [saving, setSaving] = useState<string | null>(null);
@@ -209,74 +209,68 @@ export function useEnvState() {
     }
   }, []);
 
-  const handleTestRedis = useCallback(
-    async (host: string, port?: string, password?: string) => {
-      const hostTrim = host?.trim() ?? '';
-      if (!hostTrim) {
+  const handleTestRedis = useCallback(async (host: string, port?: string, password?: string) => {
+    const hostTrim = host?.trim() ?? '';
+    if (!hostTrim) {
+      setTestRedisStatus('error');
+      setTestRedisMessage('REDIS_HOST is required');
+      return;
+    }
+    setTestRedisStatus('loading');
+    setTestRedisMessage('');
+    try {
+      const res = await fetch('/api/env/test-redis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host: hostTrim,
+          port: port?.trim() || undefined,
+          password: password?.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        setTestRedisStatus('success');
+        setTestRedisMessage('Connection successful');
+      } else {
         setTestRedisStatus('error');
-        setTestRedisMessage('REDIS_HOST is required');
-        return;
+        setTestRedisMessage(json.error ?? 'Connection failed');
       }
-      setTestRedisStatus('loading');
-      setTestRedisMessage('');
-      try {
-        const res = await fetch('/api/env/test-redis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            host: hostTrim,
-            port: port?.trim() || undefined,
-            password: password?.trim() || undefined,
-          }),
-        });
-        const json = await res.json();
-        if (json.ok) {
-          setTestRedisStatus('success');
-          setTestRedisMessage('Connection successful');
-        } else {
-          setTestRedisStatus('error');
-          setTestRedisMessage(json.error ?? 'Connection failed');
-        }
-      } catch (e) {
-        setTestRedisStatus('error');
-        setTestRedisMessage(e instanceof Error ? e.message : 'Request failed');
-      }
-    },
-    []
-  );
+    } catch (e) {
+      setTestRedisStatus('error');
+      setTestRedisMessage(e instanceof Error ? e.message : 'Request failed');
+    }
+  }, []);
 
-  const handleTestGithubOAuth = useCallback(
-    async (clientId: string, clientSecret: string) => {
-      const idTrim = clientId?.trim() ?? '';
-      const secretTrim = clientSecret?.trim() ?? '';
-      if (!idTrim || !secretTrim) {
+  const handleTestGithubOAuth = useCallback(async (clientId: string, clientSecret: string) => {
+    const idTrim = clientId?.trim() ?? '';
+    const secretTrim = clientSecret?.trim() ?? '';
+    if (!idTrim || !secretTrim) {
+      setTestGithubOAuthStatus('error');
+      setTestGithubOAuthMessage('Client ID and Client Secret are required');
+      return;
+    }
+    setTestGithubOAuthStatus('loading');
+    setTestGithubOAuthMessage('');
+    try {
+      const res = await fetch('/api/env/test-github-oauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: idTrim, clientSecret: secretTrim }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        setTestGithubOAuthStatus('success');
+        setTestGithubOAuthMessage('Credentials accepted by GitHub');
+      } else {
         setTestGithubOAuthStatus('error');
-        setTestGithubOAuthMessage('Client ID and Client Secret are required');
-        return;
+        setTestGithubOAuthMessage(json.error ?? 'GitHub OAuth check failed');
       }
-      setTestGithubOAuthStatus('loading');
-      setTestGithubOAuthMessage('');
-      try {
-        const res = await fetch('/api/env/test-github-oauth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId: idTrim, clientSecret: secretTrim }),
-        });
-        const json = await res.json();
-        if (json.ok) {
-          setTestGithubOAuthStatus('success');
-          setTestGithubOAuthMessage('Credentials accepted by GitHub');
-        } else {
-          setTestGithubOAuthStatus('error');
-          setTestGithubOAuthMessage(json.error ?? 'GitHub OAuth check failed');
-        }
-      } catch (e) {
-        setTestGithubOAuthStatus('error');
-        setTestGithubOAuthMessage(e instanceof Error ? e.message : 'Request failed');
-      }
-    },
-    []
-  );
+    } catch (e) {
+      setTestGithubOAuthStatus('error');
+      setTestGithubOAuthMessage(e instanceof Error ? e.message : 'Request failed');
+    }
+  }, []);
 
   const handleTestEmail = useCallback(
     async (toEmail: string, getEmailVars: () => Record<string, string>) => {

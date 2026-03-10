@@ -30,10 +30,13 @@ function useMatchesCompactBreakpoint() {
     const mq = window.matchMedia(
       `(min-width: ${COMPACT_MIN_PX}px) and (max-width: ${COMPACT_MAX_PX}px)`
     );
-    setMatches(mq.matches);
     const listener = () => setMatches(mq.matches);
     mq.addEventListener('change', listener);
-    return () => mq.removeEventListener('change', listener);
+    const id = setTimeout(() => setMatches(mq.matches), 0);
+    return () => {
+      clearTimeout(id);
+      mq.removeEventListener('change', listener);
+    };
   }, []);
 
   return matches;

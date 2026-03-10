@@ -256,9 +256,7 @@ export function VarList({
                     <div className="var-name-row">
                       <span className="var-name">Send test email to</span>
                     </div>
-                    <div className="depends-on">
-                      Recipient address for the test email.
-                    </div>
+                    <div className="depends-on">Recipient address for the test email.</div>
                   </div>
                   <div className="input-cell">
                     <div className="input-wrapper">

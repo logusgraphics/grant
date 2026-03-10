@@ -1,0 +1,137 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import {
+  Activity,
+  Building2,
+  FolderKanban,
+  Info,
+  KeyRound,
+  Shield,
+  User,
+  Users,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+
+const STORAGE_KEY = 'grant-demo-dialog-seen';
+
+const DEMO_RESET_ITEMS = [
+  { key: 'accounts' as const, Icon: Building2 },
+  { key: 'users' as const, Icon: User },
+  { key: 'organizations' as const, Icon: Building2 },
+  { key: 'projects' as const, Icon: FolderKanban },
+  { key: 'roles' as const, Icon: Shield },
+  { key: 'groups' as const, Icon: Users },
+  { key: 'permissions' as const, Icon: KeyRound },
+  { key: 'sessions' as const, Icon: Activity },
+] as const;
+
+export function DemoModeDialog() {
+  const t = useTranslations('demo');
+  const [open, setOpen] = useState(false);
+
+  const enabled = process.env.NEXT_PUBLIC_DEMO_MODE_ENABLED === 'true';
+  const schedule = process.env.NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE;
+
+  useEffect(() => {
+    if (!enabled) return;
+    let shouldOpen = false;
+    try {
+      const seen = typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_KEY);
+      shouldOpen = !seen;
+    } catch {
+      // ignore localStorage errors
+    }
+    if (shouldOpen) {
+      const id = setTimeout(() => setOpen(true), 0);
+      return () => clearTimeout(id);
+    }
+  }, [enabled]);
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(STORAGE_KEY, 'true');
+        }
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  if (!enabled) return null;
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+        className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-900 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950/50 dark:hover:text-sky-100"
+        aria-label={t('dialogButton')}
+      >
+        <Info className="h-[1rem] w-[1rem] shrink-0" />
+        {t('dialogButton')}
+      </Button>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          className="sm:max-w-xl"
+          hideCloseButton
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-sky-600 dark:text-sky-400 shrink-0" />
+              {t('bannerTitle')}
+            </DialogTitle>
+            <DialogDescription asChild>
+              <p className="text-muted-foreground text-sm pt-1">
+                {schedule
+                  ? t('bannerMessageWithSchedule', { schedule })
+                  : t('bannerMessageWithoutSchedule')}
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border bg-muted/50 p-4">
+            <p className="text-sm font-medium mb-2">{t('resetIncludes.title')}</p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+              {DEMO_RESET_ITEMS.map(({ key, Icon }) => (
+                <Item key={key} variant="default" size="sm">
+                  <ItemMedia variant="icon">
+                    <Icon className="size-4 text-muted-foreground" />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>{t(`resetIncludes.${key}Title`)}</ItemTitle>
+                    <ItemDescription>{t(`resetIncludes.${key}Description`)}</ItemDescription>
+                  </ItemContent>
+                </Item>
+              ))}
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-end">
+            <DialogClose asChild>
+              <Button>{t('understandButton')}</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

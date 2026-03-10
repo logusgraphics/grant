@@ -715,6 +715,21 @@ export const JOB_CONFIG = {
 } as const;
 
 // ============================================================================
+// Demo Mode Configuration
+// ============================================================================
+
+export const DEMO_MODE_CONFIG = {
+  /** Enable demo mode for limited-usage deployments */
+  enabled: getEnvBoolean('DEMO_MODE_ENABLED', false),
+
+  /**
+   * Cron schedule for automatic demo database refresh.
+   * Default: every 2 days at midnight.
+   */
+  dbRefreshSchedule: getEnv('DEMO_MODE_DB_REFRESH_SCHEDULE', '0 0 */2 * *'),
+} as const;
+
+// ============================================================================
 // System Constants
 // ============================================================================
 
@@ -927,6 +942,7 @@ export const config = {
   storage: STORAGE_CONFIG,
   privacy: PRIVACY_CONFIG,
   jobs: JOB_CONFIG,
+  demoMode: DEMO_MODE_CONFIG,
   system: SYSTEM_CONSTANTS,
   cors: CORS_CONFIG,
   helmet: HELMET_CONFIG,

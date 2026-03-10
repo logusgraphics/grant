@@ -13,8 +13,8 @@ import {
 import * as dotenv from 'dotenv';
 import { and, eq, isNull } from 'drizzle-orm';
 
-import { closeDatabase, initializeDBConnection } from '@/connection';
-import { groupPermissions, groups, permissions, resources, roleGroups, roles } from '@/schemas';
+import { closeDatabase, initializeDBConnection } from '../connection';
+import { groupPermissions, groups, permissions, resources, roleGroups, roles } from '../schemas';
 
 // Load environment variables
 dotenv.config();
@@ -144,7 +144,7 @@ export async function seedPermissions(options?: SeedOptions) {
   }
 }
 
-async function seedAll(db: ReturnType<typeof initializeDBConnection>): Promise<SeedResult> {
+export async function seedAll(db: ReturnType<typeof initializeDBConnection>): Promise<SeedResult> {
   const result: SeedResult = {
     resources: { created: 0, updated: 0, skipped: 0 },
     permissions: { created: 0, updated: 0, skipped: 0 },

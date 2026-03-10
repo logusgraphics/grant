@@ -140,6 +140,33 @@
       "table": "Table View"
     }
   },
+  "demo": {
+    "bannerTitle": "Demo environment",
+    "bannerMessageWithSchedule": "This is a free demo instance. Data (accounts, projects, etc.) may be reset periodically according to the schedule: {schedule}.",
+    "bannerMessageWithoutSchedule": "This is a free demo instance. Data (accounts, projects, etc.) may be reset periodically.",
+    "dismiss": "Dismiss",
+    "dialogButton": "Demo mode",
+    "understandButton": "I understand",
+    "resetIncludes": {
+      "title": "The following data is cleared on each reset:",
+      "accountsTitle": "Accounts",
+      "accountsDescription": "All workspaces and account data",
+      "usersTitle": "Users",
+      "usersDescription": "User profiles and authentication data",
+      "organizationsTitle": "Organizations",
+      "organizationsDescription": "Organizations and their settings",
+      "projectsTitle": "Projects",
+      "projectsDescription": "Projects and project-level configuration",
+      "rolesTitle": "Roles",
+      "rolesDescription": "Roles and role assignments",
+      "groupsTitle": "Groups",
+      "groupsDescription": "Groups and group membership",
+      "permissionsTitle": "Permissions",
+      "permissionsDescription": "Permissions and resource access",
+      "sessionsTitle": "Sessions",
+      "sessionsDescription": "Active sessions and login history"
+    }
+  },
   "dashboard": {
     "navigation": {
       "apiKeys": "API Keys",
@@ -519,6 +546,7 @@
       },
       "categories": {
         "projects": "Projects",
+        "projectApps": "Project Apps",
         "users": "Users",
         "roles": "Roles",
         "groups": "Groups",
@@ -534,6 +562,9 @@
         "createProject": "Create Project",
         "editProject": "Edit Project",
         "deleteProject": "Delete Project",
+        "createProjectApp": "Create Project App",
+        "editProjectApp": "Edit Project App",
+        "deleteProjectApp": "Delete Project App",
         "createUser": "Create User",
         "editUser": "Edit User",
         "deleteUser": "Delete User",

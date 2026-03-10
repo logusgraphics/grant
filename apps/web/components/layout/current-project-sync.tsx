@@ -30,7 +30,7 @@ export function CurrentProjectSync() {
     skip: !scope || !projectId,
   });
 
-  const project = projectId ? projects[0] ?? null : null;
+  const project = projectId ? (projects[0] ?? null) : null;
 
   useEffect(() => {
     setCurrentProject(project);

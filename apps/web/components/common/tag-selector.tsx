@@ -53,12 +53,18 @@ export function TagSelector({ selectedTagIds, onTagIdsChange }: TagSelectorProps
       size="default"
       className={cn(
         'w-full sm:w-auto sm:aspect-square sm:p-2 min-[1600px]:aspect-auto min-[1600px]:px-4 min-[1600px]:py-2',
-        hasSelectedTags && 'sm:border-2 sm:border-primary min-[1600px]:border min-[1600px]:border-input',
+        hasSelectedTags &&
+          'sm:border-2 sm:border-primary min-[1600px]:border min-[1600px]:border-input'
       )}
     >
       <div className="flex items-center w-full sm:justify-center min-[1600px]:justify-start">
         <div className={cn('flex items-center', 'gap-2 sm:gap-0 min-[1600px]:gap-2')}>
-          <Tag className={cn('size-4', hasSelectedTags && 'sm:text-primary min-[1600px]:text-foreground')} />
+          <Tag
+            className={cn(
+              'size-4',
+              hasSelectedTags && 'sm:text-primary min-[1600px]:text-foreground'
+            )}
+          />
           {hasSelectedTags ? (
             <div className="flex items-center gap-1">
               <span className="text-sm sm:hidden min-[1600px]:inline">

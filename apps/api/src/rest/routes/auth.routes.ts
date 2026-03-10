@@ -470,8 +470,9 @@ export function createAuthRoutes(context: RequestContext) {
           entryParams = await context.handlers.projectOAuth.getProjectEntryParamsFromState(state);
         }
         const locale =
-          entryParams?.locale && config.i18n.supportedLocales.includes(entryParams.locale)
-            ? entryParams.locale
+          entryParams?.locale &&
+          (config.i18n.supportedLocales as readonly string[]).includes(entryParams.locale)
+            ? (entryParams.locale as 'en' | 'de')
             : config.i18n.defaultLocale;
         if (entryParams) {
           const entryUrl = new URL(`${frontendUrl}/${locale}/auth/project`);

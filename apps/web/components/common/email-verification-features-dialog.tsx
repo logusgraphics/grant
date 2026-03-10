@@ -44,6 +44,14 @@ const featureGroups: FeatureGroup[] = [
     ],
   },
   {
+    category: 'projectApps',
+    features: [
+      { name: 'createProjectApp', personal: 'blocked', organization: 'blocked' },
+      { name: 'editProjectApp', personal: 'blocked', organization: 'blocked' },
+      { name: 'deleteProjectApp', personal: 'blocked', organization: 'blocked' },
+    ],
+  },
+  {
     category: 'users',
     features: [
       { name: 'createUser', personal: 'allowed', organization: 'blocked' },

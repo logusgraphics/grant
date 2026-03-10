@@ -111,9 +111,12 @@ export const githubOAuthTestParamsSchema = z.object({
   clientSecret: z.string().trim().min(1, 'GITHUB_CLIENT_SECRET is required'),
 });
 
-const emailSchema = z.string().trim().refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
-  message: 'Must be a valid email address',
-});
+const emailSchema = z
+  .string()
+  .trim()
+  .refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+    message: 'Must be a valid email address',
+  });
 
 /** Email provider test params for test-email endpoint */
 export const emailTestParamsSchema = z.object({
@@ -145,7 +148,9 @@ export const emailTestParamsSchema = z.object({
       host: z.string().trim().min(1),
       port: z
         .union([z.number(), z.string()])
-        .transform((v) => Math.max(1, Math.min(65535, typeof v === 'string' ? parseInt(v, 10) || 587 : v))),
+        .transform((v) =>
+          Math.max(1, Math.min(65535, typeof v === 'string' ? parseInt(v, 10) || 587 : v))
+        ),
       secure: z.union([z.boolean(), z.string()]).transform((v) => v === true || v === 'true'),
       user: z.string().trim().min(1),
       password: z.string().trim(),
@@ -253,6 +258,7 @@ const schemas: Record<string, z.ZodType<string>> = {
   JOBS_ENABLED: booleanSchema,
   JOBS_DATA_RETENTION_ENABLED: booleanSchema,
   JOBS_SYSTEM_SIGNING_KEY_ROTATION_ENABLED: booleanSchema,
+  DEMO_MODE_ENABLED: booleanSchema,
   JOBS_BULLMQ_ATTEMPTS: positiveIntSchema,
   JOBS_BULLMQ_BACKOFF_DELAY: positiveIntSchema,
   JOBS_BULLMQ_REMOVE_ON_COMPLETE_AGE: positiveIntSchema,

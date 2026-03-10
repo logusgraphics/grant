@@ -70,12 +70,22 @@ export const SYNC_VARS: Record<string, string[]> = {
   SYSTEM_USER_ID: ['packages/@grantjs/database/.env', 'apps/api/.env'],
   AUTH_PROVIDER_VERIFICATION_EXPIRATION_DAYS: ['apps/api/.env', 'apps/web/.env'],
   AUTH_OTP_VALIDITY_MINUTES: ['apps/api/.env', 'apps/web/.env'],
+  DEMO_MODE_ENABLED: ['.env', 'apps/api/.env'],
+  DEMO_MODE_DB_REFRESH_SCHEDULE: ['.env', 'apps/api/.env'],
 };
 
 /** When an API (or other) var is updated, replicate its value to the web app under a different key. */
 export const REPLICATE_TO_WEB: Record<string, { key: string; file: string }> = {
   PRIVACY_ACCOUNT_DELETION_RETENTION_DAYS: {
     key: 'NEXT_PUBLIC_ACCOUNT_DELETION_RETENTION_DAYS',
+    file: 'apps/web/.env',
+  },
+  DEMO_MODE_ENABLED: {
+    key: 'NEXT_PUBLIC_DEMO_MODE_ENABLED',
+    file: 'apps/web/.env',
+  },
+  DEMO_MODE_DB_REFRESH_SCHEDULE: {
+    key: 'NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE',
     file: 'apps/web/.env',
   },
 };
@@ -751,7 +761,8 @@ const META: EnvVarMeta[] = [
     key: 'GRAFANA_ADMIN_PASSWORD',
     category: 'optional',
     label: 'Grafana admin password',
-    description: 'Grafana dashboard login (http://localhost:3001). Add Prometheus (and optionally Jaeger) as data sources in Grafana to view metrics and traces.',
+    description:
+      'Grafana dashboard login (http://localhost:3001). Add Prometheus (and optionally Jaeger) as data sources in Grafana to view metrics and traces.',
     envFiles: ['.env'],
     isPassword: true,
     section: 'Metrics',
@@ -1313,6 +1324,25 @@ const META: EnvVarMeta[] = [
     envFiles: ['apps/api/.env'],
     dependsOn: { key: 'STORAGE_PROVIDER', values: ['s3'] },
     section: 'File Storage',
+  },
+  {
+    key: 'DEMO_MODE_ENABLED',
+    category: 'main',
+    label: 'Demo mode enabled',
+    description:
+      'Enable demo mode for limited-usage deployments. When enabled, the demo database can be reset and reseeded on a schedule.',
+    envFiles: ['.env', 'apps/api/.env'],
+    options: ['true', 'false'],
+    section: 'Demo mode',
+  },
+  {
+    key: 'DEMO_MODE_DB_REFRESH_SCHEDULE',
+    category: 'main',
+    label: 'Demo DB refresh cron',
+    description:
+      'Cron pattern for automatic demo database refresh (default: 0 0 */2 * * = every 2 days at midnight).',
+    envFiles: ['.env', 'apps/api/.env'],
+    section: 'Demo mode',
   },
   {
     key: 'JOBS_ENABLED',
