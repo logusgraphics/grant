@@ -27,7 +27,12 @@ import { useRolesStore } from '@/stores/roles.store';
 
 import { RoleCreateFormValues, createRoleSchema } from './role-types';
 
-export function RoleCreateDialog() {
+export function RoleCreateDialog({
+  triggerAlwaysShowLabel,
+}: {
+  /** When true, trigger label is always visible (e.g. empty state). When false/undefined, toolbar responsive behavior. */
+  triggerAlwaysShowLabel?: boolean;
+} = {}) {
   const scope = useScopeFromParams();
   const { groups, loading: groupsLoading } = useGroups({ scope: scope!, limit: -1 });
   const { tags, loading: tagsLoading } = useTags({ scope: scope!, limit: -1 });
@@ -160,6 +165,7 @@ export function RoleCreateDialog() {
       submittingText="createDialog.submitting"
       onCreate={handleCreate}
       onOpenChange={handleOpenChange}
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
     />
   );
 }

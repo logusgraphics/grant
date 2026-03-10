@@ -20,7 +20,8 @@ import {
 } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useDebounce, useScopeFromParams } from '@/hooks/common';
+import { useDebounce } from '@/hooks/common';
+import { useProjectUserScope } from '@/hooks/common/use-project-user-scope';
 import { useTags } from '@/hooks/tags';
 import { useUserMutations } from '@/hooks/users';
 import { cn } from '@/lib/utils';
@@ -35,7 +36,7 @@ interface UserTagsProps {
 
 export function UserTags({ user }: UserTagsProps) {
   const t = useTranslations('user.tags');
-  const scope = useScopeFromParams();
+  const scope = useProjectUserScope();
 
   const canUpdate = useGrant(ResourceSlug.User, ResourceAction.Update, {
     scope: scope!,
@@ -216,15 +217,17 @@ export function UserTags({ user }: UserTagsProps) {
 
   return (
     <>
-      <div className="rounded-lg border bg-card p-6">
+      <div className="min-w-0 rounded-lg border bg-card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">{t('title')}</h3>
+          <h3 className="text-lg font-semibold shrink-0">{t('title')}</h3>
           <Toolbar
+            alwaysRow
             items={[
               <RefreshButton
                 key="refresh"
                 onRefresh={tagsRefetch ?? undefined}
                 loading={loading}
+                iconOnly
               />,
               (totalPages > 1 || search.length > 0) && (
                 <UserTagSearch key="search" search={search} onSearchChange={handleSearchChange} />
@@ -235,17 +238,19 @@ export function UserTags({ user }: UserTagsProps) {
             ]}
           />
         </div>
-        <DataTable
-          data={tags}
-          columns={columns}
-          loading={loading}
-          emptyState={{
-            icon: <TagIcon />,
-            title: t('empty'),
-            description: t('emptyDescription'),
-          }}
-          skeletonConfig={skeletonConfig}
-        />
+        <div className="min-w-0 overflow-x-auto">
+          <DataTable
+            data={tags}
+            columns={columns}
+            loading={loading}
+            emptyState={{
+              icon: <TagIcon />,
+              title: t('empty'),
+              description: t('emptyDescription'),
+            }}
+            skeletonConfig={skeletonConfig}
+          />
+        </div>
         {totalPages > 1 && (
           <div className="mt-4 border-t">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

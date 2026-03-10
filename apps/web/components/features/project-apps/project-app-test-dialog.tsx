@@ -53,7 +53,10 @@ export function ProjectAppTestDialog() {
   const projectAppToTest = useProjectAppsStore((state) => state.projectAppToTest);
   const setProjectAppToTest = useProjectAppsStore((state) => state.setProjectAppToTest);
 
-  const redirectUris = projectAppToTest?.redirectUris ?? [];
+  const redirectUris = useMemo(
+    () => projectAppToTest?.redirectUris ?? [],
+    [projectAppToTest?.redirectUris]
+  );
   const hasRedirectUris = redirectUris.length > 0;
 
   const form = useForm<TestAppFormValues>({
@@ -86,7 +89,7 @@ export function ProjectAppTestDialog() {
       const first = redirectUris[0];
       form.reset({ redirectUri: first ?? '', scopes: [] });
     }
-  }, [projectAppToTest?.id, hasRedirectUris, redirectUris, form]);
+  }, [projectAppToTest, hasRedirectUris, redirectUris, form]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {

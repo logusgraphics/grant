@@ -25,7 +25,7 @@ export function TagCards() {
         icon: <TagIcon />,
         title: search ? t('noSearchResults.title') : t('noTags.title'),
         description: search ? t('noSearchResults.description') : t('noTags.description'),
-        action: search ? undefined : <TagCreateDialog />,
+        action: search ? undefined : <TagCreateDialog triggerAlwaysShowLabel />,
       }}
       skeleton={{
         component: <TagCardSkeleton />,

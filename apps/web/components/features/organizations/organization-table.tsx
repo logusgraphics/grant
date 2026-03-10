@@ -117,7 +117,7 @@ export function OrganizationTable() {
         icon: <Building2 />,
         title: search ? t('noSearchResults.title') : t('noOrganizations.title'),
         description: search ? t('noSearchResults.description') : t('noOrganizations.description'),
-        action: search ? undefined : <OrganizationCreateDialog />,
+        action: search ? undefined : <OrganizationCreateDialog triggerAlwaysShowLabel />,
       }}
       skeletonConfig={skeletonConfig}
     />

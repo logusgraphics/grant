@@ -129,7 +129,7 @@ export function ResourceTable() {
         icon: <Package />,
         title: search ? t('noSearchResults.title') : t('noResources.title'),
         description: search ? t('noSearchResults.description') : t('noResources.description'),
-        action: search ? undefined : <ResourceCreateDialog />,
+        action: search ? undefined : <ResourceCreateDialog triggerAlwaysShowLabel />,
       }}
       actionsColumn={{
         render: (resource) => <ResourceActions resource={resource} />,

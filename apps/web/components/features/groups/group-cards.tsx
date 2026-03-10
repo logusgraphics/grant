@@ -41,7 +41,7 @@ export function GroupCards() {
         icon: <GroupIcon />,
         title: search ? t('noSearchResults.title') : t('noGroups.title'),
         description: search ? t('noSearchResults.description') : t('noGroups.description'),
-        action: search ? undefined : <GroupCreateDialog />,
+        action: search ? undefined : <GroupCreateDialog triggerAlwaysShowLabel />,
       }}
       skeleton={{
         component: <GroupCardSkeleton />,

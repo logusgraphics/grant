@@ -48,13 +48,13 @@ export function UserDetailViewer() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <UserInfo user={user} />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid min-w-0 gap-6 min-[1200px]:grid-cols-2">
         <UserRoles user={user} />
         <UserTags user={user} />
       </div>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid min-w-0 gap-6 min-[1200px]:grid-cols-2">
         <UserGroups user={user} />
         <UserPermissions user={user} />
       </div>

@@ -815,7 +815,8 @@
       "userId": "User ID",
       "created": "Created",
       "updated": "Updated",
-      "authMethods": "Authentication methods"
+      "authMethods": "Authentication methods",
+      "metadata": "Metadata"
     },
     "roles": {
       "title": "Roles",
@@ -876,6 +877,10 @@
     },
     "apiKeys": {
       "title": "API Keys",
+      "view": {
+        "card": "Cards",
+        "table": "Table"
+      },
       "empty": "No API keys found",
       "emptyDescription": "Get started by creating your first API key",
       "loading": "Loading API keys...",
@@ -902,7 +907,7 @@
         "status": "Status",
         "expiresAt": "Expires At",
         "lastUsedAt": "Last Used",
-        "createdAt": "Created At"
+        "audit": "Audit"
       },
       "status": {
         "active": "Active",
@@ -3021,6 +3026,10 @@
   },
   "signingKeys": {
     "title": "Signing Keys",
+    "view": {
+      "card": "Cards",
+      "table": "Table"
+    },
     "toolbar": {
       "rotate": "Rotate key",
       "create": "Create signing key"
@@ -3030,6 +3039,7 @@
       "active": "Active",
       "activeYes": "Active",
       "activeNo": "Rotated",
+      "audit": "Audit",
       "createdAt": "Created",
       "rotatedAt": "Rotated at",
       "publicKey": "Public key",

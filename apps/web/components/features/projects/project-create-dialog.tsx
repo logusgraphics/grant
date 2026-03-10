@@ -25,9 +25,14 @@ import { createProjectSchema, type ProjectCreateFormValues } from './project-typ
 interface ProjectCreateDialogProps {
   /** When true, no trigger is rendered; dialog is opened only via store (e.g. from project switcher). */
   hideTrigger?: boolean;
+  /** When true, trigger label is always visible (e.g. empty state). When false/undefined, toolbar responsive behavior. */
+  triggerAlwaysShowLabel?: boolean;
 }
 
-export function ProjectCreateDialog({ hideTrigger }: ProjectCreateDialogProps = {}) {
+export function ProjectCreateDialog({
+  hideTrigger,
+  triggerAlwaysShowLabel,
+}: ProjectCreateDialogProps = {}) {
   const grantScope = useScopeFromParams();
   const projectScope = useProjectScope();
   const { tags, loading: tagsLoading } = useTags({ scope: grantScope!, limit: -1 });
@@ -118,6 +123,7 @@ export function ProjectCreateDialog({ hideTrigger }: ProjectCreateDialogProps = 
       submittingText="createDialog.submitting"
       onCreate={handleSubmit}
       onOpenChange={handleOpenChange}
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
       hideTrigger={hideTrigger}
     />
   );

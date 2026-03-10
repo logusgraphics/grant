@@ -136,7 +136,7 @@ export function UserTable() {
         icon: <UserPlus />,
         title: search ? t('noSearchResults.title') : t('noUsers.title'),
         description: search ? t('noSearchResults.description') : t('noUsers.description'),
-        action: search ? undefined : <UserCreateDialog />,
+        action: search ? undefined : <UserCreateDialog triggerAlwaysShowLabel />,
       }}
       actionsColumn={{
         render: (user) => <UserActions user={user} />,

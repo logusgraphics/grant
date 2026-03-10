@@ -41,7 +41,7 @@ export function RoleCards() {
         icon: <Shield />,
         title: search ? t('noSearchResults.title') : t('noRoles.title'),
         description: search ? t('noSearchResults.description') : t('noRoles.description'),
-        action: search ? undefined : <RoleCreateDialog />,
+        action: search ? undefined : <RoleCreateDialog triggerAlwaysShowLabel />,
       }}
       skeleton={{
         component: <RoleCardSkeleton />,

@@ -1,6 +1,6 @@
 'use client';
 
-import { LucideIcon } from 'lucide-react';
+import { LayoutTemplate, LucideIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,9 +23,11 @@ interface ViewSwitcherProps {
   options: ViewOption[];
 }
 
+/** Icon shown on the trigger button. LayoutTemplate = "switch view/layout" to avoid duplicating section icons (e.g. LayoutGrid for project-apps). */
+const TRIGGER_ICON = LayoutTemplate;
+
 export function ViewSwitcher({ currentView, onViewChange, options }: ViewSwitcherProps) {
   const currentOption = options.find((option) => option.value === currentView) || options[0];
-  const CurrentIcon = currentOption.icon;
 
   const tooltipText = currentOption.label;
 
@@ -37,7 +39,7 @@ export function ViewSwitcher({ currentView, onViewChange, options }: ViewSwitche
     >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
-          <CurrentIcon className="size-4" />
+          <TRIGGER_ICON className="size-4" />
           <span className="sm:hidden min-[1600px]:inline">{currentOption.label}</span>
         </div>
       </div>

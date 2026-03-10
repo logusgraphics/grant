@@ -8,9 +8,16 @@ export interface ApiKeySearchProps {
   search: string;
   onSearchChange: (search: string) => void;
   show?: boolean;
+  /** When true, render as icon+popover only (no full-width bar). */
+  forceCompact?: boolean;
 }
 
-export function ApiKeySearch({ search, onSearchChange, show = true }: ApiKeySearchProps) {
+export function ApiKeySearch({
+  search,
+  onSearchChange,
+  show = true,
+  forceCompact = false,
+}: ApiKeySearchProps) {
   const t = useTranslations('user.apiKeys');
 
   if (!show) {
@@ -18,6 +25,11 @@ export function ApiKeySearch({ search, onSearchChange, show = true }: ApiKeySear
   }
 
   return (
-    <Search search={search} onSearchChange={onSearchChange} placeholder={t('search.placeholder')} />
+    <Search
+      search={search}
+      onSearchChange={onSearchChange}
+      placeholder={t('search.placeholder')}
+      forceCompact={forceCompact}
+    />
   );
 }

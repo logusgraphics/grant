@@ -6,7 +6,7 @@ import { Scope } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
 
 import { useScopeFromParams } from '@/hooks/common';
-import { useUserStore } from '@/stores/user.store';
+import { useApiKeysStore } from '@/stores/api-keys.store';
 
 import { ApiKeyPagination } from './api-key-pagination';
 import { ApiKeyToolbar } from './api-key-toolbar';
@@ -27,8 +27,8 @@ export function ApiKeys({ scope: scopeProp }: ApiKeysProps) {
   const scope = scopeProp ?? scopeFromParams;
 
   const t = useTranslations('user.apiKeys');
-  const limit = useUserStore((state) => state.apiKeysLimit);
-  const totalCount = useUserStore((state) => state.apiKeysTotalCount);
+  const limit = useApiKeysStore((state) => state.limit);
+  const totalCount = useApiKeysStore((state) => state.totalCount);
 
   const canQuery = useGrant(ResourceSlug.ApiKey, ResourceAction.Query, {
     scope: scope!,

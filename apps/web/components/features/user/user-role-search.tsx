@@ -6,9 +6,16 @@ interface UserRoleSearchProps {
   search: string;
   onSearchChange: (search: string) => void;
   show?: boolean;
+  /** When true, render as icon+popover only (no full-width bar). */
+  forceCompact?: boolean;
 }
 
-export function UserRoleSearch({ search, onSearchChange, show = true }: UserRoleSearchProps) {
+export function UserRoleSearch({
+  search,
+  onSearchChange,
+  show = true,
+  forceCompact = false,
+}: UserRoleSearchProps) {
   const t = useTranslations('user.roles');
 
   if (!show) {
@@ -16,6 +23,11 @@ export function UserRoleSearch({ search, onSearchChange, show = true }: UserRole
   }
 
   return (
-    <Search search={search} onSearchChange={onSearchChange} placeholder={t('search.placeholder')} />
+    <Search
+      search={search}
+      onSearchChange={onSearchChange}
+      placeholder={t('search.placeholder')}
+      forceCompact={forceCompact}
+    />
   );
 }

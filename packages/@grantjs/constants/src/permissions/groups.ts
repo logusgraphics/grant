@@ -197,6 +197,7 @@ const GROUPS: Record<GroupKey, GroupTemplate> = {
       ResourceAction.Update,
       ResourceAction.Delete,
       ResourceAction.Query,
+      ResourceAction.Revoke,
     ],
     assignedRoles: [RoleKey.PersonalAccountOwner, RoleKey.OrganizationAccountOwner],
   },

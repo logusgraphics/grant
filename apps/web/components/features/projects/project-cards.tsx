@@ -35,7 +35,7 @@ export function ProjectCards() {
         icon: <FolderOpen />,
         title: hasActiveFilters ? t('noSearchResults.title') : t('empty.title'),
         description: hasActiveFilters ? t('noSearchResults.description') : t('empty.description'),
-        action: hasActiveFilters ? undefined : <ProjectCreateDialog />,
+        action: hasActiveFilters ? undefined : <ProjectCreateDialog triggerAlwaysShowLabel />,
       }}
       skeleton={{
         component: <ProjectCardSkeleton />,

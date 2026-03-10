@@ -21,7 +21,12 @@ import { useTagsStore } from '@/stores/tags.store';
 
 import { TagCreateFormValues, createTagSchema } from './tag-types';
 
-export function TagCreateDialog() {
+export function TagCreateDialog({
+  triggerAlwaysShowLabel,
+}: {
+  /** When true, trigger label is always visible (e.g. empty state). When false/undefined, toolbar responsive behavior. */
+  triggerAlwaysShowLabel?: boolean;
+} = {}) {
   const t = useTranslations('tags');
   const scope = useScopeFromParams();
   const { loading: tagsLoading } = useTags({ scope: scope!, limit: -1 });
@@ -110,6 +115,7 @@ export function TagCreateDialog() {
       submittingText="createDialog.submitting"
       onCreate={handleCreate}
       onOpenChange={handleOpenChange}
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
     />
   );
 }

@@ -6,9 +6,16 @@ interface UserTagSearchProps {
   search: string;
   onSearchChange: (search: string) => void;
   show?: boolean;
+  /** When true, render as icon+popover only (no full-width bar). */
+  forceCompact?: boolean;
 }
 
-export function UserTagSearch({ search, onSearchChange, show = true }: UserTagSearchProps) {
+export function UserTagSearch({
+  search,
+  onSearchChange,
+  show = true,
+  forceCompact = false,
+}: UserTagSearchProps) {
   const t = useTranslations('user.tags');
 
   if (!show) {
@@ -16,6 +23,11 @@ export function UserTagSearch({ search, onSearchChange, show = true }: UserTagSe
   }
 
   return (
-    <Search search={search} onSearchChange={onSearchChange} placeholder={t('search.placeholder')} />
+    <Search
+      search={search}
+      onSearchChange={onSearchChange}
+      placeholder={t('search.placeholder')}
+      forceCompact={forceCompact}
+    />
   );
 }

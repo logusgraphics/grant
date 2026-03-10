@@ -85,7 +85,7 @@ export function TagTable() {
         icon: <TagIcon />,
         title: t('noTags.title'),
         description: t('noTags.description'),
-        action: <TagCreateDialog />,
+        action: <TagCreateDialog triggerAlwaysShowLabel />,
       }}
       actionsColumn={{
         render: (tag) => <TagActions tag={tag} />,

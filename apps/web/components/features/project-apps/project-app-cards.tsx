@@ -45,7 +45,7 @@ export function ProjectAppCards() {
         icon: <LayoutGrid />,
         title: hasActiveFilters ? t('noSearchResults.title') : t('empty.title'),
         description: hasActiveFilters ? t('noSearchResults.description') : t('empty.description'),
-        action: hasActiveFilters ? undefined : <ProjectAppCreateDialog />,
+        action: hasActiveFilters ? undefined : <ProjectAppCreateDialog triggerAlwaysShowLabel />,
       }}
       skeleton={{
         component: <ProjectAppCardSkeleton />,

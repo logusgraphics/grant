@@ -43,6 +43,8 @@ export interface ApiKeyCreateDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onApiKeyCreated?: (apiKey: { clientId: string; clientSecret: string } | null) => void;
+  /** When true, trigger always shows the label (e.g. when used as empty-state action). */
+  triggerAlwaysShowLabel?: boolean;
 }
 
 export function ApiKeyCreateDialog({
@@ -50,6 +52,7 @@ export function ApiKeyCreateDialog({
   open,
   onOpenChange,
   onApiKeyCreated,
+  triggerAlwaysShowLabel,
 }: ApiKeyCreateDialogProps) {
   const t = useTranslations();
   const scopeFromParams = useScopeFromParams();
@@ -206,6 +209,7 @@ export function ApiKeyCreateDialog({
       submittingText="createDialog.submitting"
       onCreate={handleCreate}
       onOpenChange={handleOpenChange}
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
     />
   );
 }

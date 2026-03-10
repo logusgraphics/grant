@@ -66,6 +66,8 @@ export interface ProjectAppCreateDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onProjectAppCreated?: (result: CreateProjectAppResult | null) => void;
+  /** When true, trigger label is always visible (e.g. empty state). When false/undefined, toolbar responsive behavior. */
+  triggerAlwaysShowLabel?: boolean;
 }
 
 export function ProjectAppCreateDialog({
@@ -73,6 +75,7 @@ export function ProjectAppCreateDialog({
   open,
   onOpenChange,
   onProjectAppCreated,
+  triggerAlwaysShowLabel,
 }: ProjectAppCreateDialogProps) {
   const t = useTranslations('projectApps');
   const scopeFromParams = useScopeFromParams();
@@ -252,6 +255,7 @@ export function ProjectAppCreateDialog({
       submittingText="createDialog.submitting"
       onCreate={handleCreate}
       onOpenChange={handleOpenChange}
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
     />
   );
 }

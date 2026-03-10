@@ -16,6 +16,8 @@ export interface SearchProps {
   onSearchChange: (search: string) => void;
   placeholder: string;
   debounceDelay?: number;
+  /** When true, always show compact icon+popover (no full-width bar). Use in compact toolbars e.g. user detail cards. */
+  forceCompact?: boolean;
   className?: string;
 }
 
@@ -47,6 +49,7 @@ export function Search({
   onSearchChange,
   placeholder,
   debounceDelay = 300,
+  forceCompact = false,
   className = 'pl-10 w-full sm:w-[200px]',
 }: SearchProps) {
   const [localValue, setLocalValue] = useState(search);
@@ -55,7 +58,8 @@ export function Search({
   const compactInputRef = useRef<HTMLInputElement>(null);
   const wasFocusedRef = useRef(false);
   const debouncedSearchChange = useDebounce(onSearchChange, debounceDelay);
-  const isCompact = useMatchesCompactBreakpoint();
+  const matchesCompactBreakpoint = useMatchesCompactBreakpoint();
+  const isCompact = forceCompact || matchesCompactBreakpoint;
 
   // Sync local value with prop when it changes externally (e.g., from store reset)
   useEffect(() => {
@@ -139,13 +143,19 @@ export function Search({
 
   return (
     <>
-      {/* Full search bar: mobile (0–640px) and desktop (1201px+) */}
-      <div className="relative w-full hidden max-[640px]:block min-[641px]:max-[1200px]:hidden min-[1201px]:block">
-        {inputEl(inputRef)}
-      </div>
+      {/* Full search bar: mobile (0–640px) and desktop (1201px+) — hidden when forceCompact */}
+      {!forceCompact && (
+        <div className="relative w-full hidden max-[640px]:block min-[641px]:max-[1200px]:hidden min-[1201px]:block">
+          {inputEl(inputRef)}
+        </div>
+      )}
 
-      {/* Compact: button + dropdown, 641–1200px only (toolbar harmonizes with breadcrumbs) */}
-      <div className="hidden min-[641px]:max-[1200px]:block min-[1201px]:hidden">
+      {/* Compact: button + dropdown; when forceCompact show at all breakpoints */}
+      <div
+        className={
+          forceCompact ? 'block' : 'hidden min-[641px]:max-[1200px]:block min-[1201px]:hidden'
+        }
+      >
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -153,7 +163,11 @@ export function Search({
                 <Button
                   variant="outline"
                   size="default"
-                  className="w-full sm:w-auto sm:size-9 sm:min-w-9 sm:max-w-9 sm:p-2 min-[1600px]:size-auto min-[1600px]:min-w-0 min-[1600px]:max-w-none min-[1600px]:aspect-auto min-[1600px]:px-4 min-[1600px]:py-2"
+                  className={cn(
+                    forceCompact
+                      ? 'size-9 min-w-9 max-w-9 p-2'
+                      : 'w-full sm:w-auto sm:size-9 sm:min-w-9 sm:max-w-9 sm:p-2 min-[1600px]:size-auto min-[1600px]:min-w-0 min-[1600px]:max-w-none min-[1600px]:aspect-auto min-[1600px]:px-4 min-[1600px]:py-2'
+                  )}
                   aria-label={placeholder}
                 >
                   <SearchIcon className="size-4" />

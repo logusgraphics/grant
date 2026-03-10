@@ -1,19 +1,8 @@
-import { ApiKeySortableField, RoleSortableField, SortOrder, TagSortField } from '@grantjs/schema';
+import { RoleSortableField, SortOrder, TagSortField } from '@grantjs/schema';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 interface UserState {
-  // API Keys state
-  apiKeysPage: number;
-  apiKeysLimit: number;
-  apiKeysTotalCount: number;
-  apiKeysSearch: string;
-  apiKeysSort: { field: ApiKeySortableField; order: SortOrder };
-  apiKeysSecretDialogOpen: boolean;
-  createdApiKey: { clientId: string; clientSecret: string } | null;
-  apiKeysLoading: boolean;
-  apiKeysRefetch: (() => void) | null;
-
   // Roles state
   rolesPage: number;
   rolesLimit: number;
@@ -45,24 +34,6 @@ interface UserState {
   permissionsLimit: number;
   permissionsLoading: boolean;
   permissionsRefetch: (() => void) | null;
-
-  // Signing Keys state
-  signingKeysLoading: boolean;
-  signingKeysRefetch: (() => void) | null;
-  signingKeysHasKeys: boolean;
-  signingKeysRotateDialogOpen: boolean;
-
-  // Actions - API Keys
-  setApiKeysPage: (page: number) => void;
-  setApiKeysLimit: (limit: number) => void;
-  setApiKeysSearch: (search: string) => void;
-  setApiKeysSort: (field: ApiKeySortableField, order: SortOrder) => void;
-  setApiKeysSecretDialogOpen: (open: boolean) => void;
-  setCreatedApiKey: (apiKey: { clientId: string; clientSecret: string } | null) => void;
-  handleApiKeyCreated: (apiKey: { clientId: string; clientSecret: string } | null) => void;
-  setApiKeysLoading: (loading: boolean) => void;
-  setApiKeysRefetch: (refetch: (() => void) | null) => void;
-  setApiKeysTotalCount: (totalCount: number) => void;
 
   // Actions - Roles
   setRolesPage: (page: number) => void;
@@ -100,26 +71,13 @@ interface UserState {
   setPermissionsLoading: (loading: boolean) => void;
   setPermissionsRefetch: (refetch: (() => void) | null) => void;
 
-  // Actions - Signing Keys
-  setSigningKeysLoading: (loading: boolean) => void;
-  setSigningKeysRefetch: (refetch: (() => void) | null) => void;
-  setSigningKeysHasKeys: (hasKeys: boolean) => void;
-  setSigningKeysRotateDialogOpen: (open: boolean) => void;
-
   // Reset
-  resetApiKeysState: () => void;
   resetRolesState: () => void;
   resetTagsState: () => void;
   resetGroupsState: () => void;
   resetPermissionsState: () => void;
-  resetSigningKeysState: () => void;
   resetAll: () => void;
 }
-
-const defaultApiKeysSort = {
-  field: ApiKeySortableField.CreatedAt,
-  order: SortOrder.Desc,
-};
 
 const defaultRolesSort = {
   field: RoleSortableField.Name,
@@ -134,17 +92,6 @@ const defaultTagsSort = {
 export const useUserStore = create<UserState>()(
   devtools(
     (set) => ({
-      // Initial state - API Keys
-      apiKeysPage: 1,
-      apiKeysLimit: 10,
-      apiKeysTotalCount: 0,
-      apiKeysSearch: '',
-      apiKeysSort: defaultApiKeysSort,
-      apiKeysSecretDialogOpen: false,
-      createdApiKey: null,
-      apiKeysLoading: false,
-      apiKeysRefetch: null,
-
       // Initial state - Roles
       rolesPage: 1,
       rolesLimit: 10,
@@ -176,28 +123,6 @@ export const useUserStore = create<UserState>()(
       permissionsLimit: 10,
       permissionsLoading: false,
       permissionsRefetch: null,
-
-      // Initial state - Signing Keys
-      signingKeysLoading: false,
-      signingKeysRefetch: null,
-      signingKeysHasKeys: false,
-      signingKeysRotateDialogOpen: false,
-
-      // Actions - API Keys
-      setApiKeysPage: (page) => set({ apiKeysPage: page }),
-      setApiKeysLimit: (limit) => set({ apiKeysLimit: limit, apiKeysPage: 1 }),
-      setApiKeysSearch: (search) => set({ apiKeysSearch: search, apiKeysPage: 1 }),
-      setApiKeysSort: (field, order) => set({ apiKeysSort: { field, order }, apiKeysPage: 1 }),
-      setApiKeysSecretDialogOpen: (open) => set({ apiKeysSecretDialogOpen: open }),
-      setCreatedApiKey: (apiKey) => set({ createdApiKey: apiKey }),
-      handleApiKeyCreated: (apiKey) => {
-        if (apiKey) {
-          set({ createdApiKey: apiKey, apiKeysSecretDialogOpen: true });
-        }
-      },
-      setApiKeysLoading: (loading) => set({ apiKeysLoading: loading }),
-      setApiKeysRefetch: (refetch) => set({ apiKeysRefetch: refetch }),
-      setApiKeysTotalCount: (totalCount) => set({ apiKeysTotalCount: totalCount }),
 
       // Actions - Roles
       setRolesPage: (page) => set({ rolesPage: page }),
@@ -255,25 +180,7 @@ export const useUserStore = create<UserState>()(
       setPermissionsLoading: (loading) => set({ permissionsLoading: loading }),
       setPermissionsRefetch: (refetch) => set({ permissionsRefetch: refetch }),
 
-      // Actions - Signing Keys
-      setSigningKeysLoading: (loading) => set({ signingKeysLoading: loading }),
-      setSigningKeysRefetch: (refetch) => set({ signingKeysRefetch: refetch }),
-      setSigningKeysHasKeys: (hasKeys) => set({ signingKeysHasKeys: hasKeys }),
-      setSigningKeysRotateDialogOpen: (open) => set({ signingKeysRotateDialogOpen: open }),
-
       // Reset
-      resetApiKeysState: () =>
-        set({
-          apiKeysPage: 1,
-          apiKeysLimit: 10,
-          apiKeysTotalCount: 0,
-          apiKeysSearch: '',
-          apiKeysSort: defaultApiKeysSort,
-          apiKeysSecretDialogOpen: false,
-          createdApiKey: null,
-          apiKeysLoading: false,
-          apiKeysRefetch: null,
-        }),
       resetRolesState: () =>
         set({
           rolesPage: 1,
@@ -310,24 +217,8 @@ export const useUserStore = create<UserState>()(
           permissionsLoading: false,
           permissionsRefetch: null,
         }),
-      resetSigningKeysState: () =>
-        set({
-          signingKeysLoading: false,
-          signingKeysRefetch: null,
-          signingKeysHasKeys: false,
-          signingKeysRotateDialogOpen: false,
-        }),
       resetAll: () =>
         set({
-          apiKeysPage: 1,
-          apiKeysLimit: 10,
-          apiKeysTotalCount: 0,
-          apiKeysSearch: '',
-          apiKeysSort: defaultApiKeysSort,
-          apiKeysSecretDialogOpen: false,
-          createdApiKey: null,
-          apiKeysLoading: false,
-          apiKeysRefetch: null,
           rolesPage: 1,
           rolesLimit: 10,
           rolesSearch: '',
@@ -352,10 +243,6 @@ export const useUserStore = create<UserState>()(
           permissionsLimit: 10,
           permissionsLoading: false,
           permissionsRefetch: null,
-          signingKeysLoading: false,
-          signingKeysRefetch: null,
-          signingKeysHasKeys: false,
-          signingKeysRotateDialogOpen: false,
         }),
     }),
     { name: 'grant-user-store' }

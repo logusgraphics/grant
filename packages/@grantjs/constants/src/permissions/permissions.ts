@@ -297,6 +297,11 @@ const PERMISSION_MAPPING_TEMPLATES: Partial<Record<GroupKey, PermissionMappingTe
       resource: ResourceSlug.ApiKey,
       condition: null,
     },
+    {
+      action: ResourceAction.Revoke,
+      resource: ResourceSlug.ApiKey,
+      condition: null,
+    },
   ],
 
   [GroupKey.AccountProjectAppOwner]: [

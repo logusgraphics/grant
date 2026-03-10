@@ -815,7 +815,8 @@
       "userId": "Benutzer-ID",
       "created": "Erstellt",
       "updated": "Aktualisiert",
-      "authMethods": "Anmeldemethoden"
+      "authMethods": "Anmeldemethoden",
+      "metadata": "Metadaten"
     },
     "roles": {
       "title": "Rollen",
@@ -876,6 +877,10 @@
     },
     "apiKeys": {
       "title": "API-Schlüssel",
+      "view": {
+        "card": "Karten",
+        "table": "Tabelle"
+      },
       "empty": "Keine API-Schlüssel gefunden",
       "emptyDescription": "Erstellen Sie Ihren ersten API-Schlüssel",
       "loading": "API-Schlüssel werden geladen...",
@@ -902,7 +907,7 @@
         "status": "Status",
         "expiresAt": "Läuft ab am",
         "lastUsedAt": "Zuletzt verwendet",
-        "createdAt": "Erstellt am"
+        "audit": "Audit"
       },
       "status": {
         "active": "Aktiv",
@@ -3020,6 +3025,10 @@
   },
   "signingKeys": {
     "title": "Signaturschlüssel",
+    "view": {
+      "card": "Karten",
+      "table": "Tabelle"
+    },
     "toolbar": {
       "rotate": "Schlüssel rotieren",
       "create": "Signaturschlüssel erstellen"
@@ -3029,6 +3038,7 @@
       "active": "Aktiv",
       "activeYes": "Aktiv",
       "activeNo": "Rotiert",
+      "audit": "Audit",
       "createdAt": "Erstellt",
       "rotatedAt": "Rotiert am",
       "publicKey": "Öffentlicher Schlüssel",

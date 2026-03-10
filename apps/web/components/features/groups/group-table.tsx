@@ -122,7 +122,7 @@ export function GroupTable() {
         icon: <Shield />,
         title: search ? t('noSearchResults.title') : t('noGroups.title'),
         description: search ? t('noSearchResults.description') : t('noGroups.description'),
-        action: search ? undefined : <GroupCreateDialog />,
+        action: search ? undefined : <GroupCreateDialog triggerAlwaysShowLabel />,
       }}
       actionsColumn={{
         render: (group) => <GroupActions group={group} />,

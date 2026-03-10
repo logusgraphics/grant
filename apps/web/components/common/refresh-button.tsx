@@ -10,10 +10,20 @@ import { cn } from '@/lib/utils';
 interface RefreshButtonProps {
   onRefresh?: () => void;
   loading?: boolean;
+  /** When true, show icon only (no text). When false, text is shown above the breakpoint given by labelMinWidthPx. */
+  iconOnly?: boolean;
+  /** When iconOnly is false, show label at viewport width >= this (px). Default 1600 (dashboard). Use 1200 for card toolbars (user detail, API keys). */
+  labelMinWidthPx?: 1200 | 1600;
   className?: string;
 }
 
-export function RefreshButton({ onRefresh, loading = false, className }: RefreshButtonProps) {
+export function RefreshButton({
+  onRefresh,
+  loading = false,
+  iconOnly = false,
+  labelMinWidthPx = 1600,
+  className,
+}: RefreshButtonProps) {
   const t = useTranslations('common');
 
   return (
@@ -25,13 +35,27 @@ export function RefreshButton({ onRefresh, loading = false, className }: Refresh
           onClick={onRefresh}
           disabled={loading || !onRefresh}
           className={cn(
-            'w-full sm:w-auto sm:size-9 sm:min-w-9 sm:max-w-9 sm:p-2 min-[1600px]:size-auto min-[1600px]:min-w-0 min-[1600px]:max-w-none min-[1600px]:aspect-auto min-[1600px]:px-4 min-[1600px]:py-2',
+            iconOnly
+              ? 'size-9 min-w-9 max-w-9 p-2'
+              : labelMinWidthPx === 1200
+                ? 'w-full sm:w-auto sm:size-9 sm:min-w-9 sm:max-w-9 sm:p-2 min-[1200px]:size-auto min-[1200px]:min-w-0 min-[1200px]:max-w-none min-[1200px]:aspect-auto min-[1200px]:px-4 min-[1200px]:py-2'
+                : 'w-full sm:w-auto sm:size-9 sm:min-w-9 sm:max-w-9 sm:p-2 min-[1600px]:size-auto min-[1600px]:min-w-0 min-[1600px]:max-w-none min-[1600px]:aspect-auto min-[1600px]:px-4 min-[1600px]:py-2',
             className
           )}
           aria-label={t('actions.refresh')}
         >
           <RefreshCw className={cn('size-4 shrink-0', loading && 'animate-spin')} />
-          <span className="sm:hidden">{t('actions.refresh')}</span>
+          {!iconOnly && (
+            <span
+              className={
+                labelMinWidthPx === 1200
+                  ? 'hidden min-[1200px]:inline'
+                  : 'sm:hidden min-[1600px]:inline'
+              }
+            >
+              {t('actions.refresh')}
+            </span>
+          )}
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">

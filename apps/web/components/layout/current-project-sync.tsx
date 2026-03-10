@@ -23,7 +23,7 @@ export function CurrentProjectSync() {
   const setCurrentProject = useProjectsStore((state) => state.setCurrentProject);
 
   const { projects } = useProjects({
-    scope: scope ?? undefined,
+    scope: scope!,
     ids: projectId ? [projectId] : [],
     limit: 1,
     sort: { field: ProjectSortableField.Name, order: SortOrder.Asc },

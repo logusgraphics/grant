@@ -20,7 +20,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useScopeFromParams } from '@/hooks/common';
 import { useSigningKeys } from '@/hooks/signing-keys';
-import { useUserStore } from '@/stores/user.store';
+import { useSigningKeysStore } from '@/stores/signing-keys.store';
+
+import { SigningKeyAudit } from './signing-key-audit';
+import { SigningKeyCards } from './signing-key-cards';
 
 type SigningKeyRow = GetSigningKeysQuery['signingKeys'][number];
 
@@ -38,12 +41,12 @@ export function SigningKeyViewer({ scope: scopeProp }: SigningKeyViewerProps) {
   const scope = scopeProp ?? scopeFromParams;
 
   const t = useTranslations('signingKeys.viewer');
-  const setSigningKeysRefetch = useUserStore((state) => state.setSigningKeysRefetch);
-  const setSigningKeysLoading = useUserStore((state) => state.setSigningKeysLoading);
-  const setSigningKeysHasKeys = useUserStore((state) => state.setSigningKeysHasKeys);
-  const setSigningKeysRotateDialogOpen = useUserStore(
-    (state) => state.setSigningKeysRotateDialogOpen
-  );
+  const setRefetch = useSigningKeysStore((state) => state.setRefetch);
+  const setLoading = useSigningKeysStore((state) => state.setLoading);
+  const setHasKeys = useSigningKeysStore((state) => state.setHasKeys);
+  const setSigningKeys = useSigningKeysStore((state) => state.setSigningKeys);
+  const setRotateDialogOpen = useSigningKeysStore((state) => state.setRotateDialogOpen);
+  const view = useSigningKeysStore((state) => state.view);
 
   const { signingKeys, loading, error, refetch } = useSigningKeys({ scope: scope! });
 
@@ -52,17 +55,21 @@ export function SigningKeyViewer({ scope: scopeProp }: SigningKeyViewerProps) {
   }, [refetch]);
 
   useEffect(() => {
-    setSigningKeysRefetch(handleRefetch);
-    return () => setSigningKeysRefetch(null);
-  }, [handleRefetch, setSigningKeysRefetch]);
+    setRefetch(handleRefetch);
+    return () => setRefetch(null);
+  }, [handleRefetch, setRefetch]);
 
   useEffect(() => {
-    setSigningKeysLoading(loading);
-  }, [loading, setSigningKeysLoading]);
+    setLoading(loading);
+  }, [loading, setLoading]);
 
   useEffect(() => {
-    setSigningKeysHasKeys(signingKeys.length > 0);
-  }, [signingKeys.length, setSigningKeysHasKeys]);
+    setHasKeys(signingKeys.length > 0);
+  }, [signingKeys.length, setHasKeys]);
+
+  useEffect(() => {
+    setSigningKeys(signingKeys);
+  }, [signingKeys, setSigningKeys]);
 
   const canQuery = useGrant(ResourceSlug.ApiKey, ResourceAction.Query, {
     scope: scope!,
@@ -118,14 +125,6 @@ export function SigningKeyViewer({ scope: scopeProp }: SigningKeyViewerProps) {
       ),
     },
     {
-      key: 'createdAt',
-      header: t('createdAt'),
-      width: '160px',
-      render: (row: SigningKeyRow) => (
-        <span className="text-sm text-muted-foreground">{formatDate(row.createdAt)}</span>
-      ),
-    },
-    {
       key: 'rotatedAt',
       header: t('rotatedAt'),
       width: '160px',
@@ -144,14 +143,23 @@ export function SigningKeyViewer({ scope: scopeProp }: SigningKeyViewerProps) {
           <span className="text-muted-foreground">—</span>
         ),
     },
+    {
+      key: 'audit',
+      header: t('audit'),
+      width: '200px',
+      render: (row: SigningKeyRow) => <SigningKeyAudit signingKey={row} />,
+    },
   ];
 
   const skeletonConfig: { columns: TableSkeletonColumnConfig[]; rowCount: number } = {
-    columns: columns.map((col) => ({
-      key: col.key,
-      type: 'text',
-      width: col.width,
-    })),
+    columns: [
+      { key: 'icon', type: 'text' },
+      { key: 'kid', type: 'text' },
+      { key: 'active', type: 'text' },
+      { key: 'rotatedAt', type: 'text' },
+      { key: 'publicKeyPem', type: 'text' },
+      { key: 'audit', type: 'audit' },
+    ],
     rowCount: 3,
   };
 
@@ -165,6 +173,10 @@ export function SigningKeyViewer({ scope: scopeProp }: SigningKeyViewerProps) {
     );
   }
 
+  if (view === 'card') {
+    return <SigningKeyCards />;
+  }
+
   return (
     <>
       <DataTable<SigningKeyRow>
@@ -176,7 +188,7 @@ export function SigningKeyViewer({ scope: scopeProp }: SigningKeyViewerProps) {
           title: t('empty'),
           description: t('emptyDescription'),
           action: (
-            <Button onClick={() => setSigningKeysRotateDialogOpen(true)}>
+            <Button onClick={() => setRotateDialogOpen(true)}>
               <Fingerprint className="mr-2 h-4 w-4" />
               {t('emptyAction')}
             </Button>

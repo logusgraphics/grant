@@ -6,9 +6,16 @@ import { Sorter, type SortInput } from '@/components/common';
 interface UserRoleSorterProps {
   sort?: RoleSortInput;
   onSortChange: (field: RoleSortableField, order: SortOrder) => void;
+  iconOnly?: boolean;
+  labelMinWidthPx?: 1200 | 1600;
 }
 
-export function UserRoleSorter({ sort, onSortChange }: UserRoleSorterProps) {
+export function UserRoleSorter({
+  sort,
+  onSortChange,
+  iconOnly,
+  labelMinWidthPx,
+}: UserRoleSorterProps) {
   const t = useTranslations('user.roles');
 
   const convertSort = (gqlSort?: RoleSortInput): SortInput<RoleSortableField> | undefined => {
@@ -33,6 +40,8 @@ export function UserRoleSorter({ sort, onSortChange }: UserRoleSorterProps) {
       fields={fields}
       defaultField={RoleSortableField.Name}
       translationNamespace="user.roles"
+      iconOnly={iconOnly}
+      labelMinWidthPx={labelMinWidthPx}
     />
   );
 }

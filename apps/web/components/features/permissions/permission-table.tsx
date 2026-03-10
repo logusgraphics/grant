@@ -127,7 +127,7 @@ export function PermissionTable() {
         icon: <CopyCheck />,
         title: search ? t('noSearchResults.title') : t('noPermissions.title'),
         description: search ? t('noSearchResults.description') : t('noPermissions.description'),
-        action: search ? undefined : <PermissionCreateDialog />,
+        action: search ? undefined : <PermissionCreateDialog triggerAlwaysShowLabel />,
       }}
       actionsColumn={{
         render: (permission) => <PermissionActions permission={permission} />,

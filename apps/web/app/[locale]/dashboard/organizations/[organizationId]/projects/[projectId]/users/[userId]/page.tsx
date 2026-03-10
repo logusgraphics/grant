@@ -12,8 +12,10 @@ export default function ProjectUserDetailPage() {
   usePageTitle('user.detail');
 
   return (
-    <DashboardLayout title={t('detail.title')} sidebar={<ProjectSidebar />} variant="simple">
-      <UserDetailViewer />
+    <DashboardLayout title={t('detail.title')} sidebar={<ProjectSidebar />}>
+      <div className="p-4">
+        <UserDetailViewer />
+      </div>
     </DashboardLayout>
   );
 }

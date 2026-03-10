@@ -27,7 +27,12 @@ import { useGroupsStore } from '@/stores/groups.store';
 
 import { GroupCreateFormValues, createGroupSchema } from './group-types';
 
-export function GroupCreateDialog() {
+export function GroupCreateDialog({
+  triggerAlwaysShowLabel,
+}: {
+  /** When true, trigger label is always visible (e.g. empty state). When false/undefined, toolbar responsive behavior. */
+  triggerAlwaysShowLabel?: boolean;
+} = {}) {
   const scope = useScopeFromParams();
   const { permissions, loading: permissionsLoading } = usePermissions({ scope: scope!, limit: -1 });
   const { tags, loading: tagsLoading } = useTags({ scope: scope! });
@@ -160,6 +165,7 @@ export function GroupCreateDialog() {
       onCreate={handleCreate}
       translationNamespace="groups"
       submittingText="createDialog.submitting"
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
     />
   );
 }

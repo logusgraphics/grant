@@ -18,9 +18,11 @@ import {
 } from '@/components/common';
 import { useApiKeys } from '@/hooks/api-keys';
 import { useScopeFromParams } from '@/hooks/common';
-import { useUserStore } from '@/stores/user.store';
+import { useApiKeysStore } from '@/stores/api-keys.store';
 
 import { ApiKeyActions } from './api-key-actions';
+import { ApiKeyAudit } from './api-key-audit';
+import { ApiKeyCards } from './api-key-cards';
 import { ApiKeyCreateDialog } from './api-key-create-dialog';
 import { ApiKeySecretDialog } from './api-key-secret-dialog';
 
@@ -35,18 +37,20 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
 
   const t = useTranslations('user.apiKeys');
   const tRoot = useTranslations();
-  const page = useUserStore((state) => state.apiKeysPage);
-  const limit = useUserStore((state) => state.apiKeysLimit);
-  const search = useUserStore((state) => state.apiKeysSearch);
-  const sort = useUserStore((state) => state.apiKeysSort);
-  const secretDialogOpen = useUserStore((state) => state.apiKeysSecretDialogOpen);
-  const createdApiKey = useUserStore((state) => state.createdApiKey);
-  const setApiKeysTotalCount = useUserStore((state) => state.setApiKeysTotalCount);
-  const setApiKeysRefetch = useUserStore((state) => state.setApiKeysRefetch);
-  const setApiKeysLoading = useUserStore((state) => state.setApiKeysLoading);
-  const setSecretDialogOpen = useUserStore((state) => state.setApiKeysSecretDialogOpen);
-  const setCreatedApiKey = useUserStore((state) => state.setCreatedApiKey);
-  const handleApiKeyCreated = useUserStore((state) => state.handleApiKeyCreated);
+  const page = useApiKeysStore((state) => state.page);
+  const limit = useApiKeysStore((state) => state.limit);
+  const search = useApiKeysStore((state) => state.search);
+  const sort = useApiKeysStore((state) => state.sort);
+  const secretDialogOpen = useApiKeysStore((state) => state.secretDialogOpen);
+  const createdApiKey = useApiKeysStore((state) => state.createdApiKey);
+  const setTotalCount = useApiKeysStore((state) => state.setTotalCount);
+  const setRefetch = useApiKeysStore((state) => state.setRefetch);
+  const setLoading = useApiKeysStore((state) => state.setLoading);
+  const setApiKeys = useApiKeysStore((state) => state.setApiKeys);
+  const setSecretDialogOpen = useApiKeysStore((state) => state.setSecretDialogOpen);
+  const setCreatedApiKey = useApiKeysStore((state) => state.setCreatedApiKey);
+  const handleApiKeyCreated = useApiKeysStore((state) => state.handleApiKeyCreated);
+  const view = useApiKeysStore((state) => state.view);
 
   const { apiKeys, loading, error, totalCount, refetch } = useApiKeys({
     scope: scope!,
@@ -61,17 +65,21 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
   }, [refetch]);
 
   useEffect(() => {
-    setApiKeysRefetch(handleRefetch);
-    return () => setApiKeysRefetch(null);
-  }, [handleRefetch, setApiKeysRefetch]);
+    setRefetch(handleRefetch);
+    return () => setRefetch(null);
+  }, [handleRefetch, setRefetch]);
 
   useEffect(() => {
-    setApiKeysLoading(loading);
-  }, [loading, setApiKeysLoading]);
+    setLoading(loading);
+  }, [loading, setLoading]);
 
   useEffect(() => {
-    setApiKeysTotalCount(totalCount);
-  }, [totalCount, setApiKeysTotalCount]);
+    setTotalCount(totalCount);
+  }, [totalCount, setTotalCount]);
+
+  useEffect(() => {
+    setApiKeys(apiKeys);
+  }, [apiKeys, setApiKeys]);
 
   const canQuery = useGrant(ResourceSlug.ApiKey, ResourceAction.Query, {
     scope: scope!,
@@ -193,12 +201,10 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
       ),
     },
     {
-      key: 'createdAt',
-      header: t('table.createdAt'),
-      width: '150px',
-      render: (apiKey: ApiKey) => (
-        <span className="text-sm text-muted-foreground">{formatDate(apiKey.createdAt)}</span>
-      ),
+      key: 'audit',
+      header: t('table.audit'),
+      width: '200px',
+      render: (apiKey: ApiKey) => <ApiKeyAudit apiKey={apiKey} />,
     },
   ];
 
@@ -212,7 +218,7 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
       { key: 'status', type: 'text' },
       { key: 'expiresAt', type: 'text' },
       { key: 'lastUsedAt', type: 'text' },
-      { key: 'createdAt', type: 'text' },
+      { key: 'audit', type: 'audit' },
     ],
     rowCount: 5,
   };
@@ -222,6 +228,26 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
       <div className="rounded-lg border bg-card p-6">
         <p className="text-sm text-destructive">{t('error')}</p>
       </div>
+    );
+  }
+
+  if (view === 'card') {
+    return (
+      <>
+        <ApiKeyCards />
+        {createdApiKey && (
+          <ApiKeySecretDialog
+            open={secretDialogOpen}
+            onOpenChange={(open) => {
+              setSecretDialogOpen(open);
+              if (!open) setCreatedApiKey(null);
+            }}
+            clientId={createdApiKey.clientId}
+            clientSecret={createdApiKey.clientSecret}
+            scope={scope ? { tenant: scope.tenant, id: scope.id } : null}
+          />
+        )}
+      </>
     );
   }
 
@@ -235,7 +261,9 @@ export function ApiKeyViewer({ scope: scopeProp }: ApiKeyViewerProps) {
           icon: <KeyRound />,
           title: t('empty'),
           description: t('emptyDescription'),
-          action: <ApiKeyCreateDialog onApiKeyCreated={handleApiKeyCreated} />,
+          action: (
+            <ApiKeyCreateDialog onApiKeyCreated={handleApiKeyCreated} triggerAlwaysShowLabel />
+          ),
         }}
         actionsColumn={{
           render: (apiKey: ApiKey) => <ApiKeyActions apiKey={apiKey} scope={scope!} />,

@@ -25,7 +25,12 @@ import { useResourcesStore } from '@/stores/resources.store';
 
 import { ResourceCreateFormValues, createResourceSchema } from './resource-types';
 
-export function ResourceCreateDialog() {
+export function ResourceCreateDialog({
+  triggerAlwaysShowLabel,
+}: {
+  /** When true, trigger label is always visible (e.g. empty state). When false/undefined, toolbar responsive behavior. */
+  triggerAlwaysShowLabel?: boolean;
+} = {}) {
   const scope = useScopeFromParams();
   const { tags, loading: tagsLoading } = useTags({ scope: scope!, limit: -1 });
   const { createResource } = useResourceMutations();
@@ -142,6 +147,7 @@ export function ResourceCreateDialog() {
       submittingText="createDialog.submitting"
       onCreate={handleCreate}
       onOpenChange={handleOpenChange}
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
     />
   );
 }

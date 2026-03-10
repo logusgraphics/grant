@@ -16,9 +16,14 @@ import { CreateOrganizationFormValues, createOrganizationSchema } from './organi
 interface OrganizationCreateDialogProps {
   /** When true, no trigger is rendered; dialog is opened only via store (e.g. from organization switcher). */
   hideTrigger?: boolean;
+  /** When true, trigger label is always visible (e.g. empty state). When false/undefined, toolbar responsive behavior. */
+  triggerAlwaysShowLabel?: boolean;
 }
 
-export function OrganizationCreateDialog({ hideTrigger }: OrganizationCreateDialogProps = {}) {
+export function OrganizationCreateDialog({
+  hideTrigger,
+  triggerAlwaysShowLabel,
+}: OrganizationCreateDialogProps = {}) {
   const { createOrganization } = useOrganizationMutations();
   const scope = useAccountScope();
 
@@ -76,6 +81,7 @@ export function OrganizationCreateDialog({ hideTrigger }: OrganizationCreateDial
       submittingText="createDialog.submitting"
       onCreate={handleCreate}
       onOpenChange={handleOpenChange}
+      triggerAlwaysShowLabel={triggerAlwaysShowLabel}
       hideTrigger={hideTrigger}
     />
   );

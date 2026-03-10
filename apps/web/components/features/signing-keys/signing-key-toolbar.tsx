@@ -10,11 +10,14 @@ import { useTranslations } from 'next-intl';
 
 import { RefreshButton, Toolbar } from '@/components/common';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useScopeFromParams } from '@/hooks/common';
 import { useSigningKeyMutations } from '@/hooks/signing-keys';
-import { useUserStore } from '@/stores/user.store';
+import { cn } from '@/lib/utils';
+import { useSigningKeysStore } from '@/stores/signing-keys.store';
 
 import { SigningKeyRotateDialog } from './signing-key-rotate-dialog';
+import { SigningKeyViewSwitcher } from './signing-key-view-switcher';
 
 /**
  * Toolbar for the signing keys page. Uses store for refetch/loading (set by SigningKeyViewer).
@@ -24,11 +27,11 @@ import { SigningKeyRotateDialog } from './signing-key-rotate-dialog';
 export function SigningKeyToolbar() {
   const t = useTranslations('signingKeys.toolbar');
   const scope = useScopeFromParams();
-  const signingKeysRefetch = useUserStore((state) => state.signingKeysRefetch);
-  const loading = useUserStore((state) => state.signingKeysLoading);
-  const hasKeys = useUserStore((state) => state.signingKeysHasKeys);
-  const rotateDialogOpen = useUserStore((state) => state.signingKeysRotateDialogOpen);
-  const setRotateDialogOpen = useUserStore((state) => state.setSigningKeysRotateDialogOpen);
+  const refetch = useSigningKeysStore((state) => state.refetch);
+  const loading = useSigningKeysStore((state) => state.loading);
+  const hasKeys = useSigningKeysStore((state) => state.hasKeys);
+  const rotateDialogOpen = useSigningKeysStore((state) => state.rotateDialogOpen);
+  const setRotateDialogOpen = useSigningKeysStore((state) => state.setRotateDialogOpen);
 
   const [rotating, setRotating] = useState(false);
 
@@ -49,12 +52,12 @@ export function SigningKeyToolbar() {
       setRotating(true);
       try {
         await rotateSigningKey(s);
-        signingKeysRefetch?.();
+        refetch?.();
       } finally {
         setRotating(false);
       }
     },
-    [rotateSigningKey, signingKeysRefetch]
+    [rotateSigningKey, refetch]
   );
 
   if (!scope || !canQuery || !isProjectScope) {
@@ -62,33 +65,54 @@ export function SigningKeyToolbar() {
   }
 
   const toolbarItems = [
-    <RefreshButton key="refresh" onRefresh={signingKeysRefetch ?? undefined} loading={loading} />,
+    <RefreshButton key="refresh" onRefresh={refetch ?? undefined} loading={loading} />,
+    <SigningKeyViewSwitcher key="view" />,
     hasKeys ? (
-      <Button
-        key="rotate"
-        variant="outline"
-        size="sm"
-        onClick={handleCreateOrRotateClick}
-        disabled={loading || rotating}
-        aria-label={t('rotate')}
-      >
-        <RotateCw
-          className={['mr-2 h-4 w-4', rotating && 'animate-spin'].filter(Boolean).join(' ')}
-        />
-        {t('rotate')}
-      </Button>
+      <Tooltip key="rotate">
+        <TooltipTrigger asChild>
+          <Button
+            className={cn(
+              'w-full sm:w-auto',
+              'min-[640px]:max-[1199px]:size-9 min-[640px]:max-[1199px]:min-w-9 min-[640px]:max-[1199px]:max-w-9 min-[640px]:max-[1199px]:p-2',
+              'min-[1200px]:size-auto min-[1200px]:min-w-0 min-[1200px]:max-w-none'
+            )}
+            onClick={handleCreateOrRotateClick}
+            disabled={loading || rotating}
+            aria-label={t('rotate')}
+          >
+            <RotateCw className={cn('size-4 shrink-0', rotating && 'animate-spin')} />
+            <span className="inline min-[640px]:max-[1199px]:hidden min-[1200px]:inline">
+              {t('rotate')}
+            </span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>{t('rotate')}</p>
+        </TooltipContent>
+      </Tooltip>
     ) : (
-      <Button
-        key="create"
-        variant="outline"
-        size="sm"
-        onClick={handleCreateOrRotateClick}
-        disabled={loading || rotating}
-        aria-label={t('create')}
-      >
-        <Plus className={['mr-2 h-4 w-4', rotating && 'animate-spin'].filter(Boolean).join(' ')} />
-        {t('create')}
-      </Button>
+      <Tooltip key="create">
+        <TooltipTrigger asChild>
+          <Button
+            className={cn(
+              'w-full sm:w-auto',
+              'min-[640px]:max-[1199px]:size-9 min-[640px]:max-[1199px]:min-w-9 min-[640px]:max-[1199px]:max-w-9 min-[640px]:max-[1199px]:p-2',
+              'min-[1200px]:size-auto min-[1200px]:min-w-0 min-[1200px]:max-w-none'
+            )}
+            onClick={handleCreateOrRotateClick}
+            disabled={loading || rotating}
+            aria-label={t('create')}
+          >
+            <Plus className={cn('size-4 shrink-0', rotating && 'animate-spin')} />
+            <span className="inline min-[640px]:max-[1199px]:hidden min-[1200px]:inline">
+              {t('create')}
+            </span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>{t('create')}</p>
+        </TooltipContent>
+      </Tooltip>
     ),
   ];
 

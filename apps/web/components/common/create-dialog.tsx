@@ -18,6 +18,8 @@ export interface CreateDialogProps<TFormValues extends Record<string, any>> exte
   onCreate: (values: TFormValues) => Promise<void>;
   /** When true, no trigger is rendered; dialog is opened only via open/onOpenChange (e.g. from a switcher). */
   hideTrigger?: boolean;
+  /** When true, trigger button always shows the label (e.g. for empty-state actions). When false, label follows default breakpoint. */
+  triggerAlwaysShowLabel?: boolean;
 }
 
 export function CreateDialog<TFormValues extends Record<string, any>>({
@@ -37,6 +39,7 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
   translationNamespace,
   submittingText,
   hideTrigger = false,
+  triggerAlwaysShowLabel = false,
 }: CreateDialogProps<TFormValues>) {
   const t = useTranslations(translationNamespace);
 
@@ -47,12 +50,22 @@ export function CreateDialog<TFormValues extends Record<string, any>>({
           <Button
             className={cn(
               'w-full sm:w-auto',
-              'sm:max-[1200px]:size-9 sm:max-[1200px]:min-w-9 sm:max-[1200px]:max-w-9 sm:max-[1200px]:p-2',
-              'min-[1201px]:size-auto min-[1201px]:min-w-0 min-[1201px]:max-w-none'
+              !triggerAlwaysShowLabel && [
+                'min-[640px]:max-[1199px]:size-9 min-[640px]:max-[1199px]:min-w-9 min-[640px]:max-[1199px]:max-w-9 min-[640px]:max-[1199px]:p-2',
+                'min-[1200px]:size-auto min-[1200px]:min-w-0 min-[1200px]:max-w-none',
+              ]
             )}
           >
             <Icon className="size-4 shrink-0" />
-            <span className="hidden max-sm:inline min-[1201px]:inline">{t(triggerText)}</span>
+            <span
+              className={
+                triggerAlwaysShowLabel
+                  ? 'inline'
+                  : 'inline min-[640px]:max-[1199px]:hidden min-[1200px]:inline'
+              }
+            >
+              {t(triggerText)}
+            </span>
           </Button>
         </DialogTrigger>
       </TooltipTrigger>

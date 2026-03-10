@@ -17,7 +17,7 @@ import {
   type DataTableColumnConfig,
   type TableSkeletonColumnConfig,
 } from '@/components/common';
-import { useScopeFromParams } from '@/hooks/common';
+import { useProjectUserScope } from '@/hooks/common/use-project-user-scope';
 import { useGroups } from '@/hooks/groups';
 import { useRoles } from '@/hooks/roles';
 import { transformTagsToBadges } from '@/lib/tag';
@@ -34,7 +34,7 @@ interface UserPermissionsProps {
 
 export function UserPermissions({ user }: UserPermissionsProps) {
   const t = useTranslations('user.permissions');
-  const scope = useScopeFromParams();
+  const scope = useProjectUserScope();
 
   const page = useUserStore((state) => state.permissionsPage);
   const limit = useUserStore((state) => state.permissionsLimit);
@@ -200,30 +200,34 @@ export function UserPermissions({ user }: UserPermissionsProps) {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <div className="min-w-0 rounded-lg border bg-card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">{t('title')}</h3>
+        <h3 className="text-lg font-semibold shrink-0">{t('title')}</h3>
         <Toolbar
+          alwaysRow
           items={[
             <RefreshButton
               key="refresh"
               onRefresh={permissionsRefetch ?? undefined}
               loading={loading}
+              iconOnly
             />,
           ]}
         />
       </div>
-      <DataTable
-        data={paginatedPermissions}
-        columns={columns}
-        loading={loading}
-        emptyState={{
-          icon: <Key />,
-          title: t('empty'),
-          description: t('emptyDescription'),
-        }}
-        skeletonConfig={skeletonConfig}
-      />
+      <div className="min-w-0 overflow-x-auto">
+        <DataTable
+          data={paginatedPermissions}
+          columns={columns}
+          loading={loading}
+          emptyState={{
+            icon: <Key />,
+            title: t('empty'),
+            description: t('emptyDescription'),
+          }}
+          skeletonConfig={skeletonConfig}
+        />
+      </div>
       {totalPages > 1 && (
         <div className="mt-4 border-t">
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

@@ -6,9 +6,16 @@ import { Sorter, type SortInput } from '@/components/common';
 interface UserTagSorterProps {
   sort?: TagSortInput;
   onSortChange: (field: TagSortField, order: SortOrder) => void;
+  iconOnly?: boolean;
+  labelMinWidthPx?: 1200 | 1600;
 }
 
-export function UserTagSorter({ sort, onSortChange }: UserTagSorterProps) {
+export function UserTagSorter({
+  sort,
+  onSortChange,
+  iconOnly,
+  labelMinWidthPx,
+}: UserTagSorterProps) {
   const t = useTranslations('user.tags');
 
   const convertSort = (gqlSort?: TagSortInput): SortInput<TagSortField> | undefined => {
@@ -37,6 +44,8 @@ export function UserTagSorter({ sort, onSortChange }: UserTagSorterProps) {
       fields={fields}
       defaultField={TagSortField.Name}
       translationNamespace="user.tags"
+      iconOnly={iconOnly}
+      labelMinWidthPx={labelMinWidthPx}
     />
   );
 }

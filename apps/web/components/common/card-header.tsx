@@ -16,6 +16,7 @@ export interface CardHeaderProps {
     imageUrl?: string;
     cacheBuster?: string | Date | null;
     size?: AvatarProps['size'];
+    icon?: AvatarProps['icon'];
   };
   title: string;
   description?: string;
@@ -44,6 +45,7 @@ export function CardHeader({
           imageUrl={avatar.imageUrl}
           cacheBuster={avatar.cacheBuster}
           size={avatar.size || 'lg'}
+          icon={avatar.icon}
           className={color ? cn('border-2', getTagBorderClasses(color)) : undefined}
         />
         <div className="min-w-0 flex-1">
