@@ -1,0 +1,38 @@
+# Gitleaks configuration for Grant Platform
+# Extends default rules; allowlists paths that contain only placeholders/examples.
+# See https://github.com/gitleaks/gitleaks#configuration
+
+title = "Grant Platform gitleaks config"
+
+[extend]
+useDefault = true
+
+# Paths where secret-like strings are placeholders, examples, or test fixtures
+[allowlist]
+description = "Grant Platform: example env files, docs, badges, tests"
+paths = [
+  # Example and template env files (no real secrets)
+  '''\.env\.example$''',
+  '''\.env\.e2e\.example$''',
+  '''\.env\.development$''',
+  # Documentation (may contain example tokens or placeholder values)
+  '''^docs/''',
+  '''^observability/''',
+  # Package examples (curl YOUR_TOKEN, etc.)
+  '''/examples/''',
+  # OpenAPI/Swagger example request bodies (placeholder tokens, fake API keys)
+  '''/rest/openapi/''',
+  # Generated compliance badges
+  '''^badges/''',
+  # Test fixtures and test files that use fake tokens
+  '''/__tests__/''',
+  '''/tests/''',
+  '''\.test\.(ts|js)$''',
+  '''\.spec\.(ts|js)$''',
+  '''\.e2e\.test\.(ts|js)$''',
+  '''integration/.*\.test\.(ts|js)$''',
+  '''e2e/.*\.(ts|js)$''',
+  # Cursor/IDE and tooling
+  '''^\.cursor/''',
+  '''\.mcp\.json$''',
+]

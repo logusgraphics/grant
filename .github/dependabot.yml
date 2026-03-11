@@ -1,0 +1,42 @@
+# Dependabot: keep dependencies and GitHub Actions up to date
+# https://docs.github.com/en/code-security/dependabot
+
+version: 2
+updates:
+  # npm (root + all workspaces via pnpm-lock.yaml)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Europe/Madrid'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    labels:
+      - 'dependencies'
+      - 'npm'
+    # Group minor and patch updates into one PR to reduce noise; major stays separate
+    groups:
+      minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # GitHub Actions (workflows)
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Europe/Madrid'
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'chore(ci)'
+    labels:
+      - 'dependencies'
+      - 'github-actions'

@@ -5,7 +5,7 @@ description: End-to-end request tracing with OpenTelemetry in Grant
 
 # Distributed Tracing
 
-Grant uses [OpenTelemetry](https://opentelemetry.io/) for distributed tracing. The API is auto-instrumented for HTTP, Express, GraphQL, and Redis; you choose a backend (Jaeger or OTLP) via configuration and can add custom spans for business operations. Bootstrap: `apps/api/src/lib/tracing/index.ts`. Config: `TRACING_CONFIG` in [env.config.ts](https://github.com/logusgraphics/grant-platform/blob/main/apps/api/src/config/env.config.ts).
+Grant uses [OpenTelemetry](https://opentelemetry.io/) for distributed tracing. The API is auto-instrumented for HTTP, Express, GraphQL, and Redis; you choose a backend (Jaeger or OTLP) via configuration and can add custom spans for business operations. Bootstrap: `apps/api/src/lib/tracing/index.ts`. Config: `TRACING_CONFIG` in [env.config.ts](https://github.com/logusgraphics/grant/blob/main/apps/api/src/config/env.config.ts).
 
 ## What you get
 
@@ -16,7 +16,7 @@ Distributed tracing records a **trace** per request: a tree of **spans** (units 
 - **Debugging** — Filter by `user.id`, `error=true`, or duration in your trace backend.
 
 ::: details How it's wired
-Tracing is initialized at server startup before other services. Request IDs and optional user IDs are set on the active span in [request-logging middleware](https://github.com/logusgraphics/grant-platform/blob/main/apps/api/src/middleware/request-logging.middleware.ts). Redis is instrumented via `@opentelemetry/instrumentation-ioredis`. PostgreSQL is not auto-instrumented (app uses postgres.js). Shutdown runs during graceful server shutdown (`shutdownTracing()` before DB/cache close).
+Tracing is initialized at server startup before other services. Request IDs and optional user IDs are set on the active span in [request-logging middleware](https://github.com/logusgraphics/grant/blob/main/apps/api/src/middleware/request-logging.middleware.ts). Redis is instrumented via `@opentelemetry/instrumentation-ioredis`. PostgreSQL is not auto-instrumented (app uses postgres.js). Shutdown runs during graceful server shutdown (`shutdownTracing()` before DB/cache close).
 :::
 
 ## Request flow example

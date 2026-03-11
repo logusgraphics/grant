@@ -1,8 +1,16 @@
-# Grant
+<p align="center">
+  <img src="apps/web/public/grant-isologo.png" alt="Grant" width="120" />
+</p>
+<h1 align="center">
+  <strong>Grant</strong>
+</h1>
 
-An open-source, multi-tenant RBAC platform with self-hosting capabilities.
+<p align="center">
+  An open-source, multi-tenant RBAC platform with self-hosting capabilities.
+</p>
 
-## Compliance
+[![CI](https://github.com/logusgraphics/grant/actions/workflows/ci.yml/badge.svg)](https://github.com/logusgraphics/grant/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <!-- compliance-badges:start -->
 
@@ -14,143 +22,30 @@ An open-source, multi-tenant RBAC platform with self-hosting capabilities.
 
 <!-- compliance-badges:end -->
 
-## 🚀 Features
+## Getting Started
 
-- **Multi-tenant RBAC** - Organization and project-level access control
-- **Self-hosting** - Deploy with Docker Compose or your own infrastructure
-- **Containerized** - Docker containers for web and API
-- **Scalable** - Scale with your preferred stack
-- **Open Source** - MIT licensed with active community
+Grant provides organization and project-level access control, self-hosting with Docker, and optional SDKs for Express, Fastify, NestJS, and Next.js.
 
-## 🏗️ Architecture
+- Visit our [documentation site](https://docs.grant.center) for the full docs, guides, and API reference.
+- For a quick local run: clone the repo, `pnpm install`, then `pnpm dev`.
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│    Web App      │    │   API Server    │    │    Database     │
-│   (Next.js)     │◄──►│    (Apollo)     │◄──►│  (PostgreSQL)   │
-│   Container     │    │    Container    │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+## Documentation
 
-## 📦 Packages
+Full documentation—including self-hosting, configuration, REST and GraphQL API reference, and SDK integration—is available at [docs.grant.center](https://docs.grant.center).
 
-### Published Packages (npm)
+## Community
 
-- **`@grantjs/core`** - Core RBAC system
+The Grant community can be found on GitHub. Our [Code of Conduct](./CODE_OF_CONDUCT.md) applies to all community channels and contributions.
 
-### Self-Hosting Components
+## Contributing
 
-- **Web App** - Containerized Next.js frontend
-- **API** - Containerized Apollo Server backend
-- **Database** - PostgreSQL (self-hosted or managed)
-- **Infrastructure** - Docker Compose for local and small deployments
+Contributions are welcome. Before submitting a pull request, please read our [Contribution Guidelines](./CONTRIBUTING.md) so you have a smooth experience.
 
-## 🚀 Quick Start
+## Security
 
-### Local Development
+If you believe you have found a security vulnerability in Grant, we encourage you to **responsibly disclose it and not open a public issue**. Please see [SECURITY.md](./SECURITY.md) for how to report.
 
-```bash
-# Clone repository
-git clone https://github.com/logusgraphics/grant.git
-cd grant
+## Demo
 
-# Install dependencies
-pnpm install
-
-# Start development
-pnpm dev
-```
-
-## 📚 Documentation
-
-### Open Source
-
-- [Self-Hosting Guide](./docs/deployment/self-hosting.md)
-- [Docker Configuration](./infrastructure/docker/README.md)
-- [API Documentation](./docs/api/README.md)
-
-### SaaS Enterprise
-
-- [SaaS Features](./docs/saas/README.md)
-- [Migration Guide](./docs/migration/README.md)
-- [Feature Comparison](./docs/FEATURE_COMPARISON.md)
-- [Enterprise Support](./docs/enterprise/README.md)
-
-## 🔧 Development
-
-### Available Scripts
-
-```bash
-# Development
-pnpm dev              # Start all services
-pnpm build            # Build all packages
-pnpm test             # Run tests
-pnpm lint             # Lint all packages
-
-# Package management
-pnpm publish:core     # Publish core package
-pnpm clean            # Clean build outputs
-```
-
-### Working on Specific Components
-
-```bash
-# Web app
-pnpm --filter grant-web dev
-
-# API
-pnpm --filter grant-api dev
-
-# Core package
-pnpm --filter @grantjs/core dev
-```
-
-## 🌐 Deployment Options
-
-### Open Source (Self-Hosting)
-
-- **Docker Compose** - Local development and small deployments
-- **Manual Deployment** - Custom infrastructure (any cloud or on-premises)
-
-### SaaS Enterprise (Hosted)
-
-- **Managed Platform** - Fully hosted solution
-- **Enterprise Features** - Advanced RBAC
-- **Premium Support** - 24/7 assistance
-- **Custom Integrations** - SSO, LDAP, SAML
-
-## 💰 Pricing
-
-### Open Source
-
-- **Free Forever** - Complete self-hosting
-- **Community Support** - GitHub issues, Discord
-- **Core Features** - Basic RBAC
-
-### SaaS Enterprise
-
-- **Starter**: $99/month (up to 100 users)
-- **Professional**: $299/month (up to 1,000 users)
-- **Enterprise**: Custom pricing (unlimited users)
-
-[View Full Feature Comparison](./docs/FEATURE_COMPARISON.md) | [SaaS Platform](https://grant.logus.graphics)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
-
-## 📄 License
-
-MIT License - see [LICENSE](./LICENSE) for details.
-
-## 👨‍💻 Author
-
-**Alejandro Heredia**
-
-- Email: ale@logus.graphics
-- Website: https://logus.graphics
-- GitHub: @logusgraphics
+Test the platform in a demo environment with short data retention period.
+[demo.grant.center](https://demo.grant.center)
