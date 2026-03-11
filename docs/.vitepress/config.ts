@@ -17,10 +17,7 @@ export default withMermaid({
   lang: 'en-US',
 
   // Ignore only localhost and repo source-path links (not all dead links); keeps detection for broken internal doc links
-  ignoreDeadLinks: [
-    /^https?:\/\/localhost/,
-    /^\.?\/?(apps\/|packages\/|observability\/)/,
-  ],
+  ignoreDeadLinks: [/^https?:\/\/localhost/, /^\.?\/?(apps\/|packages\/|observability\/)/],
 
   // Exclude internal-only directories from build
   srcExclude: ['**/implementation-plans/**'],
