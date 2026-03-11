@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { Suspense, useMemo, useState, useCallback, useEffect } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -12,7 +12,7 @@ import { VarList, getNonCriticalSectionNames } from '@/components/VarList';
 import { useEnvState } from '@/hooks/useEnvState';
 import type { EnvCategoryId } from '@/lib/env-metadata';
 
-export default function ConfigPage() {
+function ConfigPageContent() {
   const {
     data,
     loading,
@@ -220,5 +220,19 @@ export default function ConfigPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ConfigPage() {
+  return (
+    <Suspense
+      fallback={
+        <main>
+          <p className="config-body-message">Loading…</p>
+        </main>
+      }
+    >
+      <ConfigPageContent />
+    </Suspense>
   );
 }
