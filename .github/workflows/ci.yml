@@ -63,3 +63,6 @@ jobs:
       - name: Audit (quick)
         run: pnpm run audit:quick
         continue-on-error: true
+
+      - name: E2E tests
+        run: pnpm test:e2e
