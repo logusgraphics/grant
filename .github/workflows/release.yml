@@ -10,8 +10,8 @@ on:
 jobs:
   release:
     name: Version and publish (@grantjs/client, server, cli)
-    # Skip when this push is the version commit from the release workflow (avoids re-trigger loop)
-    if: ${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore: version packages') }}
+    # Run on every push to main so that merging the "Version packages" PR (squash or merge) triggers publish.
+    # When the workflow itself pushes a version commit, the re-run finds no new changesets and exits without publishing.
     runs-on: self-hosted
     permissions:
       contents: write

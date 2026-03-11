@@ -16,8 +16,11 @@ export default withMermaid({
   base: '/',
   lang: 'en-US',
 
-  // Allow localhost and repo source-path links (docs reference code locations like apps/api/..., packages/@grantjs/...)
-  ignoreDeadLinks: true,
+  // Ignore only localhost and repo source-path links (not all dead links); keeps detection for broken internal doc links
+  ignoreDeadLinks: [
+    /^https?:\/\/localhost/,
+    /^\.?\/?(apps\/|packages\/|observability\/)/,
+  ],
 
   // Exclude internal-only directories from build
   srcExclude: ['**/implementation-plans/**'],
