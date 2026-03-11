@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 import { BookOpen, FileJson, Globe, Menu, Moon, Network, Sun, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { DemoModeDialog, Logo } from '@/components/common';
+import { DemoModeDialogProvider, DemoModeDialogTrigger, Logo } from '@/components/common';
 import { LanguageSwitcher, ThemeToggle } from '@/components/features/settings';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
@@ -56,84 +56,36 @@ export function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between px-4">
-        {/* Logo */}
-        <div className="flex-shrink-0">
-          <Link href="/" className="flex items-center">
-            <div className="flex items-center justify-center">
-              <Logo size={75} className="mt-2" />
-            </div>
-          </Link>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden p-2 rounded-md hover:bg-accent flex-shrink-0"
-          aria-label="Toggle menu"
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-
-        {/* Desktop Navigation and Controls */}
-        <div className="hidden md:flex md:items-center md:space-x-3">
-          <div className="flex items-center gap-4">
-            <DemoModeDialog />
-            <a
-              href={getDocsUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <BookOpen className="h-[1rem] w-[1rem] shrink-0" />
-              {t('navigation.docs')}
-            </a>
-            <a
-              href={getApiDocsUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <FileJson className="h-[1rem] w-[1rem] shrink-0" />
-              {t('navigation.apiDocs')}
-            </a>
-            <a
-              href={getGraphqlPlaygroundUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Network className="h-[1rem] w-[1rem] shrink-0" />
-              {t('navigation.graphqlPlayground')}
-            </a>
-            <ThemeToggle ref={themeToggleRef} trigger={desktopThemeTrigger} />
-            <LanguageSwitcher ref={languageSwitcherRef} trigger={desktopLanguageTrigger} />
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <div
-          className={cn(
-            'absolute top-14 left-0 right-0 bg-background border-b md:hidden transition-all duration-200 ease-in-out',
-            isMobileMenuOpen
-              ? 'opacity-100 translate-y-0'
-              : 'opacity-0 -translate-y-2 pointer-events-none'
-          )}
-        >
-          <div className="flex flex-col space-y-4 p-4">
-            <nav className="flex flex-col space-y-2">
-              {/* Dashboard link removed - breadcrumb provides better navigation */}
-            </nav>
-            <div className="flex flex-col space-y-2">
-              <div className="py-2 -mx-2">
-                <DemoModeDialog />
+    <DemoModeDialogProvider>
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-14 items-center justify-between px-4">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="flex items-center">
+              <div className="flex items-center justify-center">
+                <Logo size={75} className="mt-2" />
               </div>
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 rounded-md hover:bg-accent flex-shrink-0"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+
+          {/* Desktop Navigation and Controls */}
+          <div className="hidden md:flex md:items-center md:space-x-3">
+            <div className="flex items-center gap-4">
+              <DemoModeDialogTrigger />
               <a
                 href={getDocsUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 py-2 px-2 -mx-2 rounded-md hover:bg-accent text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <BookOpen className="h-[1rem] w-[1rem] shrink-0" />
                 {t('navigation.docs')}
@@ -142,7 +94,7 @@ export function Header() {
                 href={getApiDocsUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 py-2 px-2 -mx-2 rounded-md hover:bg-accent text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <FileJson className="h-[1rem] w-[1rem] shrink-0" />
                 {t('navigation.apiDocs')}
@@ -151,28 +103,78 @@ export function Header() {
                 href={getGraphqlPlaygroundUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 py-2 px-2 -mx-2 rounded-md hover:bg-accent text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Network className="h-[1rem] w-[1rem] shrink-0" />
                 {t('navigation.graphqlPlayground')}
               </a>
+              <ThemeToggle ref={themeToggleRef} trigger={desktopThemeTrigger} />
+              <LanguageSwitcher ref={languageSwitcherRef} trigger={desktopLanguageTrigger} />
             </div>
-            <div className="h-px bg-border" />
-            <div className="flex flex-col space-y-2">
-              <ThemeToggle ref={themeToggleRef} trigger={mobileThemeTrigger} />
-              <LanguageSwitcher ref={languageSwitcherRef} trigger={mobileLanguageTrigger} />
-            </div>
-            <div className="h-px bg-border" />
-            <div className="flex flex-col space-y-2">
-              {!isAuthenticated() ? (
-                <div className="block py-2">
-                  <Link href="/auth/login">{t('auth.login')}</Link>
+          </div>
+
+          {/* Mobile Menu */}
+          <div
+            className={cn(
+              'absolute top-14 left-0 right-0 bg-background border-b md:hidden transition-all duration-200 ease-in-out',
+              isMobileMenuOpen
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 -translate-y-2 pointer-events-none'
+            )}
+          >
+            <div className="flex flex-col space-y-4 p-4">
+              <nav className="flex flex-col space-y-2">
+                {/* Dashboard link removed - breadcrumb provides better navigation */}
+              </nav>
+              <div className="flex flex-col space-y-2">
+                <div className="py-2 -mx-2">
+                  <DemoModeDialogTrigger />
                 </div>
-              ) : null}
+                <a
+                  href={getDocsUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 py-2 px-2 -mx-2 rounded-md hover:bg-accent text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <BookOpen className="h-[1rem] w-[1rem] shrink-0" />
+                  {t('navigation.docs')}
+                </a>
+                <a
+                  href={getApiDocsUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 py-2 px-2 -mx-2 rounded-md hover:bg-accent text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <FileJson className="h-[1rem] w-[1rem] shrink-0" />
+                  {t('navigation.apiDocs')}
+                </a>
+                <a
+                  href={getGraphqlPlaygroundUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 py-2 px-2 -mx-2 rounded-md hover:bg-accent text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Network className="h-[1rem] w-[1rem] shrink-0" />
+                  {t('navigation.graphqlPlayground')}
+                </a>
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex flex-col space-y-2">
+                <ThemeToggle ref={themeToggleRef} trigger={mobileThemeTrigger} />
+                <LanguageSwitcher ref={languageSwitcherRef} trigger={mobileLanguageTrigger} />
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex flex-col space-y-2">
+                {!isAuthenticated() ? (
+                  <div className="block py-2">
+                    <Link href="/auth/login">{t('auth.login')}</Link>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </DemoModeDialogProvider>
   );
 }

@@ -76,7 +76,7 @@ export function renderBaseEmailTemplate(props: BaseEmailTemplateProps): string {
           <mj-column>
             <mj-raw>
               <div style="text-align: center;">
-                <img src="${logoUrl || `${config.security.frontendUrl}/grant-logo-email.png`}" alt="${companyName}" width="140" class="logo-email" style="display: block; width: 140px; max-width: 140px; height: auto; margin: 0 auto;" />
+                <img src="${logoUrl || `${config.security.frontendUrl}/grant-logo-email.png`}" alt="${companyName}" width="140" class="logo-email" style="display: block; width: 100px; max-width: 100px; height: auto; margin: 0 auto;" />
               </div>
             </mj-raw>
           </mj-column>
