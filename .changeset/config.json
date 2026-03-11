@@ -7,5 +7,29 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [
+    "grant",
+    "grant-api",
+    "grant-config",
+    "grant-web",
+    "grant-docs",
+    "example-express",
+    "example-fastify",
+    "example-nestjs",
+    "example-nextjs",
+    "example-nextjs-client",
+    "@grantjs/analytics",
+    "@grantjs/cache",
+    "@grantjs/constants",
+    "@grantjs/core",
+    "@grantjs/database",
+    "@grantjs/email",
+    "@grantjs/errors",
+    "@grantjs/i18n",
+    "@grantjs/jobs",
+    "@grantjs/logger",
+    "@grantjs/schema",
+    "@grantjs/storage",
+    "@grantjs/telemetry"
+  ]
 }
