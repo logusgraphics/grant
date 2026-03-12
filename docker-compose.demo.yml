@@ -114,11 +114,15 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      # Build args are interpolated from .env.demo when using --env-file .env.demo (or when deploy script sources it)
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-http://localhost:5173}
         # NEXT_PUBLIC_APP_VERSION: omitted so next.config uses package.json version
     container_name: grant-demo-web
+    env_file:
+      - .env.demo
     depends_on:
       - api
     ports:
@@ -145,6 +149,8 @@ services:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
         VITE_APP_URL: ${VITE_APP_URL:-http://localhost:3000}
     container_name: grant-demo-docs
+    env_file:
+      - .env.demo
     ports:
       - target: 8080
         published: 5173
@@ -169,6 +175,8 @@ services:
         NEXT_PUBLIC_GRANT_API_URL: ${NEXT_PUBLIC_GRANT_API_URL:-http://localhost:4000}
         NEXT_PUBLIC_GRANT_FRONTEND_URL: ${NEXT_PUBLIC_GRANT_FRONTEND_URL:-http://localhost:3000}
     container_name: grant-demo-example-nextjs
+    env_file:
+      - .env.demo
     depends_on:
       - api
     ports:
