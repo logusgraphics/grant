@@ -119,6 +119,8 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
         NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-http://localhost:5173}
+        NEXT_PUBLIC_DEMO_MODE_ENABLED: ${NEXT_PUBLIC_DEMO_MODE_ENABLED:-true}
+        NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE: ${NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE:-0 0 */2 * *}
         # NEXT_PUBLIC_APP_VERSION: omitted so next.config uses package.json version
     container_name: grant-demo-web
     env_file:

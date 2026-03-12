@@ -6,6 +6,7 @@
 #   docker build -f apps/web/Dockerfile \
 #     --build-arg NEXT_PUBLIC_API_URL=https://demo.grant.center \
 #     --build-arg NEXT_PUBLIC_APP_URL=https://demo.grant.center \
+#     --build-arg NEXT_PUBLIC_DOCS_URL=https://docs.grant.center \
 #     -t grant-web .
 #
 # NEXT_PUBLIC_APP_VERSION defaults to package.json "version" (see next.config.ts).
@@ -27,8 +28,14 @@ FROM base AS builder
 # Build-time args for Next.js (must be set when building the image)
 ARG NEXT_PUBLIC_API_URL=https://demo.grant.center
 ARG NEXT_PUBLIC_APP_URL=https://demo.grant.center
+ARG NEXT_PUBLIC_DOCS_URL=http://localhost:5173
+ARG NEXT_PUBLIC_DEMO_MODE_ENABLED=true
+ARG NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE="0 0 */2 * *"
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_DOCS_URL=$NEXT_PUBLIC_DOCS_URL
+ENV NEXT_PUBLIC_DEMO_MODE_ENABLED=$NEXT_PUBLIC_DEMO_MODE_ENABLED
+ENV NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE=$NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE
 # NEXT_PUBLIC_APP_VERSION: optional; when unset, next.config.ts uses package.json version
 ARG NEXT_PUBLIC_APP_VERSION
 ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
