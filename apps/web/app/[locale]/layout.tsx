@@ -13,6 +13,7 @@ import {
   ApolloProvider,
   GrantProvider,
   MessageProvider,
+  RuntimeConfigProvider,
   SessionRestoreGate,
 } from '@/components/providers';
 
@@ -89,16 +90,18 @@ export default function LocaleLayout({ children }: LocaleLayoutProps) {
 
   return (
     <MessageProvider messages={messages} locale={locale}>
-      <ApolloProvider>
-        <GrantProvider>
-          <SessionRestoreGate>
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="min-w-0 flex-1">{children}</main>
-            </div>
-          </SessionRestoreGate>
-        </GrantProvider>
-      </ApolloProvider>
+      <RuntimeConfigProvider>
+        <ApolloProvider>
+          <GrantProvider>
+            <SessionRestoreGate>
+              <div className="relative flex min-h-screen flex-col">
+                <Header />
+                <main className="min-w-0 flex-1">{children}</main>
+              </div>
+            </SessionRestoreGate>
+          </GrantProvider>
+        </ApolloProvider>
+      </RuntimeConfigProvider>
     </MessageProvider>
   );
 }

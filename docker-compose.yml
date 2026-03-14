@@ -151,6 +151,109 @@ services:
     networks:
       - grant-network
 
+  api:
+    image: ${GRANT_API_IMAGE:-ghcr.io/logusgraphics/grant-platform/grant-api:latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+      - apps/api/.env
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      DB_URL: postgresql://${POSTGRES_USER:-grant_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-grant_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      CACHE_STRATEGY: redis
+    volumes:
+      - api_storage:/app/apps/api/storage
+    ports:
+      - '${API_PORT:-4000}:4000'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:4000/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - grant-network
+
+  web:
+    image: ${GRANT_WEB_IMAGE:-ghcr.io/logusgraphics/grant-platform/grant-web:latest}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: grant-web
+    depends_on:
+      - api
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    restart: unless-stopped
+    networks:
+      - grant-network
+
+  docs:
+    image: ${GRANT_DOCS_IMAGE:-ghcr.io/logusgraphics/grant-platform/grant-docs:latest}
+    build:
+      context: .
+      dockerfile: docs/Dockerfile
+    container_name: grant-docs
+    ports:
+      - '${DOCS_PORT:-5173}:8080'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/ || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - grant-network
+
+  example-nextjs:
+    image: ${GRANT_EXAMPLE_NEXTJS_IMAGE:-ghcr.io/logusgraphics/grant-platform/example-nextjs:latest}
+    build:
+      context: .
+      dockerfile: packages/@grantjs/client/examples/nextjs/Dockerfile
+    container_name: grant-example-nextjs
+    depends_on:
+      - api
+    ports:
+      - '${EXAMPLE_PORT:-3004}:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    restart: unless-stopped
+    networks:
+      - grant-network
+
+  gateway:
+    image: nginx:alpine
+    container_name: grant-gateway
+    depends_on:
+      - api
+      - web
+      - docs
+      - example-nextjs
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx-gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    networks:
+      - grant-network
+
 volumes:
   postgres_data:
   pgadmin_data:
@@ -159,6 +262,7 @@ volumes:
   prometheus_data:
   grafana_data:
   umami_data:
+  api_storage:
 
 networks:
   grant-network:

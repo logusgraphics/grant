@@ -126,9 +126,14 @@ export class ApiKeyService implements IApiKeyService {
     }
   }
 
-  private async signToken(params: SignTokenParams, transaction?: Transaction): Promise<string> {
+  private async signToken(
+    params: SignTokenParams,
+    transaction?: Transaction,
+    issuerBaseUrl?: string
+  ): Promise<string> {
     const { apiKeyId, scope, userId } = params;
-    const aud = config.app.url;
+    const base = (issuerBaseUrl ?? config.app.url).replace(/\/$/, '');
+    const aud = base;
     const iat = Math.floor(Date.now() / 1000);
     const exp = Math.floor(this.getAccessTokenExpirationDate(Date.now()).getTime() / 1000);
 
@@ -137,7 +142,7 @@ export class ApiKeyService implements IApiKeyService {
       throw new NoSessionSigningKeyError('No session signing key found');
     }
 
-    const iss = buildJwksIssuerUrl(signingScope);
+    const iss = buildJwksIssuerUrl(signingScope, issuerBaseUrl);
 
     const payload = {
       sub: userId,
@@ -248,7 +253,8 @@ export class ApiKeyService implements IApiKeyService {
 
   public async exchangeApiKeyForToken(
     params: ExchangeApiKeyInput,
-    transaction?: Transaction
+    transaction?: Transaction,
+    issuerBaseUrl?: string
   ): Promise<ExchangeTokenResult> {
     const context = 'ApiKeyService.exchangeApiKeyForToken';
     const validatedParams = validateInput(exchangeApiKeyParamsSchema, params, context);
@@ -354,7 +360,11 @@ export class ApiKeyService implements IApiKeyService {
       throw new AuthenticationError('User ID not found');
     }
 
-    const accessToken = await this.signToken({ apiKeyId: apiKey.id, scope, userId }, transaction);
+    const accessToken = await this.signToken(
+      { apiKeyId: apiKey.id, scope, userId },
+      transaction,
+      issuerBaseUrl
+    );
     const expiresIn = config.jwt.accessTokenExpirationMinutes * 60;
 
     const response: ExchangeTokenResult = {

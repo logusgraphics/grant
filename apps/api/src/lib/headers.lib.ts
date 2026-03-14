@@ -3,6 +3,8 @@ import { IncomingHttpHeaders } from 'http';
 import { AUTH_ACCESS_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '@grantjs/constants';
 import { Request } from 'express';
 
+import { config } from '@/config';
+
 export interface ContextHeaders {
   origin: string;
   userAgent: string | null;
@@ -113,4 +115,22 @@ export function getContextHeaders(headers: IncomingHttpHeaders): ContextHeaders 
     userAgent: getUserAgent(headers),
     authorization: getAuthorization(headers),
   };
+}
+
+/**
+ * Build the request base URL (protocol + host) for issuer, callbacks, etc.
+ * Precedence: X-Forwarded-Proto, X-Forwarded-Host (when behind gateway), then Host, then APP_URL fallback.
+ * Compatible with nginx, Traefik, Cloudflare, k8s ingress, Fly, Render, Railway.
+ */
+export function getRequestBaseUrl(req: Request): string {
+  const proto =
+    (req.headers['x-forwarded-proto'] as string | undefined)?.split(',')[0]?.trim() || req.protocol;
+  const host =
+    (req.headers['x-forwarded-host'] as string | undefined)?.split(',')[0]?.trim() ||
+    req.get('host');
+  if (host) {
+    const base = `${proto}://${host}`.replace(/\/$/, '');
+    return base;
+  }
+  return config.app.url.replace(/\/$/, '');
 }

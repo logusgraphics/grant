@@ -9,7 +9,7 @@ Reproducible steps to build a first dashboard from the Grant API Prometheus metr
 
 ## Prerequisites
 
-- API running with `METRICS_ENABLED=true` (and `APP_PORT=4000` or match `observability/prometheus.yml`).
+- API running with `METRICS_ENABLED=true` (and `API_PORT=4000` or match `observability/prometheus.yml`).
 - Prometheus and Grafana up: `docker compose up -d prometheus grafana`.
 - See [observability/README.md](observability/README.md) in the repo for the full runbook.
 

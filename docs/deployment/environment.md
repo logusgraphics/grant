@@ -1,360 +1,120 @@
 ---
 title: Environment Setup
-description: Setting up different environments for Grant deployment
+description: Minimal environment configuration for Docker deployments
 ---
 
 # Environment Setup
 
-This guide covers setting up different environments (development, staging, production) for Grant.
+This page describes the **single root `.env`** used for Docker deployments. All apps use **canonical env variable names** (e.g. `APP_URL`, `DOCS_URL`). Frontends (web, docs, example-nextjs) receive URLs and flags at **runtime** via the API’s `GET /api/config` or (for docs) minimal `/config.json` then `/api/config`, not at build time.
 
-## Environment Overview
+## 1. Env files (single source of config)
 
-Grant supports multiple deployment environments:
+Configuration lives in env files; Compose files define topology only.
 
-- **Development** - Local development with hot reload
-- **Staging** - Pre-production testing environment
-- **Production** - Live production environment
+| Env file    | Used by                                                                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.env`      | Default stack (`docker-compose.yml`); keep minimal (e.g. `COMPOSE_PROJECT_NAME=grant`) at root; full config can live in `.env.local` or per-env files |
+| `.env.demo` | Demo/Swarm (`docker-compose.demo.yml`). Copy from `.env.demo.example`.                                                                                |
+| `.env.test` | E2E (`docker-compose.e2e.yml`). Copy from `.env.test.example`.                                                                                        |
 
-## Environment Configuration
+- Copy templates: `cp .env.example .env`, `cp .env.demo.example .env.demo`, `cp .env.test.example .env.test` (or let `./scripts/e2e.sh` create `.env.test` on first run).
+- Compose interpolates `${VAR}` from the env passed at **parse time** (e.g. `docker compose --env-file .env.test up`). Use `--env-file .env.<env>` when not using the default `.env`.
+- All app containers receive vars at **runtime** via `env_file` or the interpolated `environment:` block.
 
-### Development Environment
+Use **canonical names only** in root `.env`. There are no `NEXT_PUBLIC_*` or `VITE_*` keys in this file; those prefixes were for build-time inlining, which we no longer use.
 
-Optimized for local development with debugging enabled.
-
-**Infrastructure** (Docker Compose):
+## 2. Database and cache (required)
 
 ```bash
-# .env (root)
-POSTGRES_DB=grant
+POSTGRES_DB=grant_db
 POSTGRES_USER=grant_user
-POSTGRES_PASSWORD=grant_password
-REDIS_PASSWORD=grant_redis_password
+POSTGRES_PASSWORD=change-me
+REDIS_PASSWORD=change-me
 ```
 
-**Application**:
+The API builds `DB_URL` from these (or you set `DB_URL` directly for a managed Postgres). For managed Redis, set `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` as needed.
+
+## 3. Public URLs and CORS (required)
+
+Single public URL; API and example app are reached via the same host (path-based proxy):
 
 ```bash
-# apps/api/.env
-NODE_ENV=development
-APP_PORT=4000
+APP_URL=https://grant.yourdomain.com
+DOCS_URL=https://docs.yourdomain.com
 
-# Database
-DB_URL=postgresql://grant_user:grant_password@localhost:5432/grant
-DB_LOG_QUERIES=true
-
-# Cache (in-memory for single instance)
-CACHE_STRATEGY=memory
-
-# GraphQL/Apollo
-APOLLO_INTROSPECTION=true
-APOLLO_PLAYGROUND=true
-APOLLO_INCLUDE_STACKTRACE=true
-
-# Security (relaxed for development)
-SECURITY_FRONTEND_URL=http://localhost:3000
-SECURITY_ENABLE_RATE_LIMIT=false
+SECURITY_FRONTEND_URL=${APP_URL}
+SECURITY_ADDITIONAL_ORIGINS=https://docs.yourdomain.com
 ```
 
-**Start development environment:**
+- **APP_URL** — single public base URL. Web, API (REST + GraphQL), and example app (at `/example`) all use this when the web app proxies `/api`, `/graphql`, `/api-docs`, `/storage`, `/health`, `/.well-known`, and `/example` to the API and example app.
+- **DOCS_URL** — public URL of the docs site (VitePress).
+- **SECURITY_FRONTEND_URL** — must match the URL browsers use for the web app (typically same as `APP_URL`).
+- **SECURITY_ADDITIONAL_ORIGINS** — extra origins allowed to call the API (e.g. docs).
+
+**How frontends get these values:**
+
+- **Web (Next.js)** — Client fetches `GET /api/config` (proxied to the API) and uses the JSON (appUrl, apiUrl, docsUrl, exampleAppUrl, demoModeEnabled, etc.).
+- **Docs (VitePress)** — Entrypoint writes minimal `/config.json` with only `{ "appUrl": "${APP_URL}" }`; the docs app then fetches `${appUrl}/api/config` for the full config.
+- **Example-nextjs** — Fetches config from the same API (`/api/config` when served under the web proxy, or its own env when standalone); exampleAppOrigin = `${APP_URL}/example`.
+
+No build-time URL injection; the same image works for any deployment.
+
+## 4. Demo mode (optional)
 
 ```bash
-# Start infrastructure
-docker-compose up -d
-
-# Start API
-cd apps/api && pnpm run dev
-
-# Start web app (in another terminal)
-cd apps/web && pnpm run dev
+DEMO_MODE_ENABLED=false
+DEMO_MODE_DB_REFRESH_SCHEDULE=0 0 */2 * *
 ```
 
-### Staging Environment
+When enabled, the API may reset data on a schedule and the web UI shows a demo banner. For production, keep these off unless you intend a resettable sandbox (e.g. `demo.grant.center`).
 
-Pre-production environment for testing before going live.
-
-**Infrastructure** (Managed Services):
-
-Use managed PostgreSQL and Redis from your preferred provider (e.g. cloud or self-hosted).
-
-**Application**:
+## 5. System user ID
 
 ```bash
-# apps/api/.env (staging)
-NODE_ENV=staging
-APP_PORT=4000
-
-# Database (managed)
-DB_URL=postgresql://user:pass@staging-db-host:5432/grant
-DB_LOG_QUERIES=false
-
-# Cache (Redis for multi-instance)
-CACHE_STRATEGY=redis
-REDIS_HOST=staging-redis.cache.amazonaws.com
-REDIS_PORT=6379
-REDIS_PASSWORD=staging-redis-password
-REDIS_ENABLE_TLS=true
-
-# GraphQL/Apollo
-APOLLO_INTROSPECTION=false
-APOLLO_PLAYGROUND=false
-APOLLO_INCLUDE_STACKTRACE=false
-
-# Security (production-like)
-SECURITY_FRONTEND_URL=https://staging.yourdomain.com
-SECURITY_ENABLE_RATE_LIMIT=true
-SECURITY_RATE_LIMIT_MAX=1000  # Higher than prod for testing
+SYSTEM_USER_ID=00000000-0000-0000-0000-000000000000
 ```
 
-### Production Environment
+Must match the user created by the seed scripts. For most setups, use the default and run the provided seed.
 
-Hardened configuration for live deployment.
-
-**Application**:
+## 6. OAuth and email
 
 ```bash
-# apps/api/.env (production)
-NODE_ENV=production
-APP_PORT=4000
+GITHUB_CLIENT_ID=...
+GITHUB_CLIENT_SECRET=...
+GITHUB_CALLBACK_URL=${APP_URL}/api/auth/github/callback
+GITHUB_PROJECT_CALLBACK_URL=${APP_URL}/api/auth/project/callback
 
-# Database (managed RDS with read replicas)
-DB_URL=postgresql://user:pass@prod-db.amazonaws.com:5432/grant
-DB_POOL_MAX=20
-DB_POOL_MIN=5
-DB_LOG_QUERIES=false
-
-# Cache (Redis cluster)
-CACHE_STRATEGY=redis
-REDIS_HOST=prod-redis-cluster.cache.amazonaws.com
-REDIS_PORT=6379
-REDIS_PASSWORD=production-redis-strong-password
-REDIS_ENABLE_TLS=true
-
-# GraphQL/Apollo (security hardened)
-APOLLO_INTROSPECTION=false
-APOLLO_PLAYGROUND=false
-APOLLO_INCLUDE_STACKTRACE=false
-
-# Security (strict)
-SECURITY_FRONTEND_URL=https://yourdomain.com
-SECURITY_ENABLE_HELMET=true
-SECURITY_ENABLE_RATE_LIMIT=true
-SECURITY_RATE_LIMIT_MAX=100
-SECURITY_RATE_LIMIT_WINDOW_MINUTES=15
+EMAIL_PROVIDER=ses
+EMAIL_FROM=noreply@yourdomain.com
+# ... EMAIL_SES_* or other provider vars
 ```
 
-## Environment-Specific Files
+Configure once DNS and TLS are in place.
 
-### Directory Structure
+## 7. Build vs runtime
 
-```
-grant/
-├── .env.example                 # Infrastructure template
-├── .env.development            # Development overrides
-├── .env.staging                # Staging overrides
-├── .env.production             # Production overrides
-├── apps/api/
-│   ├── .env.example            # API template
-│   ├── .env.development        # Development API config
-│   ├── .env.staging            # Staging API config
-│   └── .env.production         # Production API config
-```
+- **Compose interpolation** — When you run `docker compose up`, Compose reads `.env` (or `--env-file`) and substitutes `${VAR}` in the YAML. This happens at **parse time**.
+- **env_file** — Lists a file (e.g. `.env`) whose contents are injected into the **container at runtime**. They are **not** available during `docker build`; they are available when the container starts.
+- **Build args** — We do not pass URL or demo flags as build args for web, docs, or example-nextjs. Images are built once and reused; URLs come from runtime env.
 
-### Loading Environment Files
+## 8. Config app and local development
 
-The API automatically loads the appropriate `.env` file based on `NODE_ENV`:
+The **config app** (`pnpm config`) reads and writes only the root `.env`.
 
-```typescript
-// Automatically handled by apps/api/src/config/env.config.ts
-dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
-dotenv.config({ path: '.env' }); // Fallback to default
-```
+**Local development:** Root scripts (`pnpm dev`, `pnpm dev:web`, `pnpm dev:api`, `pnpm db:migrate`, `pnpm db:seed`, etc.) load the standard env hierarchy from the monorepo root via **@grantjs/env** (no dotenv-cli). Always run these commands from the repo root so the loader finds `.env`, `.env.local`, `.env.development`, etc. No copying or syncing to per-app `.env` files is needed.
 
-## CI/CD Integration
+## 9. Validation
 
-### GitHub Actions Example
-
-```yaml
-name: Deploy to Staging
-
-on:
-  push:
-    branches: [develop]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm run build
-        env:
-          NODE_ENV: staging
-
-      - name: Deploy to staging
-        run: |
-          # Your deployment script
-          ./scripts/deploy-staging.sh
-        env:
-          DB_URL: ${{ secrets.STAGING_DB_URL }}
-          REDIS_PASSWORD: ${{ secrets.STAGING_REDIS_PASSWORD }}
-```
-
-### Environment Secrets
-
-Store sensitive values in your CI/CD platform:
-
-**GitHub Secrets:**
-
-- `STAGING_DB_URL`
-- `STAGING_REDIS_PASSWORD`
-- `PRODUCTION_DB_URL`
-- `PRODUCTION_REDIS_PASSWORD`
-
-## Validation
-
-Each environment should validate its configuration on startup:
+From repo root or `apps/api`:
 
 ```bash
-# Development - Should start without errors
-cd apps/api && pnpm run dev
-
-# Staging/Production - Validates stricter requirements
-cd apps/api && NODE_ENV=production pnpm run start
+NODE_ENV=production pnpm --filter grant-api start
 ```
 
-**Validation checks:**
+The API validates required env, database connectivity, and Redis when configured.
 
-- Required environment variables are set
-- Secrets are not default values in production
-- Database connection is valid
-- Redis connection (if using) is valid
+## Related
 
-## Best Practices
-
-### 1. Separate Secrets
-
-Use different secrets for each environment:
-
-```bash
-# Generate unique secrets
-openssl rand -base64 32  # For each environment
-```
-
-### 2. Environment Parity
-
-Keep environments as similar as possible:
-
-- ✅ Same database schema
-- ✅ Same application version
-- ✅ Same infrastructure type (managed services)
-- ❌ Different data
-- ❌ Different secrets
-- ❌ Different scale
-
-### 3. Configuration as Code
-
-Store environment configurations in version control:
-
-```bash
-# Safe to commit (no secrets)
-.env.example
-.env.development.example
-.env.staging.example
-.env.production.example
-```
-
-### 4. Secrets Management
-
-Never commit actual secrets:
-
-```bash
-# gitignored
-.env
-.env.development
-.env.staging
-.env.production
-.env.local
-.env.*.local
-```
-
-Use secret management services:
-
-- AWS Secrets Manager
-- HashiCorp Vault
-- Azure Key Vault
-- Google Secret Manager
-
-### 5. Testing Configuration
-
-Test configuration before deploying:
-
-```bash
-# Dry run
-NODE_ENV=staging node -e "require('./dist/config/env.config').validateConfig()"
-```
-
-## Troubleshooting
-
-### Wrong Environment Loaded
-
-**Symptom**: Development settings in production
-
-**Fix**:
-
-```bash
-# Explicitly set NODE_ENV
-export NODE_ENV=production
-node dist/server.js
-```
-
-### Missing Environment Variables
-
-**Symptom**: Configuration validation errors
-
-**Fix**:
-
-1. Check `.env` file exists
-2. Verify all required variables are set
-3. Check variable names match exactly
-4. Ensure no typos in `.env` file
-
-### Database Connection Fails
-
-**Symptom**: Cannot connect to database
-
-**Fix**:
-
-```bash
-# Test connection manually
-psql "$DB_URL"
-
-# Check network access
-telnet db-host 5432
-
-# Verify credentials
-echo $DB_URL
-```
-
-## Related Documentation
-
-- **[Configuration](/getting-started/configuration)** - Complete configuration reference
-- **[Docker Deployment](/deployment/docker)** - Local infrastructure setup
-- **[Self-Hosting](/deployment/self-hosting)** - Self-hosting guide
-
----
-
-**Next Steps:**
-
-- Choose your target environment
-- Configure environment-specific variables
-- Test configuration locally
-- Deploy to your target environment
+- [Configuration](/getting-started/configuration) — Full configuration reference
+- [Deployment overview](/deployment/self-hosting)
+- [Docker deployment](/deployment/docker)

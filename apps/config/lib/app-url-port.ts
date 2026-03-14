@@ -1,5 +1,5 @@
 /**
- * Helpers to keep APP_URL and APP_PORT in sync when one is updated in the config UI.
+ * Helpers to keep APP_URL and API_PORT in sync when one is updated in the config UI.
  */
 
 /** Removes a trailing slash from a URL, if present. */

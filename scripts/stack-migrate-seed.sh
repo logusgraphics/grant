@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Run DB migrate and seed for the demo stack (Swarm). Execs into a running API task.
-# Usage: ./scripts/stack-demo-migrate-seed.sh [stack-name]
-# From repo root: ./scripts/stack-demo-migrate-seed.sh grant-demo
+# Run DB migrate and seed for the stack (Swarm). Execs into a running API task.
+# Usage: ./scripts/stack-migrate-seed.sh [stack-name]
+# From repo root: ./scripts/stack-migrate-seed.sh grant-demo
 # Requires: stack already deployed (postgres + at least one API task running).
 
 set -e

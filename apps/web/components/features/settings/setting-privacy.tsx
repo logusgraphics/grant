@@ -44,6 +44,7 @@ import { Label } from '@/components/ui/label';
 import { useEmailVerified } from '@/hooks/auth';
 import { usePrivacySettings } from '@/hooks/privacy';
 import { getCurrentUserId } from '@/lib/auth';
+import { getRuntimeConfig } from '@/lib/runtime-config';
 import { useAuthStore } from '@/stores/auth.store';
 
 const DATA_EXPORT_INCLUDES = [
@@ -134,7 +135,7 @@ export function SettingPrivacy() {
                     <ItemDescription>
                       {key === 'retention'
                         ? t('dataRetention.deleted.description', {
-                            days: process.env.NEXT_PUBLIC_ACCOUNT_DELETION_RETENTION_DAYS ?? '30',
+                            days: getRuntimeConfig().accountDeletionRetentionDays,
                           })
                         : t(`accountDeletion.consequences.${key}Description`)}
                     </ItemDescription>

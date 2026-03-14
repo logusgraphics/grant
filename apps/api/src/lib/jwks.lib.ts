@@ -67,9 +67,10 @@ export interface PublicKeyForJwks {
  *
  * - scope null or system: returns API base URL.
  * - scope organizationProject/accountProject: returns scope-scoped issuer URL.
+ * - baseUrl: optional request-derived base (e.g. from X-Forwarded-*); falls back to config.app.url.
  */
-export function buildJwksIssuerUrl(scope: Scope | null): string {
-  const base = config.app.url.replace(/\/$/, '');
+export function buildJwksIssuerUrl(scope: Scope | null, baseUrl?: string): string {
+  const base = (baseUrl ?? config.app.url).replace(/\/$/, '');
   if (!scope || scope.tenant === Tenant.System) return base;
   const parts = scope.id.split(':');
   if (scope.tenant === Tenant.OrganizationProject && parts.length >= 2) {

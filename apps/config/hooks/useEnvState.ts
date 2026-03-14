@@ -414,11 +414,11 @@ export function useEnvState() {
           const resPort = await fetch('/api/env', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: 'APP_PORT', value: String(port) }),
+            body: JSON.stringify({ key: 'API_PORT', value: String(port) }),
           });
           const jsonPort = await resPort.json();
           if (jsonPort.ok) await fetchEnv();
-        } else if (key === 'APP_PORT') {
+        } else if (key === 'API_PORT') {
           const appUrl = getVar('APP_URL');
           const newAppUrl = setPortInAppUrl(appUrl, parseInt(value, 10));
           if (newAppUrl) {

@@ -1,513 +1,284 @@
 ---
 title: Docker Deployment
-description: Complete guide for setting up and managing Grant infrastructure with Docker Compose
+description: Deploy the Grant Platform with Docker Compose or Docker Swarm
 ---
 
 # Docker Deployment
 
-This guide explains how to set up and manage the Grant infrastructure services using Docker Compose.
+This guide shows how to deploy the Grant Platform using **Docker Compose** (single host) and how to take the same images and configuration to **Docker Swarm** (replicas and rolling updates). The flow is intentionally short and focused, similar to Umami’s deployment docs.
 
-## Overview
+## Compose files vs env files
 
-The Grant uses Docker Compose to manage its infrastructure services:
+- **Compose files** = infrastructure topology (which services run, replicas, tmpfs, networks).
+- **Env files** = configuration (passwords, ports, DB names, URLs). Keep config in `.env.<env>`; do not duplicate it in YAML.
 
-- **PostgreSQL 16** - Primary database
-- **PgAdmin 4** - Database management UI
-- **Redis 7** - Caching layer (optional)
+| Compose file              | Env file                                                | Use case                                     |
+| ------------------------- | ------------------------------------------------------- | -------------------------------------------- |
+| `docker-compose.yml`      | `.env` (or `--env-file .env.demo` for a demo-style run) | Default full stack                           |
+| `docker-compose.demo.yml` | `.env.demo`                                             | Demo/Swarm (fewer services, replicas)        |
+| `docker-compose.e2e.yml`  | `.env.test`                                             | E2E tests (minimal stack, ephemeral storage) |
 
-## Quick Start
+Compose resolves `${VAR}` in the YAML at **parse time** from the env passed to the process (e.g. `docker compose --env-file .env.test up`). Always pass `--env-file .env.<env>` when using a non-default env file so interpolation works. A minimal `.env` in the repo root (e.g. `COMPOSE_PROJECT_NAME=grant`) is kept for Compose and tooling; full config lives in `.env.test`, `.env.demo`, etc.
 
-### 1. Configure Infrastructure
+## 1. Choose your domains and ports
+
+Decide how users will reach the platform:
+
+| Component              | Default container port             | Typical public URL                    |
+| ---------------------- | ---------------------------------- | ------------------------------------- |
+| Web (Next.js)          | `3000`                             | `https://grant.yourdomain.com`        |
+| API                    | `4000`                             | `https://grant.yourdomain.com` (path) |
+| Docs (optional)        | `8080` (container) → `5173` (host) | `https://docs.yourdomain.com`         |
+| Example app (optional) | `3000` (container) → `3004` (host) | `https://example.yourdomain.com`      |
+
+You can keep the default ports from `docker-compose.yml` and put a reverse proxy (nginx, Traefik, load balancer, ingress) in front, or expose ports directly during initial testing.
+
+## 2. Environment: build vs runtime
+
+- **env_file** — The compose file sets `env_file: .env` (or `.env.demo`) on services. Those vars are injected into the **container at runtime** only; they are not available during `docker build`.
+- **Build args** — We do not pass URLs or demo flags as build args for web, docs, or example-nextjs. Images are built once and are deployment-agnostic; each deployment sets `APP_URL`, `DOCS_URL`, etc. in its env file, and the containers read them at startup.
+- **Compose interpolation** — When you run `docker compose up`, Compose reads your env file and substitutes `${VAR}` in the YAML (e.g. in `environment:` or image names). So the same compose file works for any domain.
+
+## 3. Create `.env` from the template
+
+From the repo root:
 
 ```bash
-# Copy the infrastructure environment template
 cp .env.example .env
-
-# Edit if needed (optional - defaults work for development)
-vim .env
 ```
 
-### 2. Start Services
+Update at least:
+
+- **Secrets** — `POSTGRES_PASSWORD`, `REDIS_PASSWORD` (e.g. `openssl rand -base64 32`)
+- **Public URLs** — `APP_URL`, `DOCS_URL` (single app URL; frontends get full config at runtime from API `GET /api/config`)
+- **CORS** — `SECURITY_FRONTEND_URL` (match `APP_URL`), `SECURITY_ADDITIONAL_ORIGINS`
+- **System user** — `SYSTEM_USER_ID` (must match seed)
+- **Demo mode** — `DEMO_MODE_ENABLED=false` unless you want a resettable sandbox
+
+See [Environment setup](/deployment/environment) for the full list and how build vs runtime env works.
+
+## 4. Start the stack with Docker Compose
+
+From the repo root:
 
 ```bash
-# Start all services
-docker-compose up -d
-
-# Or start specific services
-docker-compose up -d postgres redis
+docker compose up -d
 ```
 
-### 3. Verify Services
+This uses `docker-compose.yml` to start:
+
+- PostgreSQL, Redis, PgAdmin, Prometheus, Grafana, Jaeger, Umami
+- Grant API (`api`)
+- Grant web app (`web`)
+- Docs (`docs`)
+- Example Next.js app (`example-nextjs`)
+
+Default host ports:
+
+- `3000` → web
+- `4000` → API
+- `5173` → docs
+- `3004` → example app
+
+> Postgres and Redis are only reachable on the internal Docker network; the API connects to them via `postgres` / `redis` hostnames.
+
+## 5. Run migrations and seed data
+
+With the stack running, apply migrations and seed (same outcome as [§7.3](#73-migrate-and-seed-with-swarm); for Compose):
 
 ```bash
-# Check service status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
-docker-compose logs -f postgres  # specific service
+docker compose run --rm api pnpm run db:migrate
+docker compose run --rm api pnpm run db:seed
 ```
 
-### 4. Configure API
+After this, you can open the web app and complete onboarding.
+
+## 6. Put a reverse proxy in front (recommended)
+
+For production, terminate TLS and route traffic through a reverse proxy or load balancer:
+
+- Route `/`, `/auth/**`, etc. → **web** (`web:3000`)
+- Route `/api/**`, `/graphql`, `/health`, `/api-docs`, `/storage/**` → **api** (`api:4000`)
+- Optionally route `docs.yourdomain.com` → **docs** (`docs:8080`)
+
+You can use nginx, Traefik, Caddy, or your cloud’s load balancer / ingress. Reuse the URLs you configured in `.env` to keep CORS and redirects consistent.
+
+## 7. Docker Swarm: replicas and rolling updates
+
+The `docker-compose.demo.yml` file is tuned for **Swarm** and used to run `demo.grant.center`:
+
+- `deploy.replicas` for the API (e.g. 2 replicas)
+- `update_config` with `order: start-first` for rolling updates
+- An overlay network suitable for multi-node clusters
+- Host-mode ports for web/docs/example so a single node can bind to the public ports
+
+### 7.1 Initialize Swarm
+
+On the manager node:
 
 ```bash
-# Copy API environment template
-cp apps/api/.env.example apps/api/.env
-
-# The default DB_URL already matches docker-compose settings
-# DB_URL=postgresql://grant_user:grant_password@localhost:5432/grant
+docker swarm init
+# If the host has multiple IPs:
+# docker swarm init --advertise-addr <your-ip>
 ```
 
-### 5. Run API
+### 7.2 Prepare env and deploy the stack
+
+For Swarm we use the dedicated demo compose file and helper script:
 
 ```bash
-cd apps/api
-pnpm run dev
+cp .env.example .env.demo   # or reuse your existing .env, adjusted for demo
+./scripts/stack-deploy.sh up   # uses .env.demo and docker-compose.demo.yml by default
 ```
 
-## Environment Configuration
+This script:
 
-### Root `.env` (Infrastructure)
+- Loads variables from `.env.demo` in a subshell (no pollution of your shell)
+- Runs `docker stack deploy` with `docker-compose.demo.yml`
+- Uses `grant-demo` as the default stack name
 
-Controls Docker Compose services:
+You can override its defaults:
 
 ```bash
-# Database
-POSTGRES_DB=grant          # Database name
-POSTGRES_USER=grant_user            # Database user
-POSTGRES_PASSWORD=grant_password    # Database password
-
-# PgAdmin
-PGADMIN_EMAIL=admin@grant.dev      # Login email
-PGADMIN_PASSWORD=grant_password    # Login password
-
-# Redis
-REDIS_PASSWORD=grant_redis_password # Redis auth password
+ENV_FILE=.env.demo \
+COMPOSE_FILE=docker-compose.demo.yml \
+STACK_NAME=grant-demo \
+  ./scripts/stack-deploy.sh up
 ```
 
-### `apps/api/.env` (Application)
+> In CI you can run the same script after providing `.env.demo` (or equivalent env) to the runner.
 
-Controls the API application:
+### 7.3 Migrate and seed with Swarm
+
+Once the stack is up, use the helper script to run migrations and seeding inside a running API task:
 
 ```bash
-# Must match infrastructure settings
-DB_URL=postgresql://grant_user:grant_password@localhost:5432/grant
-REDIS_PASSWORD=grant_redis_password
-
-# See apps/api/.env.example for all options
+./scripts/stack-migrate-seed.sh grant-demo
 ```
 
-## Service Details
+This script:
 
-### PostgreSQL
+- Finds an API task for the given stack that has the database migration config
+- Runs database migrations
+- Runs the seed script (roles, permissions, system user, signing key)
 
-**Container**: `grant-postgres`
+### 7.4 Rolling updates
 
-**Port**: `5432`
-
-**Default credentials**:
-
-- Database: `grant`
-- User: `grant_user`
-- Password: `grant_password`
-
-**Connection string**:
-
-```
-postgresql://grant_user:grant_password@localhost:5432/grant
-```
-
-**Commands**:
+After building or pulling new images:
 
 ```bash
-# Connect via psql
-docker exec -it grant-postgres psql -U grant_user -d grant
-
-# View logs
-docker-compose logs -f postgres
-
-# Restart
-docker-compose restart postgres
+docker stack deploy -c docker-compose.demo.yml grant-platform
 ```
 
-### PgAdmin
+Swarm will:
 
-**Container**: `grant-pgadmin`
+- Start new API tasks
+- Wait for them to pass health checks
+- Drain and stop old tasks, respecting the `stop_grace_period`
 
-**Port**: `8080`
+## 8. Architecture diagrams
 
-**Access**: [http://localhost:8080](http://localhost:8080)
+### Single host with Docker Compose
 
-**Default credentials**:
+```bmermaid diagram-narrow
+flowchart TD
+  subgraph host[Single Docker host]
+    direction TB
+    subgraph infra[Infrastructure]
+      postgres[(PostgreSQL)]
+      redis[(Redis)]
+    end
 
-- Email: `admin@grant.dev`
-- Password: `grant_password`
+    subgraph apps[Grant apps]
+      api[API (4000)]
+      web[Web (3000)]
+      docs[Docs (5173)]
+      example[Example app (3004)]
+    end
+  end
 
-**Add Server in PgAdmin**:
+  web --> api
+  docs --> api
+  api --> postgres
+  api --> redis
+```
 
-1. Right-click "Servers" → "Register" → "Server"
-2. **General tab**: Name = "Grant"
-3. **Connection tab**:
-   - Host: `postgres` (service name)
-   - Port: `5432`
-   - Database: `grant`
-   - Username: `grant_user`
-   - Password: `grant_password`
+### Swarm with API replicas
 
-### Redis
+```bmermaid diagram-narrow
+flowchart TD
+  lb[Reverse proxy / LB] --> api1[API replica 1]
+  lb --> api2[API replica 2]
 
-**Container**: `grant-redis`
+  subgraph db[PostgreSQL]
+  end
+  subgraph cache[Redis]
+  end
 
-**Port**: `6379`
+  api1 --> db
+  api1 --> cache
+  api2 --> db
+  api2 --> cache
+```
 
-**Default password**: `grant_redis_password`
+## 9. E2E tests (docker-compose.e2e.yml)
 
-**Commands**:
+E2E uses a minimal stack (Postgres, Redis, API only) and **`.env.test`** as the single config source:
+
+1. Copy the template: `cp .env.test.example .env.test` (or run `./scripts/e2e.sh` once; it creates `.env.test` if missing).
+2. Start the stack with the env file so Compose interpolation works:  
+   `docker compose -f docker-compose.e2e.yml --env-file .env.test up -d`  
+   Or use the helper: `./scripts/e2e.sh --up` (then `./scripts/e2e.sh --test` to run tests; `./scripts/e2e.sh --down` to tear down).
+
+The test runner (Vitest) and the API container both use `.env.test` (host-side E2E vars like `E2E_API_BASE_URL`, `E2E_DB_URL` come from the same file).
+
+## 10. Common operations
+
+**Optional:** For local-only overrides (e.g. port changes, extra env), add `docker-compose.override.yml`; Compose loads it automatically. Add it to `.gitignore` if the team wants it to stay local.
+
+**Status**
 
 ```bash
-# Connect to Redis CLI
-docker exec -it grant-redis redis-cli -a grant_redis_password
-
-# Test connection
-redis-cli -h localhost -p 6379 -a grant_redis_password ping
-# Response: PONG
-
-# View cache keys
-docker exec -it grant-redis redis-cli -a grant_redis_password KEYS 'grant:*'
-
-# Monitor operations
-docker exec -it grant-redis redis-cli -a grant_redis_password MONITOR
+docker compose ps
+# Swarm: docker service ls
 ```
 
-## Common Operations
-
-### Start Services
+**Logs**
 
 ```bash
-# All services
-docker-compose up -d
-
-# Specific service
-docker-compose up -d postgres
-docker-compose up -d redis
-docker-compose up -d pgadmin
+docker compose logs -f api
+# Swarm: docker service logs grant-platform_api
 ```
 
-### Stop Services
+**Stop (Compose)**
 
 ```bash
-# All services
-docker-compose down
-
-# Keep data (don't remove volumes)
-docker-compose down
-
-# Remove data (WARNING: deletes all data)
-docker-compose down -v
+docker compose down
+# Add -v to remove volumes (DELETES database data)
 ```
 
-### View Logs
+**Scale API (Compose, no Swarm)**
 
 ```bash
-# All services
-docker-compose logs -f
-
-# Specific service
-docker-compose logs -f postgres
-docker-compose logs -f redis
-
-# Last 100 lines
-docker-compose logs --tail=100 postgres
+docker compose up -d --scale api=2
 ```
 
-### Restart Services
+## 11. Data and volumes
 
-```bash
-# All services
-docker-compose restart
+Docker named volumes are used for:
 
-# Specific service
-docker-compose restart postgres
-```
+- **PostgreSQL data:** `postgres_data`
+- **Redis data:** `redis_data`
+- **API storage:** `api_storage`
+- **Observability:** `prometheus_data`, `grafana_data`, `umami_data`
 
-### Check Status
+Back them up like any Docker volume:
 
-```bash
-# View running containers
-docker-compose ps
+- PostgreSQL: `docker exec <postgres-container> pg_dump -U grant_user grant_db > backup.sql`
+- API storage: back up the mounted volume path if you store uploads there
 
-# View resource usage
-docker stats grant-postgres grant-redis
-```
+## Related
 
-## Data Management
-
-### Backup Database
-
-```bash
-# Create backup
-docker exec grant-postgres pg_dump -U grant_user grant > backup.sql
-
-# With timestamp
-docker exec grant-postgres pg_dump -U grant_user grant > backup-$(date +%Y%m%d-%H%M%S).sql
-```
-
-### Restore Database
-
-```bash
-# Restore from backup
-cat backup.sql | docker exec -i grant-postgres psql -U grant_user -d grant
-
-# Or
-docker exec -i grant-postgres psql -U grant_user -d grant < backup.sql
-```
-
-### Reset Database
-
-```bash
-# Stop API first
-cd apps/api && pnpm run stop
-
-# Remove and recreate
-docker-compose down
-docker volume rm grant_postgres_data
-docker-compose up -d postgres
-
-# Run migrations
-cd apps/api && pnpm run db:migrate
-```
-
-### Clear Redis Cache
-
-```bash
-# Flush all cache
-docker exec -it grant-redis redis-cli -a grant_redis_password FLUSHDB
-
-# Delete specific keys
-docker exec -it grant-redis redis-cli -a grant_redis_password DEL grant:some-key
-```
-
-## Production Deployment
-
-### Security Considerations
-
-1. **Change all passwords**:
-
-   ```bash
-   # Generate secure passwords
-   openssl rand -base64 32
-   ```
-
-2. **Use environment-specific `.env` files**:
-   - `.env.development`
-   - `.env.staging`
-   - `.env.production`
-
-3. **Enable TLS for Redis**:
-
-   ```yaml
-   redis:
-     command: redis-server --requirepass ${REDIS_PASSWORD} --tls-port 6380 --tls-cert-file /certs/redis.crt --tls-key-file /certs/redis.key
-   ```
-
-4. **Use external managed services**:
-   - Managed PostgreSQL (e.g. from your cloud or database provider)
-   - Managed Redis (e.g. Redis Cloud, Upstash, or provider-hosted)
-   - Don't run databases in containers in production
-
-### Recommended Production Setup
-
-For production, use managed services instead of Docker Compose:
-
-```bash
-# apps/api/.env (production)
-DB_URL=postgresql://user:pass@your-db-host:5432/grant
-REDIS_HOST=your-redis-host
-REDIS_PORT=6379
-REDIS_PASSWORD=your-secure-password
-REDIS_ENABLE_TLS=true
-```
-
-## Troubleshooting
-
-### Port Already in Use
-
-**Problem**: Port 5432, 6379, or 8080 already in use
-
-**Solution**:
-
-```bash
-# Check what's using the port
-sudo lsof -i :5432
-sudo lsof -i :6379
-sudo lsof -i :8080
-
-# Change port in docker-compose.yml
-# PostgreSQL: "5433:5432"
-# Redis: "6380:6379"
-# PgAdmin: "8081:80"
-
-# Update API .env accordingly
-DB_URL=postgresql://grant_user:grant_password@localhost:5433/grant
-REDIS_PORT=6380
-```
-
-### Container Won't Start
-
-**Problem**: Service fails to start
-
-**Solution**:
-
-```bash
-# View detailed logs
-docker-compose logs postgres
-
-# Check container status
-docker-compose ps
-
-# Remove and recreate
-docker-compose down
-docker-compose up -d
-
-# Check for conflicting volumes
-docker volume ls
-docker volume inspect grant_postgres_data
-```
-
-### Cannot Connect to Database
-
-**Problem**: API can't connect to PostgreSQL
-
-**Solutions**:
-
-1. Verify PostgreSQL is running:
-
-   ```bash
-   docker-compose ps postgres
-   ```
-
-2. Test connection:
-
-   ```bash
-   docker exec -it grant-postgres psql -U grant_user -d grant
-   ```
-
-3. Check credentials match in both `.env` files
-
-4. Verify database name matches:
-   ```bash
-   docker exec -it grant-postgres psql -U grant_user -l
-   ```
-
-### Redis Connection Issues
-
-**Problem**: API can't connect to Redis
-
-**Solutions**:
-
-1. Verify Redis is running:
-
-   ```bash
-   docker-compose ps redis
-   ```
-
-2. Test connection:
-
-   ```bash
-   redis-cli -h localhost -p 6379 -a grant_redis_password ping
-   ```
-
-3. Check password matches in both `.env` files
-
-4. Verify CACHE_STRATEGY is set to `redis` in `apps/api/.env`
-
-### Data Persistence Issues
-
-**Problem**: Data disappears after restart
-
-**Solution**:
-
-```bash
-# Verify volumes exist
-docker volume ls | grep grant
-
-# Check volume mounts
-docker inspect grant-postgres | grep Mounts -A 10
-
-# Don't use `docker-compose down -v` (removes volumes)
-# Use `docker-compose down` instead
-```
-
-## Integration with API
-
-### Default Configuration
-
-The infrastructure settings are pre-configured to work with the API defaults:
-
-**Root `.env`** → **`apps/api/.env`**:
-
-- `POSTGRES_DB=grant` → `DB_URL=postgresql://...@localhost:5432/grant`
-- `POSTGRES_USER=grant_user` → `DB_URL=postgresql://grant_user:...`
-- `POSTGRES_PASSWORD=grant_password` → `DB_URL=postgresql://...grant_password@...`
-- `REDIS_PASSWORD=grant_redis_password` → `REDIS_PASSWORD=grant_redis_password`
-
-### No Configuration Needed
-
-If you use the defaults, you can start services and run the API immediately:
-
-```bash
-# 1. Start infrastructure
-docker-compose up -d
-
-# 2. Copy API config (defaults already match)
-cp apps/api/.env.example apps/api/.env
-
-# 3. Run API
-cd apps/api && pnpm run dev
-```
-
-## Related Documentation
-
-- **API Configuration**: `apps/api/src/config/README.md`
-- **API Setup Guide**: `apps/api/CONFIG_MIGRATION.md`
-- **Cache Setup**: `docs/advanced-topics/caching.md`
-- **Quick Start Guide**: `docs/getting-started/quick-start.md`
-
-## Support
-
-Need help?
-
-1. Check the logs: `docker-compose logs -f`
-2. Verify services: `docker-compose ps`
-3. Test connections manually (see commands above)
-4. Review configuration alignment
-5. Open an issue on GitHub
-
----
-
-**Quick Commands Reference**:
-
-```bash
-# Setup
-cp .env.example .env
-docker-compose up -d
-
-# Status
-docker-compose ps
-docker-compose logs -f
-
-# Stop
-docker-compose down
-
-# Reset (WARNING: deletes data)
-docker-compose down -v
-docker-compose up -d
-
-# Backup
-docker exec grant-postgres pg_dump -U grant_user grant > backup.sql
-
-# Access
-# PostgreSQL: psql://grant_user:grant_password@localhost:5432/grant
-# PgAdmin: http://localhost:8080
-# Redis: redis-cli -h localhost -p 6379 -a grant_redis_password
-```
+- [Deployment overview](/deployment/self-hosting)
+- [Environment setup](/deployment/environment)
+- [Configuration](/getting-started/configuration)

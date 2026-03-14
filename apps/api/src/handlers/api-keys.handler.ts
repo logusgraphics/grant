@@ -228,10 +228,13 @@ export class ApiKeysHandler extends CacheHandler {
     });
   }
 
-  public async exchangeApiKey(params: MutationExchangeApiKeyArgs): Promise<ExchangeApiKeyResult> {
+  public async exchangeApiKey(
+    params: MutationExchangeApiKeyArgs,
+    requestBaseUrl?: string
+  ): Promise<ExchangeApiKeyResult> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { input } = params;
-      return await this.apiKeys.exchangeApiKeyForToken(input, tx);
+      return await this.apiKeys.exchangeApiKeyForToken(input, tx, requestBaseUrl);
     });
   }
 

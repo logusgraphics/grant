@@ -4,21 +4,21 @@
 # .env.demo in a subshell (no shell pollution) then run docker stack deploy.
 #
 # Usage:
-#   ./scripts/stack-deploy-demo.sh              # deploy stack "grant-demo"
-#   ./scripts/stack-deploy-demo.sh up            # same
-#   ./scripts/stack-deploy-demo.sh down         # remove stack "grant-demo"
-#   ./scripts/stack-deploy-demo.sh up my-stack  # deploy stack "my-stack"
-#   ./scripts/stack-deploy-demo.sh down my-stack # remove stack "my-stack"
-#   ./scripts/stack-deploy-demo.sh grant-demo   # deploy stack "grant-demo" (backward compat)
+#   ./scripts/stack-deploy.sh              # deploy stack "grant-demo"
+#   ./scripts/stack-deploy.sh up            # same
+#   ./scripts/stack-deploy.sh down         # remove stack "grant-demo"
+#   ./scripts/stack-deploy.sh up my-stack  # deploy stack "my-stack"
+#   ./scripts/stack-deploy.sh down my-stack # remove stack "my-stack"
+#   ./scripts/stack-deploy.sh grant-demo   # deploy stack "grant-demo" (backward compat)
 #
-# From repo root: ./scripts/stack-deploy-demo.sh [up|down] [stack-name]
+# From repo root: ./scripts/stack-deploy.sh [up|down] [stack-name]
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR/.."
 cd "$REPO_ROOT"
 
-COMPOSE_FILE="docker-compose.demo.yml"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
 ENV_FILE="${ENV_FILE:-.env.demo}"
 STACK_NAME="${STACK_NAME:-grant-demo}"
 

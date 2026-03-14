@@ -2,15 +2,12 @@
 
 import crypto from 'node:crypto';
 
-import * as dotenv from 'dotenv';
+import { getEnv, resolveDatabaseUrl } from '@grantjs/env';
 import { and, eq } from 'drizzle-orm';
 
 import { closeDatabase, initializeDBConnection } from '@/connection';
 import type { DbSchema } from '@/connection';
 import { signingKeys, users } from '@/schemas';
-
-// Load environment variables
-dotenv.config();
 
 /**
  * System User Seeding Script
@@ -22,13 +19,10 @@ dotenv.config();
  *   pnpm db:seed:system-user    # Seed system user
  */
 
-/**
- * System user ID for internal operations
- * Can be configured via SYSTEM_USER_ID environment variable
- * Defaults to '00000000-0000-0000-0000-000000000000' if not set
- * This should match the system user ID configured in apps/api/.env
- */
-const SYSTEM_USER_ID = process.env.SYSTEM_USER_ID || '00000000-0000-0000-0000-000000000000';
+const env = getEnv();
+
+/** System user ID for internal operations (configurable via SYSTEM_USER_ID) */
+const SYSTEM_USER_ID = env.SYSTEM_USER_ID;
 
 const SYSTEM_SCOPE_TENANT = 'system';
 
@@ -76,9 +70,9 @@ export async function seedSystemUser() {
 
   try {
     // Initialize database connection
-    const connectionString = process.env.DB_URL;
+    const connectionString = resolveDatabaseUrl(env);
     if (!connectionString) {
-      console.error('❌ Error: DB_URL environment variable is required');
+      console.error('❌ Error: DB_URL or POSTGRES_* environment variables are required');
       process.exit(1);
     }
 

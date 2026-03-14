@@ -5,16 +5,14 @@ import { useMemo } from 'react';
 import { GrantProvider, type GrantClientConfig } from '@grantjs/client/react';
 
 import { getOAuthCallbackToken } from '@/lib/oauth-callback-token';
+import { useOrigin } from '@/lib/use-origin';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
+  const origin = useOrigin();
   const config = useMemo<GrantClientConfig>(
     () => ({
-      // Static references so Next.js inlines these at build time (dynamic process.env[key] is not inlined)
-      apiUrl: process.env.NEXT_PUBLIC_GRANT_API_URL ?? '',
-
-      /** Required for signInWithProjectApp: Grant web app URL (entry at /auth/project). Defaults to main app on 3000 when unset. */
-      frontendUrl: process.env.NEXT_PUBLIC_GRANT_FRONTEND_URL || 'http://localhost:3000',
-
+      apiUrl: '',
+      frontendUrl: origin || 'http://localhost:3004',
       getAccessToken: () => {
         if (typeof window === 'undefined') return null;
         // In this example, the callback page sets the token from the OAuth redirect so useGrant/GrantGate can use it.
@@ -33,7 +31,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         prefix: 'grant',
       },
     }),
-    []
+    [origin]
   );
 
   return <GrantProvider config={config}>{children}</GrantProvider>;

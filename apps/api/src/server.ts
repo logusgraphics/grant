@@ -1,4 +1,5 @@
 import '@/lib/tracing'; // must run first so OTel patches http/express before they load
+
 import http from 'http';
 
 import { ApolloServer } from '@apollo/server';

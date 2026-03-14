@@ -1,28 +1,15 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { NextConfig } from 'next';
 
 import createNextIntlPlugin from 'next-intl/plugin';
 
-// App version: from env override or package.json (single source of truth at build time)
-const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8')) as {
-  version?: string;
-};
-const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || pkg.version || 'dev';
-
 const nextConfig: NextConfig = {
   output: 'standalone',
-  env: {
-    NEXT_PUBLIC_APP_VERSION: appVersion,
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
   typedRoutes: true,
   transpilePackages: ['@grantjs/core', '@grantjs/schema'],
   webpack: (config, { isServer }) => {
-    // @grantjs/core uses Node crypto (JWKS); not used in client. Stub for browser bundle.
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -31,19 +18,27 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000'],
-    },
-  },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    // API only; docs and example are not proxied in dev so they keep HMR/WebSockets.
+    const api = 'http://localhost:4000';
     return [
+      { source: '/api/:path*', destination: `${api}/api/:path*` },
+      { source: '/graphql', destination: `${api}/graphql` },
+      { source: '/graphql/:path*', destination: `${api}/graphql/:path*` },
+      { source: '/api-docs', destination: `${api}/api-docs/` },
+      { source: '/api-docs/', destination: `${api}/api-docs/` },
+      { source: '/api-docs/:path*', destination: `${api}/api-docs/:path*` },
+      { source: '/api-docs.json', destination: `${api}/api-docs.json` },
+      { source: '/swagger-ui.css', destination: `${api}/api-docs/swagger-ui.css` },
+      { source: '/swagger-ui-bundle.js', destination: `${api}/api-docs/swagger-ui-bundle.js` },
       {
-        source: '/storage/:path*',
-        destination: `${apiUrl}/storage/:path*`,
+        source: '/swagger-ui-standalone-preset.js',
+        destination: `${api}/api-docs/swagger-ui-standalone-preset.js`,
       },
-      // Legacy path: browsers and caches often request /favicon.ico; serve the same icon so cache refreshes get the new asset.
+      { source: '/swagger-ui-init.js', destination: `${api}/api-docs/swagger-ui-init.js` },
+      { source: '/storage/:path*', destination: `${api}/storage/:path*` },
+      { source: '/health', destination: `${api}/health` },
+      { source: '/.well-known/:path*', destination: `${api}/.well-known/:path*` },
       { source: '/favicon.ico', destination: '/favicon.png' },
     ];
   },

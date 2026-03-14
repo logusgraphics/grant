@@ -13,6 +13,8 @@ export interface RequestContext {
   resourceResolvers: ResourceResolvers;
   requestLogger: ILogger;
   origin: string;
+  /** Base URL derived from request (X-Forwarded-Proto/Host or Host); used for issuer and callbacks. */
+  requestBaseUrl: string;
   locale: SupportedLocale;
   userAgent: string | null;
   ipAddress: string | null;

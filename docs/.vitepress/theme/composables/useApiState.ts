@@ -8,6 +8,8 @@ interface Account {
 
 interface ApiState {
   baseUrl: string;
+  appUrl: string;
+  exampleAppUrl: string;
   accessToken: string;
   refreshToken: string;
   verifiedEmail: string;
@@ -18,13 +20,17 @@ interface ApiState {
 
 const STORAGE_KEY = 'grant-docs-api-state';
 
-export const defaultApiBaseUrl =
-  (typeof import.meta !== 'undefined' &&
-    (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL) ||
-  '';
+// Same-origin relative paths (gateway serves docs at /docs, API at /api, example at /example)
+const RELATIVE_DEFAULTS = {
+  baseUrl: '',
+  appUrl: '',
+  exampleAppUrl: '/example',
+};
 
 const state = reactive<ApiState>({
-  baseUrl: defaultApiBaseUrl,
+  baseUrl: RELATIVE_DEFAULTS.baseUrl,
+  appUrl: RELATIVE_DEFAULTS.appUrl,
+  exampleAppUrl: RELATIVE_DEFAULTS.exampleAppUrl,
   accessToken: '',
   refreshToken: '',
   verifiedEmail: '',
@@ -32,6 +38,9 @@ const state = reactive<ApiState>({
   selectedFlow: '',
   variables: {},
 });
+
+/** Default API base URL for display (relative). */
+export const defaultApiBaseUrl = RELATIVE_DEFAULTS.baseUrl;
 
 let hydrated = false;
 let watcherActive = false;
@@ -43,7 +52,9 @@ function hydrate() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
-      if (saved.baseUrl) state.baseUrl = saved.baseUrl;
+      if (saved.baseUrl !== undefined) state.baseUrl = saved.baseUrl;
+      if (saved.appUrl !== undefined) state.appUrl = saved.appUrl;
+      if (saved.exampleAppUrl !== undefined) state.exampleAppUrl = saved.exampleAppUrl;
       if (saved.accessToken) state.accessToken = saved.accessToken;
       if (saved.refreshToken) state.refreshToken = saved.refreshToken;
       if (saved.verifiedEmail) state.verifiedEmail = saved.verifiedEmail;
@@ -63,6 +74,8 @@ function persist() {
       STORAGE_KEY,
       JSON.stringify({
         baseUrl: state.baseUrl,
+        appUrl: state.appUrl,
+        exampleAppUrl: state.exampleAppUrl,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         verifiedEmail: state.verifiedEmail,

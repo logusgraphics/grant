@@ -5,7 +5,6 @@ import { readAllEnvFiles, writeEnvKeyToFiles } from '@/lib/env-files';
 import {
   getAllEnvVarMeta,
   getSyncTargetsForKey,
-  getReplicateToWeb,
   ENV_FILE_PATHS,
   getEnvVarMeta,
 } from '@/lib/env-metadata';
@@ -70,19 +69,8 @@ export async function POST(
 
     const repoRoot = getRepoRoot();
     const meta = getEnvVarMeta(key);
-    const syncTargets = getSyncTargetsForKey(key);
-    // Sync vars (e.g. SYSTEM_USER_ID, DB_URL) must be written to all targets so seeding and API stay in sync
-    const pathsToWrite =
-      syncTargets.length > 0 ? syncTargets : (meta?.envFiles ?? ['apps/api/.env']);
-
+    const pathsToWrite = getSyncTargetsForKey(key);
     writeEnvKeyToFiles(repoRoot, key.trim(), val, pathsToWrite);
-
-    // Replicate to web app when API var is updated (e.g. PRIVACY_ACCOUNT_DELETION_RETENTION_DAYS → NEXT_PUBLIC_ACCOUNT_DELETION_RETENTION_DAYS)
-    const replicate = getReplicateToWeb(key);
-    if (replicate) {
-      writeEnvKeyToFiles(repoRoot, replicate.key, val, [replicate.file]);
-    }
-
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to write env';

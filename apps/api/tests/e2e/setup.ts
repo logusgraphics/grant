@@ -1,7 +1,7 @@
 /**
  * E2E test setup – runs once before the entire suite.
  *
- * - Loads .env.e2e (host-side env for DB helpers and base URL)
+ * - Loads .env.test (host-side env for DB helpers and base URL; same source as Compose)
  * - Validates that E2E_API_BASE_URL is set
  * - Waits for the API health endpoint to respond 200
  */
@@ -9,8 +9,8 @@ import { resolve } from 'path';
 
 import { config } from 'dotenv';
 
-// Load .env.e2e from the monorepo root (two levels up from apps/api)
-config({ path: resolve(__dirname, '../../../../.env.e2e') });
+// Load .env.test from the monorepo root (shared with docker-compose.e2e.yml --env-file)
+config({ path: resolve(__dirname, '../../../../.env.test') });
 
 // Fallback defaults matching docker-compose.e2e.yml
 const BASE_URL = process.env.E2E_API_BASE_URL ?? 'http://localhost:4000';

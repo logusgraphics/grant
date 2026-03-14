@@ -305,7 +305,8 @@ export class ProjectOAuthHandler {
     email: string,
     clientState?: string,
     scopeParam?: string | null,
-    locale?: string | null
+    locale?: string | null,
+    requestBaseUrl?: string
   ): Promise<void> {
     const app = await this.projectApps.getProjectAppByClientId(clientId);
     if (!app) {
@@ -360,7 +361,7 @@ export class ProjectOAuthHandler {
     const key = `${PROJECT_OAUTH_EMAIL_TOKEN_KEY_PREFIX}${oneTimeToken.token}` as CacheKey;
     await this.cache.oauth.set(key, payload, PROJECT_OAUTH_EMAIL_TOKEN_TTL_SECONDS);
 
-    const baseUrl = config.app.url.replace(/\/$/, '');
+    const baseUrl = (requestBaseUrl ?? config.app.url).replace(/\/$/, '');
     const callbackUrl = `${baseUrl}/api/auth/project/callback?token=${encodeURIComponent(oneTimeToken.token)}&state=${encodeURIComponent(effectiveStateId)}&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     await this.email.sendProjectOAuthMagicLink({
       to: payload.email,

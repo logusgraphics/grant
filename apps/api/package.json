@@ -29,6 +29,7 @@
     "@grantjs/core": "workspace:*",
     "@grantjs/i18n": "workspace:*",
     "@grantjs/database": "workspace:*",
+    "@grantjs/env": "workspace:*",
     "@grantjs/email": "workspace:*",
     "@grantjs/errors": "workspace:*",
     "@grantjs/jobs": "workspace:*",

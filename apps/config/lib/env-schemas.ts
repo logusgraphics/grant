@@ -171,7 +171,7 @@ const schemas: Record<string, z.ZodType<string>> = {
   NEXT_PUBLIC_ACCOUNT_DELETION_RETENTION_DAYS: positiveIntSchema,
   GITHUB_CALLBACK_URL: urlSchema,
   GITHUB_PROJECT_CALLBACK_URL: urlSchema,
-  APP_PORT: portSchema,
+  API_PORT: portSchema,
   REDIS_PORT: portSchema,
   NODE_ENV: nodeEnvSchema,
   LOG_LEVEL: logLevelSchema,

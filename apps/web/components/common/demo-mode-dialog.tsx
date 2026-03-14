@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
+import cronstrue from 'cronstrue/i18n';
 import {
   Activity,
   Building2,
@@ -12,8 +13,9 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
+import { useRuntimeConfig } from '@/components/providers/runtime-config-provider';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -39,8 +41,6 @@ const DEMO_RESET_ITEMS = [
   { key: 'sessions' as const, Icon: Activity },
 ] as const;
 
-const enabled = process.env.NEXT_PUBLIC_DEMO_MODE_ENABLED === 'true';
-
 type DemoModeContextValue = { open: boolean; setOpen: (open: boolean) => void };
 const DemoModeContext = createContext<DemoModeContextValue | null>(null);
 
@@ -50,9 +50,37 @@ function useDemoMode() {
   return ctx;
 }
 
+function mapLocaleToCronLocale(locale: string): string | undefined {
+  const base = locale.split('-')[0];
+  switch (base) {
+    case 'en':
+      return undefined;
+    default:
+      return base;
+  }
+}
+
+function getHumanReadableSchedule(
+  cronExpression: string | undefined | null,
+  locale: string
+): string | null {
+  if (!cronExpression) return null;
+  try {
+    return cronstrue.toString(cronExpression, {
+      use24HourTimeFormat: true,
+      locale: mapLocaleToCronLocale(locale),
+    });
+  } catch {
+    return null;
+  }
+}
+
 function DemoModeDialogContent() {
   const t = useTranslations('demo');
-  const schedule = process.env.NEXT_PUBLIC_DEMO_MODE_DB_REFRESH_SCHEDULE;
+  const locale = useLocale();
+  const { demoModeDbRefreshSchedule } = useRuntimeConfig();
+  const readableSchedule = getHumanReadableSchedule(demoModeDbRefreshSchedule, locale);
+
   return (
     <DialogContent
       className="sm:max-w-xl"
@@ -67,8 +95,8 @@ function DemoModeDialogContent() {
         </DialogTitle>
         <DialogDescription asChild>
           <p className="text-muted-foreground text-sm pt-1">
-            {schedule
-              ? t('bannerMessageWithSchedule', { schedule })
+            {readableSchedule
+              ? t('bannerMessageWithSchedule', { schedule: readableSchedule })
               : t('bannerMessageWithoutSchedule')}
           </p>
         </DialogDescription>
@@ -100,6 +128,7 @@ function DemoModeDialogContent() {
 
 export function DemoModeDialogProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { demoModeEnabled: enabled } = useRuntimeConfig();
 
   useEffect(() => {
     if (!enabled) return;
@@ -144,6 +173,7 @@ export function DemoModeDialogProvider({ children }: { children: React.ReactNode
 export function DemoModeDialogTrigger() {
   const t = useTranslations('demo');
   const { setOpen } = useDemoMode();
+  const { demoModeEnabled: enabled } = useRuntimeConfig();
   if (!enabled) return null;
   return (
     <Button

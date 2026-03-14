@@ -27,6 +27,7 @@ FROM base AS deps
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/@grantjs/database/package.json packages/@grantjs/database/package.json
+COPY packages/@grantjs/env/package.json packages/@grantjs/env/package.json
 COPY packages/@grantjs/schema/package.json packages/@grantjs/schema/package.json
 COPY packages/@grantjs/core/package.json packages/@grantjs/core/package.json
 COPY packages/@grantjs/constants/package.json packages/@grantjs/constants/package.json
@@ -42,6 +43,10 @@ COPY packages/@grantjs/telemetry/package.json packages/@grantjs/telemetry/packag
 COPY packages/@grantjs/client/package.json packages/@grantjs/client/package.json
 COPY packages/@grantjs/server/package.json packages/@grantjs/server/package.json
 COPY packages/@grantjs/cli/package.json packages/@grantjs/cli/package.json
+
+# Copy env package source so pnpm can resolve the workspace package
+COPY packages/@grantjs/env/tsconfig.json packages/@grantjs/env/tsconfig.json
+COPY packages/@grantjs/env/src packages/@grantjs/env/src
 
 # Copy i18n package source and locales so pnpm can resolve the workspace package
 COPY packages/@grantjs/i18n/tsconfig.json packages/@grantjs/i18n/tsconfig.json
@@ -67,6 +72,7 @@ WORKDIR /app
 COPY --from=deps --chown=grantjs:grantjs /app/node_modules ./node_modules
 COPY --from=deps --chown=grantjs:grantjs /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps --chown=grantjs:grantjs /app/packages/@grantjs/database/node_modules ./packages/@grantjs/database/node_modules
+COPY --from=deps --chown=grantjs:grantjs /app/packages/@grantjs/env/node_modules ./packages/@grantjs/env/node_modules
 COPY --from=deps --chown=grantjs:grantjs /app/packages/@grantjs/core/node_modules ./packages/@grantjs/core/node_modules
 COPY --from=deps --chown=grantjs:grantjs /app/packages/@grantjs/constants/node_modules ./packages/@grantjs/constants/node_modules
 COPY --from=deps --chown=grantjs:grantjs /app/packages/@grantjs/i18n/node_modules ./packages/@grantjs/i18n/node_modules
@@ -98,6 +104,11 @@ COPY --chown=grantjs:grantjs packages/@grantjs/database/package.json packages/@g
 COPY --chown=grantjs:grantjs packages/@grantjs/database/tsconfig.json packages/@grantjs/database/tsconfig.json
 COPY --chown=grantjs:grantjs packages/@grantjs/database/drizzle.config.ts packages/@grantjs/database/drizzle.config.cjs packages/@grantjs/database/
 COPY --chown=grantjs:grantjs packages/@grantjs/database/src packages/@grantjs/database/src
+
+# -- @grantjs/env (Zod env schema; used by API config and DB scripts) --
+COPY --chown=grantjs:grantjs packages/@grantjs/env/package.json packages/@grantjs/env/package.json
+COPY --chown=grantjs:grantjs packages/@grantjs/env/tsconfig.json packages/@grantjs/env/tsconfig.json
+COPY --chown=grantjs:grantjs packages/@grantjs/env/src packages/@grantjs/env/src
 
 # -- @grantjs/core (source-only; RBAC engine) --
 COPY --chown=grantjs:grantjs packages/@grantjs/core/package.json packages/@grantjs/core/package.json
@@ -161,7 +172,7 @@ USER grantjs
 EXPOSE 4000
 
 ENV NODE_ENV=production
-ENV APP_PORT=4000
+ENV API_PORT=4000
 
 # Set workdir to apps/api so tsx resolves tsconfig.json (and its path aliases) correctly
 WORKDIR /app/apps/api

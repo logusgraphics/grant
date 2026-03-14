@@ -47,6 +47,8 @@ async function main() {
   const targets = [
     // Docker compose / repo root
     { example: '.env.example', env: '.env' },
+    { example: '.env.test.example', env: '.env.test' },
+    { example: '.env.demo.example', env: '.env.demo' },
 
     // Core apps/packages used for local dev
     { example: 'apps/api/.env.example', env: 'apps/api/.env' },

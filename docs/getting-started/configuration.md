@@ -37,6 +37,26 @@ Then open [http://localhost:3005](http://localhost:3005).
 Env files are created automatically when you run `pnpm dev` (predev script). To create or refresh without starting the app: `pnpm env:setup`. You can also edit `.env` files directly.
 :::
 
+## Env file precedence
+
+The platform loads env files from the **monorepo root** in this order (later overrides earlier):
+
+1. `.env`
+2. `.env.local` (usually gitignored)
+3. `.env.{NODE_ENV}` (e.g. `.env.development`, `.env.test`, `.env.production`)
+4. `.env.{NODE_ENV}.local` (e.g. `.env.development.local`, usually gitignored)
+
+Only `@grantjs/env` loads these files; no need for `dotenv-cli` in scripts. Apps and DB scripts use `getEnv()` from `@grantjs/env`.
+
+## Platform env rules
+
+To avoid regressions, follow these rules:
+
+1. **Only `@grantjs/env` loads `.env` files** — no `dotenv.config()` in apps or packages.
+2. **Apps never call `dotenv` directly** — env is loaded when the env package is first imported.
+3. **Apps never read `process.env` directly** — use typed config from `@/config` or `getEnv()` from `@grantjs/env`.
+4. **All env access goes through `getEnv()`** (or the app’s derived config that uses it).
+
 ## What to set
 
 | Priority     | Variable                | Purpose                            |
