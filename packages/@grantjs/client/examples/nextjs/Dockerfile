@@ -23,8 +23,8 @@ FROM nginx:alpine AS runner
 RUN apk add --no-cache wget
 
 COPY packages/@grantjs/client/examples/nextjs/nginx.conf /etc/nginx/conf.d/default.conf
-# basePath /example → out/example; gateway sends paths with /example stripped
-COPY --from=builder /app/packages/@grantjs/client/examples/nextjs/out/example /usr/share/nginx/html/example
+# Static export writes to out/ (basePath only affects asset URLs); gateway sends paths with /example stripped
+COPY --from=builder /app/packages/@grantjs/client/examples/nextjs/out/. /usr/share/nginx/html/example/
 
 EXPOSE 3000
 CMD ["nginx", "-g", "daemon off;"]
