@@ -2,7 +2,7 @@
 # Grant SDK Example (Next.js) – Static export + Nginx (CSR)
 # =============================================================================
 # Build context: monorepo root. output: "export"; no Node runtime.
-# Gateway proxies to this container at /example (path stripped upstream).
+# Gateway forwards the full URI (/example/…) without stripping the prefix.
 #
 #   docker build -f packages/@grantjs/client/examples/nextjs/Dockerfile -t example-nextjs .
 # =============================================================================
@@ -23,7 +23,7 @@ FROM nginx:alpine AS runner
 RUN apk add --no-cache wget
 
 COPY packages/@grantjs/client/examples/nextjs/nginx.conf /etc/nginx/conf.d/default.conf
-# Static export writes to out/ (basePath only affects asset URLs); gateway sends paths with /example stripped
+# Static export writes to out/ (basePath only affects asset URLs); files served under /example/ prefix
 COPY --from=builder /app/packages/@grantjs/client/examples/nextjs/out/. /usr/share/nginx/html/example/
 
 EXPOSE 3000
