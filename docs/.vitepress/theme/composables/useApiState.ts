@@ -20,12 +20,21 @@ interface ApiState {
 
 const STORAGE_KEY = 'grant-docs-api-state';
 
-// Same-origin relative paths (gateway serves docs at /docs, API at /api, example at /example)
+// Path-based single origin: API, docs, example live under same origin. Defaults filled from window in browser.
 const RELATIVE_DEFAULTS = {
   baseUrl: '',
   appUrl: '',
   exampleAppUrl: '/example',
 };
+
+function getOriginDefaults() {
+  if (typeof window === 'undefined') return RELATIVE_DEFAULTS;
+  return {
+    baseUrl: window.location.origin,
+    appUrl: window.location.origin,
+    exampleAppUrl: `${window.location.origin}/example`,
+  };
+}
 
 const state = reactive<ApiState>({
   baseUrl: RELATIVE_DEFAULTS.baseUrl,
@@ -39,8 +48,10 @@ const state = reactive<ApiState>({
   variables: {},
 });
 
-/** Default API base URL for display (relative). */
-export const defaultApiBaseUrl = RELATIVE_DEFAULTS.baseUrl;
+/** Default API base URL for display (current origin in browser, else empty). */
+export function getDefaultApiBaseUrl(): string {
+  return typeof window === 'undefined' ? '' : window.location.origin;
+}
 
 let hydrated = false;
 let watcherActive = false;
@@ -48,22 +59,33 @@ let watcherActive = false;
 function hydrate() {
   if (hydrated || typeof window === 'undefined') return;
   hydrated = true;
+  const originDefaults = getOriginDefaults();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
       if (saved.baseUrl !== undefined) state.baseUrl = saved.baseUrl;
+      else state.baseUrl = originDefaults.baseUrl;
       if (saved.appUrl !== undefined) state.appUrl = saved.appUrl;
+      else state.appUrl = originDefaults.appUrl;
       if (saved.exampleAppUrl !== undefined) state.exampleAppUrl = saved.exampleAppUrl;
+      else state.exampleAppUrl = originDefaults.exampleAppUrl;
       if (saved.accessToken) state.accessToken = saved.accessToken;
       if (saved.refreshToken) state.refreshToken = saved.refreshToken;
       if (saved.verifiedEmail) state.verifiedEmail = saved.verifiedEmail;
       if (Array.isArray(saved.accounts)) state.accounts = saved.accounts;
       if (saved.selectedFlow) state.selectedFlow = saved.selectedFlow;
       if (saved.variables) Object.assign(state.variables, saved.variables);
+    } else {
+      state.baseUrl = originDefaults.baseUrl;
+      state.appUrl = originDefaults.appUrl;
+      state.exampleAppUrl = originDefaults.exampleAppUrl;
     }
   } catch {
-    /* corrupt data — start fresh */
+    /* corrupt data — use origin defaults */
+    state.baseUrl = originDefaults.baseUrl;
+    state.appUrl = originDefaults.appUrl;
+    state.exampleAppUrl = originDefaults.exampleAppUrl;
   }
 }
 

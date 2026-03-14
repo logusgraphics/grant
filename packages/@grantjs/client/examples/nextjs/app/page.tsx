@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useGrantClient } from '@grantjs/client/react';
 
@@ -9,10 +9,17 @@ import { useOrigin } from '@/lib/use-origin';
 export default function Home() {
   const grant = useGrantClient();
   const origin = useOrigin();
-  const defaultRedirectUri = origin ? `${origin}/example/callback` : '/example/callback';
+  const defaultRedirectUri = origin ? `${origin}/example/callback` : '';
 
   const [clientId, setClientId] = useState('');
   const [redirectUri, setRedirectUri] = useState(defaultRedirectUri);
+
+  // Sync redirect URI when origin becomes available (after mount)
+  useEffect(() => {
+    if (origin) {
+      setRedirectUri(`${origin}/example/callback`);
+    }
+  }, [origin]);
   const [scopes, setScopes] = useState('');
   const [appState, setAppState] = useState('');
   const [signInError, setSignInError] = useState<string | null>(null);

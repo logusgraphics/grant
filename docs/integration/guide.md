@@ -116,9 +116,9 @@ const step9Body = computed(() => JSON.stringify({
   scope: { tenant: 'projectUser', id: '{PROJECT_ID}:{PROJ_USER_ID}' },
 }))
 
-// URLs from runtime config (/config.json in Docker, or useApiState defaults for local dev)
+// Path-based: example app at origin/example, callback at origin/example/callback
 const exampleAppOrigin = computed(() => (state.exampleAppUrl || '').trim().replace(/\/+$/, ''))
-const exampleCallbackUrl = computed(() => exampleAppOrigin.value ? `${exampleAppOrigin.value}/example/callback` : '')
+const exampleCallbackUrl = computed(() => exampleAppOrigin.value ? `${exampleAppOrigin.value}/callback` : '')
 
 function normalizeFrontendUrl (url) {
   const u = (url || '').trim()
@@ -154,6 +154,9 @@ const authUrl = computed(() => {
   return `${frontendUrl.value}/en/auth/project?client_id=${clientId}&redirect_uri=${redirect}&state=${oauthState.value}`
 })
 const canOpenAuthFlow = computed(() => !!(frontendUrl.value && exampleCallbackUrl.value && state.variables.APP_CLIENT_ID))
+function openAuthFlowInNewTab() {
+  if (authUrl.value) window.open(authUrl.value, '_blank', 'noopener,noreferrer')
+}
 </script>
 
 # Integration Guide
@@ -346,9 +349,10 @@ A Project App is an OAuth client that lets users sign in or sign up through Gran
 
 The app was created with **client_id** <code>{{ state.variables.APP_CLIENT_ID }}</code>. Click below to open the Project OAuth sign-in flow — you'll be redirected to the Grant UI to authenticate, grant consent, and then back to the callback URL with an access token.
 
-<a v-if="canOpenAuthFlow" :href="authUrl" target="_blank" rel="noopener" class="api-tryit-auth-btn">
-  Open Sign-in Flow →
+<a v-if="canOpenAuthFlow" :href="authUrl" target="\_blank" rel="noopener noreferrer" class="api-tryit-auth-btn" @click.prevent="openAuthFlowInNewTab">
+Open Sign-in Flow →
 </a>
+
 <p v-else-if="!frontendUrl || !exampleCallbackUrl" class="api-tryit-auth-note">
   Configure app URL via <code>APP_URL</code> in env; docs entrypoint writes minimal <code>/config.json</code> and the app fetches full config from <code>GET ${appUrl}/api/config</code>. For local dev, defaults are used.
 </p>
