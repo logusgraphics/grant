@@ -36,7 +36,7 @@ You can keep the default ports from `docker-compose.yml` and put a reverse proxy
 ## 2. Environment: build vs runtime
 
 - **env_file** — The compose file sets `env_file: .env` (or `.env.demo`) on services. Those vars are injected into the **container at runtime** only; they are not available during `docker build`.
-- **Build args** — We do not pass URLs or demo flags as build args for web, docs, or example-nextjs. Images are built once and are deployment-agnostic; each deployment sets `APP_URL`, `DOCS_URL`, etc. in its env file, and the containers read them at startup.
+- **Build args** — We do not pass URLs or demo flags as build args for web, docs, or example-nextjs. Images are built once and are deployment-agnostic; each deployment sets `APP_URL` (and optionally `SECURITY_FRONTEND_URL`) in its env file, and the containers read them at startup.
 - **Compose interpolation** — When you run `docker compose up`, Compose reads your env file and substitutes `${VAR}` in the YAML (e.g. in `environment:` or image names). So the same compose file works for any domain.
 
 ## 3. Create `.env` from the template
@@ -50,12 +50,12 @@ cp .env.example .env
 Update at least:
 
 - **Secrets** — `POSTGRES_PASSWORD`, `REDIS_PASSWORD` (e.g. `openssl rand -base64 32`)
-- **Public URLs** — `APP_URL`, `DOCS_URL` (single app URL; frontends get full config at runtime from API `GET /api/config`)
+- **Public URLs** — `APP_URL` (single canonical URL; frontends get full config at runtime from API `GET /api/config`)
 - **CORS** — `SECURITY_FRONTEND_URL` (match `APP_URL`), `SECURITY_ADDITIONAL_ORIGINS`
 - **System user** — `SYSTEM_USER_ID` (must match seed)
 - **Demo mode** — `DEMO_MODE_ENABLED=false` unless you want a resettable sandbox
 
-See [Environment setup](/deployment/environment) for the full list and how build vs runtime env works.
+For **Swarm/demo**, copy `cp .env.demo.example .env.demo` and edit (e.g. with the Config app set to **Environment: Demo**). See [Environment setup](/deployment/environment) for the full list and how build vs runtime env works.
 
 ## 4. Start the stack with Docker Compose
 
@@ -127,7 +127,7 @@ docker swarm init
 For Swarm we use the dedicated demo compose file and helper script:
 
 ```bash
-cp .env.example .env.demo   # or reuse your existing .env, adjusted for demo
+cp .env.demo.example .env.demo   # or cp .env.example .env.demo, then adjust for demo
 ./scripts/stack-deploy.sh up   # uses .env.demo and docker-compose.demo.yml by default
 ```
 

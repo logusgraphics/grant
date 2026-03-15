@@ -5,7 +5,7 @@ description: Minimal environment configuration for Docker deployments
 
 # Environment Setup
 
-This page describes the **single root `.env`** used for Docker deployments. All apps use **canonical env variable names** (e.g. `APP_URL`, `DOCS_URL`). Frontends (web, docs, example-nextjs) receive URLs and flags at **runtime** via the API’s `GET /api/config` or (for docs) minimal `/config.json` then `/api/config`, not at build time.
+This page describes the **single root `.env`** used for Docker deployments. All apps use **canonical env variable names** (e.g. `APP_URL`). Frontends (web, docs, example-nextjs) receive URLs and flags at **runtime** via the API’s `GET /api/config` or (for docs) minimal `/config.json` then `/api/config`, not at build time.
 
 ## 1. Env files (single source of config)
 
@@ -40,20 +40,18 @@ Single public URL; API and example app are reached via the same host (path-based
 
 ```bash
 APP_URL=https://grant.yourdomain.com
-DOCS_URL=https://docs.yourdomain.com
 
 SECURITY_FRONTEND_URL=${APP_URL}
 SECURITY_ADDITIONAL_ORIGINS=https://docs.yourdomain.com
 ```
 
-- **APP_URL** — single public base URL. Web, API (REST + GraphQL), and example app (at `/example`) all use this when the web app proxies `/api`, `/graphql`, `/api-docs`, `/storage`, `/health`, `/.well-known`, and `/example` to the API and example app.
-- **DOCS_URL** — public URL of the docs site (VitePress).
+- **APP_URL** — single public base URL. Web, API (REST + GraphQL), docs, and example app (at `/example`) are derived from this when the web app proxies paths to the right services. Max portability with one canonical URL.
 - **SECURITY_FRONTEND_URL** — must match the URL browsers use for the web app (typically same as `APP_URL`).
 - **SECURITY_ADDITIONAL_ORIGINS** — extra origins allowed to call the API (e.g. docs).
 
 **How frontends get these values:**
 
-- **Web (Next.js)** — Client fetches `GET /api/config` (proxied to the API) and uses the JSON (appUrl, apiUrl, docsUrl, exampleAppUrl, demoModeEnabled, etc.).
+- **Web (Next.js)** — Client fetches `GET /api/config` (proxied to the API) and uses the JSON (appUrl, apiUrl, exampleAppUrl, demoModeEnabled, etc.).
 - **Docs (VitePress)** — Entrypoint writes minimal `/config.json` with only `{ "appUrl": "${APP_URL}" }`; the docs app then fetches `${appUrl}/api/config` for the full config.
 - **Example-nextjs** — Fetches config from the same API (`/api/config` when served under the web proxy, or its own env when standalone); exampleAppOrigin = `${APP_URL}/example`.
 
@@ -99,7 +97,7 @@ Configure once DNS and TLS are in place.
 
 ## 8. Config app and local development
 
-The **config app** (`pnpm config`) reads and writes only the root `.env`.
+The **Config app** (`pnpm --filter grant-config dev`) reads and writes **one root env file at a time**. Use the **Environment** selector in the header to choose **Default** (`.env`), **Demo** (`.env.demo`), or **Test** (`.env.test`).
 
 **Local development:** Root scripts (`pnpm dev`, `pnpm dev:web`, `pnpm dev:api`, `pnpm db:migrate`, `pnpm db:seed`, etc.) load the standard env hierarchy from the monorepo root via **@grantjs/env** (no dotenv-cli). Always run these commands from the repo root so the loader finds `.env`, `.env.local`, `.env.development`, etc. No copying or syncing to per-app `.env` files is needed.
 

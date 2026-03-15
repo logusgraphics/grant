@@ -5,7 +5,7 @@ description: Configure Grant with the Config app and environment variables
 
 # Configuration
 
-Grant is configured via environment variables. The **Config app** is the recommended way to view and edit them; it writes to the same `.env` files (root, API, database) and groups variables by category.
+Grant is configured via environment variables. The **Config app** is the recommended way to view and edit them; it writes to a **single root env file** at a time (`.env`, `.env.demo`, or `.env.test`).
 
 ## Config app
 
@@ -19,8 +19,9 @@ pnpm --filter grant-config dev
 
 Then open [http://localhost:3005](http://localhost:3005).
 
-- **Sidebar:** Categories (Docker, App, Database, Cache, Auth, GitHub OAuth, Security, Web, Optional) with set/missing status. Hamburger menu on small screens.
-- **Content:** Variables for the selected category in collapsible sections. Critical settings first; optional sections collapsed by default. Edit in place, generate passwords, sync shared vars (e.g. `DB_URL`) to the right files.
+- **Environment selector** (header): Choose **Default** (`.env`), **Demo** (`.env.demo`), or **Test** (`.env.test`). All vars and schema defaults are shown; unset vars show the default as placeholder.
+- **Sidebar:** Categories (App, Database, Cache, Auth, GitHub OAuth, Security, Advanced) with Set/Default/Missing status. Hamburger menu on small screens.
+- **Content:** Variables for the selected category in collapsible sections. Critical settings first; optional sections collapsed by default. Edit in place, generate passwords; optional **Use app URL** and **Use docker database** to derive `SECURITY_FRONTEND_URL` and `DB_URL` from `APP_URL` and Postgres vars.
 
 <div class="config-app-screenshots">
   <figure class="config-app-fig config-app-light">
@@ -34,7 +35,7 @@ Then open [http://localhost:3005](http://localhost:3005).
 </div>
 
 ::: tip
-Env files are created automatically when you run `pnpm dev` (predev script). To create or refresh without starting the app: `pnpm env:setup`. You can also edit `.env` files directly.
+Root `.env` is created automatically when you run `pnpm dev` (predev script). To create or refresh without starting the app: `pnpm env:setup`. For deploy and E2E, use `.env.demo` and `.env.test` (copy from `.env.demo.example` / `.env.test.example`). You can also edit env files directly.
 :::
 
 ## Env file precedence
@@ -46,7 +47,7 @@ The platform loads env files from the **monorepo root** in this order (later ove
 3. `.env.{NODE_ENV}` (e.g. `.env.development`, `.env.test`, `.env.production`)
 4. `.env.{NODE_ENV}.local` (e.g. `.env.development.local`, usually gitignored)
 
-Only `@grantjs/env` loads these files; no need for `dotenv-cli` in scripts. Apps and DB scripts use `getEnv()` from `@grantjs/env`.
+Only `@grantjs/env` loads these files; no need for `dotenv-cli` in scripts. Apps and DB scripts use `getEnv()` from `@grantjs/env`. The Config app and deployment use **root** `.env`, `.env.demo`, and `.env.test` only; apps consume these via `@grantjs/env` (no per-app `.env` for platform config).
 
 ## Platform env rules
 
@@ -66,7 +67,7 @@ To avoid regressions, follow these rules:
 | Common       | `APP_URL`               | API base URL (JWT issuer)          |
 | Common       | `CACHE_STRATEGY`        | `memory` or `redis`                |
 
-Full list, descriptions, and defaults: **`apps/api/.env.example`**. Variables use prefixes (`DB_*`, `JWT_*`, `SECURITY_*`, etc.) for grouping.
+Full list, descriptions, and defaults: Config app (all categories) or root **`.env.example`** (and `.env.demo.example` / `.env.test.example` for demo/E2E). Variables use prefixes (`DB_*`, `JWT_*`, `SECURITY_*`, etc.) for grouping.
 
 ## Using config in code
 
@@ -86,7 +87,7 @@ Implementation: `apps/api/src/config/env.config.ts`. Validated on startup; inval
 
 | Issue                       | Check                                                                                         |
 | --------------------------- | --------------------------------------------------------------------------------------------- |
-| Env not loading             | `.env` in `apps/api/`, restart server                                                         |
+| Env not loading             | `.env` at **repo root**, restart server                                                       |
 | Validation error on startup | Message names the variable; fix in Config app or `.env`                                       |
 | Redis unreachable           | `CACHE_STRATEGY=redis` → verify Redis running, `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` |
 | CORS errors                 | Set `SECURITY_FRONTEND_URL` (and `SECURITY_ADDITIONAL_ORIGINS` if needed)                     |

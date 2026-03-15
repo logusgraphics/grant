@@ -10,7 +10,7 @@ The **recommended** way to run the Grant Platform is with Docker (see [Docker de
 If you still prefer to run everything directly on a VM with Node + nginx:
 
 - Use this as a rough checklist only
-- Cross-check configuration with the latest [Configuration](/getting-started/configuration) page and `.env.example` files
+- Cross-check configuration with the latest [Configuration](/getting-started/configuration) page and root `.env.example`. Platform config is root `.env` only; use the Config app or edit that file.
 
 ## High-level steps (non-Docker)
 
