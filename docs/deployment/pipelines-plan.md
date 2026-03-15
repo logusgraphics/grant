@@ -59,8 +59,8 @@ strategy:
 ```
 
 - **Tags (dynamic):**
-  - `ghcr.io/${{ github.repository }}/${{ matrix.name }}:demo`
-  - `ghcr.io/${{ github.repository }}/${{ matrix.name }}:demo-${{ github.sha }}`
+  - <code>ghcr.io/$&#123;&#123; github.repository &#125;&#125;/$&#123;&#123; matrix.name &#125;&#125;:demo</code>
+  - <code>ghcr.io/$&#123;&#123; github.repository &#125;&#125;/$&#123;&#123; matrix.name &#125;&#125;:demo-$&#123;&#123; github.sha &#125;&#125;</code>
 - **Build cache:** Keep (or add) on the docker build step:
   - `cache-from: type=gha`
   - `cache-to: type=gha,mode=max`
