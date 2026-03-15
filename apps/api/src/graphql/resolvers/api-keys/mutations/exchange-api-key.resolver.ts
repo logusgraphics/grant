@@ -7,5 +7,5 @@ export const exchangeApiKeyResolver: MutationResolvers<GraphqlContext>['exchange
   args,
   context
 ) => {
-  return await context.handlers.apiKeys.exchangeApiKey(args);
+  return await context.handlers.apiKeys.exchangeApiKey(args, context.requestBaseUrl);
 };

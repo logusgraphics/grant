@@ -1,68 +1,17 @@
 /**
  * Environment Configuration Module
  *
- * This module provides centralized, type-safe access to all environment variables.
- *
- * Naming Conventions:
- * - APP_* - Application-level settings (port, environment, etc.)
- * - DB_* - Database configuration
- * - JWT_* - JWT and authentication settings
- * - AUTH_* - Authentication and authorization settings
- * - CACHE_* - Cache strategy and settings
- * - REDIS_* - Redis-specific configuration
- * - SECURITY_* - Security-related settings
- * - NODE_ENV - Standard Node.js environment variable (no prefix)
+ * Centralized, type-safe config built from @grantjs/env. Applications load dotenv at
+ * entrypoints; this module calls getEnv() and builds derived config.
  */
 
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@grantjs/i18n';
+import { getEnv, resolveDatabaseUrl } from '@grantjs/env';
+import { SUPPORTED_LOCALES } from '@grantjs/i18n';
 import { UserAuthenticationMethodProvider } from '@grantjs/schema';
-import * as dotenv from 'dotenv';
 
 import { ConfigurationError } from '@/lib/errors';
 
-// Load environment variables from .env file
-dotenv.config();
-
-/**
- * Get environment variable with type conversion and validation
- */
-function getEnv(key: string, defaultValue?: string): string {
-  const value = process.env[key];
-  if (value === undefined && defaultValue === undefined) {
-    throw new ConfigurationError(`Missing required environment variable: ${key}`);
-  }
-  return value ?? defaultValue!;
-}
-
-function getEnvNumber(key: string, defaultValue: number): number {
-  const value = process.env[key];
-  if (value === undefined) return defaultValue;
-  const parsed = Number(value);
-  if (isNaN(parsed)) {
-    throw new ConfigurationError(`Environment variable ${key} must be a valid number`);
-  }
-  return parsed;
-}
-
-function getEnvBoolean(key: string, defaultValue: boolean): boolean {
-  const value = process.env[key];
-  if (value === undefined) return defaultValue;
-  return value.toLowerCase() === 'true' || value === '1';
-}
-
-function getEnvEnum<T extends string>(
-  key: string,
-  allowedValues: readonly T[],
-  defaultValue: T
-): T {
-  const value = (process.env[key] as T) ?? defaultValue;
-  if (!allowedValues.includes(value)) {
-    throw new ConfigurationError(
-      `Environment variable ${key} must be one of [${allowedValues.join(', ')}], got: ${value}`
-    );
-  }
-  return value;
-}
+const env = getEnv();
 
 // ============================================================================
 // Application Configuration
@@ -76,25 +25,27 @@ export const APP_CONFIG = {
   version: '1.0.0',
 
   /** Server port */
-  port: getEnvNumber('APP_PORT', 4000),
+  port: env.API_PORT,
 
   /** Node environment */
-  nodeEnv: getEnvEnum('NODE_ENV', ['development', 'production', 'test'] as const, 'development'),
+  nodeEnv: env.NODE_ENV,
 
   /** Whether the app is running in production */
-  isProduction: getEnv('NODE_ENV', 'development') === 'production',
+  isProduction: env.NODE_ENV === 'production',
 
   /** Whether the app is running in development */
-  isDevelopment: getEnv('NODE_ENV', 'development') === 'development',
+  isDevelopment: env.NODE_ENV === 'development',
 
   /** Whether the app is running in test mode */
-  isTest: getEnv('NODE_ENV', 'development') === 'test',
+  isTest: env.NODE_ENV === 'test',
 
   /**
    * API base URL. Used as JWT iss (issuer) and aud (audience) for session and API key tokens.
-   * In production set to your public API URL (e.g. https://api.example.com). RS256 verifiers use this to validate iss/aud.
    */
-  url: getEnv('APP_URL', 'http://localhost:4000'),
+  url: env.APP_URL,
+
+  /** Public docs site URL (for runtime config consumed by web/docs) */
+  docsUrl: env.DOCS_URL,
 } as const;
 
 // ============================================================================
@@ -103,25 +54,25 @@ export const APP_CONFIG = {
 
 export const DB_CONFIG = {
   /** PostgreSQL connection string */
-  url: getEnv('DB_URL', 'postgresql://grant_user:grant_password@localhost:5432/grant'),
+  url: resolveDatabaseUrl(env),
 
   /** Maximum number of connections in the pool */
-  poolMax: getEnvNumber('DB_POOL_MAX', 20),
+  poolMax: env.DB_POOL_MAX,
 
   /** Minimum number of connections in the pool */
-  poolMin: getEnvNumber('DB_POOL_MIN', 2),
+  poolMin: env.DB_POOL_MIN,
 
   /** Connection timeout in seconds */
-  connectionTimeout: getEnvNumber('DB_CONNECTION_TIMEOUT', 30),
+  connectionTimeout: env.DB_CONNECTION_TIMEOUT,
 
   /** Idle timeout in seconds - how long a connection can be idle before being closed */
-  idleTimeout: getEnvNumber('DB_IDLE_TIMEOUT', 20),
+  idleTimeout: env.DB_IDLE_TIMEOUT,
 
   /** Query timeout in milliseconds */
-  queryTimeout: getEnvNumber('DB_QUERY_TIMEOUT', 60000),
+  queryTimeout: env.DB_QUERY_TIMEOUT,
 
   /** Enable query logging */
-  logQueries: getEnvBoolean('DB_LOG_QUERIES', !APP_CONFIG.isProduction),
+  logQueries: env.DB_LOG_QUERIES,
 } as const;
 
 // ============================================================================
@@ -130,16 +81,16 @@ export const DB_CONFIG = {
 
 export const JWT_CONFIG = {
   /** Access token expiration in minutes */
-  accessTokenExpirationMinutes: getEnvNumber('JWT_ACCESS_TOKEN_EXPIRATION_MINUTES', 15),
+  accessTokenExpirationMinutes: env.JWT_ACCESS_TOKEN_EXPIRATION_MINUTES,
 
   /** Refresh token expiration in days. Drives JWKS key retention (which rotated keys to expose), not a cache TTL. */
-  refreshTokenExpirationDays: getEnvNumber('JWT_REFRESH_TOKEN_EXPIRATION_DAYS', 30),
+  refreshTokenExpirationDays: env.JWT_REFRESH_TOKEN_EXPIRATION_DAYS,
 
   /** Cache-Control max-age for GET /.well-known/jwks.json response (seconds). For external verifiers only. */
-  jwksMaxAgeSeconds: getEnvNumber('JWT_JWKS_MAX_AGE_SECONDS', 300),
+  jwksMaxAgeSeconds: env.JWT_JWKS_MAX_AGE_SECONDS,
 
   /** TTL in seconds for in-app key caches: system signing key and verification keys by kid (GrantService). Invalidated on rotation for signing key; verification keys use TTL only. */
-  systemSigningKeyCacheTtlSeconds: getEnvNumber('JWT_SYSTEM_SIGNING_KEY_CACHE_TTL_SECONDS', 300),
+  systemSigningKeyCacheTtlSeconds: env.JWT_SYSTEM_SIGNING_KEY_CACHE_TTL_SECONDS,
 } as const;
 
 // ============================================================================
@@ -148,19 +99,19 @@ export const JWT_CONFIG = {
 
 export const AUTH_CONFIG = {
   /** Provider verification token expiration in days */
-  providerVerificationExpirationDays: getEnvNumber('AUTH_PROVIDER_VERIFICATION_EXPIRATION_DAYS', 7),
+  providerVerificationExpirationDays: env.AUTH_PROVIDER_VERIFICATION_EXPIRATION_DAYS,
 
   /** OTP (One-Time Password) verification token validity in minutes (backend enforces this; also shown in verification email). */
-  otpValidityMinutes: getEnvNumber('AUTH_OTP_VALIDITY_MINUTES', 5),
+  otpValidityMinutes: env.AUTH_OTP_VALIDITY_MINUTES,
 
   /** Password reset OTP validity in minutes */
-  passwordResetOtpValidityMinutes: getEnvNumber('AUTH_PASSWORD_RESET_OTP_VALIDITY_MINUTES', 60),
+  passwordResetOtpValidityMinutes: env.AUTH_PASSWORD_RESET_OTP_VALIDITY_MINUTES,
 
   /** Maximum number of failed login attempts before lockout */
-  maxFailedLoginAttempts: getEnvNumber('AUTH_MAX_FAILED_LOGIN_ATTEMPTS', 5),
+  maxFailedLoginAttempts: env.AUTH_MAX_FAILED_LOGIN_ATTEMPTS,
 
   /** Account lockout duration in minutes */
-  lockoutDurationMinutes: getEnvNumber('AUTH_LOCKOUT_DURATION_MINUTES', 15),
+  lockoutDurationMinutes: env.AUTH_LOCKOUT_DURATION_MINUTES,
 } as const;
 
 // ============================================================================
@@ -169,13 +120,13 @@ export const AUTH_CONFIG = {
 
 export const TOKEN_CONFIG = {
   /** Default validity period in minutes for secure tokens (e.g. OTP, verification) */
-  defaultValidityMinutes: getEnvNumber('TOKEN_DEFAULT_VALIDITY_MINUTES', 60),
+  defaultValidityMinutes: env.TOKEN_DEFAULT_VALIDITY_MINUTES,
 
   /** Default token length in bytes (hex-encoded output will be 2x this value) */
-  defaultTokenLength: getEnvNumber('TOKEN_DEFAULT_LENGTH', 32),
+  defaultTokenLength: env.TOKEN_DEFAULT_LENGTH,
 
   /** Number of bcrypt hashing rounds for secrets (higher = slower but more secure) */
-  bcryptRounds: getEnvNumber('TOKEN_BCRYPT_ROUNDS', 10),
+  bcryptRounds: env.TOKEN_BCRYPT_ROUNDS,
 } as const;
 
 // ============================================================================
@@ -184,43 +135,37 @@ export const TOKEN_CONFIG = {
 
 export const GITHUB_OAUTH_CONFIG = {
   /** GitHub OAuth Client ID */
-  clientId: getEnv('GITHUB_CLIENT_ID', ''),
+  clientId: env.GITHUB_CLIENT_ID,
 
   /** GitHub OAuth Client Secret */
-  clientSecret: getEnv('GITHUB_CLIENT_SECRET', ''),
+  clientSecret: env.GITHUB_CLIENT_SECRET,
 
   /** GitHub OAuth callback URL */
-  callbackUrl: getEnv('GITHUB_CALLBACK_URL', 'http://localhost:4000/api/auth/github/callback'),
+  callbackUrl: env.GITHUB_CALLBACK_URL,
 
   /** GitHub OAuth callback URL for project app flow (must be registered in GitHub app) */
-  projectCallbackUrl: getEnv(
-    'GITHUB_PROJECT_CALLBACK_URL',
-    'http://localhost:4000/api/auth/project/callback'
-  ),
+  projectCallbackUrl: env.GITHUB_PROJECT_CALLBACK_URL,
 
   /** GitHub OAuth authorization URL */
-  authorizationUrl: getEnv('GITHUB_AUTHORIZATION_URL', 'https://github.com/login/oauth/authorize'),
+  authorizationUrl: env.GITHUB_AUTHORIZATION_URL,
 
   /** GitHub OAuth token URL */
-  tokenUrl: getEnv('GITHUB_TOKEN_URL', 'https://github.com/login/oauth/access_token'),
+  tokenUrl: env.GITHUB_TOKEN_URL,
 
   /** GitHub API base URL */
-  apiUrl: getEnv('GITHUB_API_URL', 'https://api.github.com'),
+  apiUrl: env.GITHUB_API_URL,
 
   /** OAuth scopes to request */
   scopes: ['user:email', 'read:user'],
 
   /** State token validity in minutes (OAuth flow protection) */
-  stateValidityMinutes: getEnvNumber('GITHUB_OAUTH_STATE_VALIDITY_MINUTES', 10),
+  stateValidityMinutes: env.GITHUB_OAUTH_STATE_VALIDITY_MINUTES,
 
   /** Default avatar URL used when a GitHub user has no avatar */
-  defaultAvatarUrl: getEnv(
-    'GITHUB_DEFAULT_AVATAR_URL',
-    'https://github.com/identicons/placeholder'
-  ),
+  defaultAvatarUrl: env.GITHUB_DEFAULT_AVATAR_URL,
 
   /** TTL in seconds for CLI OAuth callback payloads stored in cache */
-  cliCallbackTtlSeconds: getEnvNumber('OAUTH_CLI_CALLBACK_TTL_SECONDS', 60),
+  cliCallbackTtlSeconds: env.OAUTH_CLI_CALLBACK_TTL_SECONDS,
 } as const;
 
 /**
@@ -239,22 +184,20 @@ export const PROJECT_OAUTH_CONFIG = {
    * Tenant app or frontend hosts the "enter email" page; user is redirected here with client_id, redirect_uri, state.
    * Handler injects default locale (e.g. /en/) when building redirects; if set via env, include locale in path for next-intl.
    */
-  emailEntryUrl: getEnv(
-    'PROJECT_OAUTH_EMAIL_ENTRY_URL',
-    process.env.SECURITY_FRONTEND_URL
-      ? `${process.env.SECURITY_FRONTEND_URL}/auth/project/email`
-      : 'http://localhost:3000/auth/project/email'
-  ),
+  emailEntryUrl:
+    env.PROJECT_OAUTH_EMAIL_ENTRY_URL ||
+    (env.SECURITY_FRONTEND_URL
+      ? `${env.SECURITY_FRONTEND_URL}/auth/project/email`
+      : 'http://localhost:3000/auth/project/email'),
   /**
    * URL for project-scoped OAuth consent (post-auth). Frontend page that shows scopes and Allow/Deny.
    * Handler injects default locale (e.g. /en/) when building redirects; if set via env, include locale in path for next-intl.
    */
-  consentUrl: getEnv(
-    'PROJECT_OAUTH_CONSENT_URL',
-    process.env.SECURITY_FRONTEND_URL
-      ? `${process.env.SECURITY_FRONTEND_URL}/auth/project/consent`
-      : 'http://localhost:3000/auth/project/consent'
-  ),
+  consentUrl:
+    env.PROJECT_OAUTH_CONSENT_URL ||
+    (env.SECURITY_FRONTEND_URL
+      ? `${env.SECURITY_FRONTEND_URL}/auth/project/consent`
+      : 'http://localhost:3000/auth/project/consent'),
 } as const;
 
 // ============================================================================
@@ -263,13 +206,13 @@ export const PROJECT_OAUTH_CONFIG = {
 
 export const CACHE_CONFIG = {
   /** Cache strategy: 'memory' for single instance, 'redis' for distributed */
-  strategy: getEnvEnum('CACHE_STRATEGY', ['memory', 'redis'] as const, 'memory'),
+  strategy: env.CACHE_STRATEGY,
 
   /** Default TTL (Time To Live) in seconds */
-  defaultTtl: getEnvNumber('CACHE_DEFAULT_TTL', 3600),
+  defaultTtl: env.CACHE_DEFAULT_TTL,
 
   /** Maximum cache size in bytes (for in-memory cache) */
-  maxSize: getEnvNumber('CACHE_MAX_SIZE', 100 * 1024 * 1024), // 100MB
+  maxSize: env.CACHE_MAX_SIZE,
 } as const;
 
 // ============================================================================
@@ -278,25 +221,25 @@ export const CACHE_CONFIG = {
 
 export const REDIS_CONFIG = {
   /** Redis server hostname */
-  host: getEnv('REDIS_HOST', 'localhost'),
+  host: env.REDIS_HOST,
 
   /** Redis server port */
-  port: getEnvNumber('REDIS_PORT', 6379),
+  port: env.REDIS_PORT,
 
   /** Redis authentication password */
-  password: process.env.REDIS_PASSWORD || undefined,
+  password: env.REDIS_PASSWORD || undefined,
 
   /** Redis database number */
-  database: getEnvNumber('REDIS_DB', 0),
+  database: env.REDIS_DB,
 
   /** Redis key prefix for namespacing */
-  keyPrefix: getEnv('REDIS_KEY_PREFIX', 'grant:'),
+  keyPrefix: env.REDIS_KEY_PREFIX,
 
   /** Connection timeout in milliseconds */
-  connectionTimeout: getEnvNumber('REDIS_CONNECTION_TIMEOUT', 10000),
+  connectionTimeout: env.REDIS_CONNECTION_TIMEOUT,
 
   /** Enable TLS for Redis connection */
-  enableTls: getEnvBoolean('REDIS_ENABLE_TLS', false),
+  enableTls: env.REDIS_ENABLE_TLS,
 } as const;
 
 // ============================================================================
@@ -305,51 +248,50 @@ export const REDIS_CONFIG = {
 
 export const SECURITY_CONFIG = {
   /** Frontend URL for CORS */
-  frontendUrl: getEnv('SECURITY_FRONTEND_URL', 'http://localhost:3000'),
+  frontendUrl: env.SECURITY_FRONTEND_URL,
 
   /** Additional allowed origins for CORS (comma-separated) */
-  additionalOrigins: process.env.SECURITY_ADDITIONAL_ORIGINS
-    ? process.env.SECURITY_ADDITIONAL_ORIGINS.split(',').map((o) => o.trim())
+  additionalOrigins: env.SECURITY_ADDITIONAL_ORIGINS
+    ? env.SECURITY_ADDITIONAL_ORIGINS.split(',')
+        .map((o: string) => o.trim())
+        .filter(Boolean)
     : [],
 
   /** Enable Helmet security headers */
-  enableHelmet: getEnvBoolean('SECURITY_ENABLE_HELMET', true),
+  enableHelmet: env.SECURITY_ENABLE_HELMET,
 
-  /** Enable rate limiting */
-  enableRateLimit: getEnvBoolean('SECURITY_ENABLE_RATE_LIMIT', APP_CONFIG.isProduction),
+  /** Enable rate limiting (default: true in production when not set) */
+  enableRateLimit: env.SECURITY_ENABLE_RATE_LIMIT ?? APP_CONFIG.isProduction,
 
   /** Rate limit: maximum requests per window */
-  rateLimitMax: getEnvNumber('SECURITY_RATE_LIMIT_MAX', 100),
+  rateLimitMax: env.SECURITY_RATE_LIMIT_MAX,
 
   /** Rate limit: time window in minutes */
-  rateLimitWindowMinutes: getEnvNumber('SECURITY_RATE_LIMIT_WINDOW_MINUTES', 15),
+  rateLimitWindowMinutes: env.SECURITY_RATE_LIMIT_WINDOW_MINUTES,
 
   /** Rate limit (auth endpoints): maximum requests per window (login, refresh, cli-callback, token) */
-  rateLimitAuthMax: getEnvNumber('SECURITY_RATE_LIMIT_AUTH_MAX', 20),
+  rateLimitAuthMax: env.SECURITY_RATE_LIMIT_AUTH_MAX,
 
   /** Rate limit (auth endpoints): time window in minutes */
-  rateLimitAuthWindowMinutes: getEnvNumber('SECURITY_RATE_LIMIT_AUTH_WINDOW_MINUTES', 15),
+  rateLimitAuthWindowMinutes: env.SECURITY_RATE_LIMIT_AUTH_WINDOW_MINUTES,
 
   /** Enable per-tenant rate limiting (noisy neighbor protection). When enabled, authenticated requests with scope are also limited by tenant. */
-  rateLimitPerTenantEnabled: getEnvBoolean('SECURITY_RATE_LIMIT_PER_TENANT_ENABLED', false),
+  rateLimitPerTenantEnabled: env.SECURITY_RATE_LIMIT_PER_TENANT_ENABLED,
 
   /** Per-tenant rate limit: maximum requests per window per tenant (scope.tenant + scope.id) */
-  rateLimitPerTenantMax: getEnvNumber('SECURITY_RATE_LIMIT_PER_TENANT_MAX', 200),
+  rateLimitPerTenantMax: env.SECURITY_RATE_LIMIT_PER_TENANT_MAX,
 
   /** Per-tenant rate limit: time window in minutes */
-  rateLimitPerTenantWindowMinutes: getEnvNumber(
-    'SECURITY_RATE_LIMIT_PER_TENANT_WINDOW_MINUTES',
-    15
-  ),
+  rateLimitPerTenantWindowMinutes: env.SECURITY_RATE_LIMIT_PER_TENANT_WINDOW_MINUTES,
 
   /** Enable database Row-Level Security enforcement for scoped requests */
-  enableRls: getEnvBoolean('SECURITY_ENABLE_RLS', true),
+  enableRls: env.SECURITY_ENABLE_RLS,
 
   /** RLS restricted role name (must match the role created in DB migration) */
-  rlsRestrictedRole: getEnv('SECURITY_RLS_ROLE', 'grant_app_restricted'),
+  rlsRestrictedRole: env.SECURITY_RLS_ROLE,
 
   /** API Key for external service authentication (optional) */
-  apiKey: process.env.SECURITY_API_KEY || undefined,
+  apiKey: env.SECURITY_API_KEY || undefined,
 } as const;
 
 // ============================================================================
@@ -357,14 +299,14 @@ export const SECURITY_CONFIG = {
 // ============================================================================
 
 export const APOLLO_CONFIG = {
-  /** Enable GraphQL introspection */
-  introspection: getEnvBoolean('APOLLO_INTROSPECTION', !APP_CONFIG.isProduction),
+  /** Enable GraphQL introspection (default: false in production) */
+  introspection: env.APOLLO_INTROSPECTION ?? !APP_CONFIG.isProduction,
 
-  /** Enable GraphQL playground */
-  playground: getEnvBoolean('APOLLO_PLAYGROUND', APP_CONFIG.isDevelopment),
+  /** Enable GraphQL playground (default: true in development) */
+  playground: env.APOLLO_PLAYGROUND ?? APP_CONFIG.isDevelopment,
 
-  /** Include stack traces in errors */
-  includeStacktrace: getEnvBoolean('APOLLO_INCLUDE_STACKTRACE', APP_CONFIG.isDevelopment),
+  /** Include stack traces in errors (default: true in development) */
+  includeStacktrace: env.APOLLO_INCLUDE_STACKTRACE ?? APP_CONFIG.isDevelopment,
 } as const;
 
 // ============================================================================
@@ -373,53 +315,49 @@ export const APOLLO_CONFIG = {
 
 export const SWAGGER_CONFIG = {
   /** Enable Swagger UI documentation */
-  enabled: getEnvBoolean('SWAGGER_ENABLED', true),
+  enabled: env.SWAGGER_ENABLED,
 
   /** Custom site title for Swagger UI */
-  siteTitle: getEnv('SWAGGER_SITE_TITLE', 'Grant API Docs'),
+  siteTitle: env.SWAGGER_SITE_TITLE,
 
   /** Persist authorization between page refreshes */
-  persistAuthorization: getEnvBoolean('SWAGGER_PERSIST_AUTHORIZATION', true),
+  persistAuthorization: env.SWAGGER_PERSIST_AUTHORIZATION,
 
   /** Display request duration in responses */
-  displayRequestDuration: getEnvBoolean('SWAGGER_DISPLAY_REQUEST_DURATION', true),
+  displayRequestDuration: env.SWAGGER_DISPLAY_REQUEST_DURATION,
 
   /** Enable filter/search in operations */
-  filter: getEnvBoolean('SWAGGER_FILTER', true),
+  filter: env.SWAGGER_FILTER,
 
   /** Enable "Try it out" by default */
-  tryItOutEnabled: getEnvBoolean('SWAGGER_TRY_IT_OUT_ENABLED', true),
+  tryItOutEnabled: env.SWAGGER_TRY_IT_OUT_ENABLED,
 
   /** Depth to expand models/schemas */
-  modelsExpandDepth: getEnvNumber('SWAGGER_MODELS_EXPAND_DEPTH', 3),
+  modelsExpandDepth: env.SWAGGER_MODELS_EXPAND_DEPTH,
 
   /** Depth to expand individual model properties */
-  modelExpandDepth: getEnvNumber('SWAGGER_MODEL_EXPAND_DEPTH', 3),
+  modelExpandDepth: env.SWAGGER_MODEL_EXPAND_DEPTH,
 
   /** Documentation expansion: 'list' | 'full' | 'none' */
-  docExpansion: getEnvEnum('SWAGGER_DOC_EXPANSION', ['list', 'full', 'none'] as const, 'list'),
+  docExpansion: env.SWAGGER_DOC_EXPANSION,
 
   /** Enable deep linking for sharing */
-  deepLinking: getEnvBoolean('SWAGGER_DEEP_LINKING', true),
+  deepLinking: env.SWAGGER_DEEP_LINKING,
 
   /** Display operation IDs */
-  displayOperationId: getEnvBoolean('SWAGGER_DISPLAY_OPERATION_ID', false),
+  displayOperationId: env.SWAGGER_DISPLAY_OPERATION_ID,
 
-  /** Syntax highlighting theme: 'agate' | 'arta' | 'monokai' | 'nord' | 'obsidian' | 'tomorrow-night' */
-  syntaxTheme: getEnvEnum(
-    'SWAGGER_SYNTAX_THEME',
-    ['agate', 'arta', 'monokai', 'nord', 'obsidian', 'tomorrow-night'] as const,
-    'monokai'
-  ),
+  /** Syntax highlighting theme */
+  syntaxTheme: env.SWAGGER_SYNTAX_THEME,
 
   /** Show extensions */
-  showExtensions: getEnvBoolean('SWAGGER_SHOW_EXTENSIONS', true),
+  showExtensions: env.SWAGGER_SHOW_EXTENSIONS,
 
   /** Show common extensions */
-  showCommonExtensions: getEnvBoolean('SWAGGER_SHOW_COMMON_EXTENSIONS', true),
+  showCommonExtensions: env.SWAGGER_SHOW_COMMON_EXTENSIONS,
 
   /** Production server URL shown in OpenAPI document (only visible in dev mode) */
-  productionUrl: getEnv('OPENAPI_PRODUCTION_URL', 'https://api.grant.center'),
+  productionUrl: env.OPENAPI_PRODUCTION_URL,
 } as const;
 
 // ============================================================================
@@ -431,10 +369,10 @@ export const I18N_CONFIG = {
   supportedLocales: SUPPORTED_LOCALES,
 
   /** Default locale */
-  defaultLocale: getEnvEnum('I18N_DEFAULT_LOCALE', SUPPORTED_LOCALES, DEFAULT_LOCALE),
+  defaultLocale: env.I18N_DEFAULT_LOCALE,
 
   /** Enable i18n debug mode */
-  debug: getEnvBoolean('I18N_DEBUG', APP_CONFIG.isDevelopment),
+  debug: env.I18N_DEBUG,
 } as const;
 
 // ============================================================================
@@ -443,44 +381,40 @@ export const I18N_CONFIG = {
 
 export const EMAIL_CONFIG = {
   /** Email provider */
-  provider: getEnvEnum(
-    'EMAIL_PROVIDER',
-    ['console', 'mailgun', 'mailjet', 'ses', 'smtp'] as const,
-    'console'
-  ),
+  provider: env.EMAIL_PROVIDER,
 
   /** From email address */
-  from: getEnv('EMAIL_FROM', 'noreply@yourdomain.com'),
+  from: env.EMAIL_FROM,
 
   /** From name displayed in emails */
-  fromName: process.env.EMAIL_FROM_NAME || 'Grant',
+  fromName: env.EMAIL_FROM_NAME || 'Grant',
 
   /** Mailgun configuration */
   mailgun: {
-    apiKey: process.env.MAILGUN_API_KEY || '',
-    domain: process.env.MAILGUN_DOMAIN || '',
+    apiKey: env.MAILGUN_API_KEY,
+    domain: env.MAILGUN_DOMAIN,
   },
 
   /** Mailjet configuration */
   mailjet: {
-    apiKey: process.env.MAILJET_API_KEY || '',
-    secretKey: process.env.MAILJET_SECRET_KEY || '',
+    apiKey: env.MAILJET_API_KEY,
+    secretKey: env.MAILJET_SECRET_KEY,
   },
 
   /** AWS SES configuration */
   ses: {
-    clientId: process.env.EMAIL_SES_CLIENT_ID || '',
-    clientSecret: process.env.EMAIL_SES_CLIENT_SECRET || '',
-    region: process.env.EMAIL_SES_REGION || 'us-east-1',
+    clientId: env.EMAIL_SES_CLIENT_ID,
+    clientSecret: env.EMAIL_SES_CLIENT_SECRET,
+    region: env.EMAIL_SES_REGION,
   },
 
   /** SMTP configuration */
   smtp: {
-    host: process.env.SMTP_HOST || 'smtp.example.com',
-    port: getEnvNumber('SMTP_PORT', 587),
-    secure: getEnvBoolean('SMTP_SECURE', false),
-    user: process.env.SMTP_USER || '',
-    password: process.env.SMTP_PASSWORD || '',
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE,
+    user: env.SMTP_USER,
+    password: env.SMTP_PASSWORD,
   },
 } as const;
 
@@ -490,15 +424,17 @@ export const EMAIL_CONFIG = {
 // Level is applied at logger bootstrap (apps/api/src/lib/logger) and affects all modules using the shared logger.
 
 export const LOGGING_CONFIG = {
-  /** Log level: trace, debug, info, warn, error, fatal */
-  level: getEnvEnum(
-    'LOG_LEVEL',
-    ['fatal', 'error', 'warn', 'info', 'debug', 'trace'] as const,
-    APP_CONFIG.isProduction ? 'info' : 'debug'
-  ),
+  /** Log level: trace, debug, info, warn, error, fatal (default: info in production when not set) */
+  level: (env.LOG_LEVEL ?? (APP_CONFIG.isProduction ? 'info' : 'debug')) as
+    | 'fatal'
+    | 'error'
+    | 'warn'
+    | 'info'
+    | 'debug'
+    | 'trace',
 
   /** Pretty print logs (development only) */
-  prettyPrint: getEnvBoolean('LOG_PRETTY_PRINT', APP_CONFIG.isDevelopment),
+  prettyPrint: env.LOG_PRETTY_PRINT,
 } as const;
 
 // ============================================================================
@@ -508,13 +444,13 @@ export const LOGGING_CONFIG = {
 
 export const METRICS_CONFIG = {
   /** Enable metrics collection and expose GET /metrics */
-  enabled: getEnvBoolean('METRICS_ENABLED', false),
+  enabled: env.METRICS_ENABLED,
 
   /** Metrics endpoint path (e.g. /metrics) */
-  endpoint: getEnv('METRICS_ENDPOINT', '/metrics'),
+  endpoint: env.METRICS_ENDPOINT,
 
   /** Collect default metrics (CPU, memory, event loop, etc.) when implementation is added */
-  collectDefaults: getEnvBoolean('METRICS_COLLECT_DEFAULTS', true),
+  collectDefaults: env.METRICS_COLLECT_DEFAULTS,
 
   /** Default labels for all metrics */
   defaultLabels: {
@@ -530,13 +466,13 @@ export const METRICS_CONFIG = {
 
 export const TELEMETRY_CONFIG = {
   /** Telemetry provider: none (noop) | cloudwatch */
-  provider: getEnvEnum('TELEMETRY_PROVIDER', ['none', 'cloudwatch'] as const, 'none'),
+  provider: env.TELEMETRY_PROVIDER,
 
   /** CloudWatch adapter (used when provider is cloudwatch) */
   cloudwatch: {
-    region: getEnv('TELEMETRY_CLOUDWATCH_REGION', 'us-east-1'),
-    logGroupName: getEnv('TELEMETRY_CLOUDWATCH_LOG_GROUP', ''),
-    logStreamPrefix: process.env.TELEMETRY_CLOUDWATCH_LOG_STREAM_PREFIX || 'grant-api',
+    region: env.TELEMETRY_CLOUDWATCH_REGION,
+    logGroupName: env.TELEMETRY_CLOUDWATCH_LOG_GROUP,
+    logStreamPrefix: env.TELEMETRY_CLOUDWATCH_LOG_STREAM_PREFIX,
   },
 } as const;
 
@@ -546,16 +482,16 @@ export const TELEMETRY_CONFIG = {
 
 export const ANALYTICS_CONFIG = {
   /** Enable analytics (when provider is not 'none') */
-  enabled: getEnvBoolean('ANALYTICS_ENABLED', false),
+  enabled: env.ANALYTICS_ENABLED,
 
   /** Analytics provider: none | umami */
-  provider: getEnvEnum('ANALYTICS_PROVIDER', ['none', 'umami'] as const, 'none'),
+  provider: env.ANALYTICS_PROVIDER,
 
   /** Umami adapter (used when provider is umami) */
   umami: {
-    apiUrl: getEnv('ANALYTICS_UMAMI_API_URL', ''),
-    websiteId: getEnv('ANALYTICS_UMAMI_WEBSITE_ID', ''),
-    hostname: process.env.ANALYTICS_UMAMI_HOSTNAME || 'grant-api',
+    apiUrl: env.ANALYTICS_UMAMI_API_URL,
+    websiteId: env.ANALYTICS_UMAMI_WEBSITE_ID,
+    hostname: env.ANALYTICS_UMAMI_HOSTNAME,
   },
 } as const;
 
@@ -565,22 +501,22 @@ export const ANALYTICS_CONFIG = {
 
 export const TRACING_CONFIG = {
   /** Enable distributed tracing */
-  enabled: getEnvBoolean('TRACING_ENABLED', false),
+  enabled: env.TRACING_ENABLED,
 
   /** Trace backend: jaeger | otlp | xray */
-  backend: getEnvEnum('TRACING_BACKEND', ['jaeger', 'otlp', 'xray'] as const, 'jaeger'),
+  backend: env.TRACING_BACKEND,
 
   /** Jaeger collector endpoint (for TRACING_BACKEND=jaeger) */
-  jaegerEndpoint: getEnv('JAEGER_ENDPOINT', 'http://localhost:14268/api/traces'),
+  jaegerEndpoint: env.JAEGER_ENDPOINT,
 
   /** OTLP trace endpoint (for TRACING_BACKEND=otlp or xray) */
-  otlpEndpoint: getEnv('OTLP_ENDPOINT', 'http://localhost:4318/v1/traces'),
+  otlpEndpoint: env.OTLP_ENDPOINT,
 
   /** Sampling rate 0.0 to 1.0 */
-  samplingRate: getEnvNumber('TRACING_SAMPLING_RATE', 1.0),
+  samplingRate: env.TRACING_SAMPLING_RATE,
 
   /** Service name in traces */
-  serviceName: getEnv('TRACING_SERVICE_NAME', 'grant-api'),
+  serviceName: env.TRACING_SERVICE_NAME,
 } as const;
 
 // ============================================================================
@@ -589,12 +525,12 @@ export const TRACING_CONFIG = {
 
 export const STORAGE_CONFIG = {
   /** Storage provider: 'local' | 's3' */
-  provider: getEnvEnum('STORAGE_PROVIDER', ['local', 's3'] as const, 'local'),
+  provider: env.STORAGE_PROVIDER,
 
   /** Local storage configuration (works for bare metal, Docker volumes, or any filesystem mount) */
   local: {
     /** Base path for local file storage (can be local directory, Docker volume mount, etc.) */
-    basePath: getEnv('STORAGE_LOCAL_BASE_PATH', './storage'),
+    basePath: env.STORAGE_LOCAL_BASE_PATH,
     /** Content type mappings for file extensions */
     contentTypes: {
       '.jpg': 'image/jpeg',
@@ -610,23 +546,23 @@ export const STORAGE_CONFIG = {
   /** S3 storage configuration */
   s3: {
     /** S3 bucket name */
-    bucket: getEnv('STORAGE_S3_BUCKET', ''),
+    bucket: env.STORAGE_S3_BUCKET,
     /** AWS region */
-    region: getEnv('STORAGE_S3_REGION', 'us-east-1'),
+    region: env.STORAGE_S3_REGION,
     /** AWS access key ID */
-    accessKeyId: getEnv('STORAGE_S3_ACCESS_KEY_ID', ''),
+    accessKeyId: env.STORAGE_S3_ACCESS_KEY_ID,
     /** AWS secret access key */
-    secretAccessKey: getEnv('STORAGE_S3_SECRET_ACCESS_KEY', ''),
+    secretAccessKey: env.STORAGE_S3_SECRET_ACCESS_KEY,
     /** Custom S3 endpoint (for S3-compatible services like MinIO) */
-    endpoint: process.env.STORAGE_S3_ENDPOINT || undefined,
+    endpoint: env.STORAGE_S3_ENDPOINT || undefined,
     /** Public URL base (e.g., CloudFront distribution URL) */
-    publicUrl: process.env.STORAGE_S3_PUBLIC_URL || undefined,
+    publicUrl: env.STORAGE_S3_PUBLIC_URL || undefined,
   },
 
   /** File upload validation configuration */
   upload: {
     /** Maximum file size in bytes (default: 5MB) */
-    maxFileSize: getEnvNumber('STORAGE_UPLOAD_MAX_FILE_SIZE', 5 * 1024 * 1024),
+    maxFileSize: env.STORAGE_UPLOAD_MAX_FILE_SIZE,
     /** Allowed MIME types for file uploads */
     allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const,
     /** Allowed file extensions */
@@ -640,10 +576,10 @@ export const STORAGE_CONFIG = {
 
 export const PRIVACY_CONFIG = {
   /** Data retention period in days for deleted accounts (default: 30) */
-  accountDeletionRetentionDays: getEnvNumber('PRIVACY_ACCOUNT_DELETION_RETENTION_DAYS', 30),
+  accountDeletionRetentionDays: env.PRIVACY_ACCOUNT_DELETION_RETENTION_DAYS,
 
   /** Data retention period in days for backups (default: 90) */
-  backupRetentionDays: getEnvNumber('PRIVACY_BACKUP_RETENTION_DAYS', 90),
+  backupRetentionDays: env.PRIVACY_BACKUP_RETENTION_DAYS,
 } as const;
 
 // ============================================================================
@@ -652,10 +588,10 @@ export const PRIVACY_CONFIG = {
 
 export const JOB_CONFIG = {
   /** Enable job scheduling */
-  enabled: getEnvBoolean('JOBS_ENABLED', true),
+  enabled: env.JOBS_ENABLED,
 
   /** Job scheduling provider: 'node-cron' | 'bullmq' */
-  provider: getEnvEnum('JOBS_PROVIDER', ['node-cron', 'bullmq'] as const, 'node-cron'),
+  provider: env.JOBS_PROVIDER,
 
   /** Redis connection for BullMQ (uses existing Redis config if available) */
   redis:
@@ -670,46 +606,42 @@ export const JOB_CONFIG = {
   /** Job-specific settings */
   dataRetention: {
     /** Cron pattern for data retention cleanup */
-    schedule: getEnv('JOBS_DATA_RETENTION_SCHEDULE', '0 2 * * *'),
+    schedule: env.JOBS_DATA_RETENTION_SCHEDULE,
     /** Enable data retention cleanup job */
-    enabled: getEnvBoolean('JOBS_DATA_RETENTION_ENABLED', true),
+    enabled: env.JOBS_DATA_RETENTION_ENABLED,
   },
 
   /** System (platform) signing key rotation */
   systemSigningKeyRotation: {
     /** Cron pattern (e.g. '0 0 1 * *' = monthly, first day at midnight) */
-    schedule: getEnv('JOBS_SYSTEM_SIGNING_KEY_ROTATION_SCHEDULE', '0 0 1 * *'),
+    schedule: env.JOBS_SYSTEM_SIGNING_KEY_ROTATION_SCHEDULE,
     /** Enable automatic system signing key rotation */
-    enabled: getEnvBoolean('JOBS_SYSTEM_SIGNING_KEY_ROTATION_ENABLED', false),
+    enabled: env.JOBS_SYSTEM_SIGNING_KEY_ROTATION_ENABLED,
   },
 
   /** BullMQ default job options */
   bullmq: {
     /** Number of retry attempts for failed jobs */
-    attempts: getEnvNumber('JOBS_BULLMQ_ATTEMPTS', 3),
+    attempts: env.JOBS_BULLMQ_ATTEMPTS,
 
     /** Backoff configuration for retries */
     backoff: {
       /** Backoff type: 'exponential' | 'fixed' */
-      type: getEnvEnum(
-        'JOBS_BULLMQ_BACKOFF_TYPE',
-        ['exponential', 'fixed'] as const,
-        'exponential'
-      ),
+      type: env.JOBS_BULLMQ_BACKOFF_TYPE,
       /** Delay in milliseconds before retry */
-      delay: getEnvNumber('JOBS_BULLMQ_BACKOFF_DELAY', 2000),
+      delay: env.JOBS_BULLMQ_BACKOFF_DELAY,
     },
 
     /** Completed job retention (in seconds) */
     removeOnComplete: {
       /** Age in seconds to keep completed jobs (default: 7 days) */
-      age: getEnvNumber('JOBS_BULLMQ_REMOVE_ON_COMPLETE_AGE', 7 * 24 * 3600),
+      age: env.JOBS_BULLMQ_REMOVE_ON_COMPLETE_AGE,
     },
 
     /** Failed job retention (in seconds) */
     removeOnFail: {
       /** Age in seconds to keep failed jobs (default: 30 days) */
-      age: getEnvNumber('JOBS_BULLMQ_REMOVE_ON_FAIL_AGE', 30 * 24 * 3600),
+      age: env.JOBS_BULLMQ_REMOVE_ON_FAIL_AGE,
     },
   },
 } as const;
@@ -720,13 +652,13 @@ export const JOB_CONFIG = {
 
 export const DEMO_MODE_CONFIG = {
   /** Enable demo mode for limited-usage deployments */
-  enabled: getEnvBoolean('DEMO_MODE_ENABLED', false),
+  enabled: env.DEMO_MODE_ENABLED,
 
   /**
    * Cron schedule for automatic demo database refresh.
    * Default: every 2 days at midnight.
    */
-  dbRefreshSchedule: getEnv('DEMO_MODE_DB_REFRESH_SCHEDULE', '0 0 */2 * *'),
+  dbRefreshSchedule: env.DEMO_MODE_DB_REFRESH_SCHEDULE,
 } as const;
 
 // ============================================================================
@@ -735,7 +667,7 @@ export const DEMO_MODE_CONFIG = {
 
 export const SYSTEM_CONSTANTS = {
   /** System user ID for internal operations (configurable via SYSTEM_USER_ID env var) */
-  systemUserId: getEnv('SYSTEM_USER_ID', '00000000-0000-0000-0000-000000000000'),
+  systemUserId: env.SYSTEM_USER_ID,
 
   /** Default page size for pagination */
   defaultPageSize: 20,
@@ -869,25 +801,49 @@ export async function printConfigSummary(): Promise<void> {
 // ============================================================================
 
 /** Development CORS origins (comma-separated, env-overridable) */
-const DEV_CORS_ORIGINS = getEnv(
-  'CORS_DEV_ORIGINS',
-  'http://localhost:3000,http://localhost:3001,https://studio.apollographql.com,https://apollo-studio-embed.vercel.app'
-)
-  .split(',')
-  .map((s) => s.trim())
+const DEV_CORS_ORIGINS = env.CORS_DEV_ORIGINS.split(',')
+  .map((s: string) => s.trim())
   .filter(Boolean);
 
 /** CORS configuration for Express middleware */
 const CORS_CONFIG = {
   origin: APP_CONFIG.isProduction
-    ? SECURITY_CONFIG.frontendUrl
+    ? [SECURITY_CONFIG.frontendUrl, ...SECURITY_CONFIG.additionalOrigins]
     : [...DEV_CORS_ORIGINS, ...SECURITY_CONFIG.additionalOrigins],
   credentials: true,
 } as const;
 
+/** Apollo Sandbox CDN origins (required when CSP is enabled and playground is used) */
+const APOLLO_SANDBOX_CDN = [
+  'https://embeddable-sandbox.cdn.apollographql.com',
+  'https://apollo-server-landing-page.cdn.apollographql.com',
+  'https://sandbox.embed.apollographql.com',
+] as const;
+
 /** Helmet security headers configuration */
 const HELMET_CONFIG = {
-  contentSecurityPolicy: APP_CONFIG.isProduction ? undefined : false,
+  crossOriginEmbedderPolicy: APOLLO_CONFIG.playground ? false : undefined,
+  contentSecurityPolicy: (():
+    | false
+    | undefined
+    | { useDefaults: false; directives: Record<string, string[]> } => {
+    if (!APP_CONFIG.isProduction) return false;
+    if (!APOLLO_CONFIG.playground) return undefined;
+    const cdnList = [...APOLLO_SANDBOX_CDN];
+    return {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'self'", ...cdnList],
+        scriptSrc: ["'self'", "'unsafe-inline'", ...cdnList],
+        scriptSrcElem: ["'self'", "'unsafe-inline'", ...cdnList],
+        imgSrc: ["'self'", 'data:', ...cdnList],
+        styleSrc: ["'self'", "'unsafe-inline'", ...cdnList],
+        manifestSrc: ["'self'", ...cdnList],
+        frameSrc: ["'self'", ...cdnList],
+        connectSrc: ["'self'"],
+      },
+    };
+  })(),
 } as const;
 
 /** Swagger UI setup configuration (computed from SWAGGER_CONFIG) */

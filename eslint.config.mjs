@@ -23,6 +23,7 @@ export default defineConfig(
       '**/node_modules/**',
       '**/dist/**',
       '**/.next/**',
+      '**/out/**', // Next.js static export (e.g. example-nextjs)
       '**/.turbo/**',
       '**/build/**',
       '**/coverage/**',
@@ -162,6 +163,27 @@ export default defineConfig(
     files: ['apps/web/next-env.d.ts'],
     rules: {
       '@typescript-eslint/triple-slash-reference': 'off',
+    },
+  },
+
+  // Forbid direct process.env in API app source; allow in config/, scripts/, tests/
+  {
+    files: ['apps/api/src/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'MemberExpression[object.name="process"][property.name="env"]',
+          message:
+            'Use config from @/config or getEnv() from @grantjs/env instead of process.env. Allowed in config/, scripts/, and tests/.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['apps/api/src/config/**/*.ts', 'apps/api/tests/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
     },
   }
 );

@@ -27,6 +27,7 @@ import { registerProjectAppsOpenApi } from './project-apps.openapi';
 import { registerProjectsOpenApi } from './projects.openapi';
 import { registerResourcesOpenApi } from './resources.openapi';
 import { registerRolesOpenApi } from './roles.openapi';
+import { registerRuntimeConfigOpenApi } from './runtime-config.openapi';
 import { registerSigningKeysOpenApi } from './signing-keys.openapi';
 import { registerTagsOpenApi } from './tags.openapi';
 import { registerUserEndpoints } from './users.openapi';
@@ -59,6 +60,7 @@ function registerCommonSchemas() {
  * Register all API endpoints organized by module
  */
 function registerAllEndpoints() {
+  registerRuntimeConfigOpenApi(registry);
   registerAuthEndpoints(registry);
   registerMeEndpoints(registry);
   registerApiKeysOpenApi(registry);
@@ -182,6 +184,10 @@ export function generateOpenApiDocument() {
       {
         name: 'Signing Keys',
         description: 'Project signing key management and rotation endpoints',
+      },
+      {
+        name: 'Config',
+        description: 'Public runtime configuration for frontends (no auth)',
       },
     ],
     externalDocs: {

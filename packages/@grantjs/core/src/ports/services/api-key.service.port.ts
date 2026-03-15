@@ -45,7 +45,8 @@ export interface IApiKeyService {
 
   exchangeApiKeyForToken(
     params: ExchangeApiKeyInput,
-    transaction?: unknown
+    transaction?: unknown,
+    issuerBaseUrl?: string
   ): Promise<ExchangeTokenResult>;
 
   revokeApiKey(params: { id: string }, transaction?: unknown): Promise<ApiKey>;

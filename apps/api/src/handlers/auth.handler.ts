@@ -70,7 +70,8 @@ export class AuthHandler extends CacheHandler {
     locale?: string,
     userAgent?: string | null,
     ipAddress?: string | null,
-    requestLogger?: ILogger
+    requestLogger?: ILogger,
+    requestBaseUrl?: string
   ): Promise<CreateAccountResult> {
     const { type, provider, providerId, providerData } = params;
 
@@ -135,7 +136,8 @@ export class AuthHandler extends CacheHandler {
           ipAddress: ipAddress || null,
           isVerified,
         },
-        tx
+        tx,
+        requestBaseUrl
       );
 
       if (provider === UserAuthenticationMethodProvider.Email) {
@@ -172,8 +174,10 @@ export class AuthHandler extends CacheHandler {
   public async login(
     params: MutationLoginArgs,
     userAgent?: string | null,
-    ipAddress?: string | null
+    ipAddress?: string | null,
+    requestBaseUrl?: string
   ): Promise<LoginResponse> {
+    const issuerBaseUrl = requestBaseUrl ?? config.app.url;
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { provider, providerId, providerData } = params.input;
       const { providerData: processedProviderData } =
@@ -261,7 +265,7 @@ export class AuthHandler extends CacheHandler {
       const userSessionsResult = await this.userSessions.getUserSessions(
         {
           userId: user.id,
-          audience: config.app.url,
+          audience: issuerBaseUrl,
           expiresAtMin: new Date(),
           userAgent,
           ipAddress,
@@ -281,7 +285,8 @@ export class AuthHandler extends CacheHandler {
 
         const { accessToken, refreshToken } = await this.userSessions.signSession(
           matchingSession,
-          userAuthenticationMethod.isVerified
+          userAuthenticationMethod.isVerified,
+          requestBaseUrl
         );
         return {
           accessToken,
@@ -305,7 +310,8 @@ export class AuthHandler extends CacheHandler {
           ipAddress: ipAddress || null,
           isVerified: userAuthenticationMethod.isVerified,
         },
-        tx
+        tx,
+        requestBaseUrl
       );
 
       return {
@@ -326,7 +332,8 @@ export class AuthHandler extends CacheHandler {
   public async refreshSession(
     refreshToken: string,
     userAgent?: string | null,
-    ipAddress?: string | null
+    ipAddress?: string | null,
+    requestBaseUrl?: string
   ): Promise<RefreshSessionResponse> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const session = await this.userSessions.refreshSessionByRefreshToken(
@@ -334,7 +341,8 @@ export class AuthHandler extends CacheHandler {
         tx,
         userAgent,
         ipAddress,
-        undefined // isVerified defaults to true in signSession
+        undefined, // isVerified defaults to true in signSession
+        requestBaseUrl
       );
 
       if (!session) {
@@ -518,7 +526,8 @@ export class AuthHandler extends CacheHandler {
       providerData: Record<string, unknown>;
     },
     userAgent?: string | null,
-    ipAddress?: string | null
+    ipAddress?: string | null,
+    requestBaseUrl?: string
   ): Promise<LoginResponse> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { userId, providerId, providerData } = params;
@@ -573,7 +582,8 @@ export class AuthHandler extends CacheHandler {
           ipAddress: ipAddress || null,
           isVerified: true, // GitHub OAuth users are always verified
         },
-        tx
+        tx,
+        requestBaseUrl
       );
 
       return {

@@ -8,7 +8,7 @@
 
 ## Prerequisites
 
-- API running on the host with `METRICS_ENABLED=true` (e.g. `APP_PORT=4000`).
+- API running on the host with `METRICS_ENABLED=true` (e.g. `API_PORT=4000`).
 - Docker Compose (postgres, redis, etc. can be running).
 
 ## Start

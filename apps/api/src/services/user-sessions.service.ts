@@ -80,14 +80,16 @@ export class UserSessionService implements IUserSessionService {
 
   public async signSession(
     session: UserSession,
-    isVerified: boolean = true
+    isVerified: boolean = true,
+    issuerBaseUrl?: string
   ): Promise<CreateSessionResult> {
     const context = 'UserSessionService.signSession';
     const validatedSession = validateInput(userSessionSchema, session, context);
     const { userId } = validatedSession;
     const sub = userId;
-    const aud = config.app.url;
-    const iss = config.app.url;
+    const base = (issuerBaseUrl ?? config.app.url).replace(/\/$/, '');
+    const aud = base;
+    const iss = base;
     const jti = session.id;
     const iat = Math.floor(Date.now() / 1000);
     const exp = Math.floor(this.getAccessTokenExpirationDate(Date.now()).getTime() / 1000);
@@ -113,7 +115,8 @@ export class UserSessionService implements IUserSessionService {
     params: Omit<CreateUserSessionInput, 'expiresAt' | 'token' | 'lastUsedAt'> & {
       isVerified?: boolean;
     },
-    transaction?: Transaction
+    transaction?: Transaction,
+    issuerBaseUrl?: string
   ): Promise<CreateSessionResult> {
     const context = 'UserSessionService.createSession';
     const now = Date.now();
@@ -122,7 +125,8 @@ export class UserSessionService implements IUserSessionService {
 
     const { userId, userAuthenticationMethodId, userAgent, ipAddress } = validatedParams;
 
-    const audience = config.app.url;
+    const base = (issuerBaseUrl ?? config.app.url).replace(/\/$/, '');
+    const audience = base;
 
     const session = await this.userSessionRepository.createUserSession(
       {
@@ -138,7 +142,7 @@ export class UserSessionService implements IUserSessionService {
       transaction
     );
 
-    return this.signSession(session, params.isVerified ?? true);
+    return this.signSession(session, params.isVerified ?? true, issuerBaseUrl);
   }
 
   /**
@@ -150,7 +154,8 @@ export class UserSessionService implements IUserSessionService {
     transaction?: Transaction,
     userAgent?: string | null,
     ipAddress?: string | null,
-    isVerified?: boolean
+    isVerified?: boolean,
+    issuerBaseUrl?: string
   ): Promise<CreateSessionResult | null> {
     const session = await this.userSessionRepository.getSessionByRefreshToken(
       refreshToken,
@@ -176,7 +181,7 @@ export class UserSessionService implements IUserSessionService {
       transaction
     );
 
-    return this.signSession(refreshedSession, isVerified ?? true);
+    return this.signSession(refreshedSession, isVerified ?? true, issuerBaseUrl);
   }
 
   public async revokeSession(id: string, transaction?: Transaction): Promise<UserSession> {

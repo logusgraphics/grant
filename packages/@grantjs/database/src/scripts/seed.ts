@@ -1,10 +1,5 @@
 #!/usr/bin/env tsx
 
-import * as dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
-
 /**
  * Main Database Seeding Script
  *

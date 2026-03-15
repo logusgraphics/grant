@@ -5,9 +5,9 @@
 # Starts the E2E Docker Compose stack (Postgres, Redis, API), runs migrations
 # and seed, waits for the API to be healthy, then executes the E2E test suite.
 #
-# Environment: This script does NOT load any .env file. It sets E2E_API_BASE_URL
-# and E2E_DB_URL with defaults below and passes them when running migrate, seed,
-# and tests. Override by exporting those vars before running (e.g. in CI).
+# Environment: Uses .env.test (copy from .env.test.example if missing). Compose
+# interpolation and container runtime use it via --env-file .env.test. E2E_* vars
+# for migrate/seed/tests come from .env.test when present, else defaults below.
 #
 # Usage:
 #   ./scripts/e2e.sh          # full run (start → migrate → seed → test → stop)
@@ -25,10 +25,7 @@ cd "$REPO_ROOT"
 
 COMPOSE_FILE="docker-compose.e2e.yml"
 PROJECT_NAME="grant-e2e"
-
-# Host-side URLs (exposed ports from docker-compose.e2e.yml). No .env required.
-E2E_API_BASE_URL="${E2E_API_BASE_URL:-http://localhost:4000}"
-E2E_DB_URL="${E2E_DB_URL:-postgresql://grant_user:grant_password@localhost:5433/grant_e2e}"
+ENV_FILE=".env.test"
 
 # Colors
 RED='\033[0;31m'
@@ -40,13 +37,27 @@ log()  { echo -e "${GREEN}[e2e]${NC} $*"; }
 warn() { echo -e "${YELLOW}[e2e]${NC} $*"; }
 err()  { echo -e "${RED}[e2e]${NC} $*" >&2; }
 
+# Ensure .env.test exists for Compose interpolation and container env
+if [ ! -f "$ENV_FILE" ]; then
+  cp .env.test.example "$ENV_FILE"
+  log "Created $ENV_FILE from .env.test.example"
+fi
+set -a
+# shellcheck source=/dev/null
+[ -f "$ENV_FILE" ] && source "$ENV_FILE"
+set +a
+
+# Host-side URLs (exposed ports from docker-compose.e2e.yml); from .env.test or defaults
+E2E_API_BASE_URL="${E2E_API_BASE_URL:-http://localhost:4001}"
+E2E_DB_URL="${E2E_DB_URL:-postgresql://grant_user:grant_password@localhost:5433/grant_e2e}"
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 start_stack() {
   log "Starting E2E stack (postgres + redis)..."
-  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d postgres redis
+  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" --env-file "$ENV_FILE" up -d postgres redis
 
   log "Waiting for Postgres to be healthy..."
   wait_for_service "grant-e2e-postgres"
@@ -55,13 +66,13 @@ start_stack() {
   wait_for_service "grant-e2e-redis"
 
   log "Running database migrations..."
-  DB_URL="$E2E_DB_URL" pnpm --filter @grantjs/database db:migrate
+  NODE_ENV=test pnpm --filter @grantjs/database db:migrate
 
   log "Running database seed..."
-  DB_URL="$E2E_DB_URL" pnpm --filter @grantjs/database db:seed
+  NODE_ENV=test pnpm --filter @grantjs/database db:seed
 
   log "Building and starting API container..."
-  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d --build api
+  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" --env-file "$ENV_FILE" up -d --build api
 
   log "Waiting for API health endpoint..."
   wait_for_health "$E2E_API_BASE_URL/health" 60
@@ -69,7 +80,7 @@ start_stack() {
 
 stop_stack() {
   log "Tearing down E2E stack..."
-  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" down -v --remove-orphans 2>/dev/null || true
+  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" --env-file "$ENV_FILE" down -v --remove-orphans 2>/dev/null || true
   log "Stack stopped."
 }
 
@@ -121,7 +132,7 @@ wait_for_health() {
     sleep 2
   done
   err "API at $url did not become healthy after $((retries * 2))s."
-  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs api --tail 50
+  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" --env-file "$ENV_FILE" logs api --tail 50
   exit 1
 }
 

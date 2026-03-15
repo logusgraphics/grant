@@ -21,7 +21,7 @@ Defined in [apps/api/src/config/env.config.ts](apps/api/src/config/env.config.ts
 
 See `observability/README.md` in the repo:
 
-1. Start the API with `METRICS_ENABLED=true` (and `APP_PORT=4000` or match `observability/prometheus.yml`).
+1. Start the API with `METRICS_ENABLED=true` (and `API_PORT=4000` or match `observability/prometheus.yml`).
 2. Run `docker compose up -d prometheus grafana`.
 3. In Grafana (e.g. http://localhost:3001), add a Prometheus data source with URL `http://prometheus:9090`.
 

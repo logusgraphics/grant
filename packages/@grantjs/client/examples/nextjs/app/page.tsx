@@ -1,14 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useGrantClient } from '@grantjs/client/react';
 
+import { useOrigin } from '@/lib/use-origin';
+
 export default function Home() {
   const grant = useGrantClient();
+  const origin = useOrigin();
+  const defaultRedirectUri = origin ? `${origin}/example/callback` : '';
 
   const [clientId, setClientId] = useState('');
-  const [redirectUri, setRedirectUri] = useState('http://localhost:3004/callback');
+  const [redirectUri, setRedirectUri] = useState(defaultRedirectUri);
+
+  // Sync redirect URI when origin becomes available (after mount)
+  useEffect(() => {
+    if (origin) {
+      setRedirectUri(`${origin}/example/callback`);
+    }
+  }, [origin]);
   const [scopes, setScopes] = useState('');
   const [appState, setAppState] = useState('');
   const [signInError, setSignInError] = useState<string | null>(null);
@@ -70,7 +81,7 @@ export default function Home() {
               type="text"
               value={redirectUri}
               onChange={(e) => setRedirectUri(e.target.value)}
-              placeholder="http://localhost:3004/callback"
+              placeholder={defaultRedirectUri}
               className="input"
             />
           </label>
@@ -107,11 +118,10 @@ export default function Home() {
       </section>
 
       <p className="setup-note">
-        Set <code>NEXT_PUBLIC_GRANT_API_URL</code> and <code>NEXT_PUBLIC_GRANT_FRONTEND_URL</code>{' '}
-        in <code>.env</code>. The frontend URL points to the Grant web app where{' '}
-        <code>/auth/project</code> is served. Implement <code>getAccessToken</code> in your Grant
-        config to return the token from your secure auth store (e.g. server session, httpOnly
-        cookie).
+        API and frontend use relative paths (same-origin). Redirect URI defaults to current origin +{' '}
+        <code>/example/callback</code>. Add this URL to your project app&apos;s allowed redirect
+        URIs. Implement <code>getAccessToken</code> in your Grant config to return the token from
+        your secure auth store (e.g. server session, httpOnly cookie).
       </p>
     </main>
   );

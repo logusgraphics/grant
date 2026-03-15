@@ -87,6 +87,15 @@
     --color-warning-soft: rgba(251, 191, 36, 0.12);
     color-scheme: dark;
   }
+  /* Logo visibility when theme is "system" (no data-theme) and OS is dark */
+  :root:not([data-theme='light']) .panel-header-logo-light,
+  :root:not([data-theme='light']) .page-header-logo-light {
+    display: none;
+  }
+  :root:not([data-theme='light']) .panel-header-logo-dark,
+  :root:not([data-theme='light']) .page-header-logo-dark {
+    display: block;
+  }
 }
 
 html {
@@ -239,6 +248,7 @@ code {
 .panel-header-actions {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .hamburger-btn {
@@ -1213,6 +1223,40 @@ select.input {
   position: static;
   top: auto;
   right: auto;
+}
+
+.panel-header-actions .env-dropdown-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-header-actions .env-dropdown-label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.panel-header-actions .theme-toggle {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+.panel-header-actions .env-dropdown.custom-select {
+  min-width: 7rem;
+  height: 2.5rem;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.panel-header-actions .env-dropdown .custom-select-trigger {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  box-sizing: border-box;
+  border-radius: var(--radius);
 }
 
 .theme-toggle:hover {

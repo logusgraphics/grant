@@ -10,14 +10,11 @@ import {
   type ResourceSlug,
   ROLES,
 } from '@grantjs/constants';
-import * as dotenv from 'dotenv';
+import { getEnv, resolveDatabaseUrl } from '@grantjs/env';
 import { and, eq, isNull } from 'drizzle-orm';
 
 import { closeDatabase, initializeDBConnection } from '../connection';
 import { groupPermissions, groups, permissions, resources, roleGroups, roles } from '../schemas';
-
-// Load environment variables
-dotenv.config();
 
 /**
  * Permission Model Seeding Script
@@ -69,9 +66,9 @@ export async function seedPermissions(options?: SeedOptions) {
 
   try {
     // Initialize database connection
-    const connectionString = process.env.DB_URL;
+    const connectionString = resolveDatabaseUrl(getEnv());
     if (!connectionString) {
-      console.error('❌ Error: DB_URL environment variable is required');
+      console.error('❌ Error: DB_URL or POSTGRES_* environment variables are required');
       process.exit(1);
     }
 

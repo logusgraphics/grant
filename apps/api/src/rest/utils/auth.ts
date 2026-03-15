@@ -130,7 +130,8 @@ export async function connectGithubToUser(
       providerData: buildGithubProviderData(oauthResult.githubUser, oauthResult.accessToken, true),
     },
     context.userAgent,
-    context.ipAddress
+    context.ipAddress,
+    context.requestBaseUrl
   );
 }
 
@@ -212,7 +213,8 @@ export async function handleGithubCallbackAuth(
         },
       },
       context.userAgent,
-      context.ipAddress
+      context.ipAddress,
+      context.requestBaseUrl
     );
     return {
       accessToken: result.accessToken,
@@ -234,7 +236,8 @@ export async function handleGithubCallbackAuth(
         ),
       },
       context.userAgent,
-      context.ipAddress
+      context.ipAddress,
+      context.requestBaseUrl
     );
     return {
       accessToken: result.accessToken,
@@ -259,7 +262,8 @@ export async function handleGithubCallbackAuth(
     context.locale,
     context.userAgent,
     context.ipAddress,
-    context.requestLogger
+    context.requestLogger,
+    context.requestBaseUrl
   );
   return {
     accessToken: result.accessToken,

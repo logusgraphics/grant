@@ -9,7 +9,6 @@ import { GraphQLError } from 'graphql';
 import { toast } from 'sonner';
 
 import { getTempClient } from '@/lib/apollo-temp-client';
-import { getApiBaseUrl } from '@/lib/constants';
 import { refreshSessionViaCookie } from '@/lib/refresh-session';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -56,7 +55,7 @@ export function setSessionExpiredMessages(
 }
 
 function getGraphQLUrl(): string {
-  return `${getApiBaseUrl()}/graphql`;
+  return '/graphql';
 }
 
 function getCurrentLocale(): string {
@@ -394,11 +393,6 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
   return forward(operation);
 });
 
-const httpLink = new HttpLink({
-  uri: getGraphQLUrl(),
-  credentials: 'include',
-});
-
 export interface ApolloClientOptions {
   getSessionExpiredMessages?: () => { title: string; description: string };
 }
@@ -407,6 +401,10 @@ export function getClient(options?: ApolloClientOptions) {
   if (options?.getSessionExpiredMessages) {
     setSessionExpiredMessages(options.getSessionExpiredMessages);
   }
+  const httpLink = new HttpLink({
+    uri: getGraphQLUrl(),
+    credentials: 'include',
+  });
   return new ApolloClient({
     cache: new InMemoryCache({
       typePolicies: {

@@ -64,7 +64,8 @@ export function createAuthRoutes(context: RequestContext) {
           },
         },
         context.userAgent,
-        context.ipAddress
+        context.ipAddress,
+        context.requestBaseUrl
       );
 
       setRefreshTokenCookie(res, result.refreshToken);
@@ -88,7 +89,8 @@ export function createAuthRoutes(context: RequestContext) {
         context.locale,
         context.userAgent,
         context.ipAddress,
-        context.requestLogger
+        context.requestLogger,
+        context.requestBaseUrl
       );
 
       setRefreshTokenCookie(res, result.refreshToken);
@@ -109,7 +111,8 @@ export function createAuthRoutes(context: RequestContext) {
       const result = await context.handlers.auth.refreshSession(
         refreshTokenFromCookie,
         context.userAgent,
-        context.ipAddress
+        context.ipAddress,
+        context.requestBaseUrl
       );
       setRefreshTokenCookie(res, result.refreshToken);
       sendSuccessResponse(res, { accessToken: result.accessToken });
@@ -202,7 +205,8 @@ export function createAuthRoutes(context: RequestContext) {
               const result = await context.handlers.auth.refreshSession(
                 refreshToken,
                 context.userAgent,
-                context.ipAddress
+                context.ipAddress,
+                context.requestBaseUrl
               );
               setRefreshTokenCookie(res, result.refreshToken);
               const claims = await context.grant.verifyToken(result.accessToken);
@@ -362,13 +366,16 @@ export function createAuthRoutes(context: RequestContext) {
     async (req: TypedRequest<{ body: typeof exchangeApiKeyRequestSchema }>, res: Response) => {
       const { clientId, clientSecret, scope } = req.body;
 
-      const result = await context.handlers.apiKeys.exchangeApiKey({
-        input: {
-          clientId,
-          clientSecret,
-          scope,
+      const result = await context.handlers.apiKeys.exchangeApiKey(
+        {
+          input: {
+            clientId,
+            clientSecret,
+            scope,
+          },
         },
-      });
+        context.requestBaseUrl
+      );
 
       sendSuccessResponse(res, result);
     }
@@ -414,7 +421,8 @@ export function createAuthRoutes(context: RequestContext) {
         email,
         client_state,
         scope,
-        locale
+        locale,
+        context.requestBaseUrl
       );
       res.status(202).send();
     }

@@ -12,8 +12,8 @@ export default withMermaid({
   title: 'Grant',
   description: 'Open-source, multi-tenant RBAC platform with self-hosting capabilities',
 
-  // Site configuration
-  base: '/',
+  // Site configuration (gateway serves docs at /docs)
+  base: '/docs/',
   lang: 'en-US',
 
   // Ignore only localhost and repo source-path links (not all dead links); keeps detection for broken internal doc links
@@ -24,7 +24,7 @@ export default withMermaid({
 
   // Head configuration
   head: [
-    ['link', { rel: 'icon', href: '/favicon.svg' }],
+    ['link', { rel: 'icon', href: '/favicon.png' }],
     ['meta', { name: 'theme-color', content: '#2563eb' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Grant' }],
@@ -61,7 +61,7 @@ export default withMermaid({
       { text: 'Home', link: '/' },
       { text: 'Getting Started', link: '/getting-started/introduction' },
       { text: 'API Reference', link: '/api-reference/rest-api' },
-      { text: 'Self-Hosting', link: '/deployment/self-hosting' },
+      { text: 'Deployment', link: '/deployment/self-hosting' },
       { text: 'GitHub', link: 'https://github.com/logusgraphics/grant' },
     ],
 
@@ -113,6 +113,7 @@ export default withMermaid({
           collapsed: true,
           items: [
             { text: 'Development Guide', link: '/contributing/guide' },
+            { text: 'Versioning and Release', link: '/contributing/versioning' },
             { text: 'Adding REST Endpoints', link: '/contributing/rest-api' },
             { text: 'Testing', link: '/contributing/testing' },
             { text: 'Security Audit', link: '/contributing/security-audit' },
@@ -121,7 +122,7 @@ export default withMermaid({
         {
           text: 'Deployment',
           items: [
-            { text: 'Self-Hosting', link: '/deployment/self-hosting' },
+            { text: 'Overview', link: '/deployment/self-hosting' },
             { text: 'Docker', link: '/deployment/docker' },
             { text: 'Environment Setup', link: '/deployment/environment' },
           ],
@@ -251,10 +252,41 @@ export default withMermaid({
 
   // Vite configuration
   vite: {
+    server: {
+      // When docs are viewed via Next.js proxy (localhost:3000/docs), script and WS must go to
+      // the Vite dev server (5173) so .vue files are transformed and HMR works.
+      origin: 'http://localhost:5173',
+      hmr: {
+        // Client connects to 5173 for WebSocket instead of document origin (3000).
+        host: 'localhost',
+        clientPort: 5173,
+        protocol: 'ws',
+      },
+    },
     ssr: {
       noExternal: ['vitepress-plugin-mermaid'], // Ensure Mermaid plugin is processed by Vite
     },
     plugins: [
+      // Workaround: Vite import-analysis misparses Vue SFC style blocks containing calc(X / N).
+      // Rewrite those to equivalent calc(N%) so the parser does not see division.
+      {
+        name: 'fix-vitepress-calc-in-style',
+        transform(code, id) {
+          if (
+            id.includes('VPFeatures.vue') &&
+            id.includes('type=style') &&
+            id.includes('lang.css')
+          ) {
+            return {
+              code: code
+                .replace(/\bcalc\(100%\s*\/\s*2\)/g, 'calc(50%)')
+                .replace(/\bcalc\(100%\s*\/\s*3\)/g, 'calc(33.333333%)')
+                .replace(/\bcalc\(100%\s*\/\s*4\)/g, 'calc(25%)'),
+              map: null,
+            };
+          }
+        },
+      },
       Components({
         include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
         dts: false,

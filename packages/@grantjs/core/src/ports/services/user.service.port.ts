@@ -125,13 +125,18 @@ export interface IUserSessionService {
     transaction?: unknown
   ): Promise<UserSessionPage>;
 
-  signSession(session: UserSession, isVerified?: boolean): Promise<CreateSessionResult>;
+  signSession(
+    session: UserSession,
+    isVerified?: boolean,
+    issuerBaseUrl?: string
+  ): Promise<CreateSessionResult>;
 
   createSession(
     params: Omit<CreateUserSessionInput, 'expiresAt' | 'token' | 'lastUsedAt'> & {
       isVerified?: boolean;
     },
-    transaction?: unknown
+    transaction?: unknown,
+    issuerBaseUrl?: string
   ): Promise<CreateSessionResult>;
 
   refreshSessionByRefreshToken(
@@ -139,7 +144,8 @@ export interface IUserSessionService {
     transaction?: unknown,
     userAgent?: string | null,
     ipAddress?: string | null,
-    isVerified?: boolean
+    isVerified?: boolean,
+    issuerBaseUrl?: string
   ): Promise<CreateSessionResult | null>;
 
   revokeSession(id: string, transaction?: unknown): Promise<UserSession>;

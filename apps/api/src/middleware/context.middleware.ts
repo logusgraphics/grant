@@ -10,7 +10,12 @@ import { getLocale } from '@/i18n';
 import { DrizzleAuditLogger } from '@/lib/audit';
 import { extractScopeFromRequest } from '@/lib/authorization/scope-extractor';
 import { IEntityCacheAdapter } from '@/lib/cache';
-import { getAuthorizationToken, getClientIp, getContextHeaders } from '@/lib/headers.lib';
+import {
+  getAuthorizationToken,
+  getClientIp,
+  getContextHeaders,
+  getRequestBaseUrl,
+} from '@/lib/headers.lib';
 import { hasRlsKeys, scopeToRlsContext, setRlsContext } from '@/lib/rls';
 import { JwtTokenProvider } from '@/lib/token';
 import { DrizzleTransactionalConnection } from '@/lib/transaction-manager.lib';
@@ -30,6 +35,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const headers = req.headers;
     const { origin, userAgent } = getContextHeaders(headers);
+    const requestBaseUrl = getRequestBaseUrl(req);
     const locale = getLocale(req);
     const ipAddress = getClientIp(req);
 
@@ -88,6 +94,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
           resourceResolvers,
           requestLogger: getRequestLogger(req),
           origin,
+          requestBaseUrl,
           locale,
           userAgent,
           ipAddress,
@@ -118,6 +125,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
         resourceResolvers,
         requestLogger: getRequestLogger(req),
         origin,
+        requestBaseUrl,
         locale,
         userAgent,
         ipAddress,

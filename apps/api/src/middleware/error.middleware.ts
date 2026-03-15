@@ -1,6 +1,7 @@
 import { GrantException } from '@grantjs/core';
 import { NextFunction, Request, Response } from 'express';
 
+import { config } from '@/config';
 import { t, translateError } from '@/i18n';
 import { HttpException, mapDomainToHttp } from '@/lib/errors';
 import { getRequestLogger } from '@/middleware/request-logging.middleware';
@@ -34,7 +35,7 @@ export function errorHandler(error: Error, req: Request, res: Response, _next: N
       ...(httpError.translationKey && { translationKey: httpError.translationKey }),
       ...(httpError.translationParams && { translationParams: httpError.translationParams }),
       ...(httpError.extensions && { extensions: httpError.extensions }),
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      ...(config.app.isDevelopment && { stack: error.stack }),
     });
     return;
   }
@@ -43,7 +44,7 @@ export function errorHandler(error: Error, req: Request, res: Response, _next: N
     error: t(req, 'errors.common.internalError'),
     code: 'INTERNAL_ERROR',
     translationKey: 'errors.common.internalError',
-    ...(process.env.NODE_ENV === 'development' && {
+    ...(config.app.isDevelopment && {
       details: error.message,
       stack: error.stack,
     }),

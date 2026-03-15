@@ -16,7 +16,8 @@ export const register: MutationResolvers<GraphqlContext>['register'] = async (_,
     locale,
     userAgent,
     ipAddress,
-    context.requestLogger
+    context.requestLogger,
+    context.requestBaseUrl
   );
   setRefreshTokenCookie(context.res, result.refreshToken);
   context.requestLogger.info({

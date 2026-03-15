@@ -17,8 +17,10 @@ docs/.vitepress/dist/
 
 # Environment files
 .env
+.env.demo
 .env.local
 .env.e2e
+.env.test
 .env.development.local
 .env.test.local
 .env.production.local

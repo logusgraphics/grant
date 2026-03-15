@@ -22,7 +22,8 @@ export const refreshSession: MutationResolvers<GraphqlContext>['refreshSession']
     const result = await context.handlers.auth.refreshSession(
       refreshTokenFromCookie,
       context.userAgent,
-      context.ipAddress
+      context.ipAddress,
+      context.requestBaseUrl
     );
     setRefreshTokenCookie(context.res, result.refreshToken);
     return result;

@@ -1,4 +1,5 @@
 import '@/lib/tracing'; // must run first so OTel patches http/express before they load
+
 import http from 'http';
 
 import { ApolloServer } from '@apollo/server';
@@ -60,7 +61,9 @@ async function startServer() {
     formatError: formatGraphQLError,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+      ...(config.apollo.playground
+        ? [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
+        : []),
       ApolloServerPluginInlineTrace(),
     ],
   });

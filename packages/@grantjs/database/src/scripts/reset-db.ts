@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import * as dotenv from 'dotenv';
+import { getEnv, resolveDatabaseUrl } from '@grantjs/env';
 import { reset } from 'drizzle-seed';
 
 import { closeDatabase, initializeDBConnection } from '../connection';
@@ -59,8 +59,6 @@ import {
 import { userRoles, userRolesAuditLogs } from '../schemas/user-roles.schema';
 import { userSessionAuditLogs, userSessions } from '../schemas/user-sessions.schema';
 import { userAuditLogs, users } from '../schemas/users.schema';
-
-dotenv.config();
 
 export const resetTables = {
   accountProjects,
@@ -129,9 +127,9 @@ async function main() {
   console.log('🗑️ Starting database reset...');
 
   try {
-    const connectionString = process.env.DB_URL;
+    const connectionString = resolveDatabaseUrl(getEnv());
     if (!connectionString) {
-      console.error('❌ Error: DB_URL environment variable is required');
+      console.error('❌ Error: DB_URL or POSTGRES_* environment variables are required');
       process.exit(1);
     }
 

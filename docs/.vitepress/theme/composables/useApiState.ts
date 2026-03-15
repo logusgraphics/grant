@@ -8,6 +8,8 @@ interface Account {
 
 interface ApiState {
   baseUrl: string;
+  appUrl: string;
+  exampleAppUrl: string;
   accessToken: string;
   refreshToken: string;
   verifiedEmail: string;
@@ -18,8 +20,26 @@ interface ApiState {
 
 const STORAGE_KEY = 'grant-docs-api-state';
 
+// Path-based single origin: API, docs, example live under same origin. Defaults filled from window in browser.
+const RELATIVE_DEFAULTS = {
+  baseUrl: '',
+  appUrl: '',
+  exampleAppUrl: '/example',
+};
+
+function getOriginDefaults() {
+  if (typeof window === 'undefined') return RELATIVE_DEFAULTS;
+  return {
+    baseUrl: window.location.origin,
+    appUrl: window.location.origin,
+    exampleAppUrl: `${window.location.origin}/example`,
+  };
+}
+
 const state = reactive<ApiState>({
-  baseUrl: 'http://localhost:4000',
+  baseUrl: RELATIVE_DEFAULTS.baseUrl,
+  appUrl: RELATIVE_DEFAULTS.appUrl,
+  exampleAppUrl: RELATIVE_DEFAULTS.exampleAppUrl,
   accessToken: '',
   refreshToken: '',
   verifiedEmail: '',
@@ -28,26 +48,48 @@ const state = reactive<ApiState>({
   variables: {},
 });
 
+/** Default API base URL for display (current origin in browser, else empty). */
+export function getDefaultApiBaseUrl(): string {
+  return typeof window === 'undefined' ? '' : window.location.origin;
+}
+
 let hydrated = false;
 let watcherActive = false;
 
 function hydrate() {
   if (hydrated || typeof window === 'undefined') return;
   hydrated = true;
+  const originDefaults = getOriginDefaults();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
-      if (saved.baseUrl) state.baseUrl = saved.baseUrl;
+      state.baseUrl =
+        saved.baseUrl && saved.baseUrl.trim() !== '' ? saved.baseUrl : originDefaults.baseUrl;
+      state.appUrl =
+        saved.appUrl && saved.appUrl.trim() !== '' ? saved.appUrl : originDefaults.appUrl;
+      // Treat legacy relative default '/example' as unset so we use origin + '/example'
+      const legacyExample = (saved.exampleAppUrl || '').trim();
+      state.exampleAppUrl =
+        legacyExample !== '' && legacyExample !== '/example'
+          ? saved.exampleAppUrl
+          : originDefaults.exampleAppUrl;
       if (saved.accessToken) state.accessToken = saved.accessToken;
       if (saved.refreshToken) state.refreshToken = saved.refreshToken;
       if (saved.verifiedEmail) state.verifiedEmail = saved.verifiedEmail;
       if (Array.isArray(saved.accounts)) state.accounts = saved.accounts;
       if (saved.selectedFlow) state.selectedFlow = saved.selectedFlow;
       if (saved.variables) Object.assign(state.variables, saved.variables);
+    } else {
+      state.baseUrl = originDefaults.baseUrl;
+      state.appUrl = originDefaults.appUrl;
+      state.exampleAppUrl = originDefaults.exampleAppUrl;
     }
   } catch {
-    /* corrupt data — start fresh */
+    /* corrupt data — use origin defaults */
+    state.baseUrl = originDefaults.baseUrl;
+    state.appUrl = originDefaults.appUrl;
+    state.exampleAppUrl = originDefaults.exampleAppUrl;
   }
 }
 
@@ -58,6 +100,8 @@ function persist() {
       STORAGE_KEY,
       JSON.stringify({
         baseUrl: state.baseUrl,
+        appUrl: state.appUrl,
+        exampleAppUrl: state.exampleAppUrl,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         verifiedEmail: state.verifiedEmail,

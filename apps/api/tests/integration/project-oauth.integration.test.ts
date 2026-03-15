@@ -182,6 +182,7 @@ function buildProjectOAuthContext(
     locale: 'en',
     userAgent: null,
     ipAddress: null,
+    requestBaseUrl: 'https://api.example.com',
   } as RequestContext;
 }
 
