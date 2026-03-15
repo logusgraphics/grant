@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+# Minimal permissions; jobs override when they need more (e.g. packages: write for push).
+permissions:
+  contents: read
+
 concurrency:
   group: deploy
   cancel-in-progress: true
@@ -90,7 +94,10 @@ jobs:
     name: Deploy demo stack
     runs-on: self-hosted
     needs: build-and-push
-    # Opt-in: set repository variable DEMO_DEPLOY_ENABLED to 'true' and configure SSH_* secrets
+    permissions:
+      contents: read
+    # Opt-in: set repository variable DEMO_DEPLOY_ENABLED to 'true' and configure SSH_* secrets.
+    # Server must have run once: docker login ghcr.io (PAT with read:packages).
     if: ${{ vars.DEMO_DEPLOY_ENABLED == 'true' }}
     steps:
       - name: Deploy via SSH
@@ -101,5 +108,16 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
+            set -e
             cd "${{ secrets.SSH_DEPLOY_PATH }}"
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+            git pull origin main
+            IMAGE_BASE="ghcr.io/${{ github.repository }}"
+            docker pull "$IMAGE_BASE/grant-api:demo"
+            docker pull "$IMAGE_BASE/grant-web:demo"
+            docker pull "$IMAGE_BASE/grant-docs:demo"
+            docker pull "$IMAGE_BASE/example-nextjs:demo"
             ./scripts/stack-deploy.sh up
+            docker service update --force grant-demo_api grant-demo_web grant-demo_docs grant-demo_example-nextjs
