@@ -152,7 +152,7 @@ services:
       - grant-network
 
   api:
-    image: ${GRANT_API_IMAGE:-ghcr.io/logusgraphics/grant-platform/grant-api:latest}
+    image: ${GRANT_API_IMAGE:-ghcr.io/logusgraphics/grant/grant-api:latest}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -185,7 +185,7 @@ services:
       - grant-network
 
   web:
-    image: ${GRANT_WEB_IMAGE:-ghcr.io/logusgraphics/grant-platform/grant-web:latest}
+    image: ${GRANT_WEB_IMAGE:-ghcr.io/logusgraphics/grant/grant-web:latest}
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -203,7 +203,7 @@ services:
       - grant-network
 
   docs:
-    image: ${GRANT_DOCS_IMAGE:-ghcr.io/logusgraphics/grant-platform/grant-docs:latest}
+    image: ${GRANT_DOCS_IMAGE:-ghcr.io/logusgraphics/grant/grant-docs:latest}
     build:
       context: .
       dockerfile: docs/Dockerfile
@@ -221,7 +221,7 @@ services:
       - grant-network
 
   example-nextjs:
-    image: ${GRANT_EXAMPLE_NEXTJS_IMAGE:-ghcr.io/logusgraphics/grant-platform/example-nextjs:latest}
+    image: ${GRANT_EXAMPLE_NEXTJS_IMAGE:-ghcr.io/logusgraphics/grant/example-nextjs:latest}
     build:
       context: .
       dockerfile: packages/@grantjs/client/examples/nextjs/Dockerfile
