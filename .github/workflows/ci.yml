@@ -4,14 +4,17 @@ on:
   pull_request:
     branches: [main]
 
+# All Dependabot PRs share one concurrency group so they don't flood the runner (8 PRs = 1 job at a time, not 8). Human PRs keep per-ref isolation.
 concurrency:
-  group: grant-${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.actor == 'dependabot[bot]' && format('grant-{0}-dependabot', github.workflow) || format('grant-{0}-{1}', github.workflow, github.ref) }}
   cancel-in-progress: true
 
 jobs:
   build-test:
     name: Lint, build, test
     runs-on: self-hosted
+    # Optional: skip CI for Dependabot PRs to free the runner — uncomment next line:
+    # if: github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
