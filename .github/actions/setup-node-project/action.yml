@@ -1,0 +1,34 @@
+# Composite action: Node + pnpm + native pnpm cache + install.
+# Single place for install logic; used by ci.yml and release.yml.
+# Pin checkout in each workflow job that needs the repo (e.g. actions/checkout@v4.2.2, fetch-depth: 0).
+# Order: pnpm/action-setup first, then setup-node (GitHub recommendation). If setup-node runs first, pnpm cache logic can fail because pnpm is not installed yet.
+# Do NOT set PATH or PNPM_HOME in env here; pnpm/action-setup uses GITHUB_PATH. Overriding PATH replaces the OS toolchain (/usr/bin, /bin) and breaks pnpm.
+name: Setup Node project
+description: Setup Node.js, pnpm with native cache, and install dependencies
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4.1.0
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6.1.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: '24'
+  pnpm-version:
+    description: pnpm version
+    required: false
+    default: '8.15.0'

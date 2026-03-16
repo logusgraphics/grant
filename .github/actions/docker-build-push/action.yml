@@ -1,0 +1,42 @@
+# Composite action: Buildx + build-push with cache scope and optional provenance: false.
+# Workflow passes cache_scope: ${{ matrix.image }}-${{ github.sha }}.
+name: Docker build and push
+description: Setup Buildx and build/push image with GHA cache scope
+runs:
+  using: composite
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3.3.0
+
+    - name: Build and push
+      uses: docker/build-push-action@v6.6.0
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.file }}
+        push: ${{ inputs.push }}
+        tags: ${{ inputs.tags }}
+        cache-from: type=gha,scope=${{ inputs.cache_scope }}
+        cache-to: type=gha,mode=max,scope=${{ inputs.cache_scope }}
+        provenance: false
+
+inputs:
+  context:
+    description: Build context path
+    required: false
+    default: .
+  file:
+    description: Path to Dockerfile
+    required: true
+  cache_scope:
+    description: Cache scope (e.g. matrix.image-github.sha)
+    required: true
+  image:
+    description: Image name (for reference; tags are passed explicitly)
+    required: false
+  tags:
+    description: Multiline list of image tags
+    required: true
+  push:
+    description: Whether to push to registry
+    required: true
+    default: true

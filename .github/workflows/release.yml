@@ -1,18 +1,65 @@
 # Versions and publishes npm packages when a "Version packages" PR is merged to main.
-# Publishes: @grantjs/client, @grantjs/server, @grantjs/cli (and any other packages with changesets).
+# On push to main: single prepare job (build + test + artifact), then release and docker in parallel.
+# Deploy (demo stack) runs after docker when DEMO_DEPLOY_ENABLED is true.
 name: Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+concurrency:
+  group: grant-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
+  prepare:
+    name: Build, test, upload artifact
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node project
+        uses: ./.github/actions/setup-node-project
+        with:
+          node-version: '24'
+          pnpm-version: '8.15.0'
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Check tag palette distance
+        run: pnpm --filter @grantjs/constants run check:palette
+
+      - name: Test
+        run: pnpm test
+
+      - name: Create build artifact
+        run: |
+          include=()
+          for p in packages/*/dist apps/web/.next apps/api/dist; do
+            [ -e "$p" ] && include+=( "$p" )
+          done
+          if [ ${#include[@]} -eq 0 ]; then
+            echo "No build outputs found" && exit 1
+          fi
+          tar --zstd --owner=0 --group=0 -cf build.tar.zst -C . "${include[@]}"
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: build-outputs-${{ github.run_id }}
+          path: build.tar.zst
+
   release:
     name: Version and publish (@grantjs/client, server, cli)
-    # Run on every push to main so that merging the "Version packages" PR (squash or merge) triggers publish.
-    # When the workflow itself pushes a version commit, the re-run finds no new changesets and exits without publishing.
     runs-on: self-hosted
+    needs: prepare
     permissions:
       contents: write
       pull-requests: write
@@ -20,46 +67,33 @@ jobs:
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
 
+      - name: Download build outputs
+        uses: actions/download-artifact@v4.1.3
+        with:
+          name: build-outputs-${{ github.run_id }}
+          path: build-artifacts
+
+      - name: Restore build outputs
+        run: tar --zstd -xf build-artifacts/build.tar.zst -C .
+
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v4.1.0
         with:
-          version: 8.15.0
+          version: '8.15.0'
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check tag palette distance
-        run: pnpm --filter @grantjs/constants run check:palette
-
-      - name: Build
-        run: pnpm run build:release
-
-      - name: Test
-        run: pnpm test
+      - name: Install (prefer offline)
+        run: pnpm install --prefer-offline --frozen-lockfile
 
       - name: Create Release Pull Request or Publish
         id: changesets
@@ -72,3 +106,78 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  docker:
+    name: Build and push images
+    runs-on: self-hosted
+    needs: prepare
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: grant-api
+            file: apps/api/Dockerfile
+          - image: grant-web
+            file: apps/web/Dockerfile
+          - image: grant-docs
+            file: docs/Dockerfile
+          - image: example-nextjs
+            file: packages/@grantjs/client/examples/nextjs/Dockerfile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.image }}
+        uses: ./.github/actions/docker-build-push
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          cache_scope: ${{ matrix.image }}-${{ github.sha }}
+          image: ${{ matrix.image }}
+          tags: |
+            ghcr.io/${{ github.repository }}/${{ matrix.image }}:demo
+            ghcr.io/${{ github.repository }}/${{ matrix.image }}:sha-${{ github.sha }}
+          push: true
+
+  deploy:
+    name: Deploy demo stack
+    runs-on: self-hosted
+    needs: docker
+    permissions:
+      contents: read
+    if: vars.DEMO_DEPLOY_ENABLED == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull images and deploy
+        run: |
+          set -e
+          IMAGE_BASE="ghcr.io/${{ github.repository }}"
+          docker pull "$IMAGE_BASE/grant-api:demo"
+          docker pull "$IMAGE_BASE/grant-web:demo"
+          docker pull "$IMAGE_BASE/grant-docs:demo"
+          docker pull "$IMAGE_BASE/example-nextjs:demo"
+          ./scripts/stack-deploy.sh up
+          docker service update --force grant-demo_api grant-demo_web grant-demo_docs grant-demo_example-nextjs
