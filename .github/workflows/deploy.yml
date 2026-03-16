@@ -1,4 +1,4 @@
-# Build and push images to GHCR; optionally deploy demo stack via SSH.
+# Build and push images to GHCR; optionally deploy demo stack.
 # On push to main: ci.yml, deploy.yml, and release.yml run independently.
 name: Build and Publish Images
 
@@ -96,28 +96,28 @@ jobs:
     needs: build-and-push
     permissions:
       contents: read
-    # Opt-in: set repository variable DEMO_DEPLOY_ENABLED to 'true' and configure SSH_* secrets.
-    # Server must have run once: docker login ghcr.io (PAT with read:packages).
+    # Opt-in: set repository variable DEMO_DEPLOY_ENABLED to 'true'.
     if: ${{ vars.DEMO_DEPLOY_ENABLED == 'true' }}
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            set -e
-            cd "${{ secrets.SSH_DEPLOY_PATH }}"
-            git fetch origin
-            git checkout main
-            git reset --hard origin/main
-            git pull origin main
-            IMAGE_BASE="ghcr.io/${{ github.repository }}"
-            docker pull "$IMAGE_BASE/grant-api:demo"
-            docker pull "$IMAGE_BASE/grant-web:demo"
-            docker pull "$IMAGE_BASE/grant-docs:demo"
-            docker pull "$IMAGE_BASE/example-nextjs:demo"
-            ./scripts/stack-deploy.sh up
-            docker service update --force grant-demo_api grant-demo_web grant-demo_docs grant-demo_example-nextjs
+          fetch-depth: 0
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull images and deploy
+        run: |
+          set -e
+          IMAGE_BASE="ghcr.io/${{ github.repository }}"
+          docker pull "$IMAGE_BASE/grant-api:demo"
+          docker pull "$IMAGE_BASE/grant-web:demo"
+          docker pull "$IMAGE_BASE/grant-docs:demo"
+          docker pull "$IMAGE_BASE/example-nextjs:demo"
+          ./scripts/stack-deploy.sh up
+          docker service update --force grant-demo_api grant-demo_web grant-demo_docs grant-demo_example-nextjs
