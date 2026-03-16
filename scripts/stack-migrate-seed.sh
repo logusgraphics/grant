@@ -41,12 +41,18 @@ if [[ -z "$API_CONTAINER" ]]; then
 fi
 
 echo "Using API container: $API_CONTAINER"
+
+# env_file values are injected literally (no ${VAR} expansion), so DB_URL may
+# contain unexpanded references. Reconstruct it from the individual POSTGRES_*
+# vars which are always plain values.
+EXPAND_DB_URL='export DB_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"'
+
 echo "Running migrate..."
-docker exec "$API_CONTAINER" sh -c 'cd /app/packages/@grantjs/database && ./node_modules/.bin/drizzle-kit migrate --config=drizzle.config.cjs'
+docker exec "$API_CONTAINER" sh -c "$EXPAND_DB_URL && cd /app/packages/@grantjs/database && ./node_modules/.bin/drizzle-kit migrate --config=drizzle.config.cjs"
 
 echo ""
 echo "Running seed..."
-if ! docker exec "$API_CONTAINER" sh -c 'cd /app/packages/@grantjs/database && ./node_modules/.bin/tsx src/scripts/seed.ts'; then
+if ! docker exec "$API_CONTAINER" sh -c "$EXPAND_DB_URL && cd /app/packages/@grantjs/database && ./node_modules/.bin/tsx src/scripts/seed.ts"; then
   echo "" >&2
   echo "If the error is 'Cannot find package @/...', the API image is missing the database package tsconfig.json. Rebuild and roll out:" >&2
   echo "  docker compose -f docker-compose.demo.yml build api && docker service update --force ${STACK_NAME}_api" >&2

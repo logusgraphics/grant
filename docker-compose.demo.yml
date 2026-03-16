@@ -85,8 +85,6 @@ services:
       NODE_ENV: production
     volumes:
       - demo_api_storage:/app/apps/api/storage
-    ports:
-      - '${API_PORT}:${API_PORT}'
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:${API_PORT}/health || exit 1']
       interval: 10s
@@ -94,6 +92,37 @@ services:
       retries: 5
       start_period: 15s
     stop_grace_period: 35s
+    restart: unless-stopped
+    networks:
+      - demo-network
+
+  api-lb:
+    image: nginx:alpine
+    container_name: grant-demo-api-lb
+    configs:
+      - source: api_lb_conf
+        target: /etc/nginx/templates/default.conf.template
+    environment:
+      API_PORT: ${API_PORT}
+      NGINX_ENVSUBST_FILTER: API_PORT
+    depends_on:
+      - api
+    ports:
+      - target: ${API_PORT}
+        published: ${API_PORT}
+        protocol: tcp
+        mode: host
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:${API_PORT}/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
     restart: unless-stopped
     networks:
       - demo-network
@@ -171,6 +200,10 @@ volumes:
   demo_postgres_data:
   demo_redis_data:
   demo_api_storage:
+
+configs:
+  api_lb_conf:
+    file: ./deploy/api-lb.conf.template
 
 networks:
   demo-network:
