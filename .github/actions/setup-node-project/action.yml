@@ -31,4 +31,4 @@ inputs:
   pnpm-version:
     description: pnpm version
     required: false
-    default: '8.15.9'
+    default: '8.15.0'
