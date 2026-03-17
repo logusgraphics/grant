@@ -82,7 +82,7 @@ jobs:
         run: tar --zstd -xf build-artifacts/build.tar.zst -C .
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4.1.0
+        uses: pnpm/action-setup@v4.4.0
         with:
           version: '8.15.0'
 
