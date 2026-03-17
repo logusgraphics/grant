@@ -136,4 +136,3 @@ export const TAILWIND_TAG_PALETTE_SAFE_CLASSES = [
   'dark:text-green-200',
   'dark:border-green-600',
 ] as const;
-

@@ -106,7 +106,7 @@ function buildProjectOAuthContext(
   };
   const accounts = { getAccounts: vi.fn().mockResolvedValue({ accounts: [] }) };
   const organizationUsers = {
-    getOrganizationUsers: vi.fn().mockResolvedValue([{ userId: 'user-1' }]),
+    getOrganizationUsers: vi.fn().mockResolvedValue([{ userId: 'user-1', roleId: 'role-1' }]),
   };
   const authHandler = {
     resolveUserIdFromGithubForProject: vi.fn().mockResolvedValue('user-1'),

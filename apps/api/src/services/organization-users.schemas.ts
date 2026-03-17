@@ -4,11 +4,13 @@ import { idSchema, baseEntitySchema, deleteSchema } from './common/schemas';
 
 export const getOrganizationUsersParamsSchema = z.object({
   organizationId: idSchema,
+  userId: idSchema.optional(),
 });
 
 export const addOrganizationUserParamsSchema = z.object({
   organizationId: idSchema,
   userId: idSchema,
+  roleId: idSchema,
 });
 
 export const removeOrganizationUserParamsSchema = deleteSchema.extend({
@@ -19,4 +21,5 @@ export const removeOrganizationUserParamsSchema = deleteSchema.extend({
 export const organizationUserSchema = baseEntitySchema.extend({
   organizationId: idSchema,
   userId: idSchema,
+  roleId: idSchema,
 });

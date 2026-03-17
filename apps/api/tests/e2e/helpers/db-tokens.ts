@@ -166,6 +166,30 @@ export async function getMemberRoleId(organizationId: string): Promise<string | 
   return orgRoles.length > 0 ? orgRoles[0].id : null;
 }
 
+/**
+ * Get an organization role ID by role name.
+ * Role names are i18n keys stored in DB (from seed), e.g. 'roles.names.organizationOwner',
+ * 'roles.names.organizationViewer', 'roles.names.organizationAdmin'.
+ * Used in E2E to invite with a specific role or assert role-based access.
+ */
+export async function getOrganizationRoleIdByName(
+  organizationId: string,
+  roleName: string
+): Promise<string | null> {
+  const conn = getConnection();
+  const rows = await conn<RoleRow[]>`
+    SELECT r.id, r.name
+    FROM roles r
+    INNER JOIN organization_roles orl ON orl.role_id = r.id
+    WHERE orl.organization_id = ${organizationId}
+      AND orl.deleted_at IS NULL
+      AND r.deleted_at IS NULL
+      AND r.name = ${roleName}
+    LIMIT 1
+  `;
+  return rows.length > 0 ? rows[0].id : null;
+}
+
 // ---------------------------------------------------------------------------
 // Project users (for project OAuth E2E: user must be in project_users)
 // ---------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 input AddOrganizationUserInput {
   organizationId: ID!
   userId: ID!
+  roleId: ID!
 }

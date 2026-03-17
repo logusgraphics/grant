@@ -91,12 +91,17 @@ export class UserHandler extends CacheHandler {
       const user = await this.users.createUser({ name }, tx);
       const { id: userId } = user;
       switch (scope.tenant) {
-        case Tenant.Organization:
+        case Tenant.Organization: {
+          const roleId = roleIds?.[0];
+          if (!roleId) {
+            throw new BadRequestError('Organization scope requires at least one role');
+          }
           await this.organizationUsers.addOrganizationUser(
-            { organizationId: scope.id, userId },
+            { organizationId: scope.id, userId, roleId },
             tx
           );
           break;
+        }
         case Tenant.OrganizationProject:
         case Tenant.AccountProject: {
           const projectId = this.extractProjectIdFromScope(scope);
@@ -105,7 +110,8 @@ export class UserHandler extends CacheHandler {
         }
       }
 
-      if (roleIds && roleIds.length > 0) {
+      // For non-organization scope, assign roles via user_roles; org role is stored on organization_users.role_id only
+      if (roleIds && roleIds.length > 0 && scope.tenant !== Tenant.Organization) {
         await Promise.all(
           roleIds.map((roleId) => this.userRoles.addUserRole({ userId, roleId }, tx))
         );
@@ -257,14 +263,11 @@ export class UserHandler extends CacheHandler {
       case Tenant.Account:
         return [];
       case Tenant.Organization: {
-        const [orgRoles, userRoleRows] = await Promise.all([
-          this.scopeServices.organizationRoles.getOrganizationRoles({
-            organizationId: scope.id,
-          }),
-          this.scopeServices.userRoles.getUserRoles({ userId }),
-        ]);
-        const scopeRoleIds = new Set(orgRoles.map((or) => or.roleId));
-        return userRoleRows.map((ur) => ur.roleId).filter((roleId) => scopeRoleIds.has(roleId));
+        const orgUsers = await this.scopeServices.organizationUsers.getOrganizationUsers({
+          organizationId: scope.id,
+          userId,
+        });
+        return orgUsers.length > 0 && orgUsers[0].roleId ? [orgUsers[0].roleId] : [];
       }
       case Tenant.OrganizationProject:
       case Tenant.AccountProject:

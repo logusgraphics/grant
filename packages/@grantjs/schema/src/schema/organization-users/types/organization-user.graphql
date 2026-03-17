@@ -2,6 +2,7 @@ type OrganizationUser implements Auditable {
   id: ID!
   organizationId: ID!
   userId: ID!
+  roleId: ID!
   organization: Organization
   user: User
   createdAt: Date!

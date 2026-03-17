@@ -723,7 +723,9 @@ describe('ProjectOAuthHandler', () => {
       mockOrganizationProjects.getOrganizationProject.mockResolvedValue({
         organizationId: 'org-id',
       });
-      mockOrganizationUsers.getOrganizationUsers.mockResolvedValue([{ userId: 'user-id' }]);
+      mockOrganizationUsers.getOrganizationUsers.mockResolvedValue([
+        { userId: 'user-id', roleId: 'role-1' },
+      ]);
     });
 
     it('throws ConfigurationError when GitHub is not configured', async () => {
@@ -831,7 +833,9 @@ describe('ProjectOAuthHandler', () => {
       mockOrganizationProjects.getOrganizationProject.mockResolvedValue({
         organizationId: 'org-id',
       });
-      mockOrganizationUsers.getOrganizationUsers.mockResolvedValue([{ userId: 'user-id' }]);
+      mockOrganizationUsers.getOrganizationUsers.mockResolvedValue([
+        { userId: 'user-id', roleId: 'role-1' },
+      ]);
     });
 
     it('throws AuthenticationError when token is invalid or stateId mismatch', async () => {
