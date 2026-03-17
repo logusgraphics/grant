@@ -14,8 +14,6 @@ import {
   groups,
   organizationProjectApiKeys,
   organizationProjects,
-  organizationRoles,
-  organizations,
   organizationUsers,
   permissions,
   projectRoles,
@@ -232,32 +230,19 @@ export class GrantRepository implements IGrantRepository {
       }
 
       case Tenant.Organization: {
-        // Get user's roles for this organization, but only if the user is a member
-        const orgRoles = await db
-          .select({ roleId: roles.id })
-          .from(userRoles)
-          .innerJoin(roles, and(eq(userRoles.roleId, roles.id), isNull(userRoles.deletedAt)))
-          .innerJoin(
-            organizationRoles,
-            and(
-              eq(organizationRoles.roleId, roles.id),
-              eq(organizationRoles.organizationId, scope.id),
-              isNull(organizationRoles.deletedAt)
-            )
-          )
-          .innerJoin(
-            organizationUsers,
+        // Get user's role for this organization from organization_users.role_id (single source of truth)
+        const orgMembership = await db
+          .select({ roleId: organizationUsers.roleId })
+          .from(organizationUsers)
+          .where(
             and(
               eq(organizationUsers.organizationId, scope.id),
-              eq(organizationUsers.userId, userId), // Only return roles if user is a member
+              eq(organizationUsers.userId, userId),
               isNull(organizationUsers.deletedAt)
             )
           )
-          .where(
-            and(eq(userRoles.userId, userId), isNull(userRoles.deletedAt), isNull(roles.deletedAt))
-          );
-
-        return orgRoles.map((r: { roleId: string }) => r.roleId);
+          .limit(1);
+        return orgMembership.length > 0 ? [orgMembership[0].roleId] : [];
       }
 
       case Tenant.AccountProjectUser:
@@ -401,47 +386,27 @@ export class GrantRepository implements IGrantRepository {
             );
           return projectRolesResult.map((r: { roleId: string }) => r.roleId);
         }
-        const orgProjectRolesResult = await db
-          .select({ roleId: roles.id })
-          .from(userRoles)
-          .innerJoin(roles, eq(userRoles.roleId, roles.id))
-          .innerJoin(
-            organizationRoles,
-            and(
-              eq(organizationRoles.roleId, roles.id),
-              eq(organizationRoles.organizationId, organizationId),
-              isNull(organizationRoles.deletedAt)
-            )
-          )
-          .innerJoin(
-            organizations,
-            and(eq(organizations.id, organizationId), isNull(organizations.deletedAt))
-          )
-          .innerJoin(
-            organizationUsers,
-            and(
-              eq(organizationUsers.organizationId, organizationId),
-              eq(organizationUsers.userId, userId),
-              isNull(organizationUsers.deletedAt)
-            )
-          )
+        // Org role from organization_users.role_id (single source of truth); must be member of org and project
+        const orgMembership = await db
+          .select({ roleId: organizationUsers.roleId })
+          .from(organizationUsers)
           .innerJoin(
             organizationProjects,
             and(
-              eq(organizationProjects.organizationId, organizationId),
+              eq(organizationProjects.organizationId, organizationUsers.organizationId),
               eq(organizationProjects.projectId, projectId),
               isNull(organizationProjects.deletedAt)
             )
           )
           .where(
             and(
-              eq(userRoles.userId, userId),
-              isNull(userRoles.deletedAt),
-              isNull(roles.deletedAt),
-              isNull(organizationProjects.deletedAt)
+              eq(organizationUsers.organizationId, organizationId),
+              eq(organizationUsers.userId, userId),
+              isNull(organizationUsers.deletedAt)
             )
-          );
-        return orgProjectRolesResult.map((r: { roleId: string }) => r.roleId);
+          )
+          .limit(1);
+        return orgMembership.length > 0 ? [orgMembership[0].roleId] : [];
       }
 
       case Tenant.ProjectUser: {

@@ -86,7 +86,7 @@ export interface IOrganizationService {
 
 export interface IOrganizationUserService {
   getOrganizationUsers(
-    params: { organizationId: string },
+    params: { organizationId: string; userId?: string },
     transaction?: unknown
   ): Promise<OrganizationUser[]>;
 

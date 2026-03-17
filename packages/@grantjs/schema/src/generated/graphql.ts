@@ -234,6 +234,7 @@ export type AddOrganizationTagInput = {
 
 export type AddOrganizationUserInput = {
   organizationId: Scalars['ID']['input'];
+  roleId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
@@ -1327,6 +1328,7 @@ export type OrganizationUser = Auditable & {
   id: Scalars['ID']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['ID']['output'];
+  roleId: Scalars['ID']['output'];
   updatedAt: Scalars['Date']['output'];
   user?: Maybe<User>;
   userId: Scalars['ID']['output'];

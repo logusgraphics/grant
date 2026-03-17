@@ -347,25 +347,17 @@ export class OrganizationInvitationsHandler {
         }
       }
 
-      // 5. Add user to organization
+      // 5. Add user to organization with role (membership.role_id is single source of truth)
       await this.organizationUsers.addOrganizationUser(
         {
           organizationId: invitation.organizationId,
-          userId: user!.id,
-        },
-        tx
-      );
-
-      // 6. Assign role
-      await this.userRoles.addUserRole(
-        {
           userId: user!.id,
           roleId: invitation.roleId,
         },
         tx
       );
 
-      // 7. Update invitation status
+      // 6. Update invitation status
       await this.organizationInvitations.updateInvitation(
         invitation.id,
         {

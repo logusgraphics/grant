@@ -92,6 +92,11 @@ export interface IOrganizationUserRepository {
     transaction?: unknown
   ): Promise<OrganizationUser>;
 
+  updateOrganizationUser(
+    params: { organizationId: string; userId: string; roleId: string },
+    transaction?: unknown
+  ): Promise<OrganizationUser>;
+
   softDeleteOrganizationUser(
     params: RemoveOrganizationUserInput,
     transaction?: unknown

@@ -7,7 +7,6 @@ import {
   type IOrganizationRoleRepository,
   type IOrganizationUserRepository,
   type IRoleRepository,
-  type IUserRoleRepository,
 } from '@grantjs/core';
 import {
   OrganizationMember,
@@ -35,7 +34,6 @@ export class OrganizationMemberService implements IOrganizationMemberService {
     private readonly organizationUserRepository: IOrganizationUserRepository,
     private readonly organizationRoleRepository: IOrganizationRoleRepository,
     private readonly roleRepository: IRoleRepository,
-    private readonly userRoleRepository: IUserRoleRepository,
     readonly user: GrantAuth | null,
     private readonly audit: IAuditLogger
   ) {}
@@ -179,19 +177,16 @@ export class OrganizationMemberService implements IOrganizationMemberService {
       );
     }
 
-    const userRoles = await this.userRoleRepository.getUserRoles({ userId }, transaction);
+    const currentMember = await this.organizationMemberRepository.getOrganizationMember(
+      { organizationId, userId },
+      transaction
+    );
+    const previousRoleId = currentMember?.role?.id ?? null;
 
-    const orgRoleIds = new Set(allOrganizationRoles.map((or) => or.roleId));
-    const orgScopedUserRoles = userRoles.filter((ur) => orgRoleIds.has(ur.roleId));
-
-    for (const userRole of orgScopedUserRoles) {
-      await this.userRoleRepository.softDeleteUserRole(
-        { userId, roleId: userRole.roleId },
-        transaction
-      );
-    }
-
-    await this.userRoleRepository.addUserRole({ userId, roleId }, transaction);
+    await this.organizationUserRepository.updateOrganizationUser(
+      { organizationId, userId, roleId },
+      transaction
+    );
 
     const updatedMember = await this.organizationMemberRepository.getOrganizationMember(
       {
@@ -207,7 +202,7 @@ export class OrganizationMemberService implements IOrganizationMemberService {
 
     await this.audit.logUpdate(
       organizationId,
-      { userId, previousRoleIds: orgScopedUserRoles.map((ur) => ur.roleId) },
+      { userId, previousRoleId },
       { userId, roleId },
       { context: 'OrganizationMemberService.updateOrganizationMember' },
       transaction
@@ -244,22 +239,7 @@ export class OrganizationMemberService implements IOrganizationMemberService {
       throw new NotFoundError('User', userId);
     }
 
-    const organizationRoles = await this.organizationRoleRepository.getOrganizationRoles(
-      { organizationId },
-      transaction
-    );
-    const orgRoleIds = new Set(organizationRoles.map((or) => or.roleId));
-
-    const userRoles = await this.userRoleRepository.getUserRoles({ userId }, transaction);
-
-    const orgScopedUserRoles = userRoles.filter((ur) => orgRoleIds.has(ur.roleId));
-    for (const userRole of orgScopedUserRoles) {
-      await this.userRoleRepository.softDeleteUserRole(
-        { userId, roleId: userRole.roleId },
-        transaction
-      );
-    }
-
+    // Role is stored on organization_users; soft-deleting the membership removes the user's org role
     await this.organizationUserRepository.softDeleteOrganizationUser(
       { organizationId, userId },
       transaction
@@ -267,7 +247,7 @@ export class OrganizationMemberService implements IOrganizationMemberService {
 
     await this.audit.logSoftDelete(
       organizationId,
-      { userId, roleIds: orgScopedUserRoles.map((ur) => ur.roleId) },
+      { userId, roleId: memberToRemove.role?.id ?? null },
       { userId, removed: true },
       { context: 'OrganizationMemberService.removeOrganizationMember' },
       transaction

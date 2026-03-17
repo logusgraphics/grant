@@ -1,11 +1,9 @@
 import {
   DbSchema,
   organizationInvitations,
-  organizationRoles,
   organizationUsers,
   roles,
   userAuthenticationMethods,
-  userRoles,
   users,
 } from '@grantjs/database';
 import {
@@ -83,22 +81,13 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
         })
         .from(organizationUsers)
         .innerJoin(users, eq(organizationUsers.userId, users.id))
+        .innerJoin(roles, eq(organizationUsers.roleId, roles.id))
         .leftJoin(
           userAuthenticationMethods,
           and(
             eq(userAuthenticationMethods.userId, users.id),
             eq(userAuthenticationMethods.isPrimary, true),
             isNull(userAuthenticationMethods.deletedAt)
-          )
-        )
-        .leftJoin(userRoles, and(eq(userRoles.userId, users.id), isNull(userRoles.deletedAt)))
-        .leftJoin(roles, eq(userRoles.roleId, roles.id))
-        .leftJoin(
-          organizationRoles,
-          and(
-            eq(organizationRoles.organizationId, organizationId),
-            eq(organizationRoles.roleId, roles.id),
-            isNull(organizationRoles.deletedAt)
           )
         )
         .where(and(...memberWhereConditions));
@@ -150,43 +139,20 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
         invitationId?: string;
       }> = [];
 
-      // Add members (deduplicate by userId, preferring entries with roles)
-      const memberMap = new Map<
-        string,
-        {
-          id: string;
-          name: string;
-          email: string | null;
-          roleId: string | null;
-          roleName: string | null;
-          type: MemberType;
-          status: OrganizationInvitationStatus | null;
-          createdAt: Date;
-          userId?: string;
-          invitationId?: string;
-        }
-      >();
-
+      // Add members (one row per membership; role from organization_users.role_id)
       for (const member of membersData) {
-        const existing = memberMap.get(member.userId);
-        // Prefer entry with a role, or if both have roles, keep the first one
-        if (!existing || (!existing.roleId && member.roleId)) {
-          memberMap.set(member.userId, {
-            id: member.userId,
-            name: member.userName,
-            email: member.userEmail || null,
-            roleId: member.roleId || null,
-            roleName: member.roleName || null,
-            type: MemberType.Member,
-            status: null,
-            createdAt: member.userCreatedAt,
-            userId: member.userId,
-          });
-        }
+        allMembers.push({
+          id: member.userId,
+          name: member.userName,
+          email: member.userEmail || null,
+          roleId: member.roleId,
+          roleName: member.roleName,
+          type: MemberType.Member,
+          status: null,
+          createdAt: member.userCreatedAt,
+          userId: member.userId,
+        });
       }
-
-      // Add deduplicated members to allMembers
-      allMembers.push(...Array.from(memberMap.values()));
 
       // Add invitations
       for (const invitation of invitationsData) {
@@ -236,34 +202,22 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
       // Fetch full entity data for paginated results
       const members: OrganizationMember[] = await Promise.all(
         paginatedMembers.map(async (member) => {
-          if (member.type === MemberType.Member && member.userId) {
-            // Fetch full user and role
+          if (member.type === MemberType.Member && member.userId && member.roleId) {
+            // Fetch full user and role (role from organization_users.role_id)
             const [user] = await dbInstance
               .select()
               .from(users)
               .where(eq(users.id, member.userId))
               .limit(1);
 
-            // Fetch user's role that belongs to this organization
-            const [userRole] = await dbInstance
-              .select({
-                role: roles,
-              })
-              .from(userRoles)
-              .innerJoin(roles, eq(userRoles.roleId, roles.id))
-              .innerJoin(
-                organizationRoles,
-                and(
-                  eq(organizationRoles.roleId, roles.id),
-                  eq(organizationRoles.organizationId, organizationId),
-                  isNull(organizationRoles.deletedAt)
-                )
-              )
-              .where(and(eq(userRoles.userId, member.userId), isNull(userRoles.deletedAt)))
+            const [roleRow] = await dbInstance
+              .select()
+              .from(roles)
+              .where(eq(roles.id, member.roleId))
               .limit(1);
 
-            if (!userRole?.role) {
-              throw new BadRequestError(`User ${member.userId} does not have a role assigned`);
+            if (!roleRow) {
+              throw new BadRequestError(`User ${member.userId} has invalid role ${member.roleId}`);
             }
 
             return {
@@ -271,7 +225,7 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
               name: member.name,
               email: member.email,
               type: MemberType.Member,
-              role: userRole.role as unknown as Role,
+              role: roleRow as unknown as Role,
               user: user as unknown as User,
               invitation: null,
               status: null,
@@ -368,7 +322,7 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
         END
       `.as('user_email');
 
-      // Fetch member (user) data
+      // Fetch member (user) data with role from organization_users.role_id
       const [memberData] = await dbInstance
         .select({
           userId: users.id,
@@ -380,6 +334,7 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
         })
         .from(organizationUsers)
         .innerJoin(users, eq(organizationUsers.userId, users.id))
+        .innerJoin(roles, eq(organizationUsers.roleId, roles.id))
         .leftJoin(
           userAuthenticationMethods,
           and(
@@ -388,8 +343,6 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
             isNull(userAuthenticationMethods.deletedAt)
           )
         )
-        .leftJoin(userRoles, and(eq(userRoles.userId, users.id), isNull(userRoles.deletedAt)))
-        .leftJoin(roles, eq(userRoles.roleId, roles.id))
         .where(
           and(
             eq(organizationUsers.organizationId, params.organizationId),
@@ -404,24 +357,22 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
         return null;
       }
 
-      // Fetch full user and role
       const [user] = await dbInstance
         .select()
         .from(users)
         .where(eq(users.id, memberData.userId))
         .limit(1);
 
-      const [userRole] = await dbInstance
-        .select({
-          role: roles,
-        })
-        .from(userRoles)
-        .innerJoin(roles, eq(userRoles.roleId, roles.id))
-        .where(and(eq(userRoles.userId, memberData.userId), isNull(userRoles.deletedAt)))
+      const [roleRow] = await dbInstance
+        .select()
+        .from(roles)
+        .where(eq(roles.id, memberData.roleId))
         .limit(1);
 
-      if (!userRole?.role) {
-        throw new BadRequestError(`User ${memberData.userId} does not have a role assigned`);
+      if (!roleRow) {
+        throw new BadRequestError(
+          `User ${memberData.userId} has invalid role ${memberData.roleId}`
+        );
       }
 
       return {
@@ -429,7 +380,7 @@ export class OrganizationMemberRepository implements IOrganizationMemberReposito
         name: memberData.userName,
         email: memberData.userEmail || null,
         type: MemberType.Member,
-        role: userRole.role as unknown as Role,
+        role: roleRow as unknown as Role,
         user: user as unknown as User,
         invitation: null,
         status: null,

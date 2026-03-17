@@ -1,19 +1,13 @@
-import {
-  OrganizationUserModel,
-  organizationRoles,
-  organizationUsers,
-  organizations,
-  roles,
-  userRoles,
-} from '@grantjs/database';
+import { OrganizationUserModel, organizationUsers, organizations, roles } from '@grantjs/database';
 import {
   AddOrganizationUserInput,
   OrganizationUser,
   QueryOrganizationUsersInput,
   RemoveOrganizationUserInput,
 } from '@grantjs/schema';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 
+import { NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
 
@@ -41,7 +35,57 @@ export class OrganizationUserRepository
     params: AddOrganizationUserInput,
     transaction?: Transaction
   ): Promise<OrganizationUser> {
-    return this.add(params, transaction);
+    const db = transaction || this.db;
+    const paramsRecord = params as Record<string, unknown>;
+    const unique = this.whereUnique(paramsRecord);
+    const softDeleted = unique ? and(unique, isNotNull(organizationUsers.deletedAt)) : undefined;
+    if (softDeleted) {
+      const existingSoftDeleted = await db
+        .select()
+        .from(organizationUsers)
+        .where(softDeleted)
+        .limit(1);
+      if (existingSoftDeleted.length > 0) {
+        const result = await db
+          .update(organizationUsers)
+          .set({
+            deletedAt: null,
+            updatedAt: new Date(),
+            roleId: params.roleId,
+          })
+          .where(softDeleted)
+          .returning();
+        const reactivated = result[0];
+        if (reactivated) return this.toEntity(reactivated as OrganizationUserModel);
+      }
+    }
+    return this.add(paramsRecord, transaction);
+  }
+
+  public async updateOrganizationUser(
+    params: { organizationId: string; userId: string; roleId: string },
+    transaction?: Transaction
+  ): Promise<OrganizationUser> {
+    const db = transaction || this.db;
+    const result = await db
+      .update(organizationUsers)
+      .set({
+        roleId: params.roleId,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(organizationUsers.organizationId, params.organizationId),
+          eq(organizationUsers.userId, params.userId),
+          isNull(organizationUsers.deletedAt)
+        )
+      )
+      .returning();
+    const updated = result[0];
+    if (!updated) {
+      throw new NotFoundError('OrganizationUser');
+    }
+    return this.toEntity(updated as OrganizationUserModel);
   }
 
   public async softDeleteOrganizationUser(
@@ -80,16 +124,7 @@ export class OrganizationUserRepository
       })
       .from(organizationUsers)
       .innerJoin(organizations, eq(organizationUsers.organizationId, organizations.id))
-      .leftJoin(userRoles, and(eq(userRoles.userId, userId), isNull(userRoles.deletedAt)))
-      .leftJoin(roles, eq(userRoles.roleId, roles.id))
-      .leftJoin(
-        organizationRoles,
-        and(
-          eq(organizationRoles.organizationId, organizationUsers.organizationId),
-          eq(organizationRoles.roleId, roles.id),
-          isNull(organizationRoles.deletedAt)
-        )
-      )
+      .innerJoin(roles, eq(organizationUsers.roleId, roles.id))
       .where(
         and(
           eq(organizationUsers.userId, userId),
@@ -98,23 +133,11 @@ export class OrganizationUserRepository
         )
       );
 
-    const membershipMap = new Map<
-      string,
-      { organizationId: string; organizationName: string; role: string; joinedAt: Date }
-    >();
-
-    for (const membership of membershipsData) {
-      const roleName = membership.roleName;
-      if (roleName && !membershipMap.has(membership.organizationId)) {
-        membershipMap.set(membership.organizationId, {
-          organizationId: membership.organizationId,
-          organizationName: membership.organizationName,
-          role: roleName,
-          joinedAt: membership.joinedAt,
-        });
-      }
-    }
-
-    return Array.from(membershipMap.values());
+    return membershipsData.map((m) => ({
+      organizationId: m.organizationId,
+      organizationName: m.organizationName,
+      role: m.roleName,
+      joinedAt: m.joinedAt,
+    }));
   }
 }

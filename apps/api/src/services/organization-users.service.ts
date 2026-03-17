@@ -19,6 +19,7 @@ import {
 import type {
   IAuditLogger,
   IOrganizationRepository,
+  IOrganizationRoleRepository,
   IOrganizationUserRepository,
   IOrganizationUserService,
   IUserRepository,
@@ -29,6 +30,7 @@ export class OrganizationUserService implements IOrganizationUserService {
     private readonly organizationRepository: IOrganizationRepository,
     private readonly userRepository: IUserRepository,
     private readonly organizationUserRepository: IOrganizationUserRepository,
+    private readonly organizationRoleRepository: IOrganizationRoleRepository,
     private readonly audit: IAuditLogger
   ) {}
 
@@ -83,19 +85,18 @@ export class OrganizationUserService implements IOrganizationUserService {
   public async getOrganizationUsers(
     params: {
       organizationId: string;
+      userId?: string;
     },
     transaction?: Transaction
   ): Promise<OrganizationUser[]> {
     const context = 'OrganizationUserService.getOrganizationUsers';
     const validatedParams = validateInput(getOrganizationUsersParamsSchema, params, context);
-    const { organizationId } = validatedParams;
+    const { organizationId, userId } = validatedParams;
 
     await this.organizationExists(organizationId, transaction);
 
     const result = await this.organizationUserRepository.getOrganizationUsers(
-      {
-        organizationId,
-      },
+      { organizationId, ...(userId && { userId }) },
       transaction
     );
     return validateOutput(
@@ -111,7 +112,17 @@ export class OrganizationUserService implements IOrganizationUserService {
   ): Promise<OrganizationUser> {
     const context = 'OrganizationUserService.addOrganizationUser';
     const validatedParams = validateInput(addOrganizationUserParamsSchema, params, context);
-    const { organizationId, userId } = validatedParams;
+    const { organizationId, userId, roleId } = validatedParams;
+
+    await this.organizationExists(organizationId, transaction);
+    const orgRoles = await this.organizationRoleRepository.getOrganizationRoles(
+      { organizationId },
+      transaction
+    );
+    const roleBelongsToOrg = orgRoles.some((r) => r.roleId === roleId);
+    if (!roleBelongsToOrg) {
+      throw new NotFoundError('Role', roleId);
+    }
 
     const hasUser = await this.organizationHasUser(organizationId, userId, transaction);
 
@@ -120,7 +131,7 @@ export class OrganizationUserService implements IOrganizationUserService {
     }
 
     const organizationUser = await this.organizationUserRepository.addOrganizationUser(
-      { organizationId, userId },
+      { organizationId, userId, roleId },
       transaction
     );
 
@@ -128,6 +139,7 @@ export class OrganizationUserService implements IOrganizationUserService {
       id: organizationUser.id,
       organizationId: organizationUser.organizationId,
       userId: organizationUser.userId,
+      roleId: organizationUser.roleId,
       createdAt: organizationUser.createdAt,
       updatedAt: organizationUser.updatedAt,
     };

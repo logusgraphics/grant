@@ -300,7 +300,6 @@ export function createServices(
       repositories.organizationUserRepository,
       repositories.organizationRoleRepository,
       repositories.roleRepository,
-      repositories.userRoleRepository,
       user,
       audit(organizationAuditLogs, 'organizationId', user, db)
     ),
@@ -338,6 +337,7 @@ export function createServices(
       repositories.organizationRepository,
       repositories.userRepository,
       repositories.organizationUserRepository,
+      repositories.organizationRoleRepository,
       audit(organizationUsersAuditLogs, 'organizationUserId', user, db)
     ),
     organizationProjects: new OrganizationProjectService(

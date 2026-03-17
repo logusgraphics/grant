@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { organizations } from './organizations.schema';
+import { roles } from './roles.schema';
 import { users } from './users.schema';
 
 export const organizationUsers = pgTable(
@@ -21,6 +22,9 @@ export const organizationUsers = pgTable(
       .notNull(),
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    roleId: uuid('role_id')
+      .references(() => roles.id, { onDelete: 'cascade' })
       .notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -53,6 +57,10 @@ export const organizationUsersRelations = relations(organizationUsers, ({ one })
   user: one(users, {
     fields: [organizationUsers.userId],
     references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [organizationUsers.roleId],
+    references: [roles.id],
   }),
 }));
 

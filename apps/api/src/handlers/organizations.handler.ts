@@ -9,6 +9,7 @@ import {
 } from '@grantjs/schema';
 
 import { IEntityCacheAdapter } from '@/lib/cache';
+import { ConfigurationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
@@ -72,22 +73,17 @@ export class OrganizationHandler extends CacheHandler {
 
       const seededRoles = await this.organizationRoles.seedOrganizationRoles(organization.id, tx);
 
-      await this.organizationUsers.addOrganizationUser(
-        { organizationId: organization.id, userId },
-        tx
-      );
-
       const ownerRole = seededRoles.find(
         (r) => r.role.name === ORGANIZATION_ROLE_DEFINITIONS[RoleKey.OrganizationOwner].name
       );
-      if (ownerRole) {
-        const userRoles = await this.userRoles.getUserRoles({ userId }, tx);
-        const hasOwnerRole = userRoles.some((ur) => ur.roleId === ownerRole.role.id);
-
-        if (!hasOwnerRole) {
-          await this.userRoles.addUserRole({ userId, roleId: ownerRole.role.id }, tx);
-        }
+      if (!ownerRole) {
+        throw new ConfigurationError('Organization Owner role not seeded');
       }
+
+      await this.organizationUsers.addOrganizationUser(
+        { organizationId: organization.id, userId, roleId: ownerRole.role.id },
+        tx
+      );
 
       return organization;
     });
@@ -153,9 +149,9 @@ export class OrganizationHandler extends CacheHandler {
         ...organizationTags.map((ot) =>
           this.organizationTags.removeOrganizationTag({ organizationId, tagId: ot.tagId }, tx)
         ),
-        ...userRolesForOrgRoles.flat().map((ur) =>
-          this.userRoles.removeUserRole({ userId: ur.userId, roleId: ur.roleId }, tx)
-        ),
+        ...userRolesForOrgRoles
+          .flat()
+          .map((ur) => this.userRoles.removeUserRole({ userId: ur.userId, roleId: ur.roleId }, tx)),
       ]);
 
       return await this.organizations.deleteOrganization(params, tx);

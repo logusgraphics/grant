@@ -350,9 +350,14 @@ export class ProjectHandler extends CacheHandler {
         ),
         ...roleIds.map((roleId) => this.projectRoles.removeProjectRole({ projectId, roleId }, tx)),
         ...userIds.map((userId) => this.projectUsers.removeProjectUser({ projectId, userId }, tx)),
-        ...userRolesForProjectRoles.flat().map((ur) =>
-          this.scopeServices.userRoles.removeUserRole({ userId: ur.userId, roleId: ur.roleId }, tx)
-        ),
+        ...userRolesForProjectRoles
+          .flat()
+          .map((ur) =>
+            this.scopeServices.userRoles.removeUserRole(
+              { userId: ur.userId, roleId: ur.roleId },
+              tx
+            )
+          ),
       ]);
 
       this.removeProjectIdFromScopeCache(scope, projectId);
