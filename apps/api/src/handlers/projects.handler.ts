@@ -336,6 +336,10 @@ export class ProjectHandler extends CacheHandler {
           throw new BadRequestError('Invalid scope');
       }
 
+      const userRolesForProjectRoles = await Promise.all(
+        roleIds.map((roleId) => this.scopeServices.userRoles.getUserRoles({ roleId }, tx))
+      );
+
       await Promise.all([
         ...tagIds.map((tagId) => this.projectTags.removeProjectTag({ projectId, tagId }, tx)),
         ...permissionIds.map((permissionId) =>
@@ -346,6 +350,9 @@ export class ProjectHandler extends CacheHandler {
         ),
         ...roleIds.map((roleId) => this.projectRoles.removeProjectRole({ projectId, roleId }, tx)),
         ...userIds.map((userId) => this.projectUsers.removeProjectUser({ projectId, userId }, tx)),
+        ...userRolesForProjectRoles.flat().map((ur) =>
+          this.scopeServices.userRoles.removeUserRole({ userId: ur.userId, roleId: ur.roleId }, tx)
+        ),
       ]);
 
       this.removeProjectIdFromScopeCache(scope, projectId);

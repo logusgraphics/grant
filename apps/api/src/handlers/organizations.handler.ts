@@ -120,6 +120,11 @@ export class OrganizationHandler extends CacheHandler {
         this.organizationPermissions.getOrganizationPermissions({ organizationId }, tx),
         this.organizationTags.getOrganizationTags({ organizationId }, tx),
       ]);
+      const orgRoleIds = organizationRoles.map((or) => or.roleId);
+      const userRolesForOrgRoles = await Promise.all(
+        orgRoleIds.map((roleId) => this.userRoles.getUserRoles({ roleId }, tx))
+      );
+
       await Promise.all([
         ...organizationProjects.map((op) =>
           this.organizationProjects.removeOrganizationProject(
@@ -147,6 +152,9 @@ export class OrganizationHandler extends CacheHandler {
         ),
         ...organizationTags.map((ot) =>
           this.organizationTags.removeOrganizationTag({ organizationId, tagId: ot.tagId }, tx)
+        ),
+        ...userRolesForOrgRoles.flat().map((ur) =>
+          this.userRoles.removeUserRole({ userId: ur.userId, roleId: ur.roleId }, tx)
         ),
       ]);
 

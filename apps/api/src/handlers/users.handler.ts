@@ -132,8 +132,7 @@ export class UserHandler extends CacheHandler {
       let currentTagIds: string[] = [];
       let currentRoleIds: string[] = [];
       if (Array.isArray(tagIds)) {
-        const currentTags = await this.userTags.getUserTags({ userId }, tx);
-        currentTagIds = currentTags.map((pt) => pt.tagId);
+        currentTagIds = await this.getUserTagIdsInScope(userId, scope);
       }
       if (Array.isArray(roleIds)) {
         currentRoleIds = await this.getUserRoleIdsInScope(userId, scope);
@@ -182,17 +181,16 @@ export class UserHandler extends CacheHandler {
 
       switch (scope.tenant) {
         case Tenant.Organization: {
-          const [userTags, scopedRoleIds] = await Promise.all([
-            this.userTags.getUserTags({ userId }, tx),
+          const [scopedTagIds, scopedRoleIds] = await Promise.all([
+            this.getUserTagIdsInScope(userId, scope),
             this.getUserRoleIdsInScope(userId, scope),
           ]);
-          const tagIds = userTags.map((ut) => ut.tagId);
           await this.organizationUsers.removeOrganizationUser(
             { organizationId: scope.id, userId },
             tx
           );
           await Promise.all([
-            ...tagIds.map((tagId) => this.userTags.removeUserTag({ userId, tagId }, tx)),
+            ...scopedTagIds.map((tagId) => this.userTags.removeUserTag({ userId, tagId }, tx)),
             ...scopedRoleIds.map((roleId) => this.userRoles.removeUserRole({ userId, roleId }, tx)),
           ]);
           await this.removeUserIdFromScopeCache(scope, userId);
@@ -245,6 +243,15 @@ export class UserHandler extends CacheHandler {
    * Returns role IDs that the user has in the given scope (project or organization).
    * Used by User.roles field resolver to avoid leaking global roles.
    */
+  private async getUserTagIdsInScope(userId: string, scope: Scope): Promise<string[]> {
+    const [scopedTagIds, userTags] = await Promise.all([
+      this.getScopedTagIds(scope),
+      this.userTags.getUserTags({ userId }),
+    ]);
+    const scopeTagIdSet = new Set(scopedTagIds);
+    return userTags.map((ut) => ut.tagId).filter((tagId) => scopeTagIdSet.has(tagId));
+  }
+
   public async getUserRoleIdsInScope(userId: string, scope: Scope): Promise<string[]> {
     switch (scope.tenant) {
       case Tenant.Account:

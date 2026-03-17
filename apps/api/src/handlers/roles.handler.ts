@@ -188,15 +188,7 @@ export class RoleHandler extends CacheHandler {
       const tagIds = roleTags.map((rt) => rt.tagId);
       const groupIds = roleGroups.map((rg) => rg.groupId);
 
-      // Get all users in the scope to remove their UserRole relationships
-      const userIds = await this.getScopedUserIds(scope);
-
-      // Get all UserRole relationships for this role, then filter by users in scope
-      const allUserRoleRelations = await this.userRoles.getUserRoles({ roleId }, tx);
-      const userRoleRelations =
-        userIds.length > 0
-          ? allUserRoleRelations.filter((ur) => userIds.includes(ur.userId))
-          : allUserRoleRelations;
+      const userRoleRelations = await this.userRoles.getUserRoles({ roleId }, tx);
 
       switch (scope.tenant) {
         case Tenant.Organization:
@@ -216,7 +208,6 @@ export class RoleHandler extends CacheHandler {
       await Promise.all([
         ...tagIds.map((tagId) => this.roleTags.removeRoleTag({ roleId, tagId }, tx)),
         ...groupIds.map((groupId) => this.roleGroups.removeRoleGroup({ roleId, groupId }, tx)),
-        // Remove UserRole relationships for users in this scope
         ...userRoleRelations.map((ur) =>
           this.userRoles.removeUserRole({ userId: ur.userId, roleId: ur.roleId }, tx)
         ),
