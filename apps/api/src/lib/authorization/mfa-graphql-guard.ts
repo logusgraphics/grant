@@ -5,6 +5,7 @@ import { GraphqlContext } from '@/graphql/types';
 import { AuthenticationError, AuthorizationError } from '@/lib/errors/error-classes';
 
 import { isAuthenticatedGraphQL } from './auth-guard';
+import { resolveOrgRequiresMfaForSensitiveActions } from './mfa-org-requirement';
 
 export interface MfaGraphQLGuardOptions {
   allowPersonalContext?: boolean;
@@ -52,15 +53,10 @@ export function requireMfaGraphQL<
     if (allowPersonalContext && (await handlers.auth.isPersonalScope(scope))) {
       return resolverFn(parent, args, context, info);
     }
-    let orgRequiresMfa = true;
-    if (scope.tenant === Tenant.Organization) {
-      const result = await handlers.organizations.getOrganizations({
-        ids: [scope.id],
-        limit: 1,
-        requestedFields: ['requireMfaForSensitiveActions'],
-      });
-      orgRequiresMfa = Boolean(result.organizations?.[0]?.requireMfaForSensitiveActions ?? false);
-    }
+    const orgRequiresMfa = await resolveOrgRequiresMfaForSensitiveActions(
+      scope,
+      handlers.organizations.getOrganizations.bind(handlers.organizations)
+    );
     const userRequiresMfa = await handlers.me.hasActiveMfaEnrollmentForUser(user!.userId);
     const requiresMfa = orgRequiresMfa || userRequiresMfa;
     if (!requiresMfa || user!.mfaVerified) {

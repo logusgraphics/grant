@@ -296,9 +296,7 @@ Email verification and MFA are **separate** guards so they can be composed expli
 | `requireMfaGraphQL` / `requireMfaRest`                             | MFA step-up (`MFA_REQUIRED` when policy requires it and JWT `mfaVerified` is false) |
 | `requireEmailThenMfaGraphQL` / `requireEmailThenMfaRest`           | Canonical **email → MFA → RBAC → handler** chain for mutating org-scoped routes     |
 
-**MFA policy (session tokens):** On organization-scoped routes covered by the MFA guard, the API requires a verified MFA step when **either** the organization has `requireMfaForSensitiveActions`, **or** the user has at least one **active** MFA factor (`isEnabled` and not soft-deleted). Enforcement uses `handlers.me.hasActiveMfaEnrollmentForUser` (any enabled factor, not primary-only). API keys and project-app tokens bypass MFA in the guard.
-
-**Project tenant quirk:** For `organizationProject` / `organizationProjectUser` scopes, the MFA guard still defaults to requiring MFA without reading the org’s `requireMfaForSensitiveActions` flag (stricter than org-only scope with the flag off). Aligning that behavior is a separate change.
+**MFA policy (session tokens):** On organization-scoped routes covered by the MFA guard, the API requires a verified MFA step when **either** the organization has `requireMfaForSensitiveActions`, **or** the user has at least one **active** MFA factor (`isEnabled` and not soft-deleted). For `organization` scope, the flag is read for `scope.id`. For `organizationProject` / `organizationProjectUser`, the governing organization is the first segment of the composite `scope.id` (`organizationId:projectId` or `organizationId:projectId:userId`). Enforcement uses `handlers.me.hasActiveMfaEnrollmentForUser` (any enabled factor, not primary-only). API keys and project-app tokens bypass MFA in the guard.
 
 ## Rate Limiting
 

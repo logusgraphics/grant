@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ContextRequest } from '@/types';
 
 import { isAuthenticatedRest } from './auth-guard';
+import { resolveOrgRequiresMfaForSensitiveActions } from './mfa-org-requirement';
 import { extractScopeFromRequest } from './scope-extractor';
 
 export interface MfaRestGuardOptions {
@@ -37,15 +38,10 @@ export function requireMfaRest(options: MfaRestGuardOptions = {}) {
       return next();
     }
 
-    let orgRequiresMfa = true;
-    if (scope.tenant === Tenant.Organization) {
-      const result = await handlers.organizations.getOrganizations({
-        ids: [scope.id],
-        limit: 1,
-        requestedFields: ['requireMfaForSensitiveActions'],
-      });
-      orgRequiresMfa = Boolean(result.organizations?.[0]?.requireMfaForSensitiveActions ?? false);
-    }
+    const orgRequiresMfa = await resolveOrgRequiresMfaForSensitiveActions(
+      scope,
+      handlers.organizations.getOrganizations.bind(handlers.organizations)
+    );
     const userRequiresMfa = await handlers.me.hasActiveMfaEnrollmentForUser(user!.userId);
     const requiresMfa = orgRequiresMfa || userRequiresMfa;
 
