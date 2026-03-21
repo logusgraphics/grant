@@ -1,12 +1,11 @@
 import crypto from 'node:crypto';
 
+import type { IAuditLogger, ISigningKeyRepository, ISigningKeyService } from '@grantjs/core';
 import { ConfigurationError } from '@grantjs/core';
-import { SigningKey, Tenant, type Scope } from '@grantjs/schema';
+import { type Scope, SigningKey, Tenant } from '@grantjs/schema';
 
 import { generateUUID } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
-
-import type { IAuditLogger, ISigningKeyRepository, ISigningKeyService } from '@grantjs/core';
 
 export interface SigningKeyResult {
   kid: string;

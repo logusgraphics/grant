@@ -3,58 +3,58 @@
  * The canonical service port interfaces now live in ./services/*.service.port.ts.
  * This file re-exports them so existing consumers are not broken.
  */
-export type { DeleteParams, IUserService } from './services/user.service.port';
-export type { IRoleService } from './services/role.service.port';
-export type { IPermissionService, IPermissionTagService } from './services/permission.service.port';
-export type { IResourceService, IResourceTagService } from './services/resource.service.port';
-export type { ITagService } from './services/tag.service.port';
-export type { IGrantService } from './services/grant.service.port';
 export type {
-  IAccountService,
-  IAccountProjectService,
-  IAccountRoleService,
-  IAccountTagService,
-  IAccountProjectTagService,
   IAccountProjectApiKeyService,
+  IAccountProjectService,
+  IAccountProjectTagService,
+  IAccountRoleService,
+  IAccountService,
+  IAccountTagService,
 } from './services/account.service.port';
-export type {
-  IProjectAppService,
-  IProjectAppTagService,
-} from './services/project-app.service.port';
 export type {
   IApiKeyService,
   ISigningKeyService,
   SigningKeyResult,
 } from './services/api-key.service.port';
 export type {
+  GenerateStateParams,
+  GitHubUserInfo,
   IAuthService,
   IGitHubOAuthService,
-  IOAuthStateService,
   IMeService,
-  GitHubUserInfo,
-  GenerateStateParams,
+  IOAuthStateService,
   OAuthState,
 } from './services/auth.service.port';
+export type { IGrantService } from './services/grant.service.port';
 export type {
-  IOrganizationService,
-  IOrganizationUserService,
-  IOrganizationRoleService,
   IOrganizationGroupService,
+  IOrganizationInvitationService,
+  IOrganizationMemberService,
   IOrganizationPermissionService,
+  IOrganizationProjectApiKeyService,
   IOrganizationProjectService,
   IOrganizationProjectTagService,
-  IOrganizationProjectApiKeyService,
+  IOrganizationRoleService,
+  IOrganizationService,
   IOrganizationTagService,
-  IOrganizationMemberService,
-  IOrganizationInvitationService,
+  IOrganizationUserService,
 } from './services/organization.service.port';
+export type { IPermissionService, IPermissionTagService } from './services/permission.service.port';
 export type {
-  IProjectService,
-  IProjectUserService,
-  IProjectRoleService,
   IProjectGroupService,
   IProjectPermissionService,
   IProjectResourceService,
+  IProjectRoleService,
+  IProjectService,
   IProjectTagService,
   IProjectUserApiKeyService,
+  IProjectUserService,
 } from './services/project.service.port';
+export type {
+  IProjectAppService,
+  IProjectAppTagService,
+} from './services/project-app.service.port';
+export type { IResourceService, IResourceTagService } from './services/resource.service.port';
+export type { IRoleService } from './services/role.service.port';
+export type { ITagService } from './services/tag.service.port';
+export type { DeleteParams, IUserService } from './services/user.service.port';

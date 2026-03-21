@@ -3,11 +3,10 @@
  * so handler-originated logs include requestId when called from routes/resolvers.
  */
 
+import type { ILogger } from '@grantjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthHandler } from '@/handlers/auth.handler';
-
-import type { ILogger } from '@grantjs/core';
 
 const mockResendVerificationEmail = vi.fn();
 const mockSendOtp = vi.fn();

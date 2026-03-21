@@ -1,9 +1,9 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { TagColor } from '@grantjs/constants';
 import { Tag } from '@grantjs/schema';
 import { Tag as TagIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CardGrid, CardHeader } from '@/components/common';
 import { useTagsStore } from '@/stores/tags.store';

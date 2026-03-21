@@ -1,3 +1,4 @@
+import type { IOrganizationPermissionRepository } from '@grantjs/core';
 import { OrganizationPermissionModel, organizationPermissions } from '@grantjs/database';
 import {
   AddOrganizationPermissionInput,
@@ -9,8 +10,6 @@ import {
 import { Transaction } from '@/lib/transaction-manager.lib';
 
 import { PivotRepository } from './common/PivotRepository';
-
-import type { IOrganizationPermissionRepository } from '@grantjs/core';
 
 export class OrganizationPermissionRepository
   extends PivotRepository<OrganizationPermissionModel, OrganizationPermission>

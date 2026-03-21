@@ -1,7 +1,7 @@
 'use client';
 
-import { GroupSortableField, SortOrder, GroupSortInput } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { GroupSortableField, GroupSortInput, SortOrder } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 import { useGroupsStore } from '@/stores/groups.store';

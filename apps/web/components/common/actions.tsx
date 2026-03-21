@@ -1,9 +1,8 @@
 'use client';
 
 import { type ReactNode } from 'react';
-
-import { MoreVertical } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { MoreVertical } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {

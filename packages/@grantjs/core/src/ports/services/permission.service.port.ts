@@ -2,8 +2,6 @@
  * Permission-domain service port interfaces.
  * Covers: Permission, PermissionTag.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddPermissionTagInput,
   CreatePermissionInput,
@@ -16,6 +14,9 @@ import type {
   UpdatePermissionInput,
   UpdatePermissionTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // IPermissionService

@@ -1,15 +1,14 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { canAssignRole } from '@grantjs/constants';
 import { ApiKey, Scope, Tenant } from '@grantjs/schema';
 import { Ban, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
-import { Actions, type ActionItem } from '@/components/common';
+import { type ActionItem, Actions } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useMembers } from '@/hooks/members';
 import { useAuthStore } from '@/stores/auth.store';

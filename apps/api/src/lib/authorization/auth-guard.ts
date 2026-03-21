@@ -1,5 +1,5 @@
 import { Resolver } from '@grantjs/schema';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { GraphQLResolveInfo } from 'graphql';
 
 import { GraphqlContext } from '@/graphql/types';

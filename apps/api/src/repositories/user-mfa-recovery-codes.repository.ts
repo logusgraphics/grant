@@ -1,14 +1,13 @@
-import { UserMfaRecoveryCodeModel, userMfaRecoveryCodes } from '@grantjs/database';
-
-import { Transaction } from '@/lib/transaction-manager.lib';
-
-import { EntityRepository, FilterCondition } from './common/EntityRepository';
-
 import type {
   IMfaRecoveryCodeStatus,
   IUserMfaRecoveryCodeRecord,
   IUserMfaRecoveryCodeRepository,
 } from '@grantjs/core';
+import { UserMfaRecoveryCodeModel, userMfaRecoveryCodes } from '@grantjs/database';
+
+import { Transaction } from '@/lib/transaction-manager.lib';
+
+import { EntityRepository, FilterCondition } from './common/EntityRepository';
 
 export class UserMfaRecoveryCodeRepository
   extends EntityRepository<UserMfaRecoveryCodeModel, UserMfaRecoveryCodeModel>

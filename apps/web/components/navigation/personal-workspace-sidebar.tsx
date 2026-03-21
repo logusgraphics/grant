@@ -1,11 +1,9 @@
 'use client';
 
 import { ComponentProps } from 'react';
-
 import { useParams } from 'next/navigation';
-
-import { FolderOpen, Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { FolderOpen, Tag } from 'lucide-react';
 
 import { WorkspaceSwitcher } from '@/components/common';
 import { Sidebar } from '@/components/ui/sidebar';

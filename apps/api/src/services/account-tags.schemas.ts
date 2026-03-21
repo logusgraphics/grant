@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { idSchema, deleteSchema } from './common/schemas';
+import { deleteSchema, idSchema } from './common/schemas';
 
 export const accountTagSchema = z.object({
   id: idSchema,

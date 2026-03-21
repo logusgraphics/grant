@@ -1,4 +1,5 @@
 import { DEFAULT_RESOURCE_ACTIONS } from '@grantjs/constants';
+import type { IResourceRepository } from '@grantjs/core';
 import { ResourceModel, resources, tags } from '@grantjs/database';
 import {
   CreateResourceInput,
@@ -14,8 +15,6 @@ import {
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { EntityRepository, FilterCondition, RelationsConfig } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IResourceRepository } from '@grantjs/core';
 
 export class ResourceRepository
   extends EntityRepository<ResourceModel, Resource>

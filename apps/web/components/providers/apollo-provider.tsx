@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-
-import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
 import { useTranslations } from 'next-intl';
+import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
 
 import { getClient } from '@/lib/apollo-client';
 

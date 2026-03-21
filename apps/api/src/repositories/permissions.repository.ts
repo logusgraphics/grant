@@ -1,3 +1,4 @@
+import type { IPermissionRepository } from '@grantjs/core';
 import { PermissionModel, permissions, resources, tags } from '@grantjs/database';
 import {
   CreatePermissionInput,
@@ -15,8 +16,6 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { EntityRepository, RelationsConfig } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IPermissionRepository } from '@grantjs/core';
 
 export class PermissionRepository
   extends EntityRepository<PermissionModel, Permission>

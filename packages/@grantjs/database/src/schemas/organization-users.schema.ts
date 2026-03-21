@@ -1,12 +1,12 @@
 import { relations, sql } from 'drizzle-orm';
 import {
-  pgTable,
-  pgPolicy,
-  uuid,
-  timestamp,
-  varchar,
-  uniqueIndex,
   index,
+  pgPolicy,
+  pgTable,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
 
 import { organizations } from './organizations.schema';

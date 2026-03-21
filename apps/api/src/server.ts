@@ -1,7 +1,5 @@
 import '@/lib/tracing'; // must run first so OTel patches http/express before they load
 
-import http from 'http';
-
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
@@ -11,14 +9,15 @@ import { closeDatabase, initializeDBConnection } from '@grantjs/database';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import http from 'http';
 import swaggerUi from 'swagger-ui-express';
 
 import { config, printConfigSummary, validateConfig } from '@/config';
-import { graphqlMinAalAtLoginMiddleware } from '@/lib/authorization/min-aal-at-login';
 import { schema } from '@/graphql/resolvers';
 import { GraphqlContext } from '@/graphql/types';
 import { i18nMiddleware, initializeI18n } from '@/i18n';
 import { createAppContext } from '@/lib/app-context.lib';
+import { graphqlMinAalAtLoginMiddleware } from '@/lib/authorization/min-aal-at-login';
 import { CacheFactory } from '@/lib/cache';
 import { formatGraphQLError } from '@/lib/errors';
 import { initializeJobs, shutdownJobs } from '@/lib/jobs/initialize';

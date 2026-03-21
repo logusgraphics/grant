@@ -1,10 +1,10 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { ApiKey, Scope } from '@grantjs/schema';
 import { Ban } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   AlertDialog,

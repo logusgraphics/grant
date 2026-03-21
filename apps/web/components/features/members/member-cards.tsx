@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { OrganizationInvitationStatus } from '@grantjs/schema';
 import { Shield, UserCheck, UserCircle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, CardHeader } from '@/components/common';
 import { Badge } from '@/components/ui/badge';

@@ -1,4 +1,14 @@
 import { MILLISECONDS_PER_MINUTE } from '@grantjs/constants';
+import type {
+  IAccountProjectApiKeyRepository,
+  IAccountProjectRepository,
+  IApiKeyRepository,
+  IApiKeyService,
+  IAuditLogger,
+  IOrganizationProjectApiKeyRepository,
+  IOrganizationProjectRepository,
+  IProjectUserApiKeyRepository,
+} from '@grantjs/core';
 import { Grant, GrantAuth, NoSessionSigningKeyError } from '@grantjs/core';
 import {
   ApiKey,
@@ -29,17 +39,6 @@ import {
   queryApiKeysArgsSchema,
   revokeApiKeyParamsSchema,
 } from './api-keys.schemas';
-
-import type {
-  IAuditLogger,
-  IAccountProjectApiKeyRepository,
-  IAccountProjectRepository,
-  IApiKeyRepository,
-  IApiKeyService,
-  IOrganizationProjectApiKeyRepository,
-  IOrganizationProjectRepository,
-  IProjectUserApiKeyRepository,
-} from '@grantjs/core';
 
 interface ExchangeTokenResult {
   accessToken: string;

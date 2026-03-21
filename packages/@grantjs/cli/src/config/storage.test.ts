@@ -1,9 +1,10 @@
-import { mkdtempSync, rmSync, writeFileSync, readFileSync, mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type { GrantConfigFile } from '../types/config.js';
 import {
   DEFAULT_PROFILE_NAME,
   getConfigPath,
@@ -13,8 +14,6 @@ import {
   resolveProfileName,
   saveConfigFile,
 } from './storage.js';
-
-import type { GrantConfigFile } from '../types/config.js';
 
 describe('resolveProfileName', () => {
   it('returns profile flag when provided', () => {

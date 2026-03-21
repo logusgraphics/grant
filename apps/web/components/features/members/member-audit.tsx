@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { OrganizationInvitationStatus } from '@grantjs/schema';
 import { Calendar, Clock, Fingerprint, Mail, User } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { Audit, type AuditField } from '@/components/common';
 import { MemberWithInvitation } from '@/hooks/members';

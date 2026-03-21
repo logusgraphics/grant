@@ -1,11 +1,10 @@
+import type { IJobAdapter } from '@grantjs/core';
 import { JobFactory } from '@grantjs/jobs';
 
 import { config } from '@/config';
 import { createJobs } from '@/jobs';
 import { createLogger, loggerFactory } from '@/lib/logger';
 import { AppContext } from '@/types';
-
-import type { IJobAdapter } from '@grantjs/core';
 
 const logger = createLogger('JobInitializer');
 

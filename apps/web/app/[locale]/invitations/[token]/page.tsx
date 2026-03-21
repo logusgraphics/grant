@@ -1,12 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-
 import { useParams } from 'next/navigation';
-
+import { useLocale, useTranslations } from 'next-intl';
 import { AccountType, OrganizationInvitationStatus } from '@grantjs/schema';
 import { AlertTriangle, CheckCircle2, Loader2, Mail, MailCheck, XCircle } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
 
 import { InfoPanel } from '@/components/common';
 import { AuthLayout } from '@/components/layout';

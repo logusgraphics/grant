@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { ApolloCache } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import {
@@ -7,8 +8,7 @@ import {
   Tag,
   TagPage,
 } from '@grantjs/schema';
-import { CreateTagDocument, UpdateTagDocument, DeleteTagDocument } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
+import { CreateTagDocument, DeleteTagDocument, UpdateTagDocument } from '@grantjs/schema';
 import { toast } from 'sonner';
 
 import { evictTagsCache } from './cache';

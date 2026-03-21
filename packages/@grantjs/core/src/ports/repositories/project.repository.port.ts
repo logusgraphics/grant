@@ -2,7 +2,6 @@
  * Project-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { DeleteParams, SelectedFields } from './common';
 import type {
   AddProjectAppTagInput,
   AddProjectGroupInput,
@@ -30,16 +29,16 @@ import type {
   ProjectTag,
   ProjectUser,
   ProjectUserApiKey,
+  QueryProjectAppsArgs,
   QueryProjectAppTagsInput,
   QueryProjectGroupsInput,
   QueryProjectPermissionsInput,
   QueryProjectResourcesInput,
   QueryProjectRolesInput,
+  QueryProjectsArgs,
   QueryProjectTagsInput,
   QueryProjectUserApiKeysInput,
   QueryProjectUsersInput,
-  QueryProjectAppsArgs,
-  QueryProjectsArgs,
   RemoveProjectAppTagInput,
   RemoveProjectGroupInput,
   RemoveProjectPermissionInput,
@@ -52,6 +51,8 @@ import type {
   UpdateProjectAppTagInput,
   UpdateProjectTagInput,
 } from '@grantjs/schema';
+
+import type { DeleteParams, SelectedFields } from './common';
 
 export interface IProjectRepository {
   getProjects(

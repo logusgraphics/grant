@@ -1,11 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
-
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 

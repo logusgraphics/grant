@@ -2,8 +2,8 @@ export {
   createContextLogger,
   createLogger,
   createModuleLogger,
+  type Logger,
   logger,
   loggerFactory,
   rawPinoLogger,
-  type Logger,
 } from './logger';

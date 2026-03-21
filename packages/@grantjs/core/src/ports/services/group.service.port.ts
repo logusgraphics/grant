@@ -2,8 +2,6 @@
  * Group-domain service port interfaces.
  * Covers: Group, GroupPermission, GroupTag.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddGroupPermissionInput,
   AddGroupTagInput,
@@ -20,6 +18,9 @@ import type {
   UpdateGroupInput,
   UpdateGroupTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // IGroupService

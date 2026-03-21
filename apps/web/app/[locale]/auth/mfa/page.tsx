@@ -1,15 +1,14 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useMutation } from '@apollo/client/react';
 import {
   SetupMfaDocument,
   VerifyMfaDocument,
   VerifyMfaRecoveryCodeDocument,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 
 import { MfaOtpInput } from '@/components/features/auth/mfa-otp-input';
 import { MfaQrPanel } from '@/components/features/auth/mfa-qr-panel';

@@ -1,13 +1,12 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { GetSigningKeysQuery, Scope, Tenant } from '@grantjs/schema';
 import { format } from 'date-fns';
 import { Fingerprint } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Avatar,

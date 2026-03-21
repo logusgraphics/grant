@@ -101,7 +101,6 @@ import {
   userAuthenticationMethods,
   userAuthenticationMethodsRelations,
 } from './user-authentication-methods.schema';
-import { userRoles, userRolesRelations } from './user-roles.schema';
 import {
   userMfaFactorAuditLogs,
   userMfaFactors,
@@ -111,6 +110,7 @@ import {
   userMfaRecoveryCodes,
   userMfaRecoveryCodesRelations,
 } from './user-mfa-recovery-codes.schema';
+import { userRoles, userRolesRelations } from './user-roles.schema';
 import { userSessions, userSessionsRelations } from './user-sessions.schema';
 import { userTags, userTagsRelations } from './user-tags.schema';
 import { users, usersRelations } from './users.schema';

@@ -1,8 +1,8 @@
 import {
   CreateProjectAppResult,
   ProjectApp,
-  ProjectAppSortInput,
   ProjectAppSortableField,
+  ProjectAppSortInput,
   SortOrder,
 } from '@grantjs/schema';
 import { create } from 'zustand';

@@ -1,3 +1,4 @@
+import type { IOrganizationProjectRepository } from '@grantjs/core';
 import { OrganizationProjectModel, organizationProjects } from '@grantjs/database';
 import {
   AddOrganizationProjectInput,
@@ -9,8 +10,6 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IOrganizationProjectRepository } from '@grantjs/core';
 
 export class OrganizationProjectRepository
   extends PivotRepository<OrganizationProjectModel, OrganizationProject>

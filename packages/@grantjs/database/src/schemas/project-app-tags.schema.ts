@@ -1,12 +1,12 @@
 import { relations, sql } from 'drizzle-orm';
 import {
+  boolean,
+  index,
   pgTable,
-  uuid,
   timestamp,
   uniqueIndex,
+  uuid,
   varchar,
-  index,
-  boolean,
 } from 'drizzle-orm/pg-core';
 
 import { projectApps } from './project-apps.schema';

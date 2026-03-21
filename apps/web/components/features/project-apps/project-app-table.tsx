@@ -1,15 +1,16 @@
 'use client';
 
-import { getTagBorderClasses, TagColor } from '@grantjs/constants';
-import { LayoutGrid } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { getTagBorderClasses, TagColor } from '@grantjs/constants';
+import type { ProjectApp, Tag } from '@grantjs/schema';
+import { LayoutGrid } from 'lucide-react';
 
 import {
   Avatar,
   CopyToClipboard,
   DataTable,
-  ScrollBadges,
   type DataTableColumnConfig,
+  ScrollBadges,
   type TableSkeletonColumnConfig,
 } from '@/components/common';
 import { useScopeFromParams } from '@/hooks/common';
@@ -20,8 +21,6 @@ import { useProjectAppsStore } from '@/stores/project-apps.store';
 import { ProjectAppActions } from './project-app-actions';
 import { ProjectAppAudit } from './project-app-audit';
 import { ProjectAppCreateDialog } from './project-app-create-dialog';
-
-import type { ProjectApp, Tag } from '@grantjs/schema';
 
 export function ProjectAppTable() {
   const t = useTranslations('projectApps');

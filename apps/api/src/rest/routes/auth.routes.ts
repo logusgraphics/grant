@@ -26,9 +26,9 @@ import {
   requestPasswordResetRequestSchema,
   resendVerificationRequestSchema,
   resetPasswordRequestSchema,
-  verifyMfaRequestSchema,
-  verifyMfaRecoveryCodeRequestSchema,
   verifyEmailRequestSchema,
+  verifyMfaRecoveryCodeRequestSchema,
+  verifyMfaRequestSchema,
 } from '@/rest/schemas';
 import { exchangeApiKeyRequestSchema } from '@/rest/schemas/api-keys.schemas';
 import { TypedRequest } from '@/rest/types';

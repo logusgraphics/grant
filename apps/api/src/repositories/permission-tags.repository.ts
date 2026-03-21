@@ -1,3 +1,4 @@
+import type { IPermissionTagRepository } from '@grantjs/core';
 import { PermissionTagModel, permissionTags } from '@grantjs/database';
 import {
   AddPermissionTagInput,
@@ -9,8 +10,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IPermissionTagRepository } from '@grantjs/core';
 
 export class PermissionTagRepository
   extends PivotRepository<PermissionTagModel, PermissionTag>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-
 import { Scope, Tenant } from '@grantjs/schema';
 
 import { useAuthStore } from '@/stores/auth.store';

@@ -5,9 +5,8 @@
  * - Validates that E2E_API_BASE_URL is set
  * - Waits for the API health endpoint to respond 200
  */
-import { resolve } from 'path';
-
 import { config } from 'dotenv';
+import { resolve } from 'path';
 
 // Load .env.test from the monorepo root (shared with docker-compose.e2e.yml --env-file)
 config({ path: resolve(__dirname, '../../../../.env.test') });

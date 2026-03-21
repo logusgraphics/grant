@@ -1,3 +1,10 @@
+import type {
+  IAccountProjectRepository,
+  IAccountProjectService,
+  IAccountRepository,
+  IAuditLogger,
+  IProjectRepository,
+} from '@grantjs/core';
 import {
   AccountProject,
   AddAccountProjectInput,
@@ -17,14 +24,6 @@ import {
   removeAccountProjectInputSchema,
 } from './account-projects.schemas';
 import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
-
-import type {
-  IAuditLogger,
-  IAccountRepository,
-  IProjectRepository,
-  IAccountProjectRepository,
-  IAccountProjectService,
-} from '@grantjs/core';
 
 export class AccountProjectService implements IAccountProjectService {
   constructor(

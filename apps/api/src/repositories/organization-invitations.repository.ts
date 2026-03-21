@@ -1,3 +1,4 @@
+import type { IOrganizationInvitationRepository } from '@grantjs/core';
 import {
   OrganizationInvitationModel,
   organizationInvitations,
@@ -21,8 +22,6 @@ import { NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { EntityRepository, FilterCondition, RelationsConfig } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IOrganizationInvitationRepository } from '@grantjs/core';
 
 export class OrganizationInvitationRepository
   extends EntityRepository<OrganizationInvitationModel, OrganizationInvitation>

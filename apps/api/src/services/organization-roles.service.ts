@@ -1,4 +1,11 @@
 import { ORGANIZATION_ROLE_DEFINITIONS } from '@grantjs/constants';
+import type {
+  IAuditLogger,
+  IOrganizationRepository,
+  IOrganizationRoleRepository,
+  IOrganizationRoleService,
+  IRoleRepository,
+} from '@grantjs/core';
 import {
   AddOrganizationRoleInput,
   OrganizationRole,
@@ -17,14 +24,6 @@ import {
   organizationRoleSchema,
   removeOrganizationRoleInputSchema,
 } from './organization-roles.schemas';
-
-import type {
-  IAuditLogger,
-  IOrganizationRepository,
-  IOrganizationRoleRepository,
-  IOrganizationRoleService,
-  IRoleRepository,
-} from '@grantjs/core';
 
 export class OrganizationRoleService implements IOrganizationRoleService {
   constructor(

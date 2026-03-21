@@ -1,15 +1,15 @@
 import { existsSync } from 'node:fs';
 
+import type { Command } from 'commander';
+
 import {
   getConfigPath,
+  listProfileNames,
   loadConfigFile,
   loadProfile,
-  listProfileNames,
   saveConfigFile,
 } from '../config/index.js';
-
 import type { GrantConfig, GrantConfigFile, GrantScope } from '../types/config.js';
-import type { Command } from 'commander';
 
 const VALID_TENANTS = ['accountProject', 'organizationProject'] as const;
 

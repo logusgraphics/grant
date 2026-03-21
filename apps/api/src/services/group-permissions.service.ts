@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IGroupPermissionRepository,
+  IGroupPermissionService,
+  IGroupRepository,
+  IPermissionRepository,
+} from '@grantjs/core';
 import {
   AddGroupPermissionInput,
   GroupPermission,
@@ -9,21 +16,13 @@ import { ConflictError, NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams } from '@/types';
 
-import { validateInput, validateOutput, createDynamicSingleSchema } from './common';
+import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
 import {
-  getGroupPermissionsParamsSchema,
   addGroupPermissionParamsSchema,
-  removeGroupPermissionParamsSchema,
+  getGroupPermissionsParamsSchema,
   groupPermissionSchema,
+  removeGroupPermissionParamsSchema,
 } from './group-permissions.schemas';
-
-import type {
-  IAuditLogger,
-  IGroupPermissionRepository,
-  IGroupPermissionService,
-  IGroupRepository,
-  IPermissionRepository,
-} from '@grantjs/core';
 
 export class GroupPermissionService implements IGroupPermissionService {
   constructor(

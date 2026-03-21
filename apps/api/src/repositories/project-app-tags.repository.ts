@@ -1,3 +1,4 @@
+import type { IProjectAppTagRepository } from '@grantjs/core';
 import { ProjectAppTagModel, projectAppTags } from '@grantjs/database';
 import {
   AddProjectAppTagInput,
@@ -9,8 +10,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IProjectAppTagRepository } from '@grantjs/core';
 
 function toEntity(dbPivot: ProjectAppTagModel): ProjectAppTag {
   return {

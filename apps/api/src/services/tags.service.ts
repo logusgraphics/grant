@@ -1,9 +1,10 @@
+import type { IAuditLogger, ITagRepository, ITagService } from '@grantjs/core';
 import {
+  CreateTagInput,
+  MutationDeleteTagArgs,
+  QueryTagsArgs,
   Tag,
   TagPage,
-  QueryTagsArgs,
-  MutationDeleteTagArgs,
-  CreateTagInput,
   UpdateTagInput,
 } from '@grantjs/schema';
 
@@ -12,10 +13,10 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import {
-  validateInput,
-  validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  validateInput,
+  validateOutput,
 } from './common';
 import {
   createTagInputSchema,
@@ -24,8 +25,6 @@ import {
   tagSchema,
   updateTagArgsSchema,
 } from './tags.schemas';
-
-import type { IAuditLogger, ITagRepository, ITagService } from '@grantjs/core';
 
 export class TagService implements ITagService {
   constructor(

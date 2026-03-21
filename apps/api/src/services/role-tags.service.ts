@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IRoleRepository,
+  IRoleTagRepository,
+  IRoleTagService,
+  ITagRepository,
+} from '@grantjs/core';
 import { AddRoleTagInput, RemoveRoleTagInput, RoleTag, UpdateRoleTagInput } from '@grantjs/schema';
 
 import { ConflictError, NotFoundError } from '@/lib/errors';
@@ -14,14 +21,6 @@ import {
   roleTagSchema,
   updateRoleTagInputSchema,
 } from './role-tags.schemas';
-
-import type {
-  IAuditLogger,
-  IRoleRepository,
-  IRoleTagRepository,
-  IRoleTagService,
-  ITagRepository,
-} from '@grantjs/core';
 
 export class RoleTagService implements IRoleTagService {
   constructor(

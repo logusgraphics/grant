@@ -1,3 +1,4 @@
+import type { ILogger } from '@grantjs/core';
 import { trace } from '@opentelemetry/api';
 import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,8 +7,6 @@ import { config } from '@/config';
 import { logger } from '@/lib/logger';
 import { getTelemetryAdapter } from '@/lib/telemetry';
 import { ContextRequest } from '@/types';
-
-import type { ILogger } from '@grantjs/core';
 
 export interface RequestWithLogger extends Request {
   requestId: string;

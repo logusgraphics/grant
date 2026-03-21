@@ -12,8 +12,8 @@
  */
 import { apiClient } from './api-client';
 import {
-  getMemberRoleId,
   getInvitationTokenForEmail,
+  getMemberRoleId,
   getVerificationTokenForEmail,
 } from './db-tokens';
 

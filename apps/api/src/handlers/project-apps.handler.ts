@@ -1,3 +1,8 @@
+import type {
+  IProjectAppService,
+  IProjectAppTagService,
+  ITransactionalConnection,
+} from '@grantjs/core';
 import {
   CreateProjectAppResult,
   MutationCreateProjectAppArgs,
@@ -16,12 +21,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IProjectAppService,
-  IProjectAppTagService,
-  ITransactionalConnection,
-} from '@grantjs/core';
 
 export class ProjectAppsHandler extends CacheHandler {
   constructor(

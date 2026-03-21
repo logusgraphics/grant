@@ -3,9 +3,8 @@ import { SupportedLocale } from '@grantjs/i18n';
 import { config } from '@/config';
 import { defaultLocale, translateStatic } from '@/i18n';
 
-import { createAlternativeLink, createButton, renderBaseEmailTemplate } from './base.mjml';
-
 import type { SendPasswordResetParams } from '../';
+import { createAlternativeLink, createButton, renderBaseEmailTemplate } from './base.mjml';
 
 export function getPasswordResetEmailSubject(params: SendPasswordResetParams): string {
   const emailLocale = (params.locale || defaultLocale) as SupportedLocale;

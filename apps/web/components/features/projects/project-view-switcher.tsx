@@ -1,9 +1,9 @@
 'use client';
 
-import { LayoutGrid, Table } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LayoutGrid, Table } from 'lucide-react';
 
-import { ViewSwitcher, type ViewOption } from '@/components/common';
+import { type ViewOption, ViewSwitcher } from '@/components/common';
 import { useProjectsStore } from '@/stores/projects.store';
 
 import { ProjectView } from './project-types';

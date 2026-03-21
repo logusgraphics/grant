@@ -1,5 +1,5 @@
-import { SortOrder, TagSortField, TagSortInput } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { SortOrder, TagSortField, TagSortInput } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 

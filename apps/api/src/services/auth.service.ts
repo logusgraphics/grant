@@ -1,3 +1,4 @@
+import type { IAuthService } from '@grantjs/core';
 import { Grant, GrantAuth } from '@grantjs/core';
 import { AuthorizationResult, IsAuthorizedInput } from '@grantjs/schema';
 
@@ -5,8 +6,6 @@ import { createLogger } from '@/lib/logger';
 
 import { authorizationResultSchema, isAuthorizedInputSchema } from './auth.schemas';
 import { validateInput, validateOutput } from './common';
-
-import type { IAuthService } from '@grantjs/core';
 
 export class AuthService implements IAuthService {
   private readonly logger = createLogger('AuthService');

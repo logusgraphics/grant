@@ -1,3 +1,4 @@
+import type { IGroupPermissionRepository } from '@grantjs/core';
 import { GroupPermissionModel, groupPermissions } from '@grantjs/database';
 import {
   AddGroupPermissionInput,
@@ -8,8 +9,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IGroupPermissionRepository } from '@grantjs/core';
 
 export class GroupPermissionRepository
   extends PivotRepository<GroupPermissionModel, GroupPermission>

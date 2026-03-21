@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 
 import { EmailVerificationBanner, FullPageLoader } from '@/components/common';
 import { useAccountsSync } from '@/hooks/accounts';

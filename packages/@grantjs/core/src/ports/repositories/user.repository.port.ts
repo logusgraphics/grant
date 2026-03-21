@@ -2,7 +2,6 @@
  * User-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   AddUserRoleInput,
   AddUserTagInput,
@@ -15,8 +14,8 @@ import type {
   GetUserSessionsInput,
   MutationDeleteUserArgs,
   QueryUserRolesInput,
-  QueryUserTagsInput,
   QueryUsersArgs,
+  QueryUserTagsInput,
   RemoveUserRoleInput,
   RemoveUserTagInput,
   UpdateUserAuthenticationMethodInput,
@@ -31,6 +30,8 @@ import type {
   UserSessionPage,
   UserTag,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IUserRepository {
   getUsers(

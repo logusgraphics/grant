@@ -1,7 +1,7 @@
 'use client';
 
-import { SortOrder, PermissionSortableField, PermissionSortInput } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { PermissionSortableField, PermissionSortInput, SortOrder } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 import { usePermissionsStore } from '@/stores/permissions.store';

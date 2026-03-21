@@ -1,20 +1,20 @@
 // Context and Provider
-export { GrantProvider, useGrantClient, useGrantClientOptional } from './context';
 export type { GrantProviderProps } from './context';
+export { GrantProvider, useGrantClient, useGrantClientOptional } from './context';
 
 // Permission hooks
-export { useGrant } from './hooks/useGrant';
 export type { UseGrantOptions, UseGrantResult } from './hooks/useGrant';
+export { useGrant } from './hooks/useGrant';
 
 // Components
-export { GrantGate } from './components/GrantGate';
 export type { GrantGateProps } from './components/GrantGate';
+export { GrantGate } from './components/GrantGate';
 
 // Re-export core types for convenience
 export type {
-  GrantClientConfig,
-  AuthTokens,
   AuthorizationResult,
+  AuthTokens,
+  GrantClientConfig,
   Permission,
   Scope,
 } from '../types';

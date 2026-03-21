@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { UserAuthenticationMethodProvider } from '@grantjs/schema';
 import { KeyRound, Lock, Shield, Unlink } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { ActionItem, Actions } from '@/components/common';
 

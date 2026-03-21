@@ -1,6 +1,5 @@
-import { DbSchema } from '@grantjs/database';
-
 import type { ITransactionalConnection } from '@grantjs/core';
+import { DbSchema } from '@grantjs/database';
 
 export type Transaction = Parameters<Parameters<DbSchema['transaction']>[0]>[0];
 

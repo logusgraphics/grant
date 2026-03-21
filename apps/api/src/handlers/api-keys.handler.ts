@@ -1,3 +1,11 @@
+import type {
+  IAccountProjectApiKeyService,
+  IApiKeyService,
+  IOrganizationProjectApiKeyService,
+  IProjectUserApiKeyService,
+  IRoleService,
+  ITransactionalConnection,
+} from '@grantjs/core';
 import {
   ApiKey,
   ApiKeyPage,
@@ -18,15 +26,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IAccountProjectApiKeyService,
-  IApiKeyService,
-  IOrganizationProjectApiKeyService,
-  IProjectUserApiKeyService,
-  IRoleService,
-  ITransactionalConnection,
-} from '@grantjs/core';
 
 export class ApiKeysHandler extends CacheHandler {
   constructor(

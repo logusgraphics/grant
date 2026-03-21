@@ -1,11 +1,10 @@
+import type { IUserMfaFactorRecord, IUserMfaFactorRepository } from '@grantjs/core';
 import { UserMfaFactorModel, userMfaFactors } from '@grantjs/database';
 
 import { NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 
 import { BaseUpdateArgs, EntityRepository, FilterCondition } from './common/EntityRepository';
-
-import type { IUserMfaFactorRecord, IUserMfaFactorRepository } from '@grantjs/core';
 
 export class UserMfaFactorRepository
   extends EntityRepository<UserMfaFactorModel, UserMfaFactorModel>

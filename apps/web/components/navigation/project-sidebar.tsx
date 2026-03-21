@@ -1,23 +1,21 @@
 'use client';
 
 import { ComponentProps } from 'react';
-
 import { useParams } from 'next/navigation';
-
+import { useTranslations } from 'next-intl';
 import {
   Building2,
+  CopyCheck,
   Fingerprint,
   FolderOpen,
   Group,
+  KeyRound,
   LayoutGrid,
   Package,
   Shield,
   Tag,
   Users,
-  KeyRound,
-  CopyCheck,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { WorkspaceSwitcher } from '@/components/common';
 import { OrganizationSwitcher } from '@/components/features/organizations';

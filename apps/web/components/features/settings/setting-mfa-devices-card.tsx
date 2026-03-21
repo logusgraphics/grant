@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-
-import { KeyRound, Shield, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { KeyRound, Shield, Trash2 } from 'lucide-react';
 
-import { Actions, type ActionItem } from '@/components/common/actions';
+import { type ActionItem, Actions } from '@/components/common/actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,8 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useMfaDevices, useMfaMutations } from '@/hooks/mfa';
 
 import { SettingCard } from './setting-card';

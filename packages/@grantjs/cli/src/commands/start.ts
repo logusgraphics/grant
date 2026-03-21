@@ -2,6 +2,7 @@ import { exec } from 'node:child_process';
 import { createServer } from 'node:http';
 import { platform } from 'node:os';
 
+import type { Command } from 'commander';
 import inquirer from 'inquirer';
 
 import {
@@ -9,9 +10,9 @@ import {
   exchangeCliCallback,
   fetchOrganizations,
   fetchProjects,
-  loginWithEmail,
   type LoginAccount,
   type LoginResult,
+  loginWithEmail,
   type OrganizationItem,
   type ProjectItem,
 } from '../api/client.js';
@@ -21,9 +22,7 @@ import {
   loadConfigFile,
   saveConfigFile,
 } from '../config/index.js';
-
 import type { GrantConfig, GrantScope } from '../types/config.js';
-import type { Command } from 'commander';
 
 const AUTH_SESSION = 'session';
 const AUTH_API_KEY = 'api-key';

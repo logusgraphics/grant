@@ -2,8 +2,8 @@ import { MILLISECONDS_PER_DAY } from '@grantjs/constants';
 import {
   Grant,
   type IAccountRepository,
-  type IUserRepository,
   type IMeService,
+  type IUserRepository,
 } from '@grantjs/core';
 import {
   Account,

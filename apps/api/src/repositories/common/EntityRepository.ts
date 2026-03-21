@@ -1,7 +1,7 @@
+import type { Schema } from '@grantjs/database';
 import { DbSchema } from '@grantjs/database';
 import { Auditable, Searchable, SortOrder } from '@grantjs/schema';
 import {
-  SQL,
   and,
   asc,
   count,
@@ -13,14 +13,13 @@ import {
   isNull,
   lte,
   or,
+  SQL,
   sql,
 } from 'drizzle-orm';
 
 import { NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
 import { Transaction } from '@/lib/transaction-manager.lib';
-
-import type { Schema } from '@grantjs/database';
 
 interface BaseEntity extends Auditable {
   [key: string]: unknown;

@@ -1,9 +1,7 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-import animate from 'tailwindcss-animate';
-
 import type { Config } from 'tailwindcss';
+import animate from 'tailwindcss-animate';
+import { fileURLToPath } from 'url';
 
 const rootDir =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));

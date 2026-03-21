@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Scope } from '@grantjs/schema';
 import { KeyRound, RotateCw } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   AlertDialog,

@@ -1,9 +1,9 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Tag, User } from '@grantjs/schema';
 import { LogIn, Shield, Tags, UserPlus } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, CardHeader, ScrollBadges } from '@/components/common';
 import { transformTagsToBadges } from '@/lib/tag';

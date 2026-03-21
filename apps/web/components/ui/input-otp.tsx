@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from 'input-otp';
 
 import { cn } from '@/lib/utils';

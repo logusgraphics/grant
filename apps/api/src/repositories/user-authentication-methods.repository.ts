@@ -1,3 +1,4 @@
+import type { IUserAuthenticationMethodRepository } from '@grantjs/core';
 import { UserAuthenticationMethodModel, userAuthenticationMethods, users } from '@grantjs/database';
 import {
   CreateUserAuthenticationMethodInput,
@@ -19,8 +20,6 @@ import {
   FilterCondition,
   RelationsConfig,
 } from './common/EntityRepository';
-
-import type { IUserAuthenticationMethodRepository } from '@grantjs/core';
 
 export class UserAuthenticationMethodRepository
   extends EntityRepository<UserAuthenticationMethodModel, UserAuthenticationMethod>

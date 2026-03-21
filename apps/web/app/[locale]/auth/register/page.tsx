@@ -1,13 +1,11 @@
 'use client';
 
 import { useRef, useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
-
+import { useTranslations } from 'next-intl';
 import { AccountType } from '@grantjs/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, Info } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 

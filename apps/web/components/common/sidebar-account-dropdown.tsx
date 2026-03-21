@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   Building2,
   ChevronsUpDown,
@@ -10,7 +11,6 @@ import {
   User,
   UserCircle,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Avatar,

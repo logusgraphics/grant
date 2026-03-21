@@ -25,7 +25,7 @@ import { useUserMutations } from '@/hooks/users';
 import { getDocsUrl } from '@/lib/constants';
 import { useUsersStore } from '@/stores/users.store';
 
-import { UserCreateFormValues, createUserSchema } from './user-types';
+import { createUserSchema, UserCreateFormValues } from './user-types';
 
 export function UserCreateDialog({
   triggerAlwaysShowLabel,

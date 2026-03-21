@@ -23,7 +23,7 @@ import { useUserMutations } from '@/hooks/users';
 import { getDocsUrl } from '@/lib/constants';
 import { useUsersStore } from '@/stores/users.store';
 
-import { UserEditFormValues, editUserSchema } from './user-types';
+import { editUserSchema, UserEditFormValues } from './user-types';
 
 const mapUserToFormValues = (user: UserType): UserEditFormValues => {
   const metadata = user.metadata ?? null;

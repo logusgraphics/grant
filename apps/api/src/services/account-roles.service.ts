@@ -1,10 +1,17 @@
-import { ROLES, RoleKey } from '@grantjs/constants';
+import { RoleKey, ROLES } from '@grantjs/constants';
+import type {
+  IAccountRepository,
+  IAccountRoleRepository,
+  IAccountRoleService,
+  IAuditLogger,
+  IRoleRepository,
+} from '@grantjs/core';
 import {
-  AddAccountRoleInput,
   AccountRole,
+  AccountType,
+  AddAccountRoleInput,
   RemoveAccountRoleInput,
   Role,
-  AccountType,
 } from '@grantjs/schema';
 
 import { BadRequestError, ConflictError, NotFoundError } from '@/lib/errors';
@@ -12,20 +19,12 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams } from '@/types';
 
 import {
+  accountRoleSchema,
   addAccountRoleInputSchema,
   getAccountRolesParamsSchema,
-  accountRoleSchema,
   removeAccountRoleInputSchema,
 } from './account-roles.schemas';
 import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
-
-import type {
-  IAuditLogger,
-  IAccountRepository,
-  IRoleRepository,
-  IAccountRoleRepository,
-  IAccountRoleService,
-} from '@grantjs/core';
 
 export class AccountRoleService implements IAccountRoleService {
   constructor(

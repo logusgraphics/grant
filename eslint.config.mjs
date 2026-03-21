@@ -1,7 +1,7 @@
 import eslint from '@eslint/js';
 import prettierConfig from 'eslint-config-prettier';
-import importPlugin from 'eslint-plugin-import';
 import reactHooks from 'eslint-plugin-react-hooks';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
@@ -36,8 +36,8 @@ export default defineConfig(
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     plugins: {
       '@typescript-eslint': tseslint.plugin,
+      'simple-import-sort': simpleImportSort,
       'unused-imports': unusedImports,
-      import: importPlugin,
       'react-hooks': reactHooks,
     },
     languageOptions: {
@@ -75,50 +75,21 @@ export default defineConfig(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
 
-      // Import order
-      'import/order': [
+      // Import order — use simple-import-sort (eslint-plugin-import `import/order` crashes on ESLint 10; see import-js/eslint-plugin-import#3227)
+      'simple-import-sort/imports': [
         'error',
         {
           groups: [
-            'builtin',
-            'external',
-            'internal',
-            'parent',
-            'sibling',
-            'index',
-            'object',
-            'type',
+            ['^\\u0000'],
+            ['^node:'],
+            ['^react$', '^react-dom$', '^react/', '^next', '^@?\\w'],
+            ['^@/'],
+            ['^'],
+            ['^\\.'],
           ],
-          pathGroups: [
-            {
-              pattern: 'react',
-              group: 'external',
-              position: 'before',
-            },
-            {
-              pattern: 'next',
-              group: 'external',
-              position: 'before',
-            },
-            {
-              pattern: 'next/**',
-              group: 'external',
-              position: 'before',
-            },
-            {
-              pattern: '@/**',
-              group: 'internal',
-              position: 'after',
-            },
-          ],
-          pathGroupsExcludedImportTypes: ['react', 'builtin'],
-          'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
         },
       ],
+      'simple-import-sort/exports': 'error',
     },
   },
 

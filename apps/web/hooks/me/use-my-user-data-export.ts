@@ -1,6 +1,6 @@
+import { useTranslations } from 'next-intl';
 import { useLazyQuery } from '@apollo/client/react';
 import { MyUserDataExportDocument, UserDataExport } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 interface UseMyUserDataExportResult {

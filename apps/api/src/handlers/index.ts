@@ -1,3 +1,5 @@
+import type { Grant, ITransactionalConnection } from '@grantjs/core';
+
 import { IEntityCacheAdapter } from '@/lib/cache';
 import type { Transaction } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
@@ -19,8 +21,6 @@ import { RoleHandler } from './roles.handler';
 import { SigningKeysHandler } from './signing-keys.handler';
 import { TagHandler } from './tags.handler';
 import { UserHandler } from './users.handler';
-
-import type { Grant, ITransactionalConnection } from '@grantjs/core';
 
 export type Handlers = ReturnType<typeof createHandlers>;
 

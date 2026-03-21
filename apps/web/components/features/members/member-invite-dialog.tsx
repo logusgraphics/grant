@@ -1,14 +1,13 @@
 'use client';
 
 import { useMemo, useRef } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { canAssignRole } from '@grantjs/constants';
 import { Role } from '@grantjs/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, Mail } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -43,9 +42,9 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useMembersStore } from '@/stores/members.store';
 
 import {
+  inviteMemberSchema,
   MemberInviteDialogProps,
   MemberInviteFormValues,
-  inviteMemberSchema,
 } from './member-types';
 
 export function MemberInviteDialog({ open, onOpenChange, onSuccess }: MemberInviteDialogProps) {

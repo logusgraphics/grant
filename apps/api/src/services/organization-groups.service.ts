@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IGroupRepository,
+  IOrganizationGroupRepository,
+  IOrganizationGroupService,
+  IOrganizationRepository,
+} from '@grantjs/core';
 import {
   AddOrganizationGroupInput,
   OrganizationGroup,
@@ -15,14 +22,6 @@ import {
   organizationGroupSchema,
   removeOrganizationGroupInputSchema,
 } from './organization-groups.schemas';
-
-import type {
-  IAuditLogger,
-  IGroupRepository,
-  IOrganizationGroupRepository,
-  IOrganizationGroupService,
-  IOrganizationRepository,
-} from '@grantjs/core';
 
 export class OrganizationGroupService implements IOrganizationGroupService {
   constructor(

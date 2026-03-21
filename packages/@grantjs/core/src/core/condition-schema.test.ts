@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import { ComparisonOperator, LogicalOperator } from '../types';
-
 import { permissionConditionSchema } from './condition-schema';
 
 describe('permissionConditionSchema', () => {

@@ -16,8 +16,8 @@ import {
   generateTotpSecret,
   verifyTotpCode,
 } from '@/lib/mfa.lib';
-import { Transaction } from '@/lib/transaction-manager.lib';
 import { generateRandomBytes, hashSecret, verifySecret } from '@/lib/token.lib';
+import { Transaction } from '@/lib/transaction-manager.lib';
 
 export class UserMfaService implements IUserMfaService {
   constructor(

@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IGroupRepository,
+  IGroupTagRepository,
+  IGroupTagService,
+  ITagRepository,
+} from '@grantjs/core';
 import {
   AddGroupTagInput,
   GroupTag,
@@ -19,14 +26,6 @@ import {
   removeGroupTagsInputSchema,
   updateGroupTagInputSchema,
 } from './group-tags.schemas';
-
-import type {
-  IAuditLogger,
-  IGroupRepository,
-  IGroupTagRepository,
-  IGroupTagService,
-  ITagRepository,
-} from '@grantjs/core';
 
 export class GroupTagService implements IGroupTagService {
   constructor(

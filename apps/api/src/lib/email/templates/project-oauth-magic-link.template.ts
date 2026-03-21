@@ -1,10 +1,9 @@
+import type { SendProjectOAuthMagicLinkParams } from '@grantjs/core';
 import { SupportedLocale } from '@grantjs/i18n';
 
 import { defaultLocale, translateStatic } from '@/i18n';
 
 import { createAlternativeLink, createButton, renderBaseEmailTemplate } from './base.mjml';
-
-import type { SendProjectOAuthMagicLinkParams } from '@grantjs/core';
 
 const PROJECT_OAUTH_MAGIC_LINK_KEYS = {
   subject: 'email.projectOAuthMagicLink.subject',

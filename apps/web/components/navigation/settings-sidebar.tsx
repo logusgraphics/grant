@@ -1,9 +1,8 @@
 'use client';
 
 import { ComponentProps } from 'react';
-
-import { Building2, Lock, Shield, User, UserCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Building2, Lock, Shield, User, UserCircle } from 'lucide-react';
 
 import { Sidebar } from '@/components/ui/sidebar';
 

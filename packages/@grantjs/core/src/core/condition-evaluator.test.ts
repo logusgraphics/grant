@@ -3,11 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ComparisonOperator,
-  LogicalOperator,
   type ConditionExpression,
   type ExecutionContext,
+  LogicalOperator,
 } from '../types';
-
 import { ConditionEvaluator } from './condition-evaluator';
 
 describe('ConditionEvaluator', () => {

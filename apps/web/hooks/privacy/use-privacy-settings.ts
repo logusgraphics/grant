@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useLazyQuery, useMutation } from '@apollo/client/react';
 import {
   DeleteMyAccountsDocument,
@@ -7,7 +7,6 @@ import {
   MyUserDataExportDocument,
   MyUserDataExportQuery,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { useRouter } from '@/i18n/navigation';

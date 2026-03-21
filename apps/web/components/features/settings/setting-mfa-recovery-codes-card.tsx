@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-
-import { AlertTriangle, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { AlertTriangle, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

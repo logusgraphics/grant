@@ -1,21 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useMemo } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Group, Role, Tag, User } from '@grantjs/schema';
 import { Group as GroupIcon, Users } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Avatar,
   DataTable,
+  type DataTableColumnConfig,
   Pagination,
   RefreshButton,
   ScrollBadges,
-  Toolbar,
-  type DataTableColumnConfig,
   type TableSkeletonColumnConfig,
+  Toolbar,
 } from '@/components/common';
 import { useProjectUserScope } from '@/hooks/common/use-project-user-scope';
 import { useRoles } from '@/hooks/roles';

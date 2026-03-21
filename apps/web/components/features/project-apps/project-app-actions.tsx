@@ -1,17 +1,15 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
+import type { ProjectApp, Scope } from '@grantjs/schema';
 import { FlaskConical, Pencil, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
-import { Actions, type ActionItem } from '@/components/common';
+import { type ActionItem, Actions } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useProjectAppsStore } from '@/stores/project-apps.store';
-
-import type { ProjectApp, Scope } from '@grantjs/schema';
 
 export interface ProjectAppActionsProps {
   projectApp: ProjectApp;

@@ -1,4 +1,5 @@
 import { ROLES } from '@grantjs/constants';
+import type { IAuditLogger, IRoleRepository, IRoleService } from '@grantjs/core';
 import {
   CreateRoleInput,
   MutationDeleteRoleArgs,
@@ -25,8 +26,6 @@ import {
   roleSchema,
   updateRoleArgsSchema,
 } from './roles.schemas';
-
-import type { IAuditLogger, IRoleRepository, IRoleService } from '@grantjs/core';
 
 export class RoleService implements IRoleService {
   constructor(

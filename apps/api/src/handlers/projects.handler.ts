@@ -1,3 +1,16 @@
+import type {
+  IAccountProjectService,
+  IAccountProjectTagService,
+  IOrganizationProjectService,
+  IOrganizationProjectTagService,
+  IProjectGroupService,
+  IProjectPermissionService,
+  IProjectRoleService,
+  IProjectService,
+  IProjectTagService,
+  IProjectUserService,
+  ITransactionalConnection,
+} from '@grantjs/core';
 import {
   MutationCreateProjectArgs,
   MutationDeleteProjectArgs,
@@ -14,20 +27,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IAccountProjectService,
-  IAccountProjectTagService,
-  IOrganizationProjectService,
-  IOrganizationProjectTagService,
-  IProjectGroupService,
-  IProjectPermissionService,
-  IProjectRoleService,
-  IProjectService,
-  IProjectTagService,
-  IProjectUserService,
-  ITransactionalConnection,
-} from '@grantjs/core';
 
 export class ProjectHandler extends CacheHandler {
   constructor(

@@ -1,9 +1,8 @@
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { grantPlugin, grant, type AuthorizedFastifyRequest } from '../../fastify/plugin';
+import { type AuthorizedFastifyRequest, grant, grantPlugin } from '../../fastify/plugin';
 import { GrantClient } from '../../grant-client';
-
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 describe('Fastify Grant Plugin', () => {
   let client: GrantClient;

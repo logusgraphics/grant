@@ -1,10 +1,10 @@
-import type { Handlers } from '@/handlers';
-import type { ResourceResolvers } from '@/resource-resolvers';
-import type { Services } from '@/services';
-
 import type { Grant, GrantAuth, ILogger } from '@grantjs/core';
 import type { DbSchema } from '@grantjs/database';
 import type { SupportedLocale } from '@grantjs/i18n';
+
+import type { Handlers } from '@/handlers';
+import type { ResourceResolvers } from '@/resource-resolvers';
+import type { Services } from '@/services';
 
 export interface RequestContext {
   grant: Grant;

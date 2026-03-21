@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { OrganizationInvitationStatus } from '@grantjs/schema';
 import { UserCheck } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Avatar,

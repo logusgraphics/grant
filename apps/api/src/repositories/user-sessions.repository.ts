@@ -1,8 +1,9 @@
+import type { IUserSessionRepository } from '@grantjs/core';
 import {
-  UserSessionModel,
   userAuthenticationMethods,
-  userSessions,
   users,
+  UserSessionModel,
+  userSessions,
 } from '@grantjs/database';
 import {
   CreateUserSessionInput,
@@ -27,8 +28,6 @@ import {
   FilterCondition,
   RelationsConfig,
 } from './common/EntityRepository';
-
-import type { IUserSessionRepository } from '@grantjs/core';
 
 export class UserSessionRepository
   extends EntityRepository<UserSessionModel, UserSession>

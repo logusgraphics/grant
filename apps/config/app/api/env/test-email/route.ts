@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { EmailFactory } from '@grantjs/email';
 
 import { emailTestTemplates } from '@/lib/email-test-templates';

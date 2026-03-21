@@ -2,7 +2,6 @@
  * User-domain service port interfaces.
  * Covers: User, UserRole, UserTag, UserSession, UserAuthenticationMethod.
  */
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddUserRoleInput,
   AddUserTagInput,
@@ -29,6 +28,8 @@ import type {
   UserSessionPage,
   UserTag,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
 
 // ---------------------------------------------------------------------------
 // Shared

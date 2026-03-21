@@ -1,3 +1,4 @@
+import type { IProjectRoleRepository } from '@grantjs/core';
 import { ProjectRoleModel, projectRoles } from '@grantjs/database';
 import {
   AddProjectRoleInput,
@@ -8,8 +9,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IProjectRoleRepository } from '@grantjs/core';
 
 export class ProjectRoleRepository
   extends PivotRepository<ProjectRoleModel, ProjectRole>

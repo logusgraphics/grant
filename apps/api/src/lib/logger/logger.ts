@@ -1,15 +1,14 @@
+import type { ILogger } from '@grantjs/core';
 import {
-  PinoLoggerFactory,
   configureLogger,
   createContextLogger,
   createLogger,
   getLogger,
   getRawPinoLogger,
+  PinoLoggerFactory,
 } from '@grantjs/logger';
 
 import { config } from '@/config';
-
-import type { ILogger } from '@grantjs/core';
 
 // Configure the shared logger with API-specific settings at import time
 configureLogger({

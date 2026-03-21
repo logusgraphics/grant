@@ -3,11 +3,11 @@
 import {
   getResourceDefinition,
   getResourceSlugs,
-  ROLE_KEYS,
   GROUP_DEFINITIONS,
   PERMISSION_MAPPINGS,
-  type RoleKey,
   type ResourceSlug,
+  ROLE_KEYS,
+  type RoleKey,
   ROLES,
 } from '@grantjs/constants';
 import { getEnv, resolveDatabaseUrl } from '@grantjs/env';

@@ -1,5 +1,4 @@
 import { type ReactNode } from 'react';
-
 import { z } from 'zod';
 
 export interface BaseEntity {

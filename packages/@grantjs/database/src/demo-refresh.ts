@@ -3,11 +3,10 @@ import crypto from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { reset } from 'drizzle-seed';
 
+import type { DbSchema } from './connection';
 import { signingKeys, users } from './schemas';
 import { resetTables } from './scripts/reset-db';
 import { seedAll } from './scripts/seed-permissions';
-
-import type { DbSchema } from './connection';
 
 const SYSTEM_SCOPE_TENANT = 'system';
 

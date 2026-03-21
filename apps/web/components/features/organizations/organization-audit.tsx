@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Organization } from '@grantjs/schema';
 import { Calendar, Clock, Fingerprint } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { Audit, type AuditField } from '@/components/common';
 import { formatTimestamp } from '@/lib/utils';

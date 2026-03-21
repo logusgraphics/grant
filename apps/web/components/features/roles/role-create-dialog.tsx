@@ -25,7 +25,7 @@ import { useTags } from '@/hooks/tags';
 import { getDocsUrl } from '@/lib/constants';
 import { useRolesStore } from '@/stores/roles.store';
 
-import { RoleCreateFormValues, createRoleSchema } from './role-types';
+import { createRoleSchema, RoleCreateFormValues } from './role-types';
 
 export function RoleCreateDialog({
   triggerAlwaysShowLabel,

@@ -1,18 +1,16 @@
 'use client';
 
 import React from 'react';
-
 import { useParams } from 'next/navigation';
-
 import { useTranslations } from 'next-intl';
 
 import {
+  Breadcrumb as BreadcrumbRoot,
   BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  Breadcrumb as BreadcrumbRoot,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import {

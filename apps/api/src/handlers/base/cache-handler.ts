@@ -1,11 +1,3 @@
-import { createHash } from 'crypto';
-
-import { AccountTag, AuthorizationResult, Scope, Tenant } from '@grantjs/schema';
-
-import { AUTH_RESULT_CACHE_KEY_PREFIX } from '@/constants/cache.constants';
-import { CacheKey, ICacheAdapter, IEntityCacheAdapter } from '@/lib/cache';
-import { BadRequestError } from '@/lib/errors';
-
 import type {
   IAccountProjectApiKeyService,
   IAccountProjectService,
@@ -28,6 +20,12 @@ import type {
   IScopedIdProvider,
   IUserRoleService,
 } from '@grantjs/core';
+import { AccountTag, AuthorizationResult, Scope, Tenant } from '@grantjs/schema';
+import { createHash } from 'crypto';
+
+import { AUTH_RESULT_CACHE_KEY_PREFIX } from '@/constants/cache.constants';
+import { CacheKey, ICacheAdapter, IEntityCacheAdapter } from '@/lib/cache';
+import { BadRequestError } from '@/lib/errors';
 
 /**
  * Narrow subset of Services used by CacheHandler for scope-resolution.

@@ -1,7 +1,6 @@
 'use client';
 
 import { ComponentProps, ReactNode, useCallback } from 'react';
-
 import { LucideIcon } from 'lucide-react';
 
 import { SidebarAccountDropdown } from '@/components/common';

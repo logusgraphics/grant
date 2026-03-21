@@ -1,5 +1,5 @@
-import { OrganizationMemberSortableField, SortOrder } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { OrganizationMemberSortableField, SortOrder } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 import { useMembersStore } from '@/stores/members.store';

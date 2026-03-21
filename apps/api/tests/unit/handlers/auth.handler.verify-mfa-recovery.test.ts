@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthHandler } from '@/handlers/auth.handler';
-
 import { AuthenticationError } from '@/lib/errors';
 
 const mockUserAuthenticationMethods = {

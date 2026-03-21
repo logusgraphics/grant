@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-
-import { Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Upload } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import Cropper, { Area } from 'react-easy-crop';
 

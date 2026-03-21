@@ -2,8 +2,6 @@
  * Project-app (OAuth app per project) service port.
  * Covers: ProjectApp, ProjectAppTag.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddProjectAppTagInput,
   CreateProjectAppInput,
@@ -17,6 +15,9 @@ import type {
   UpdateProjectAppInput,
   UpdateProjectAppTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 export interface IProjectAppService {
   getProjectApps(

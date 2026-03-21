@@ -2,7 +2,6 @@
  * Account-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   Account,
   AccountPage,
@@ -31,6 +30,8 @@ import type {
   UpdateAccountProjectTagInput,
   UpdateAccountTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IAccountRepository {
   getAccounts(

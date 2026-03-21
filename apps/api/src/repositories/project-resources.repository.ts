@@ -1,3 +1,4 @@
+import type { IProjectResourceRepository } from '@grantjs/core';
 import { ProjectResourceModel, projectResources } from '@grantjs/database';
 import {
   AddProjectResourceInput,
@@ -8,8 +9,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IProjectResourceRepository } from '@grantjs/core';
 
 export class ProjectResourceRepository
   extends PivotRepository<ProjectResourceModel, ProjectResource>

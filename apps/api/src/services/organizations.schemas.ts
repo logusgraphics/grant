@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 import {
+  baseEntitySchema,
+  deleteSchema,
   idSchema,
   nameSchema,
-  slugSchema,
-  baseEntitySchema,
-  paginatedResponseSchema,
   nonEmptyNameSchema,
-  sortOrderSchema,
+  paginatedResponseSchema,
   queryParamsSchema,
-  deleteSchema,
   scopeSchema,
+  slugSchema,
+  sortOrderSchema,
 } from './common/schemas';
 
 export const organizationSortableFieldSchema = z.enum(['name', 'slug', 'createdAt', 'updatedAt']);

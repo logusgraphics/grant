@@ -6,7 +6,6 @@ import {
   TokenInvalidError,
   TokenValidationError,
 } from '../errors/grant-exception';
-
 import type { ITokenProvider } from '../ports/token.port';
 import type { ApiKeyTokenPayload, GrantService, SessionSigningKey, TokenClaims } from '../types';
 

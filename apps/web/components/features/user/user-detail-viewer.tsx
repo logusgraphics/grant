@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-
 import { useParams } from 'next/navigation';
-
 import { useTranslations } from 'next-intl';
 
 import { ApiKeys } from '@/components/features/api-keys';

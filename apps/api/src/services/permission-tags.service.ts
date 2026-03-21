@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IPermissionRepository,
+  IPermissionTagRepository,
+  IPermissionTagService,
+  ITagRepository,
+} from '@grantjs/core';
 import {
   AddPermissionTagInput,
   PermissionTag,
@@ -19,14 +26,6 @@ import {
   removePermissionTagsInputSchema,
   updatePermissionTagInputSchema,
 } from './permission-tags.schemas';
-
-import type {
-  IAuditLogger,
-  IPermissionRepository,
-  IPermissionTagRepository,
-  IPermissionTagService,
-  ITagRepository,
-} from '@grantjs/core';
 
 export class PermissionTagService implements IPermissionTagService {
   constructor(

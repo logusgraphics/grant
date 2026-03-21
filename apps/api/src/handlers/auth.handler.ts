@@ -1,3 +1,16 @@
+import type {
+  IAccountRoleService,
+  IAccountService,
+  IAuthService,
+  IEmailService,
+  ILogger,
+  ITransactionalConnection,
+  IUserAuthenticationMethodService,
+  IUserMfaService,
+  IUserRoleService,
+  IUserService,
+  IUserSessionService,
+} from '@grantjs/core';
 import { SupportedLocale } from '@grantjs/i18n';
 import {
   AccountType,
@@ -32,20 +45,6 @@ import { getVerificationExpirationMs, getVerificationExpiryDate } from '@/lib/ve
 import { Otp } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IAccountRoleService,
-  IAccountService,
-  IAuthService,
-  IEmailService,
-  ILogger,
-  ITransactionalConnection,
-  IUserAuthenticationMethodService,
-  IUserRoleService,
-  IUserMfaService,
-  IUserSessionService,
-  IUserService,
-} from '@grantjs/core';
 
 export class AuthHandler extends CacheHandler {
   protected readonly logger = createLogger('AuthHandler');

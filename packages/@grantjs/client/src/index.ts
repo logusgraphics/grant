@@ -3,16 +3,16 @@ export { GrantClient } from './grant-client';
 
 // Types
 export type {
-  GrantClientConfig,
+  ApiError,
+  AuthorizationResult,
   AuthTokens,
   CacheOptions,
-  AuthorizationResult,
-  PermissionQueryOptions,
+  GrantClientConfig,
   Permission,
+  PermissionQueryOptions,
   Resource,
-  ApiError,
-  SignInWithProjectAppOptions,
   // Re-exported from @grantjs/schema
   Scope,
+  SignInWithProjectAppOptions,
   Tenant,
 } from './types';

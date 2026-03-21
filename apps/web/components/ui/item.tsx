@@ -1,5 +1,4 @@
 import * as React from 'react';
-
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
@@ -107,4 +106,4 @@ function ItemDescription({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-export { Item, ItemGroup, ItemMedia, ItemContent, ItemTitle, ItemDescription };
+export { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle };

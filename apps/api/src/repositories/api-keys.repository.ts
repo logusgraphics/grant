@@ -1,3 +1,4 @@
+import type { IApiKeyRepository } from '@grantjs/core';
 import { ApiKeyModel, apiKeys, users } from '@grantjs/database';
 import {
   ApiKey,
@@ -18,8 +19,6 @@ import {
   FilterCondition,
   RelationsConfig,
 } from './common/EntityRepository';
-
-import type { IApiKeyRepository } from '@grantjs/core';
 
 export class ApiKeyRepository
   extends EntityRepository<ApiKeyModel, ApiKey>

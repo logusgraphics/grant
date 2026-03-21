@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IOrganizationPermissionRepository,
+  IOrganizationPermissionService,
+  IOrganizationRepository,
+  IPermissionRepository,
+} from '@grantjs/core';
 import {
   AddOrganizationPermissionInput,
   OrganizationPermission,
@@ -16,14 +23,6 @@ import {
   queryOrganizationPermissionsArgsSchema,
   removeOrganizationPermissionInputSchema,
 } from './organization-permissions.schemas';
-
-import type {
-  IAuditLogger,
-  IOrganizationPermissionRepository,
-  IOrganizationPermissionService,
-  IOrganizationRepository,
-  IPermissionRepository,
-} from '@grantjs/core';
 
 export class OrganizationPermissionService implements IOrganizationPermissionService {
   constructor(

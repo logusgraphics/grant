@@ -5,8 +5,8 @@ import {
   createProjectResourceResolver,
   ProjectResourceData,
 } from './project.resolver';
-import { TagResourceData, createTagResourceResolver } from './tag.resolver';
-import { UserResourceData, createUserResourceResolver } from './user.resolver';
+import { createTagResourceResolver, TagResourceData } from './tag.resolver';
+import { createUserResourceResolver, UserResourceData } from './user.resolver';
 
 export type ResourceResolvers = ReturnType<typeof createResourceResolvers>;
 

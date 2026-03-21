@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Project } from '@grantjs/schema';
 import { FolderOpen, Tags } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, ScrollBadges } from '@/components/common';
 import { useProjectTags } from '@/hooks/common';

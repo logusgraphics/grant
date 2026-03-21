@@ -1,3 +1,4 @@
+import type { IUserRoleRepository } from '@grantjs/core';
 import { UserRoleModel, userRoles } from '@grantjs/database';
 import {
   AddUserRoleInput,
@@ -8,8 +9,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IUserRoleRepository } from '@grantjs/core';
 
 export class UserRoleRepository
   extends PivotRepository<UserRoleModel, UserRole>

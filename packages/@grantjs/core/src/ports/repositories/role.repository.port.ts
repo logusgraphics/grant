@@ -2,15 +2,14 @@
  * Role-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   AddRoleGroupInput,
   AddRoleTagInput,
   CreateRoleInput,
   MutationDeleteRoleArgs,
   QueryRoleGroupsInput,
-  QueryRoleTagsInput,
   QueryRolesArgs,
+  QueryRoleTagsInput,
   RemoveRoleGroupInput,
   RemoveRoleTagInput,
   Role,
@@ -20,6 +19,8 @@ import type {
   UpdateRoleInput,
   UpdateRoleTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IRoleRepository {
   getRoles(

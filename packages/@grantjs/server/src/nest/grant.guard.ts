@@ -12,14 +12,13 @@ import { Reflector } from '@nestjs/core';
 import { GrantClient } from '../grant-client';
 import { debugGrant } from '../utils/debug';
 import { extractTokenFromRequest } from '../utils/token-extractor';
-
 import { GRANT_OPTIONS_KEY } from './grant.decorator';
 import { GRANT_CLIENT } from './grant.module';
 
 /** Injection token for GrantGuard. Use with @UseGuards(GRANT_GUARD) so Nest resolves the guard from the container (with GrantClient injected). */
 export const GRANT_GUARD = 'GrantGuard';
 
-import type { ResourceResolver, AuthorizationResult } from '../types';
+import type { AuthorizationResult, ResourceResolver } from '../types';
 import type { GrantOptions } from './grant.decorator';
 
 /**

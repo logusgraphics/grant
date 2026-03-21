@@ -1,7 +1,7 @@
 'use client';
 
-import { LucideIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LucideIcon } from 'lucide-react';
 
 import { FormDialog, FormDialogProps } from '@/components/common/form-dialog';
 import { Button } from '@/components/ui/button';

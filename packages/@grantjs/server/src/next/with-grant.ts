@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { GrantClient } from '../grant-client';
+import type { AuthorizationResult, ResourceResolver } from '../types';
 import { debugGrant } from '../utils/debug';
 import { extractTokenFromRequest } from '../utils/token-extractor';
-
-import type { ResourceResolver, AuthorizationResult } from '../types';
 
 /**
  * Options for Next.js route handler guard

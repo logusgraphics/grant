@@ -1,13 +1,14 @@
+import type { IProjectRepository } from '@grantjs/core';
 import {
-  ProjectModel,
   accountProjectTags,
   projectGroups,
+  ProjectModel,
   projectPermissions,
   projectResources,
   projectRoles,
+  projects,
   projectTags,
   projectUsers,
-  projects,
 } from '@grantjs/database';
 import { organizationProjectTags } from '@grantjs/database/src/schemas/organization-project-tags.schema';
 import {
@@ -38,8 +39,6 @@ import {
   RelationsConfig,
 } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IProjectRepository } from '@grantjs/core';
 
 export class ProjectRepository
   extends EntityRepository<ProjectModel, Project>

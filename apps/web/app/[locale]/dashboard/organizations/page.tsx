@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-
-import { AccountType } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { AccountType } from '@grantjs/schema';
 
 import {
   OrganizationDeleteDialog,

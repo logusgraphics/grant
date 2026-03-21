@@ -1,7 +1,7 @@
 'use client';
 
-import { ShieldX, Home, ArrowLeft, LogIn } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ArrowLeft, Home, LogIn, ShieldX } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { usePageTitle } from '@/hooks';

@@ -3,8 +3,6 @@
  * Covers: Account, AccountProject, AccountRole, AccountTag,
  *         AccountProjectTag, AccountProjectApiKey.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   Account,
   AccountPage,
@@ -28,6 +26,9 @@ import type {
   Role,
   UpdateAccountProjectTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // IAccountService

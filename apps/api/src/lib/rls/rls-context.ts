@@ -1,4 +1,4 @@
-import { Tenant, type Scope } from '@grantjs/schema';
+import { type Scope, Tenant } from '@grantjs/schema';
 import { sql } from 'drizzle-orm';
 
 import { config } from '@/config';

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import Redis from 'ioredis';
 
 import { redisTestParamsSchema } from '@/lib/env-schemas';

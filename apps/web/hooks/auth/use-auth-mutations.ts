@@ -1,11 +1,13 @@
+import { useTranslations } from 'next-intl';
 import { useMutation } from '@apollo/client/react';
 import {
   AccountType,
   CreateAccountResult,
   LoginDocument,
   LoginResponse,
-  RegisterDocument,
   RefreshSessionDocument,
+  RefreshSessionResponse,
+  RegisterDocument,
   RequestPasswordResetDocument,
   RequestPasswordResetResponse,
   ResendVerificationDocument,
@@ -16,9 +18,7 @@ import {
   UserAuthenticationMethodProvider,
   VerifyEmailDocument,
   VerifyEmailResponse,
-  RefreshSessionResponse,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/stores/auth.store';

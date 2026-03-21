@@ -23,7 +23,7 @@ import { useTags } from '@/hooks/tags';
 import { slugifyAction } from '@/lib/slugify';
 import { useResourcesStore } from '@/stores/resources.store';
 
-import { ResourceCreateFormValues, createResourceSchema } from './resource-types';
+import { createResourceSchema, ResourceCreateFormValues } from './resource-types';
 
 export function ResourceCreateDialog({
   triggerAlwaysShowLabel,

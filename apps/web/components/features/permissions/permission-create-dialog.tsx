@@ -22,7 +22,7 @@ import { useTags } from '@/hooks/tags';
 import { getDocsUrl } from '@/lib/constants';
 import { usePermissionsStore } from '@/stores/permissions.store';
 
-import { PermissionCreateFormValues, createPermissionSchema } from './permission-types';
+import { createPermissionSchema, PermissionCreateFormValues } from './permission-types';
 
 export function PermissionCreateDialog({
   triggerAlwaysShowLabel,

@@ -1,18 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
-
-import { Check, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Check, User } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-  getProjectConsentInfo,
   approveProjectConsent,
   denyProjectConsent,
+  getProjectConsentInfo,
   type ProjectConsentInfo,
 } from '@/lib/project-oauth-api';
 

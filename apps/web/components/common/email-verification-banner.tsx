@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-import { AlertTriangle, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { AlertTriangle, X } from 'lucide-react';
 
 import { EmailVerificationFeaturesDialog } from '@/components/common/email-verification-features-dialog';
 import { Button } from '@/components/ui/button';

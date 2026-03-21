@@ -1,3 +1,4 @@
+import type { IOrganizationProjectTagRepository } from '@grantjs/core';
 import {
   OrganizationProjectTagModel,
   organizationProjectTags,
@@ -12,8 +13,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IOrganizationProjectTagRepository } from '@grantjs/core';
 
 export class OrganizationProjectTagRepository
   extends PivotRepository<OrganizationProjectTagModel, OrganizationProjectTag>

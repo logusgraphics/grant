@@ -2,7 +2,6 @@
  * Group-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   AddGroupPermissionInput,
   AddGroupTagInput,
@@ -13,13 +12,15 @@ import type {
   GroupTag,
   MutationDeleteGroupArgs,
   QueryGroupPermissionsInput,
-  QueryGroupTagsInput,
   QueryGroupsArgs,
+  QueryGroupTagsInput,
   RemoveGroupPermissionInput,
   RemoveGroupTagInput,
   UpdateGroupInput,
   UpdateGroupTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IGroupRepository {
   getGroups(

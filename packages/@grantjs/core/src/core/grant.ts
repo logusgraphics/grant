@@ -6,11 +6,6 @@ import {
   TokenType,
 } from '@grantjs/schema';
 
-import { getAalFromTokenClaims } from './aal';
-import { ConditionEvaluator } from './condition-evaluator';
-import { PermissionChecker } from './permission-checker';
-import { TokenManager } from './token-manager';
-
 import type { ITokenProvider } from '../ports/token.port';
 import type {
   ApiKeyTokenPayload,
@@ -19,6 +14,10 @@ import type {
   GrantService,
   TokenClaims,
 } from '../types';
+import { getAalFromTokenClaims } from './aal';
+import { ConditionEvaluator } from './condition-evaluator';
+import { PermissionChecker } from './permission-checker';
+import { TokenManager } from './token-manager';
 
 export class Grant {
   private conditionEvaluator: ConditionEvaluator;

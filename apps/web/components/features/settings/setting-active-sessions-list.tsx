@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-
-import { AlertCircle, LogOut, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { AlertCircle, LogOut, Monitor, Smartphone, Tablet } from 'lucide-react';
 
-import { RefreshButton, Search, Toolbar, Pagination } from '@/components/common';
+import { Pagination, RefreshButton, Search, Toolbar } from '@/components/common';
 import { SettingCard } from '@/components/features/settings';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {

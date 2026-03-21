@@ -1,6 +1,13 @@
+import type {
+  IAuditLogger,
+  IProjectRepository,
+  IProjectTagRepository,
+  IProjectTagService,
+  ITagRepository,
+} from '@grantjs/core';
 import {
-  ProjectTag,
   AddProjectTagInput,
+  ProjectTag,
   RemoveProjectTagInput,
   UpdateProjectTagInput,
 } from '@grantjs/schema';
@@ -9,23 +16,15 @@ import { ConflictError, NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams } from '@/types';
 
-import { validateInput, validateOutput, createDynamicSingleSchema } from './common';
+import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
 import {
+  addProjectTagInputSchema,
+  getProjectTagsIntersectionSchema,
   getProjectTagsParamsSchema,
   projectTagSchema,
-  addProjectTagInputSchema,
   removeProjectTagInputSchema,
-  getProjectTagsIntersectionSchema,
   updateProjectTagInputSchema,
 } from './project-tags.schemas';
-
-import type {
-  IAuditLogger,
-  IProjectRepository,
-  IProjectTagRepository,
-  IProjectTagService,
-  ITagRepository,
-} from '@grantjs/core';
 
 export class ProjectTagService implements IProjectTagService {
   constructor(

@@ -1,21 +1,3 @@
-import {
-  OrganizationTag,
-  AddOrganizationTagInput,
-  RemoveOrganizationTagInput,
-} from '@grantjs/schema';
-
-import { ConflictError, NotFoundError } from '@/lib/errors';
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { DeleteParams } from '@/types';
-
-import { validateInput, validateOutput, createDynamicSingleSchema } from './common';
-import {
-  getOrganizationTagsParamsSchema,
-  organizationTagSchema,
-  addOrganizationTagInputSchema,
-  removeOrganizationTagInputSchema,
-} from './organization-tags.schemas';
-
 import type {
   IAuditLogger,
   IOrganizationRepository,
@@ -23,6 +5,23 @@ import type {
   IOrganizationTagService,
   ITagRepository,
 } from '@grantjs/core';
+import {
+  AddOrganizationTagInput,
+  OrganizationTag,
+  RemoveOrganizationTagInput,
+} from '@grantjs/schema';
+
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { DeleteParams } from '@/types';
+
+import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
+import {
+  addOrganizationTagInputSchema,
+  getOrganizationTagsParamsSchema,
+  organizationTagSchema,
+  removeOrganizationTagInputSchema,
+} from './organization-tags.schemas';
 
 export class OrganizationTagService implements IOrganizationTagService {
   constructor(

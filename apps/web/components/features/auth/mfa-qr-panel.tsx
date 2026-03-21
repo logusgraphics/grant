@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-import QRCode from 'qrcode';
-import { Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Copy } from 'lucide-react';
+import QRCode from 'qrcode';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';

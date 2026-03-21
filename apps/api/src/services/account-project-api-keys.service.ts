@@ -1,3 +1,11 @@
+import type {
+  IAccountProjectApiKeyRepository,
+  IAccountProjectApiKeyService,
+  IAccountProjectRepository,
+  IAccountRoleRepository,
+  IAuditLogger,
+  IUserRoleRepository,
+} from '@grantjs/core';
 import { GrantAuth } from '@grantjs/core';
 import { AccountProjectApiKey } from '@grantjs/schema';
 
@@ -10,15 +18,6 @@ import {
   getAccountProjectApiKeysParamsSchema,
 } from './account-project-api-keys.schemas';
 import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
-
-import type {
-  IAuditLogger,
-  IAccountProjectRepository,
-  IAccountRoleRepository,
-  IAccountProjectApiKeyRepository,
-  IUserRoleRepository,
-  IAccountProjectApiKeyService,
-} from '@grantjs/core';
 
 export class AccountProjectApiKeyService implements IAccountProjectApiKeyService {
   constructor(

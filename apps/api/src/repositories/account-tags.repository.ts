@@ -1,3 +1,4 @@
+import type { IAccountTagRepository } from '@grantjs/core';
 import { AccountTagModel, accountTags } from '@grantjs/database';
 import {
   AccountTag,
@@ -9,8 +10,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IAccountTagRepository } from '@grantjs/core';
 
 export class AccountTagsRepository
   extends PivotRepository<AccountTagModel, AccountTag>

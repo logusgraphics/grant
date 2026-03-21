@@ -1,3 +1,11 @@
+import type {
+  IAccountProjectTagRepository,
+  IAccountProjectTagService,
+  IAccountRepository,
+  IAuditLogger,
+  IProjectRepository,
+  ITagRepository,
+} from '@grantjs/core';
 import {
   AccountProjectTag,
   AddAccountProjectTagInput,
@@ -19,15 +27,6 @@ import {
   updateAccountProjectTagInputSchema,
 } from './account-project-tags.schema';
 import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
-
-import type {
-  IAuditLogger,
-  IAccountRepository,
-  IProjectRepository,
-  ITagRepository,
-  IAccountProjectTagRepository,
-  IAccountProjectTagService,
-} from '@grantjs/core';
 
 export class AccountProjectTagService implements IAccountProjectTagService {
   constructor(

@@ -1,9 +1,8 @@
+import type { ILogger } from '@grantjs/core';
 import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres, { Sql } from 'postgres';
 
 import { schema } from '../schemas';
-
-import type { ILogger } from '@grantjs/core';
 
 export type DbSchema = PostgresJsDatabase<typeof schema>;
 

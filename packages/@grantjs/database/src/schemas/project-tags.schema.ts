@@ -1,14 +1,14 @@
 import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm';
 import {
-  pgTable,
+  boolean,
+  index,
   pgPolicy,
-  uuid,
+  pgTable,
   timestamp,
   uniqueIndex,
+  uuid,
   varchar,
-  index,
-  boolean,
 } from 'drizzle-orm/pg-core';
 
 import { projects } from './projects.schema';

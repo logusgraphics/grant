@@ -1,5 +1,5 @@
-import { SortOrder, RoleSortableField, RoleSortInput } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { RoleSortableField, RoleSortInput, SortOrder } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 import { useRolesStore } from '@/stores/roles.store';

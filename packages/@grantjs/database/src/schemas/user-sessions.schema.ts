@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { pgTable, uuid, varchar, timestamp, index, boolean } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 import { userAuthenticationMethods } from './user-authentication-methods.schema';
 import { users } from './users.schema';

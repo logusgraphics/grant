@@ -1,11 +1,12 @@
 'use client';
 
+import './globals.css';
+
 import { Geist, Geist_Mono } from 'next/font/google';
 import Script from 'next/script';
 
 import { ThemeProvider } from '@/components/providers';
 import { Toast } from '@/components/ui/toast';
-import './globals.css';
 
 // Run before paint so system preference is applied before first render (avoids wrong logo/theme flash).
 const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme')||'system';var dark=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',dark);}catch(e){}})();`;

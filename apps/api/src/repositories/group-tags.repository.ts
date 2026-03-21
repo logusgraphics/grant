@@ -1,3 +1,4 @@
+import type { IGroupTagRepository } from '@grantjs/core';
 import { GroupTagModel, groupTags } from '@grantjs/database';
 import {
   AddGroupTagInput,
@@ -10,8 +11,6 @@ import {
 import { Transaction } from '@/lib/transaction-manager.lib';
 
 import { PivotRepository } from './common/PivotRepository';
-
-import type { IGroupTagRepository } from '@grantjs/core';
 
 export class GroupTagRepository
   extends PivotRepository<GroupTagModel, GroupTag>

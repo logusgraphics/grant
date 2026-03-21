@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-
 import { AccountType } from '@grantjs/schema';
 
 import { useRouter } from '@/i18n/navigation';

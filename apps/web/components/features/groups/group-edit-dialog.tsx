@@ -24,7 +24,7 @@ import { useTags } from '@/hooks/tags';
 import { getDocsUrl } from '@/lib/constants';
 import { useGroupsStore } from '@/stores/groups.store';
 
-import { GroupEditFormValues, editGroupSchema } from './group-types';
+import { editGroupSchema, GroupEditFormValues } from './group-types';
 
 export function GroupEditDialog() {
   const scope = useScopeFromParams();

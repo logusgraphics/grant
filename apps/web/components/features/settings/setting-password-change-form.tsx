@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { PasswordInput, PasswordStrengthIndicator } from '@/components/common';

@@ -1,11 +1,10 @@
-import jwt from 'jsonwebtoken';
-
 import type {
   ITokenProvider,
   TokenDecodeResult,
   TokenSignOptions,
   TokenVerifyOptions,
 } from '@grantjs/core';
+import jwt from 'jsonwebtoken';
 
 /**
  * jsonwebtoken-based implementation of ITokenProvider.

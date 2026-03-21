@@ -1,3 +1,11 @@
+import type {
+  IAuditLogger,
+  IOrganizationProjectTagRepository,
+  IOrganizationProjectTagService,
+  IOrganizationRepository,
+  IProjectRepository,
+  ITagRepository,
+} from '@grantjs/core';
 import {
   AddOrganizationProjectTagInput,
   OrganizationProjectTag,
@@ -19,15 +27,6 @@ import {
   removeOrganizationProjectTagInputSchema,
   updateOrganizationProjectTagInputSchema,
 } from './organization-project-tags.schema';
-
-import type {
-  IAuditLogger,
-  IOrganizationProjectTagRepository,
-  IOrganizationProjectTagService,
-  IOrganizationRepository,
-  IProjectRepository,
-  ITagRepository,
-} from '@grantjs/core';
 
 export class OrganizationProjectTagService implements IOrganizationProjectTagService {
   constructor(

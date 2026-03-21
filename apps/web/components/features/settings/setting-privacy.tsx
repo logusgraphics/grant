@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import {
   Activity,
   AlertTriangle,
@@ -14,7 +14,6 @@ import {
   UserCog,
   UserX,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CopyToClipboard } from '@/components/common';
 import { SettingCard } from '@/components/features/settings';

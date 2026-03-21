@@ -1,3 +1,4 @@
+import type { IOrganizationTagRepository } from '@grantjs/core';
 import { OrganizationTagModel, organizationTags } from '@grantjs/database';
 import {
   AddOrganizationTagInput,
@@ -9,8 +10,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IOrganizationTagRepository } from '@grantjs/core';
 
 export class OrganizationTagRepository
   extends PivotRepository<OrganizationTagModel, OrganizationTag>

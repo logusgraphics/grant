@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
-import { ComparisonOperator, LogicalOperator } from '../types';
-
 import type { FieldValue } from '../types';
+import { ComparisonOperator, LogicalOperator } from '../types';
 
 const fieldReferenceSchema = z.object({
   $ref: z.string(),

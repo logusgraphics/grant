@@ -1,7 +1,7 @@
 'use client';
 
-import { ApiKeySortableField, ApiKeySortInput, SortOrder } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { ApiKeySortableField, ApiKeySortInput, SortOrder } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 

@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
-
+import { useTranslations } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { TagSortField, SortOrder } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { SortOrder, TagSortField } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 import { useTagsStore } from '@/stores/tags.store';

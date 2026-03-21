@@ -1,17 +1,3 @@
-import { ProjectRole, RemoveProjectRoleInput, AddProjectRoleInput } from '@grantjs/schema';
-
-import { ConflictError, NotFoundError } from '@/lib/errors';
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { DeleteParams } from '@/types';
-
-import { validateInput, validateOutput, createDynamicSingleSchema } from './common';
-import {
-  getProjectRolesParamsSchema,
-  projectRoleSchema,
-  addProjectRoleInputSchema,
-  removeProjectRoleInputSchema,
-} from './project-roles.schemas';
-
 import type {
   IAuditLogger,
   IProjectRepository,
@@ -19,6 +5,19 @@ import type {
   IProjectRoleService,
   IRoleRepository,
 } from '@grantjs/core';
+import { AddProjectRoleInput, ProjectRole, RemoveProjectRoleInput } from '@grantjs/schema';
+
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { DeleteParams } from '@/types';
+
+import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
+import {
+  addProjectRoleInputSchema,
+  getProjectRolesParamsSchema,
+  projectRoleSchema,
+  removeProjectRoleInputSchema,
+} from './project-roles.schemas';
 
 export class ProjectRoleService implements IProjectRoleService {
   constructor(

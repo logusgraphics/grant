@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 import {
+  baseEntitySchema,
+  colorSchema,
+  deleteSchema,
   idSchema,
   nameSchema,
-  sortOrderSchema,
-  colorSchema,
-  baseEntitySchema,
-  paginatedResponseSchema,
-  sortableParamsSchema,
   nonEmptyNameSchema,
+  paginatedResponseSchema,
   queryParamsSchema,
-  deleteSchema,
+  sortableParamsSchema,
+  sortOrderSchema,
 } from './common/schemas';
 
 export const createTagSchema = z.object({

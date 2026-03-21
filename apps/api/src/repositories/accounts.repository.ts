@@ -1,3 +1,4 @@
+import type { IAccountRepository } from '@grantjs/core';
 import { AccountModel, accountProjects, accounts, users } from '@grantjs/database';
 import {
   Account,
@@ -18,8 +19,6 @@ import {
   EntityRepository,
   RelationsConfig,
 } from './common/EntityRepository';
-
-import type { IAccountRepository } from '@grantjs/core';
 
 export class AccountRepository
   extends EntityRepository<AccountModel, Account>

@@ -1,11 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
-
-import { Check, Github } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Check, Github } from 'lucide-react';
 
 import { AuthLayoutStandalone } from '@/components/layout';
 import { Alert, AlertDescription } from '@/components/ui/alert';

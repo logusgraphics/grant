@@ -1,30 +1,29 @@
 export * from './generated/graphql';
 export type {
-  ProjectAppPublicInfo,
-  ProjectAppScopeInfo,
-  ProjectConsentInfo,
-  ProjectConsentInfoUser,
-  ProjectConsentRedirectResult,
-} from './project-oauth.types';
-
-export type {
   AccountResolvers,
   GroupResolvers,
   MutationResolvers,
   OrganizationInvitationResolvers,
   OrganizationResolvers,
   PermissionResolvers,
-  ProjectResolvers,
   ProjectAppResolvers,
+  ProjectResolvers,
   QueryResolvers,
   RequireFields,
   Resolver,
-  ResolverTypeWrapper,
   Resolvers,
   ResolversObject,
   ResolversParentTypes,
   ResolversTypes,
+  ResolverTypeWrapper,
   RoleResolvers,
   TagResolvers,
   UserResolvers,
 } from './generated/resolvers';
+export type {
+  ProjectAppPublicInfo,
+  ProjectAppScopeInfo,
+  ProjectConsentInfo,
+  ProjectConsentInfoUser,
+  ProjectConsentRedirectResult,
+} from './project-oauth.types';

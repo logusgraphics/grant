@@ -1,3 +1,20 @@
+import type {
+  IAccountRoleService,
+  IAccountService,
+  IAuthService,
+  IEmailService,
+  IFileStorageServicePort,
+  ILogger,
+  IMeService,
+  IOrganizationUserService,
+  IProjectUserService,
+  ITransactionalConnection,
+  IUserAuthenticationMethodService,
+  IUserMfaService,
+  IUserRoleService,
+  IUserService,
+  IUserSessionService,
+} from '@grantjs/core';
 import { GrantAuth } from '@grantjs/core';
 import { SupportedLocale } from '@grantjs/i18n';
 import {
@@ -23,24 +40,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { Otp } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IAccountRoleService,
-  IAccountService,
-  IAuthService,
-  IEmailService,
-  IFileStorageServicePort,
-  ILogger,
-  IMeService,
-  IOrganizationUserService,
-  IProjectUserService,
-  ITransactionalConnection,
-  IUserAuthenticationMethodService,
-  IUserMfaService,
-  IUserRoleService,
-  IUserService,
-  IUserSessionService,
-} from '@grantjs/core';
 
 export class MeHandler extends CacheHandler {
   protected readonly logger = createLogger('MeHandler');

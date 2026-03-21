@@ -3,9 +3,9 @@ import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import {
   authenticateGraphQLResolver,
   authorizeGraphQLResolver,
-  requireEmailThenMfaGraphQL,
   type EmailVerificationGraphQLGuardOptions,
   type MfaGraphQLGuardOptions,
+  requireEmailThenMfaGraphQL,
 } from '@/lib/authorization';
 
 import * as apiKeyMutations from './api-keys/mutations';

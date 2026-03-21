@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
 
 import { FullPageLoader } from '@/components/common';

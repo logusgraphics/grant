@@ -1,7 +1,7 @@
 'use client';
 
-import { RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

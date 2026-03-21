@@ -1,10 +1,10 @@
 'use client';
 
-import { LayoutGrid, Table } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LayoutGrid, Table } from 'lucide-react';
 
-import { ViewSwitcher, type ViewOption } from '@/components/common';
-import { useApiKeysStore, type ApiKeyView } from '@/stores/api-keys.store';
+import { type ViewOption, ViewSwitcher } from '@/components/common';
+import { type ApiKeyView, useApiKeysStore } from '@/stores/api-keys.store';
 
 export function ApiKeyViewSwitcher() {
   const t = useTranslations('user.apiKeys');

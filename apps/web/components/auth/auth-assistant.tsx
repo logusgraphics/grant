@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-
+import { useTranslations } from 'next-intl';
 import {
   CheckCircle2,
   Clock,
@@ -10,13 +10,12 @@ import {
   Inbox,
   KeyRound,
   LogIn,
+  type LucideIcon,
   Mail,
   RefreshCw,
   ShieldCheck,
   UserPlus,
-  type LucideIcon,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Accordion,

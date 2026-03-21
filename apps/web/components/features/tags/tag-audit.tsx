@@ -1,8 +1,8 @@
 'use client';
 
-import { Tag } from '@grantjs/schema';
-import { Fingerprint, Calendar, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Tag } from '@grantjs/schema';
+import { Calendar, Clock, Fingerprint } from 'lucide-react';
 
 import { Audit, AuditField } from '@/components/common';
 import { formatTimestamp } from '@/lib/utils';

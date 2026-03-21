@@ -1,18 +1,18 @@
 import { Resolver } from '@grantjs/schema';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 import { GraphqlContext } from '@/graphql/types';
 
 import {
-  requireEmailVerificationGraphQL,
   type EmailVerificationGraphQLGuardOptions,
+  requireEmailVerificationGraphQL,
 } from './email-verification-graphql-guard';
 import {
-  requireEmailVerificationRest,
   type EmailVerificationRestGuardOptions,
+  requireEmailVerificationRest,
 } from './email-verification-rest-guard';
-import { requireMfaGraphQL, type MfaGraphQLGuardOptions } from './mfa-graphql-guard';
-import { requireMfaRest, type MfaRestGuardOptions } from './mfa-rest-guard';
+import { type MfaGraphQLGuardOptions, requireMfaGraphQL } from './mfa-graphql-guard';
+import { type MfaRestGuardOptions, requireMfaRest } from './mfa-rest-guard';
 
 /**
  * Canonical order for sensitive scoped operations: **email verification → MFA → inner resolver** (RBAC wraps the inner resolver).

@@ -4,8 +4,6 @@
  *         ProjectPermission, ProjectResource, ProjectTag,
  *         ProjectUserApiKey.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddProjectGroupInput,
   AddProjectPermissionInput,
@@ -36,6 +34,9 @@ import type {
   RemoveProjectUserInput,
   UpdateProjectTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // IProjectService

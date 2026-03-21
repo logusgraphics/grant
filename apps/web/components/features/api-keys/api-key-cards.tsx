@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ApiKey, Tenant } from '@grantjs/schema';
 import { Calendar, KeyRound, Shield } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, CardHeader, CopyToClipboard } from '@/components/common';
 import { useScopeFromParams } from '@/hooks/common';

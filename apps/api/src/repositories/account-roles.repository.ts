@@ -1,15 +1,14 @@
+import type { IAccountRoleRepository } from '@grantjs/core';
 import { AccountRoleModel, accountRoles } from '@grantjs/database';
 import {
-  AddAccountRoleInput,
   AccountRole,
+  AddAccountRoleInput,
   QueryAccountRolesInput,
   RemoveAccountRoleInput,
 } from '@grantjs/schema';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IAccountRoleRepository } from '@grantjs/core';
 
 export class AccountRoleRepository
   extends PivotRepository<AccountRoleModel, AccountRole>

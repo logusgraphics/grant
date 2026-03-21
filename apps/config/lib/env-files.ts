@@ -2,7 +2,7 @@
  * Read and write .env files. Used only in API routes (Node).
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 const ENCODING = 'utf-8' as const;

@@ -1,10 +1,10 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { getAvailableTagColors, normalizeTagColorForPicker } from '@grantjs/constants';
 import { Tag } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { DefaultValues } from 'react-hook-form';
 
 import {
@@ -19,7 +19,7 @@ import { useScopeFromParams } from '@/hooks/common';
 import { useTagMutations, useTags } from '@/hooks/tags';
 import { useTagsStore } from '@/stores/tags.store';
 
-import { TagEditFormValues, editTagSchema } from './tag-types';
+import { editTagSchema, TagEditFormValues } from './tag-types';
 
 export function TagEditDialog() {
   const t = useTranslations('tags');

@@ -16,7 +16,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { apiClient } from '../helpers/api-client';
 import { addProjectUserForE2e, closeDbHelper } from '../helpers/db-tokens';
 import { graphqlRequest } from '../helpers/graphql';
-import { getProjectOAuthEmailTokenFromRedis, closeRedisHelper } from '../helpers/redis-e2e';
+import { closeRedisHelper, getProjectOAuthEmailTokenFromRedis } from '../helpers/redis-e2e';
 import { TestUser } from '../helpers/test-user';
 
 interface CreateProjectAppData {

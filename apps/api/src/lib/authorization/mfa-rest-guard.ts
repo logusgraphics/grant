@@ -1,4 +1,4 @@
-import { TokenType, Tenant } from '@grantjs/schema';
+import { Tenant, TokenType } from '@grantjs/schema';
 import { NextFunction, Request, Response } from 'express';
 
 import { ContextRequest } from '@/types';

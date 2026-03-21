@@ -1,8 +1,8 @@
 'use client';
 
-import { SortOrder } from '@grantjs/schema';
-import { ArrowUp, ArrowDown, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { SortOrder } from '@grantjs/schema';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {

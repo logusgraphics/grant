@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
 import { useParams } from 'next/navigation';
-
-import { DEFAULT_LOCALE } from '@grantjs/i18n';
 import { AbstractIntlMessages } from 'next-intl';
+import { DEFAULT_LOCALE } from '@grantjs/i18n';
 
 import { FullPageLoader } from '@/components/common';
 import { Header } from '@/components/layout';

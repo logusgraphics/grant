@@ -1,12 +1,10 @@
 'use client';
 
 import { useCallback } from 'react';
-
 import { useSearchParams } from 'next/navigation';
-
-import { Globe, Monitor, Moon, Sun } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
+import { Globe, Monitor, Moon, Sun } from 'lucide-react';
 
 import { SettingCard } from '@/components/features/settings';
 import { Button } from '@/components/ui/button';

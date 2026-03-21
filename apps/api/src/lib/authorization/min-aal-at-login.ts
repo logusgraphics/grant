@@ -1,8 +1,8 @@
 import {
+  type Aal,
   downgradeAalIfMfaStale,
   getAalFromTokenClaims,
   satisfiesMinAal,
-  type Aal,
 } from '@grantjs/core';
 import { TokenType } from '@grantjs/schema';
 import { NextFunction, Request, Response } from 'express';

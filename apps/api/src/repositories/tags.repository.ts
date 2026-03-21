@@ -1,25 +1,24 @@
+import type { ITagRepository } from '@grantjs/core';
 import { TagModel, tags } from '@grantjs/database';
 import {
-  QueryTagsArgs,
+  CreateTagInput,
   MutationDeleteTagArgs,
+  QueryTagsArgs,
   Tag,
   TagPage,
-  CreateTagInput,
   TagSearchableField,
   UpdateTagInput,
 } from '@grantjs/schema';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import {
-  EntityRepository,
   BaseCreateArgs,
-  BaseUpdateArgs,
   BaseDeleteArgs,
+  BaseUpdateArgs,
+  EntityRepository,
   RelationsConfig,
 } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { ITagRepository } from '@grantjs/core';
 
 export class TagRepository extends EntityRepository<TagModel, Tag> implements ITagRepository {
   protected table = tags;

@@ -1,3 +1,4 @@
+import type { IProjectGroupRepository } from '@grantjs/core';
 import { ProjectGroupModel, projectGroups } from '@grantjs/database';
 import {
   AddProjectGroupInput,
@@ -8,8 +9,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IProjectGroupRepository } from '@grantjs/core';
 
 export class ProjectGroupRepository
   extends PivotRepository<ProjectGroupModel, ProjectGroup>

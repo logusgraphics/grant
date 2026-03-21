@@ -1,3 +1,4 @@
+import type { IOrganizationProjectApiKeyRepository } from '@grantjs/core';
 import { OrganizationProjectApiKeyModel, organizationProjectApiKeys } from '@grantjs/database';
 import {
   AddOrganizationProjectApiKeyInput,
@@ -8,8 +9,6 @@ import {
 import { Transaction } from '@/lib/transaction-manager.lib';
 
 import { PivotRepository } from './common/PivotRepository';
-
-import type { IOrganizationProjectApiKeyRepository } from '@grantjs/core';
 
 export class OrganizationProjectApiKeyRepository
   extends PivotRepository<OrganizationProjectApiKeyModel, OrganizationProjectApiKey>

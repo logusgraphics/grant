@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-
-import { Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Info } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { MfaOtpInput } from '@/components/features/auth/mfa-otp-input';
+import { MfaQrPanel } from '@/components/features/auth/mfa-qr-panel';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,8 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MfaOtpInput } from '@/components/features/auth/mfa-otp-input';
-import { MfaQrPanel } from '@/components/features/auth/mfa-qr-panel';
 import { useMfaMutations } from '@/hooks/mfa';
 
 interface SettingMfaEnrollDialogProps {
