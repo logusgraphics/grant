@@ -17,7 +17,10 @@ import express from 'express';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { rateLimitMiddleware } from '@/middleware/rate-limit.middleware';
+import {
+  AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS,
+  rateLimitMiddleware,
+} from '@/middleware/rate-limit.middleware';
 
 type MockSecurity = {
   enableRateLimit: boolean;
@@ -82,9 +85,19 @@ function createTestApp(
     res.json({ ok: true });
   });
 
-  app.post('/api/auth/login', (_req, res) => {
-    res.json({ ok: true });
-  });
+  for (const methodPath of AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS) {
+    const spaceIdx = methodPath.indexOf(' ');
+    const method = methodPath.slice(0, spaceIdx);
+    const routePath = methodPath.slice(spaceIdx + 1);
+    const handler = (_req: express.Request, res: express.Response) => {
+      res.json({ ok: true });
+    };
+    if (method === 'GET') {
+      app.get(routePath, handler);
+    } else if (method === 'POST') {
+      app.post(routePath, handler);
+    }
+  }
 
   return app;
 }
@@ -153,6 +166,17 @@ describe('rate limit integration', () => {
 
       const res = await request(app).post('/api/auth/login').send({});
       expect(res.status).toBe(429);
+    });
+
+    it('counts MFA auth routes toward the same auth-sensitive rate limit bucket', async () => {
+      await request(app).post('/api/auth/mfa/setup').send({}).expect(200);
+      await request(app).post('/api/auth/mfa/verify').send({ code: '000000' }).expect(200);
+
+      const res = await request(app)
+        .post('/api/auth/mfa/recovery/verify')
+        .send({ code: 'DEADBEEF' });
+      expect(res.status).toBe(429);
+      expect(res.body.error?.code).toBe('rate_limit_exceeded');
     });
 
     it('when rateLimitPerTenantEnabled is false, does not per-tenant limit even with scope', async () => {

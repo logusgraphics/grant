@@ -93,7 +93,11 @@ export default withMermaid({
             { text: 'Permission Conditions', link: '/core-concepts/permission-conditions' },
             { text: 'API Keys', link: '/core-concepts/api-keys' },
             {
-              text: 'Organization Members & Invitations',
+              text: 'MFA recovery',
+              link: '/core-concepts/mfa-recovery',
+            },
+            {
+              text: 'Members & Invitations',
               link: '/core-concepts/organization-invitations',
             },
             { text: 'Tags & Relationships', link: '/core-concepts/tags-relationships' },

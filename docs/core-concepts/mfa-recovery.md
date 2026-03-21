@@ -31,6 +31,10 @@ description: Recovery code lifecycle, MFA challenge elevation, and how org MFA p
 
 - If `requireMfaForSensitiveActions` is enabled for an organization, **sensitive org actions** may still **require MFA server-side** even if the user has disabled MFA on their account. The user will see MFA-required flows until they enroll and verify again; this is intentional: self-service disable does not weaken server enforcement for those routes.
 
+## See also
+
+- [Security & session management](../architecture/security.md#multi-factor-authentication-mfa) — MFA guards, min-AAL, JWT `mfaVerified`
+
 ## References
 
 - Handlers: `AuthHandler.verifyMfa`, `AuthHandler.verifyMfaRecoveryCode`

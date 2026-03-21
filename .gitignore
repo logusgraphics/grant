@@ -62,3 +62,5 @@ apps/api/tests/e2e/compliance-report.json
 apps/api/storage/
 *.pem
 .cursor/mcp.json
+# Cursor IDE — local planning drafts (not versioned; see docs/architecture/security.md for MFA)
+.cursor/plans/

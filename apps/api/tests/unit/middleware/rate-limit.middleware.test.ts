@@ -2,7 +2,10 @@ import { InMemoryCacheAdapter } from '@grantjs/cache/memory';
 import { Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { rateLimitMiddleware } from '@/middleware/rate-limit.middleware';
+import {
+  AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS,
+  rateLimitMiddleware,
+} from '@/middleware/rate-limit.middleware';
 
 type MockSecurity = {
   enableRateLimit: boolean;
@@ -273,5 +276,16 @@ describe('rateLimitMiddleware', () => {
       expect(next).toHaveBeenCalledTimes(2);
       expect(res.status).not.toHaveBeenCalled();
     });
+  });
+
+  it('exports auth-sensitive paths including MFA routes (single source for rate-limit integration)', () => {
+    expect([...AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS]).toEqual(
+      expect.arrayContaining([
+        'POST /api/auth/mfa/setup',
+        'POST /api/auth/mfa/verify',
+        'POST /api/auth/mfa/recovery/verify',
+        'GET /api/me/mfa/recovery-codes/status',
+      ])
+    );
   });
 });

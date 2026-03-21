@@ -30,12 +30,16 @@ apps/api/tests/
 │   ├── i18n/                   # i18n error mapper translationKey, helpers
 │   │   ├── error-mapper.translationKey.test.ts
 │   │   └── helpers.test.ts
+│   ├── lib/authorization/      # Min-AAL-at-login, MFA GraphQL/REST guards
+│   │   ├── min-aal-at-login.test.ts
+│   │   └── mfa-guards.test.ts
 │   ├── middleware/             # Rate limiting, request-logging middleware logic
 │   │   ├── rate-limit.middleware.test.ts
 │   │   └── request-logging.middleware.test.ts
 │   ├── handlers/               # Handler optional requestLogger, project OAuth
 │   │   ├── auth.handler.project-oauth.test.ts
 │   │   ├── auth.handler.request-logger.test.ts
+│   │   ├── auth.handler.mfa-step-up.test.ts
 │   │   ├── auth.handler.verify-mfa-recovery.test.ts
 │   │   └── project-oauth.handler.test.ts
 │   ├── services/              # Audit service tenant scoping, MFA lifecycle
@@ -43,8 +47,9 @@ apps/api/tests/
 │   └── jobs/                  # Tenant job context validation
 ├── integration/
 │   ├── i18n.integration.test.ts          # REST error body includes translationKey and localized error
+│   ├── mfa-auth.integration.test.ts      # MFA REST: unauthenticated /api/auth/mfa/verify → 401
 │   ├── project-oauth.integration.test.ts # Project OAuth authorize, email request, email callback
-│   ├── rate-limit.integration.test.ts   # HTTP-level rate limit tests
+│   ├── rate-limit.integration.test.ts   # HTTP-level rate limit tests (MFA paths share auth bucket)
 │   ├── observability.integration.test.ts   # Metrics endpoint, telemetry/analytics/tracing adapters
 │   └── request-logging.integration.test.ts   # Request-scoped logger and requestId in log payload
 └── e2e/
@@ -56,6 +61,8 @@ apps/api/tests/
     │   ├── negative-auth.e2e.test.ts    # Authentication rejection
     │   ├── project-apps.e2e.test.ts     # Project app CRUD (create, list, update, delete) via GraphQL
     │   ├── project-oauth.e2e.test.ts   # Project OAuth authorize, email request, email callback
+    │   ├── mfa.e2e.test.ts             # TOTP enroll/verify, org MFA policy, recovery step-up
+    │   ├── mfa-aal2-login.e2e.test.ts  # Login requiresMfaStepUp when API uses aal2 (opt-in env)
     │   └── user-onboarding.e2e.test.ts  # User onboarding flow
     └── compliance/
         ├── soc2-access-control.e2e.test.ts
@@ -66,10 +73,10 @@ apps/api/tests/
 
 ## Configuration
 
-| App     | Environment | Config                                                                    |
-| ------- | ----------- | ------------------------------------------------------------------------- |
-| **API** | `node`      | `apps/api/vitest.config.ts` — uses `vite-tsconfig-paths` for `@/` imports |
-| **Web** | `jsdom`     | `apps/web/vitest.config.ts` — component testing with DOM                  |
+| App     | Environment | Config                                                                             |
+| ------- | ----------- | ---------------------------------------------------------------------------------- |
+| **API** | `node`      | `apps/api/vitest.config.ts` — uses `vite-tsconfig-paths` for `@/` imports          |
+| **Web** | `jsdom`     | `apps/web/vitest.config.ts` — component + hook tests (`**/*.{test,spec}.{ts,tsx}`) |
 
 ## Security and Compliance Tests
 
@@ -105,12 +112,47 @@ pnpm test tests/e2e/scenarios/multi-tenant.e2e.test.ts
 pnpm test tests/e2e/compliance/
 ```
 
+## MFA testing
+
+MFA is covered across layers; **unit** and **integration** suites are independent and can run **in parallel** in CI (separate jobs or `pnpm exec vitest run` processes). **E2E** needs the Docker stack (`./scripts/e2e.sh` or `docker compose -f docker-compose.e2e.yml` + `pnpm --filter grant-api test:e2e`).
+
+| Layer                 | Location                                                                                                                                                                                                     | What it asserts                                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Core**              | `packages/@grantjs/core/src/core/aal.test.ts`                                                                                                                                                                | AAL comparison / token claims                                                                                                      |
+| **API unit**          | `tests/unit/lib/mfa.lib.test.ts`, `tests/unit/services/user-mfa.service.test.ts`, `tests/unit/handlers/auth.handler.verify-mfa-recovery.test.ts`, `tests/unit/lib/authorization/mfa-org-requirement.test.ts` | Crypto, service lifecycle, recovery handler, org `requireMfaForSensitiveActions` resolution                                        |
+| **API unit (policy)** | `tests/unit/lib/authorization/min-aal-at-login.test.ts`, `mfa-guards.test.ts`, `tests/unit/handlers/auth.handler.mfa-step-up.test.ts`                                                                        | Min-AAL at login (GraphQL + REST), MFA guards, `requiresMfaStepUp` via login/refresh                                               |
+| **Integration**       | `tests/integration/mfa-auth.integration.test.ts`                                                                                                                                                             | `POST /api/auth/mfa/verify` → **401** without session                                                                              |
+| **Integration**       | `tests/integration/rate-limit.integration.test.ts`                                                                                                                                                           | MFA routes share the **auth-sensitive** rate-limit bucket (`AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS` in `rate-limit.middleware.ts`) |
+| **E2E**               | `tests/e2e/scenarios/mfa.e2e.test.ts`                                                                                                                                                                        | REST TOTP verify, invalid code, org policy + recovery step-up (`otplib` for deterministic codes)                                   |
+| **E2E (opt-in)**      | `tests/e2e/scenarios/mfa-aal2-login.e2e.test.ts`                                                                                                                                                             | Login `requiresMfaStepUp` when the API runs with `AUTH_MIN_AAL_AT_LOGIN=aal2`                                                      |
+| **Web**               | `apps/web/hooks/mfa/use-mfa-mutations.test.tsx`                                                                                                                                                              | MFA mutations (mocked Apollo); `verifyEnrollment` → `false` when response has no data (e.g. `MFA_REQUIRED`)                        |
+
+**`AUTH_MIN_AAL_AT_LOGIN=aal2` in E2E:** Default `docker-compose.e2e.yml` uses `aal1`. Do **not** run two stacks on the same host ports in parallel. Prefer a **second CI job** that sets `AUTH_MIN_AAL_AT_LOGIN=aal2` for the API container before `up`, or restart the API with the new env and run a second Vitest invocation. On the **host** (Vitest process), set `E2E_EXPECT_MIN_AAL_AT_LOGIN=aal2` so `mfa-aal2-login.e2e.test.ts` runs; without it, that file is skipped.
+
+**Commands (API, from repo root):**
+
+```bash
+# Unit — MFA-related (examples)
+pnpm --filter grant-api exec vitest run \
+  tests/unit/lib/authorization/min-aal-at-login.test.ts \
+  tests/unit/lib/authorization/mfa-guards.test.ts \
+  tests/unit/handlers/auth.handler.mfa-step-up.test.ts
+
+# Integration — can run in parallel with unit in CI
+pnpm --filter grant-api exec vitest run \
+  tests/integration/mfa-auth.integration.test.ts \
+  tests/integration/rate-limit.integration.test.ts
+
+# E2E — stack must be up; see Quick Start in docker-compose.e2e.yml
+pnpm --filter grant-api test:e2e
+```
+
 ## Rate Limit Testing
 
 Rate limiting is tested at two levels:
 
-- **Unit** (`tests/unit/middleware/`) — middleware logic in isolation with mocked config and store
-- **Integration** (`tests/integration/`) — HTTP-level via supertest against a minimal Express app
+- **Unit** (`tests/unit/middleware/`) — middleware logic in isolation with mocked config and store; `AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS` is asserted to include MFA routes (single source with `rate-limit.middleware.ts`)
+- **Integration** (`tests/integration/`) — HTTP-level via supertest against a minimal Express app (stubs registered from `AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS`)
 
 The integration suite includes optional benchmark reporting (duration, req/s). Suppress with `BENCHMARK_REPORT=0`.
 
