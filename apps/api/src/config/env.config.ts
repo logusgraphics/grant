@@ -839,16 +839,29 @@ export async function printConfigSummary(): Promise<void> {
 // Middleware Configuration (Computed from other configs)
 // ============================================================================
 
-/** Development CORS origins (comma-separated, env-overridable) */
-const DEV_CORS_ORIGINS = env.CORS_DEV_ORIGINS.split(',')
+function isValidOrigin(s: string): boolean {
+  try {
+    const u = new URL(s);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/** Development CORS origins (comma-separated, env-overridable, validated) */
+const DEV_CORS_ORIGINS: string[] = env.CORS_DEV_ORIGINS.split(',')
   .map((s: string) => s.trim())
-  .filter(Boolean);
+  .filter(Boolean)
+  .filter(isValidOrigin);
+
+/** Validated additional origins from SECURITY_CONFIG */
+const ADDITIONAL_ORIGINS: string[] = SECURITY_CONFIG.additionalOrigins.filter(isValidOrigin);
 
 /** CORS configuration for Express middleware */
 const CORS_CONFIG = {
   origin: APP_CONFIG.isProduction
-    ? [SECURITY_CONFIG.frontendUrl, ...SECURITY_CONFIG.additionalOrigins]
-    : [...DEV_CORS_ORIGINS, ...SECURITY_CONFIG.additionalOrigins],
+    ? [SECURITY_CONFIG.frontendUrl, ...ADDITIONAL_ORIGINS].filter(isValidOrigin)
+    : [...DEV_CORS_ORIGINS, ...ADDITIONAL_ORIGINS],
   credentials: true,
 } as const;
 

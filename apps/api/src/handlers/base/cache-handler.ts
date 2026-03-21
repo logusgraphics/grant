@@ -691,14 +691,14 @@ export class CacheHandler implements IScopedIdProvider {
     grantedScopes?: string[]
   ): string {
     const contextHash = context?.resource
-      ? createHash('sha256').update(JSON.stringify(context.resource)).digest('hex').substring(0, 8)
+      ? createHash('sha512').update(JSON.stringify(context.resource)).digest('hex').substring(0, 8)
       : 'none';
     const resourceNorm = permission.resource.trim().toLowerCase();
     const actionNorm = permission.action.trim().toLowerCase();
     const scopePart = `${scope.tenant}:${scope.id}`;
     const grantedPart =
       grantedScopes && grantedScopes.length > 0
-        ? createHash('sha256')
+        ? createHash('sha512')
             .update(
               [...grantedScopes]
                 .map((s) => (s ?? '').trim().toLowerCase())

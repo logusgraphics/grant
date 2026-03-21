@@ -4,7 +4,6 @@ const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 /**
  * Fixed salt for scrypt — binds derived keys to this purpose (not a secret).
- * Replaces single-pass SHA-256 (flagged by CodeQL as weak password hashing) for key derivation.
  */
 const MFA_KDF_SALT = Buffer.from('grant-platform:mfa-secret-encryption:v1', 'utf8');
 
@@ -16,11 +15,6 @@ function deriveMfaAesKey(keyMaterial: string): Buffer {
     p: 1,
     maxmem: 64 * 1024 * 1024,
   });
-}
-
-/** Legacy key material (pre–scrypt); kept only for decrypting existing rows. */
-function legacySha256MfaKey(keyMaterial: string): Buffer {
-  return crypto.createHash('sha256').update(keyMaterial).digest();
 }
 
 function decryptMfaSecretWithKey(
@@ -115,6 +109,7 @@ export function verifyTotpCode(params: {
     const msg = Buffer.alloc(8);
     msg.writeUInt32BE(Math.floor(c / 0x100000000), 0);
     msg.writeUInt32BE(c & 0xffffffff, 4);
+    // codeql[js/weak-cryptographic-hash]: RFC 6238 / RFC 4226 HOTP uses HMAC-SHA1; required for standard TOTP interop.
     const hmac = crypto.createHmac('sha1', key).update(msg).digest();
     const offset = hmac[hmac.length - 1]! & 0x0f;
     const binary =
@@ -154,9 +149,5 @@ export function decryptMfaSecret(params: {
   secretTag: string;
   key: string;
 }): string {
-  try {
-    return decryptMfaSecretWithKey(params, deriveMfaAesKey(params.key));
-  } catch {
-    return decryptMfaSecretWithKey(params, legacySha256MfaKey(params.key));
-  }
+  return decryptMfaSecretWithKey(params, deriveMfaAesKey(params.key));
 }
