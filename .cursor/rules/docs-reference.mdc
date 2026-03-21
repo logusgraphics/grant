@@ -25,6 +25,7 @@ When working on a topic below, read the linked doc for detailed patterns, conven
 | API keys, scopes, token exchange | `docs/core-concepts/api-keys.md` |
 | Tags, generic tagging, automatic query routing | `docs/core-concepts/tags-relationships.md` |
 | Organization invitations, member management | `docs/core-concepts/organization-invitations.md` |
+| MFA recovery codes, challenge elevation, self-service MFA disable | `docs/core-concepts/mfa-recovery.md` |
 
 ## Implementation patterns
 

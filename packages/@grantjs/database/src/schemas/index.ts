@@ -40,6 +40,8 @@ export * from './roles.schema';
 export * from './schema';
 export * from './tags.schema';
 export * from './user-authentication-methods.schema';
+export * from './user-mfa-factors.schema';
+export * from './user-mfa-recovery-codes.schema';
 export * from './user-roles.schema';
 export * from './user-sessions.schema';
 export * from './user-tags.schema';

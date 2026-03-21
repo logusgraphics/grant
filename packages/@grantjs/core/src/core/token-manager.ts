@@ -156,6 +156,27 @@ export class TokenManager {
   }
 
   private payloadToClaims(decoded: Record<string, unknown>): TokenClaims {
+    const amrRaw = decoded.amr;
+    const amr = Array.isArray(amrRaw)
+      ? amrRaw.filter((x): x is string => typeof x === 'string')
+      : undefined;
+    const acr = typeof decoded.acr === 'string' ? decoded.acr : undefined;
+    const authRaw = decoded.auth_time;
+    const auth_time =
+      typeof authRaw === 'number'
+        ? authRaw
+        : typeof authRaw === 'string'
+          ? Number.parseInt(authRaw, 10)
+          : undefined;
+
+    const mfaAuthRaw = decoded.mfa_auth_time;
+    const mfa_auth_time =
+      typeof mfaAuthRaw === 'number'
+        ? mfaAuthRaw
+        : typeof mfaAuthRaw === 'string'
+          ? Number.parseInt(mfaAuthRaw, 10)
+          : undefined;
+
     return {
       sub: decoded.sub as string,
       aud: decoded.aud as string,
@@ -166,7 +187,12 @@ export class TokenManager {
       type: decoded.type as TokenType,
       scope: decoded.scope as Scope | undefined,
       isVerified: decoded.isVerified as boolean | undefined,
+      mfaVerified: decoded.mfaVerified as boolean | undefined,
       scopes: Array.isArray(decoded.scopes) ? (decoded.scopes as string[]) : undefined,
+      ...(amr && amr.length > 0 ? { amr } : {}),
+      ...(acr ? { acr } : {}),
+      ...(auth_time !== undefined && !Number.isNaN(auth_time) ? { auth_time } : {}),
+      ...(mfa_auth_time !== undefined && !Number.isNaN(mfa_auth_time) ? { mfa_auth_time } : {}),
     };
   }
 

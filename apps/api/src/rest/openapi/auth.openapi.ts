@@ -30,6 +30,11 @@ import {
   validationErrorResponseSchema,
   verifyEmailRequestSchema,
   verifyEmailResponseSchema,
+  verifyMfaRequestSchema,
+  verifyMfaResponseSchema,
+  verifyMfaRecoveryCodeRequestSchema,
+  verifyMfaRecoveryCodeResponseSchema,
+  setupMfaResponseSchema,
 } from '@/rest/schemas';
 /**
  * Register authentication endpoints in the OpenAPI registry
@@ -72,16 +77,20 @@ export function registerAuthEndpoints(registry: OpenAPIRegistry) {
             example: {
               success: true,
               data: {
-                account: {
-                  id: 'acc_123',
-                  type: 'personal',
-                  ownerId: 'usr_456',
-                  createdAt: '2025-10-11T00:00:00Z',
-                  updatedAt: '2025-10-11T00:00:00Z',
-                  deletedAt: null,
-                },
+                accounts: [
+                  {
+                    id: 'acc_123',
+                    type: 'personal',
+                    ownerId: 'usr_456',
+                    createdAt: '2025-10-11T00:00:00Z',
+                    updatedAt: '2025-10-11T00:00:00Z',
+                    deletedAt: null,
+                  },
+                ],
                 accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                 refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                mfaVerified: false,
+                requiresMfaStepUp: false,
               },
             },
           },
@@ -1037,6 +1046,117 @@ You can provide additional context to help with condition evaluation:
         content: {
           'application/json': {
             schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/mfa/setup
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/mfa/setup',
+    tags: ['Authentication'],
+    summary: 'Initialize TOTP MFA enrollment',
+    description:
+      'Returns factor id, plaintext secret (one-time), and otpauth URL. Requires Bearer session.',
+    security: [{ bearerAuth: [] }],
+    request: {},
+    responses: {
+      200: {
+        description: 'Setup payload',
+        content: {
+          'application/json': {
+            schema: setupMfaResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/mfa/verify
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/mfa/verify',
+    tags: ['Authentication'],
+    summary: 'Complete MFA challenge with TOTP',
+    description: 'Marks session MFA-verified and returns rotated tokens; sets refresh cookie.',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: verifyMfaRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'New tokens with mfaVerified',
+        content: {
+          'application/json': {
+            schema: verifyMfaResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized or invalid code',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * POST /api/auth/mfa/recovery/verify
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/auth/mfa/recovery/verify',
+    tags: ['Authentication'],
+    summary: 'Complete MFA challenge with recovery code',
+    description:
+      'Consumes a one-time recovery code, marks session MFA-verified, returns rotated tokens; sets refresh cookie.',
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: verifyMfaRecoveryCodeRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'New tokens with mfaVerified',
+        content: {
+          'application/json': {
+            schema: verifyMfaRecoveryCodeResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized or invalid recovery code',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
           },
         },
       },

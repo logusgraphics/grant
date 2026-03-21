@@ -54,6 +54,20 @@ export const envSchema = z.object({
   AUTH_PASSWORD_RESET_OTP_VALIDITY_MINUTES: optionalNumber(60),
   AUTH_MAX_FAILED_LOGIN_ATTEMPTS: optionalNumber(5),
   AUTH_LOCKOUT_DURATION_MINUTES: optionalNumber(15),
+  AUTH_MFA_TOTP_ISSUER: optionalString('Grant'),
+  AUTH_MFA_TOTP_PERIOD_SECONDS: optionalNumber(30),
+  AUTH_MFA_TOTP_WINDOW: optionalNumber(1),
+  AUTH_MFA_VERIFY_MAX_ATTEMPTS: optionalNumber(5),
+  AUTH_MFA_VERIFY_WINDOW_MINUTES: optionalNumber(15),
+  AUTH_MFA_SESSION_TTL_MINUTES: optionalNumber(1440),
+  AUTH_MFA_SECRET_ENCRYPTION_KEY: optionalString(''),
+  /** Preferred: minimum AAL required after login for general API access (`aal1` | `aal2`). */
+  AUTH_MIN_AAL_AT_LOGIN: z
+    .string()
+    .optional()
+    .transform((s) => (s === 'aal2' ? 'aal2' : 'aal1')),
+  /** When > 0, session `auth_time` older than this (seconds) may require step-up (future enforcement). */
+  AUTH_MFA_STEP_UP_MAX_AGE_SECONDS: optionalNumber(0),
   TOKEN_DEFAULT_VALIDITY_MINUTES: optionalNumber(60),
   TOKEN_DEFAULT_LENGTH: optionalNumber(32),
   TOKEN_BCRYPT_ROUNDS: optionalNumber(10),

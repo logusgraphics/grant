@@ -286,6 +286,20 @@ Both REST and GraphQL endpoints use the same guard pattern:
 
 When a blocked operation is attempted, the API returns `403` with code `EMAIL_VERIFICATION_REQUIRED`.
 
+### MFA and composable guards (sensitive operations)
+
+Email verification and MFA are **separate** guards so they can be composed explicitly:
+
+| Export                                                             | Role                                                                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `requireEmailVerificationGraphQL` / `requireEmailVerificationRest` | Email verification only (`EMAIL_VERIFICATION_REQUIRED`)                             |
+| `requireMfaGraphQL` / `requireMfaRest`                             | MFA step-up (`MFA_REQUIRED` when policy requires it and JWT `mfaVerified` is false) |
+| `requireEmailThenMfaGraphQL` / `requireEmailThenMfaRest`           | Canonical **email → MFA → RBAC → handler** chain for mutating org-scoped routes     |
+
+**MFA policy (session tokens):** On organization-scoped routes covered by the MFA guard, the API requires a verified MFA step when **either** the organization has `requireMfaForSensitiveActions`, **or** the user has at least one **active** MFA factor (`isEnabled` and not soft-deleted). Enforcement uses `handlers.me.hasActiveMfaEnrollmentForUser` (any enabled factor, not primary-only). API keys and project-app tokens bypass MFA in the guard.
+
+**Project tenant quirk:** For `organizationProject` / `organizationProjectUser` scopes, the MFA guard still defaults to requiring MFA without reading the org’s `requireMfaForSensitiveActions` flag (stricter than org-only scope with the flag off). Aligning that behavior is a separate change.
+
 ## Rate Limiting
 
 Rate limiting protects against brute force, abuse, and noisy-neighbor scenarios by capping requests per client IP.

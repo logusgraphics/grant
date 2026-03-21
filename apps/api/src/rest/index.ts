@@ -16,10 +16,13 @@ import { createRolesRouter } from '@/rest/routes/roles.routes';
 import { createSigningKeysRoutes } from '@/rest/routes/signing-keys.routes';
 import { createTagsRouter } from '@/rest/routes/tags.routes';
 import { createUserRoutes } from '@/rest/routes/users.routes';
+import { minAalAtLoginRestMiddleware } from '@/lib/authorization/min-aal-at-login';
 import { RequestContext } from '@/types';
 
 export function createRestRouter(context: RequestContext): Router {
   const router = Router();
+
+  router.use(minAalAtLoginRestMiddleware);
 
   router.use('/config', createConfigRoutes());
   router.use('/api-keys', createApiKeysRoutes(context));

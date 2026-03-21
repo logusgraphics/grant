@@ -1,0 +1,6 @@
+mutation SetMyPrimaryMfaDevice($input: SetMyPrimaryMfaDeviceInput!) {
+  setMyPrimaryMfaDevice(input: $input) {
+    id
+    isPrimary
+  }
+}

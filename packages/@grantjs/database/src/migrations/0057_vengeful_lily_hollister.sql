@@ -1,0 +1,1 @@
+ALTER TABLE "user_mfa_recovery_codes" ADD COLUMN "updated_at" timestamp DEFAULT now() NOT NULL;

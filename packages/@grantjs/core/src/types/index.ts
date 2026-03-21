@@ -24,6 +24,15 @@ export interface TokenClaims {
   type: TokenType; // Token type: Session, ApiKey, or ProjectApp
   scope?: Scope; // Optional: Required for API key and project-app tokens
   isVerified?: boolean; // Optional: Email verification status (session tokens only)
+  mfaVerified?: boolean; // Optional: MFA verification status (session tokens only)
+  /** OIDC-style authentication methods references (session tokens). */
+  amr?: string[];
+  /** Authentication Context Class Reference / assurance level label (session tokens). */
+  acr?: string;
+  /** Unix timestamp of primary authentication (session tokens). */
+  auth_time?: number;
+  /** Unix timestamp of last MFA proof (session tokens with AAL2); used for step-up max age. */
+  mfa_auth_time?: number;
   scopes?: string[]; // Optional: Granted scope list for project-app tokens (resource:action)
   [key: string]: unknown; // Allow additional JWT claims
 }
@@ -233,5 +242,14 @@ export interface GrantAuth {
   type: TokenType; // Token type: Session, ApiKey, or ProjectApp
   scope?: Scope; // Required for API key and project-app tokens
   isVerified?: boolean; // Email verification status (session tokens only, always true for API keys)
+  mfaVerified?: boolean; // MFA verification status (session tokens only, always true for non-MFA token types)
   grantedScopes?: string[]; // For project-app tokens: allowed resource:action list; permissions are capped by this
+  /** Effective AAL from claims (session only); use with satisfiesMinAal / route policy. */
+  aal?: 'aal1' | 'aal2' | 'aal3';
+  amr?: string[];
+  acr?: string;
+  /** Primary authentication time (unix seconds), session tokens only. */
+  authTime?: number;
+  /** Last MFA proof time (unix seconds), session tokens only; from `mfa_auth_time` claim. */
+  mfaAuthTime?: number;
 }

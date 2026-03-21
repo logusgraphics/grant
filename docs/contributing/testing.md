@@ -15,6 +15,12 @@ pnpm test:run          # Single run
 pnpm test:coverage     # With coverage report
 ```
 
+### Security-sensitive guard refactors
+
+When changing email or MFA guards, verify that every sensitive route still chains **email verification and MFA** where required:
+
+- `rg "requireEmailVerificationGraphQL|requireEmailVerificationRest" apps/api` — only `email-then-mfa-compose.ts`, `email-verification-*.ts`, and `index.ts` should import the raw email guards for export; **routes** should use `requireEmailThenMfaGraphQL` / `requireEmailThenMfaRest` unless the endpoint is intentionally email-only.
+
 ## Test Structure
 
 ```
@@ -30,8 +36,10 @@ apps/api/tests/
 │   ├── handlers/               # Handler optional requestLogger, project OAuth
 │   │   ├── auth.handler.project-oauth.test.ts
 │   │   ├── auth.handler.request-logger.test.ts
+│   │   ├── auth.handler.verify-mfa-recovery.test.ts
 │   │   └── project-oauth.handler.test.ts
-│   ├── services/              # Audit service tenant scoping
+│   ├── services/              # Audit service tenant scoping, MFA lifecycle
+│   │   └── user-mfa.service.test.ts
 │   └── jobs/                  # Tenant job context validation
 ├── integration/
 │   ├── i18n.integration.test.ts          # REST error body includes translationKey and localized error

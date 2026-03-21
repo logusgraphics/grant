@@ -26,6 +26,8 @@ export const Query = {
   // Me (authenticated)
   me: authenticateGraphQLResolver(meQueries.me!),
   myUserAuthenticationMethods: authenticateGraphQLResolver(meQueries.myUserAuthenticationMethods!),
+  myMfaDevices: authenticateGraphQLResolver(meQueries.myMfaDevices!),
+  myMfaRecoveryCodeStatus: authenticateGraphQLResolver(meQueries.myMfaRecoveryCodeStatus!),
   myUserDataExport: authenticateGraphQLResolver(meQueries.myUserDataExport!),
   myUserSessions: authenticateGraphQLResolver(meQueries.myUserSessions!),
   // Organization (scoped)

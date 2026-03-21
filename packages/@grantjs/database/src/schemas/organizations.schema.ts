@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { pgTable, uuid, varchar, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, index, boolean } from 'drizzle-orm/pg-core';
 
 export const organizations = pgTable(
   'organizations',
@@ -7,6 +7,9 @@ export const organizations = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 255 }).notNull(),
     slug: varchar('slug', { length: 255 }).notNull(),
+    requireMfaForSensitiveActions: boolean('require_mfa_for_sensitive_actions')
+      .default(false)
+      .notNull(),
     deletedAt: timestamp('deleted_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -3,8 +3,9 @@ import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import {
   authenticateGraphQLResolver,
   authorizeGraphQLResolver,
-  requireEmailVerificationGraphQL,
+  requireEmailThenMfaGraphQL,
   type EmailVerificationGraphQLGuardOptions,
+  type MfaGraphQLGuardOptions,
 } from '@/lib/authorization';
 
 import * as apiKeyMutations from './api-keys/mutations';
@@ -23,8 +24,12 @@ import * as signingKeyMutations from './signing-keys/mutations';
 import * as tagMutations from './tags/mutations';
 import * as userMutations from './users/mutations';
 
-const ALLOW_PERSONAL: EmailVerificationGraphQLGuardOptions = { allowPersonalContext: true };
-const BLOCK_UNVERIFIED: EmailVerificationGraphQLGuardOptions = { allowPersonalContext: false };
+const ALLOW_PERSONAL_EMAIL: EmailVerificationGraphQLGuardOptions = { allowPersonalContext: true };
+const ALLOW_PERSONAL_MFA: MfaGraphQLGuardOptions = { allowPersonalContext: true };
+const BLOCK_UNVERIFIED_EMAIL: EmailVerificationGraphQLGuardOptions = {
+  allowPersonalContext: false,
+};
+const BLOCK_UNVERIFIED_MFA: MfaGraphQLGuardOptions = { allowPersonalContext: false };
 
 export const Mutation = {
   // Auth (public - no guards needed)
@@ -35,6 +40,9 @@ export const Mutation = {
   resendVerification: authMutations.resendVerification,
   requestPasswordReset: authMutations.requestPasswordReset,
   resetPassword: authMutations.resetPassword,
+  setupMfa: authenticateGraphQLResolver(authMutations.setupMfa!),
+  verifyMfa: authenticateGraphQLResolver(authMutations.verifyMfa!),
+  verifyMfaRecoveryCode: authenticateGraphQLResolver(authMutations.verifyMfaRecoveryCode!),
 
   // Me (private - own account operations, always allowed)
   logoutMyUser: meMutations.logoutMyUser!, // Cookie-only; no auth required
@@ -51,33 +59,42 @@ export const Mutation = {
   setMyPrimaryAuthenticationMethod: authenticateGraphQLResolver(
     meMutations.setMyPrimaryAuthenticationMethod!
   ),
+  createMyMfaEnrollment: authenticateGraphQLResolver(meMutations.createMyMfaEnrollment!),
+  verifyMyMfaEnrollment: authenticateGraphQLResolver(meMutations.verifyMyMfaEnrollment!),
+  setMyPrimaryMfaDevice: authenticateGraphQLResolver(meMutations.setMyPrimaryMfaDevice!),
+  removeMyMfaDevice: authenticateGraphQLResolver(meMutations.removeMyMfaDevice!),
+  generateMyMfaRecoveryCodes: authenticateGraphQLResolver(meMutations.generateMyMfaRecoveryCodes!),
   uploadMyUserPicture: authenticateGraphQLResolver(meMutations.uploadMyUserPicture!),
   updateMyUser: authenticateGraphQLResolver(meMutations.updateMyUser!),
 
   // Users (scoped - allow personal context)
-  createUser: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createUser: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.User, action: ResourceAction.Create },
       userMutations.createUser!
     )
   ),
-  updateUser: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updateUser: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.User, action: ResourceAction.Update },
       userMutations.updateUser!
     )
   ),
-  deleteUser: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteUser: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.User, action: ResourceAction.Delete },
       userMutations.deleteUser!
     )
   ),
-  uploadUserPicture: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  uploadUserPicture: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.User, action: ResourceAction.UploadPicture },
       userMutations.uploadUserPicture!
@@ -85,22 +102,25 @@ export const Mutation = {
   ),
 
   // Roles (scoped - allow personal context)
-  createRole: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createRole: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Role, action: ResourceAction.Create },
       roleMutations.createRole!
     )
   ),
-  deleteRole: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteRole: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Role, action: ResourceAction.Delete },
       roleMutations.deleteRole!
     )
   ),
-  updateRole: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updateRole: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Role, action: ResourceAction.Update },
       roleMutations.updateRole!
@@ -108,22 +128,25 @@ export const Mutation = {
   ),
 
   // Groups (scoped - allow personal context)
-  createGroup: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createGroup: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Group, action: ResourceAction.Create },
       groupMutations.createGroup!
     )
   ),
-  deleteGroup: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteGroup: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Group, action: ResourceAction.Delete },
       groupMutations.deleteGroup!
     )
   ),
-  updateGroup: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updateGroup: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Group, action: ResourceAction.Update },
       groupMutations.updateGroup!
@@ -131,22 +154,25 @@ export const Mutation = {
   ),
 
   // Organizations (scoped - block for unverified users)
-  createOrganization: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  createOrganization: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Organization, action: ResourceAction.Create },
       organizationMutations.createOrganization!
     )
   ),
-  updateOrganization: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  updateOrganization: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Organization, action: ResourceAction.Update },
       organizationMutations.updateOrganization!
     )
   ),
-  deleteOrganization: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  deleteOrganization: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Organization, action: ResourceAction.Delete },
       organizationMutations.deleteOrganization!
@@ -154,8 +180,9 @@ export const Mutation = {
   ),
 
   // Organization Invitations (scoped - block for unverified users)
-  inviteMember: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  inviteMember: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Create },
       organizationInvitationMutations.inviteMember!
@@ -163,26 +190,30 @@ export const Mutation = {
   ),
   // Accept uses the invitation token as authorization — the user isn't an org member yet,
   // so RBAC can't apply. The handler validates token, expiry, and email independently.
-  acceptInvitation: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  acceptInvitation: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     organizationInvitationMutations.acceptInvitation!
   ),
-  resendInvitationEmail: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  resendInvitationEmail: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.ResendEmail },
       organizationInvitationMutations.resendInvitationEmail!
     )
   ),
-  renewInvitation: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  renewInvitation: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Renew },
       organizationInvitationMutations.renewInvitation!
     )
   ),
-  revokeInvitation: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  revokeInvitation: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.OrganizationInvitation, action: ResourceAction.Revoke },
       organizationInvitationMutations.revokeInvitation!
@@ -190,15 +221,17 @@ export const Mutation = {
   ),
 
   // Organization Members (scoped - block for unverified users)
-  updateOrganizationMember: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  updateOrganizationMember: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.OrganizationMember, action: ResourceAction.Update },
       organizationMemberMutations.updateOrganizationMember!
     )
   ),
-  removeOrganizationMember: requireEmailVerificationGraphQL(
-    BLOCK_UNVERIFIED,
+  removeOrganizationMember: requireEmailThenMfaGraphQL(
+    BLOCK_UNVERIFIED_EMAIL,
+    BLOCK_UNVERIFIED_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.OrganizationMember, action: ResourceAction.Remove },
       organizationMemberMutations.removeOrganizationMember!
@@ -206,15 +239,17 @@ export const Mutation = {
   ),
 
   // Projects (scoped - allow personal context)
-  createProject: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createProject: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Project, action: ResourceAction.Create },
       projectMutations.createProject!
     )
   ),
-  updateProject: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updateProject: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
         resource: ResourceSlug.Project,
@@ -224,8 +259,9 @@ export const Mutation = {
       projectMutations.updateProject!
     )
   ),
-  deleteProject: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteProject: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
         resource: ResourceSlug.Project,
@@ -237,22 +273,25 @@ export const Mutation = {
   ),
 
   // Permissions (scoped - allow personal context)
-  createPermission: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createPermission: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Permission, action: ResourceAction.Create },
       permissionMutations.createPermission!
     )
   ),
-  deletePermission: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deletePermission: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Permission, action: ResourceAction.Delete },
       permissionMutations.deletePermission!
     )
   ),
-  updatePermission: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updatePermission: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Permission, action: ResourceAction.Update },
       permissionMutations.updatePermission!
@@ -260,22 +299,25 @@ export const Mutation = {
   ),
 
   // Resources (scoped - allow personal context)
-  createResource: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createResource: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Resource, action: ResourceAction.Create },
       resourceMutations.createResource!
     )
   ),
-  deleteResource: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteResource: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Resource, action: ResourceAction.Delete },
       resourceMutations.deleteResource!
     )
   ),
-  updateResource: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updateResource: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Resource, action: ResourceAction.Update },
       resourceMutations.updateResource!
@@ -283,15 +325,17 @@ export const Mutation = {
   ),
 
   // Tags (scoped - allow personal context)
-  createTag: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createTag: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Tag, action: ResourceAction.Create },
       tagMutations.createTag!
     )
   ),
-  updateTag: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updateTag: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
         resource: ResourceSlug.Tag,
@@ -301,8 +345,9 @@ export const Mutation = {
       tagMutations.updateTag!
     )
   ),
-  deleteTag: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteTag: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.Tag, action: ResourceAction.Delete, resourceResolver: 'tag' },
       tagMutations.deleteTag!
@@ -310,29 +355,33 @@ export const Mutation = {
   ),
 
   // Api Keys (scoped - allow personal context)
-  createApiKey: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createApiKey: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.ApiKey, action: ResourceAction.Create },
       apiKeyMutations.createApiKey!
     )
   ),
-  exchangeApiKey: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  exchangeApiKey: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.ApiKey, action: ResourceAction.Exchange },
       apiKeyMutations.exchangeApiKey!
     )
   ),
-  revokeApiKey: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  revokeApiKey: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.ApiKey, action: ResourceAction.Revoke },
       apiKeyMutations.revokeApiKey!
     )
   ),
-  deleteApiKey: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteApiKey: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.ApiKey, action: ResourceAction.Delete },
       apiKeyMutations.deleteApiKey!
@@ -340,8 +389,9 @@ export const Mutation = {
   ),
 
   // Signing Keys (scoped; project only – same permission as API key query for rotate)
-  rotateSigningKey: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  rotateSigningKey: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       { resource: ResourceSlug.ApiKey, action: ResourceAction.Query },
       signingKeyMutations.rotateSigningKey!
@@ -349,8 +399,9 @@ export const Mutation = {
   ),
 
   // Project apps (OAuth apps per project; scoped)
-  createProjectApp: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  createProjectApp: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
         resource: ResourceSlug.ProjectApp,
@@ -360,8 +411,9 @@ export const Mutation = {
       projectAppMutations.createProjectApp!
     )
   ),
-  updateProjectApp: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  updateProjectApp: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
         resource: ResourceSlug.ProjectApp,
@@ -371,8 +423,9 @@ export const Mutation = {
       projectAppMutations.updateProjectApp!
     )
   ),
-  deleteProjectApp: requireEmailVerificationGraphQL(
-    ALLOW_PERSONAL,
+  deleteProjectApp: requireEmailThenMfaGraphQL(
+    ALLOW_PERSONAL_EMAIL,
+    ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
         resource: ResourceSlug.ProjectApp,

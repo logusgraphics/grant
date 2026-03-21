@@ -1,0 +1,3 @@
+extend type Mutation {
+  verifyMfaRecoveryCode(input: VerifyMfaRecoveryCodeInput!): MfaVerifyResponse!
+}

@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { pgTable, uuid, varchar, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, index, boolean } from 'drizzle-orm/pg-core';
 
 import { userAuthenticationMethods } from './user-authentication-methods.schema';
 import { users } from './users.schema';
@@ -17,6 +17,8 @@ export const userSessions = pgTable(
     token: varchar('token', { length: 255 }).notNull().unique(),
     audience: varchar('audience', { length: 255 }).notNull(),
     expiresAt: timestamp('expires_at').notNull(),
+    emailVerified: boolean('email_verified').default(true).notNull(),
+    mfaVerifiedAt: timestamp('mfa_verified_at'),
     lastUsedAt: timestamp('last_used_at'),
     userAgent: varchar('user_agent', { length: 500 }),
     ipAddress: varchar('ip_address', { length: 45 }),

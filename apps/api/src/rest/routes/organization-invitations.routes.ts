@@ -8,7 +8,7 @@ import {
 } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { NotFoundError } from '@/lib/errors';
 import { parseRelations } from '@/lib/field-selection.lib';
 import { validate } from '@/middleware/validation.middleware';
@@ -32,7 +32,7 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
   router.post(
     '/invite',
     validate({ body: inviteMemberRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: false }),
+    requireEmailThenMfaRest({ allowPersonalContext: false }, { allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.OrganizationInvitation,
       action: ResourceAction.Create,
@@ -55,7 +55,7 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
   router.post(
     '/accept',
     validate({ body: acceptInvitationRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: false }),
+    requireEmailThenMfaRest({ allowPersonalContext: false }, { allowPersonalContext: false }),
     async (req: TypedRequest<{ body: typeof acceptInvitationRequestSchema }>, res: Response) => {
       const { token, userData } = req.body;
 
@@ -151,7 +151,7 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
   router.post(
     '/:id/resend-email',
     validate({ params: invitationParamsSchema, body: invitationActionBodySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: false }),
+    requireEmailThenMfaRest({ allowPersonalContext: false }, { allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.OrganizationInvitation,
       action: ResourceAction.ResendEmail,
@@ -178,7 +178,7 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
   router.post(
     '/:id/renew',
     validate({ params: invitationParamsSchema, body: invitationActionBodySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: false }),
+    requireEmailThenMfaRest({ allowPersonalContext: false }, { allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.OrganizationInvitation,
       action: ResourceAction.Renew,
@@ -205,7 +205,7 @@ export function createOrganizationInvitationsRoutes(context: RequestContext) {
   router.delete(
     '/:id',
     validate({ params: invitationParamsSchema, body: invitationActionBodySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: false }),
+    requireEmailThenMfaRest({ allowPersonalContext: false }, { allowPersonalContext: false }),
     authorizeRestRoute({
       resource: ResourceSlug.OrganizationInvitation,
       action: ResourceAction.Revoke,

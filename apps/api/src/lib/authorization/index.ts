@@ -15,4 +15,7 @@ export {
   requireEmailVerificationGraphQL,
   type EmailVerificationGraphQLGuardOptions,
 } from './email-verification-graphql-guard';
+export { requireEmailThenMfaGraphQL, requireEmailThenMfaRest } from './email-then-mfa-compose';
+export { requireMfaRest, type MfaRestGuardOptions } from './mfa-rest-guard';
+export { requireMfaGraphQL, type MfaGraphQLGuardOptions } from './mfa-graphql-guard';
 export type { ResourceResolver, ResourceResolverParams, ResourceResolverResult } from './types';

@@ -18,6 +18,7 @@ import {
   deleteMyAccountsBodySchema,
   deleteMyAccountsResponseSchema,
   getMyUserAuthenticationMethodsResponseSchema,
+  getMyMfaRecoveryCodeStatusResponseSchema,
   getMyUserSessionsQuerySchema,
   getMyUserSessionsResponseSchema,
   logoutMyUserResponseSchema,
@@ -55,6 +56,7 @@ export function registerMeEndpoints(registry: OpenAPIRegistry) {
     'GetMyUserAuthenticationMethodsResponse',
     getMyUserAuthenticationMethodsResponseSchema
   );
+  registry.register('GetMyMfaRecoveryCodeStatusResponse', getMyMfaRecoveryCodeStatusResponseSchema);
   registry.register('DeleteMyAccountsBody', deleteMyAccountsBodySchema);
   registry.register('DeleteMyAccountsResponse', deleteMyAccountsResponseSchema);
   registry.register('CreateMySecondaryAccountResponse', createMySecondaryAccountResponseSchema);
@@ -909,6 +911,52 @@ Users can only revoke their own sessions.
         content: {
           'application/json': {
             schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/me/mfa/recovery-codes/status
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/me/mfa/recovery-codes/status',
+    tags: ['Me'],
+    summary: 'MFA recovery code status (metadata only)',
+    description:
+      'Returns count of active unused recovery codes and last generation time. Plaintext codes are never returned.',
+    request: {},
+    responses: {
+      200: {
+        description: 'Recovery code metadata',
+        content: {
+          'application/json': {
+            schema: getMyMfaRecoveryCodeStatusResponseSchema,
+            example: {
+              success: true,
+              data: {
+                activeCount: 8,
+                lastGeneratedAt: '2026-03-20T12:00:00.000Z',
+              },
+            },
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
           },
         },
       },

@@ -4,6 +4,7 @@
       "unknownError": "An unknown error occurred"
     },
     "validation": {
+      "invalidEmail": "Invalid email",
       "invalidUrl": "Must be a valid URL",
       "redirectUrisMinOne": "At least one redirect URI is required",
       "nameTooLong": "Name too long",
@@ -2838,6 +2839,74 @@
         "changePasswordError": "Failed to change password",
         "revokeSessionSuccess": "Session revoked successfully",
         "revokeSessionError": "Failed to revoke session"
+      },
+      "mfa": {
+        "devices": {
+          "title": "MFA devices",
+          "description": "Manage your registered authenticator devices.",
+          "addDevice": "Set up authenticator",
+          "loading": "Loading devices...",
+          "empty": "No MFA devices registered.",
+          "verified": "Verified",
+          "pendingVerification": "pending verification",
+          "addedOn": "Added {date}",
+          "lastUsedOn": "Last used {date}",
+          "setPrimary": "Set primary",
+          "primary": "Primary",
+          "remove": "Remove",
+          "removeLastTitle": "Disable MFA for this account?",
+          "removeLastDescription": "Removing your last authenticator turns off MFA. Any unused recovery codes will be revoked.",
+          "removeLastOrgPolicy": "If your organization requires MFA for sensitive actions, those actions stay blocked until you set up MFA again.",
+          "removeLastCancel": "Cancel",
+          "removeLastConfirm": "Disable MFA",
+          "removeLastWorking": "Disabling…"
+        },
+        "enroll": {
+          "title": "Set up authenticator app",
+          "description": "Create a new authenticator setup and verify it to activate.",
+          "infoTitle": "Before you continue",
+          "infoDescription": "Starting setup creates a new TOTP configuration. If one already exists, it will be replaced after you confirm with a valid code.",
+          "totpLabel": "Authenticator code",
+          "generateSetup": "Set up authenticator",
+          "continue": "Continue",
+          "preparing": "Preparing...",
+          "verifying": "Verifying...",
+          "verifyAndEnable": "Verify and enable",
+          "cancel": "Cancel",
+          "setupFailed": "Failed to initialize MFA setup.",
+          "verifyFailed": "Failed to verify authenticator code."
+        },
+        "challenge": {
+          "title": "Multi-factor authentication",
+          "description": "Verify your authenticator app code to continue.",
+          "verifyCode": "Verify code",
+          "useRecoveryCode": "Use recovery code",
+          "recoveryCodePlaceholder": "Enter recovery code",
+          "checking": "Checking...",
+          "useCode": "Use code",
+          "invalidCode": "Invalid MFA code",
+          "invalidRecoveryCode": "Invalid recovery code"
+        },
+        "recovery": {
+          "title": "Recovery codes",
+          "description": "Generate one-time recovery codes for account access fallback.",
+          "generate": "Generate",
+          "regenerate": "Regenerate",
+          "copyAll": "Copy all codes",
+          "copied": "Recovery codes copied",
+          "empty": "No active recovery codes yet. Generate and store them securely.",
+          "statusLoading": "Loading recovery status…",
+          "oneTimeTitle": "Save these codes now",
+          "oneTimeDescription": "This is the only time we show the full list. Copy and store them somewhere safe before leaving this page.",
+          "metadataActive": "You have {count} active recovery codes. Last generated: {date}.",
+          "unknownDate": "unknown"
+        },
+        "qr": {
+          "imageAlt": "MFA QR code",
+          "secretLabel": "Secret",
+          "copySecret": "Copy secret",
+          "copied": "Secret copied to clipboard"
+        }
       }
     },
     "preferences": {

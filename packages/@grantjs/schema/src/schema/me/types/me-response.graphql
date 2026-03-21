@@ -1,5 +1,6 @@
 type MeResponse {
   accounts: [Account!]!
+  mfaVerified: Boolean
   requiresEmailVerification: Boolean
   verificationExpiry: Date
   email: String

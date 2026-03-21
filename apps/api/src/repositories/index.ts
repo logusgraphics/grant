@@ -41,6 +41,8 @@ import { RoleRepository } from './roles.repository';
 import { SigningKeyRepository } from './signing-keys.repository';
 import { TagRepository } from './tags.repository';
 import { UserAuthenticationMethodRepository } from './user-authentication-methods.repository';
+import { UserMfaFactorRepository } from './user-mfa-factors.repository';
+import { UserMfaRecoveryCodeRepository } from './user-mfa-recovery-codes.repository';
 import { UserRoleRepository } from './user-roles.repository';
 import { UserSessionRepository } from './user-sessions.repository';
 import { UserTagRepository } from './user-tags.repository';
@@ -91,6 +93,8 @@ export function createRepositories(db: DbSchema) {
     roleRepository: new RoleRepository(db),
     tagRepository: new TagRepository(db),
     userAuthenticationMethodRepository: new UserAuthenticationMethodRepository(db),
+    userMfaFactorRepository: new UserMfaFactorRepository(db),
+    userMfaRecoveryCodeRepository: new UserMfaRecoveryCodeRepository(db),
     userRoleRepository: new UserRoleRepository(db),
     userTagRepository: new UserTagRepository(db),
     userRepository: new UserRepository(db),

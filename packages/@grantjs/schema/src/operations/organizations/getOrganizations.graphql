@@ -18,6 +18,7 @@ query GetOrganizations(
       id
       name
       slug
+      requireMfaForSensitiveActions
       createdAt
       updatedAt
       tags {

@@ -4,6 +4,7 @@ import {
   type IAuditLogger,
   type IUserSessionRepository,
   type IUserSessionService,
+  type SessionSignOptions,
 } from '@grantjs/core';
 import {
   CreateUserSessionInput,
@@ -81,7 +82,9 @@ export class UserSessionService implements IUserSessionService {
   public async signSession(
     session: UserSession,
     isVerified: boolean = true,
-    issuerBaseUrl?: string
+    mfaVerified: boolean = false,
+    issuerBaseUrl?: string,
+    signOptions?: SessionSignOptions
   ): Promise<CreateSessionResult> {
     const context = 'UserSessionService.signSession';
     const validatedSession = validateInput(userSessionSchema, session, context);
@@ -94,6 +97,25 @@ export class UserSessionService implements IUserSessionService {
     const iat = Math.floor(Date.now() / 1000);
     const exp = Math.floor(this.getAccessTokenExpirationDate(Date.now()).getTime() / 1000);
 
+    const sessionRow = session as unknown as {
+      createdAt?: Date | string | null;
+      mfaVerifiedAt?: Date | string | null;
+    };
+    const createdAtMs = sessionRow.createdAt
+      ? new Date(sessionRow.createdAt).getTime()
+      : Date.now();
+    const authTimeSeconds =
+      signOptions?.authTimeSeconds ?? Math.max(0, Math.floor(createdAtMs / 1000));
+
+    const mfaAuthTimeSeconds = mfaVerified
+      ? sessionRow.mfaVerifiedAt
+        ? Math.max(0, Math.floor(new Date(sessionRow.mfaVerifiedAt).getTime() / 1000))
+        : Math.floor(Date.now() / 1000)
+      : undefined;
+
+    const amr = mfaVerified ? (['pwd', 'otp'] as const) : (['pwd'] as const);
+    const acr = mfaVerified ? 'aal2' : 'aal1';
+
     const jwtPayload = {
       sub,
       aud,
@@ -103,6 +125,11 @@ export class UserSessionService implements IUserSessionService {
       jti,
       type: TokenType.Session,
       isVerified,
+      mfaVerified,
+      amr: [...amr],
+      acr,
+      auth_time: authTimeSeconds,
+      ...(mfaAuthTimeSeconds !== undefined ? { mfa_auth_time: mfaAuthTimeSeconds } : {}),
     };
 
     const accessToken = await this.grant.signSessionToken(jwtPayload);
@@ -142,7 +169,12 @@ export class UserSessionService implements IUserSessionService {
       transaction
     );
 
-    return this.signSession(session, params.isVerified ?? true, issuerBaseUrl);
+    return this.signSession(
+      session,
+      params.isVerified ?? true,
+      Boolean((session as unknown as { mfaVerifiedAt?: Date | null }).mfaVerifiedAt),
+      issuerBaseUrl
+    );
   }
 
   /**
@@ -155,6 +187,7 @@ export class UserSessionService implements IUserSessionService {
     userAgent?: string | null,
     ipAddress?: string | null,
     isVerified?: boolean,
+    mfaVerified?: boolean,
     issuerBaseUrl?: string
   ): Promise<CreateSessionResult | null> {
     const session = await this.userSessionRepository.getSessionByRefreshToken(
@@ -181,7 +214,15 @@ export class UserSessionService implements IUserSessionService {
       transaction
     );
 
-    return this.signSession(refreshedSession, isVerified ?? true, issuerBaseUrl);
+    return this.signSession(
+      refreshedSession,
+      isVerified ??
+        (refreshedSession as unknown as { emailVerified?: boolean }).emailVerified ??
+        true,
+      mfaVerified ??
+        Boolean((refreshedSession as unknown as { mfaVerifiedAt?: Date | null }).mfaVerifiedAt),
+      issuerBaseUrl
+    );
   }
 
   public async revokeSession(id: string, transaction?: Transaction): Promise<UserSession> {
@@ -218,6 +259,13 @@ export class UserSessionService implements IUserSessionService {
         id: sessionId,
         lastUsedAt: new Date(),
       },
+      transaction
+    );
+  }
+
+  public async markMfaVerified(sessionId: string, transaction?: Transaction): Promise<UserSession> {
+    return this.userSessionRepository.updateUserSession(
+      { id: sessionId, mfaVerifiedAt: new Date() } as unknown as UpdateUserSessionInput,
       transaction
     );
   }

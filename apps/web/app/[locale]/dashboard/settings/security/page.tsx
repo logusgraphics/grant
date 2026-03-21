@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl';
 import {
   SettingActiveSessionsList,
   SettingAuthenticationMethodsList,
+  SettingMfaDevicesCard,
+  SettingMfaRecoveryCodesCard,
   SettingPasswordChangeForm,
 } from '@/components/features/settings';
 import { DashboardLayout } from '@/components/layout';
@@ -69,6 +71,8 @@ export default function SecuritySettingsPage() {
           loading={authMethodsLoading}
           onChangePassword={emailMethod ? () => setShowChangePassword(true) : undefined}
         />
+        <SettingMfaDevicesCard />
+        <SettingMfaRecoveryCodesCard />
 
         {showChangePassword && (
           <SettingPasswordChangeForm

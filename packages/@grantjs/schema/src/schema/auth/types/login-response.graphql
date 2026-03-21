@@ -2,6 +2,11 @@ type LoginResponse {
   accounts: [Account!]!
   accessToken: String!
   refreshToken: String!
+  mfaVerified: Boolean
+  """
+  When true, the client should complete MFA before expecting full API access (see AUTH_MIN_AAL_AT_LOGIN).
+  """
+  requiresMfaStepUp: Boolean
   requiresEmailVerification: Boolean
   verificationExpiry: Date
   email: String

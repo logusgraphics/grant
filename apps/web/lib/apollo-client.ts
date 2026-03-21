@@ -160,6 +160,11 @@ function isForbiddenGraphQLError(error: GraphQLError): boolean {
   );
 }
 
+function isMfaRequiredGraphQLError(error: GraphQLError): boolean {
+  const extensions = error.extensions as { code?: string } | undefined;
+  return extensions?.code === 'MFA_REQUIRED';
+}
+
 function isUnauthorizedNetworkError(error: unknown): boolean {
   if (!isNetworkErrorWithStatus(error)) {
     return false;
@@ -282,6 +287,15 @@ function redirectToForbidden() {
   }
 }
 
+function redirectToMfaChallenge() {
+  if (typeof window !== 'undefined') {
+    const currentPath = window.location.pathname;
+    const locale = currentPath.split('/')[1] || DEFAULT_LOCALE;
+    const returnTo = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+    window.location.href = `/${locale}/auth/mfa?mode=challenge&returnTo=${returnTo}`;
+  }
+}
+
 function shouldSkipErrorRedirect(operationName: string | undefined): boolean {
   if (!operationName) return false;
   return SKIP_ERROR_REDIRECT_OPERATIONS.includes(
@@ -377,6 +391,11 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
   }
 
   if (!shouldSkipErrorRedirect(operation.operationName)) {
+    const hasMfaRequiredError = graphQLErrors.some(isMfaRequiredGraphQLError);
+    if (hasMfaRequiredError) {
+      redirectToMfaChallenge();
+      return;
+    }
     const hasNotFoundError = graphQLErrors.some(isNotFoundGraphQLError);
     if (hasNotFoundError) {
       redirectToNotFound();

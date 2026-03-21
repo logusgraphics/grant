@@ -47,6 +47,14 @@ const cacheStrategySchema = z
     message: 'Must be memory or redis',
   });
 
+/** Minimum AAL after login (when MFA enrolled) */
+const minAalAtLoginSchema = z
+  .string()
+  .trim()
+  .refine((v) => v === '' || v === 'aal1' || v === 'aal2', {
+    message: 'Must be aal1 or aal2',
+  });
+
 /** Boolean env (true/false string) */
 const booleanSchema = z
   .string()
@@ -223,6 +231,15 @@ const schemas: Record<string, z.ZodType<string>> = {
   AUTH_MAX_FAILED_LOGIN_ATTEMPTS: positiveIntSchema,
   AUTH_LOCKOUT_DURATION_MINUTES: positiveIntSchema,
   AUTH_PASSWORD_RESET_OTP_VALIDITY_MINUTES: positiveIntSchema,
+  AUTH_MFA_TOTP_ISSUER: optionalString,
+  AUTH_MFA_TOTP_PERIOD_SECONDS: positiveIntSchema,
+  AUTH_MFA_TOTP_WINDOW: positiveIntSchema,
+  AUTH_MFA_VERIFY_MAX_ATTEMPTS: positiveIntSchema,
+  AUTH_MFA_VERIFY_WINDOW_MINUTES: positiveIntSchema,
+  AUTH_MFA_SESSION_TTL_MINUTES: positiveIntSchema,
+  AUTH_MFA_SECRET_ENCRYPTION_KEY: optionalString,
+  AUTH_MIN_AAL_AT_LOGIN: minAalAtLoginSchema,
+  AUTH_MFA_STEP_UP_MAX_AGE_SECONDS: positiveIntSchema,
   TOKEN_DEFAULT_VALIDITY_MINUTES: positiveIntSchema,
   TOKEN_DEFAULT_LENGTH: positiveIntSchema,
   TOKEN_BCRYPT_ROUNDS: positiveIntSchema,

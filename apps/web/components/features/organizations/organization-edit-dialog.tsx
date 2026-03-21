@@ -41,6 +41,12 @@ export function OrganizationEditDialog() {
 
   const fields: DialogField[] = [
     {
+      name: 'requireMfaForSensitiveActions',
+      label: 'form.requireMfaForSensitiveActions',
+      type: 'switch',
+      required: false,
+    },
+    {
       name: 'name',
       label: 'form.name',
       placeholder: 'form.name',
@@ -51,11 +57,13 @@ export function OrganizationEditDialog() {
 
   const defaultValues: DefaultValues<EditOrganizationFormValues> = {
     name: organizationToEdit?.name || '',
+    requireMfaForSensitiveActions: organizationToEdit?.requireMfaForSensitiveActions ?? false,
     tagIds: organizationToEdit?.tags?.map((tag: Tag) => tag.id) || [],
   };
 
   const mapOrganizationToFormValues = (organization: Organization): EditOrganizationFormValues => ({
     name: organization.name,
+    requireMfaForSensitiveActions: organization.requireMfaForSensitiveActions ?? false,
     tagIds: organization.tags?.map((tag: Tag) => tag.id),
   });
 
@@ -66,6 +74,7 @@ export function OrganizationEditDialog() {
         tenant: Tenant.Organization,
       },
       name: values.name,
+      requireMfaForSensitiveActions: values.requireMfaForSensitiveActions ?? false,
     });
   };
 

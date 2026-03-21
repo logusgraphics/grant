@@ -632,6 +632,10 @@ export type ExchangeApiKeyResult = {
   expiresIn: Scalars['Int']['output'];
 };
 
+export type GenerateMyMfaRecoveryCodesInput = {
+  factorId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type GetUserAuthenticationMethodsInput = {
   provider?: InputMaybe<UserAuthenticationMethodProvider>;
   userId?: InputMaybe<Scalars['ID']['input']>;
@@ -757,8 +761,11 @@ export type LoginResponse = {
   accessToken: Scalars['String']['output'];
   accounts: Array<Account>;
   email?: Maybe<Scalars['String']['output']>;
+  mfaVerified?: Maybe<Scalars['Boolean']['output']>;
   refreshToken: Scalars['String']['output'];
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
+  /** When true, the client should complete MFA before expecting full API access (see AUTH_MIN_AAL_AT_LOGIN). */
+  requiresMfaStepUp?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
 };
 
@@ -771,6 +778,7 @@ export type MeResponse = {
   __typename?: 'MeResponse';
   accounts: Array<Account>;
   email?: Maybe<Scalars['String']['output']>;
+  mfaVerified?: Maybe<Scalars['Boolean']['output']>;
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
 };
@@ -780,6 +788,48 @@ export enum MemberType {
   Member = 'member',
 }
 
+export type MfaDevice = {
+  __typename?: 'MfaDevice';
+  createdAt: Scalars['Date']['output'];
+  id: Scalars['ID']['output'];
+  isEnabled: Scalars['Boolean']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  lastUsedAt?: Maybe<Scalars['Date']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type MfaEnrollment = {
+  __typename?: 'MfaEnrollment';
+  factorId: Scalars['ID']['output'];
+  otpAuthUrl: Scalars['String']['output'];
+  secret: Scalars['String']['output'];
+};
+
+export type MfaRecoveryCodeStatus = {
+  __typename?: 'MfaRecoveryCodeStatus';
+  activeCount: Scalars['Int']['output'];
+  lastGeneratedAt?: Maybe<Scalars['Date']['output']>;
+};
+
+export type MfaSetupResponse = {
+  __typename?: 'MfaSetupResponse';
+  factorId: Scalars['ID']['output'];
+  otpAuthUrl: Scalars['String']['output'];
+  secret: Scalars['String']['output'];
+};
+
+export type MfaVerifyResponse = {
+  __typename?: 'MfaVerifyResponse';
+  accessToken: Scalars['String']['output'];
+  mfaVerified: Scalars['Boolean']['output'];
+  refreshToken: Scalars['String']['output'];
+};
+
+export type MfaVerifyResult = {
+  __typename?: 'MfaVerifyResult';
+  success: Scalars['Boolean']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
@@ -787,6 +837,7 @@ export type Mutation = {
   changeMyPassword: ChangeMyPasswordResult;
   createApiKey: CreateApiKeyResult;
   createGroup: Group;
+  createMyMfaEnrollment: MfaEnrollment;
   createMySecondaryAccount: CreateMySecondaryAccountResult;
   createMyUserAuthenticationMethod: UserAuthenticationMethod;
   createOrganization: Organization;
@@ -811,11 +862,13 @@ export type Mutation = {
   deleteTag: Tag;
   deleteUser: User;
   exchangeApiKey: ExchangeApiKeyResult;
+  generateMyMfaRecoveryCodes: Array<Scalars['String']['output']>;
   inviteMember: OrganizationInvitation;
   login: LoginResponse;
   logoutMyUser: LogoutMyUserResponse;
   refreshSession: RefreshSessionResponse;
   register: CreateAccountResult;
+  removeMyMfaDevice: MfaVerifyResult;
   removeOrganizationMember: OrganizationMember;
   renewInvitation: OrganizationInvitation;
   requestPasswordReset: RequestPasswordResetResponse;
@@ -832,6 +885,8 @@ export type Mutation = {
    */
   rotateSigningKey: SigningKey;
   setMyPrimaryAuthenticationMethod: UserAuthenticationMethod;
+  setMyPrimaryMfaDevice: MfaDevice;
+  setupMfa: MfaSetupResponse;
   updateGroup: Group;
   updateMyUser: User;
   updateOrganization: Organization;
@@ -847,6 +902,9 @@ export type Mutation = {
   uploadMyUserPicture: UploadUserPictureResult;
   uploadUserPicture: UploadUserPictureResult;
   verifyEmail: VerifyEmailResponse;
+  verifyMfa: MfaVerifyResponse;
+  verifyMfaRecoveryCode: MfaVerifyResponse;
+  verifyMyMfaEnrollment: MfaVerifyResult;
 };
 
 export type MutationAcceptInvitationArgs = {
@@ -962,6 +1020,10 @@ export type MutationExchangeApiKeyArgs = {
   input: ExchangeApiKeyInput;
 };
 
+export type MutationGenerateMyMfaRecoveryCodesArgs = {
+  input?: InputMaybe<GenerateMyMfaRecoveryCodesInput>;
+};
+
 export type MutationInviteMemberArgs = {
   input: InviteMemberInput;
 };
@@ -972,6 +1034,10 @@ export type MutationLoginArgs = {
 
 export type MutationRegisterArgs = {
   input: RegisterInput;
+};
+
+export type MutationRemoveMyMfaDeviceArgs = {
+  input: RemoveMyMfaDeviceInput;
 };
 
 export type MutationRemoveOrganizationMemberArgs = {
@@ -1020,6 +1086,10 @@ export type MutationRotateSigningKeyArgs = {
 
 export type MutationSetMyPrimaryAuthenticationMethodArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationSetMyPrimaryMfaDeviceArgs = {
+  input: SetMyPrimaryMfaDeviceInput;
 };
 
 export type MutationUpdateGroupArgs = {
@@ -1088,6 +1158,18 @@ export type MutationVerifyEmailArgs = {
   input: VerifyEmailInput;
 };
 
+export type MutationVerifyMfaArgs = {
+  input: VerifyMfaInput;
+};
+
+export type MutationVerifyMfaRecoveryCodeArgs = {
+  input: VerifyMfaRecoveryCodeInput;
+};
+
+export type MutationVerifyMyMfaEnrollmentArgs = {
+  input: VerifyMyMfaEnrollmentInput;
+};
+
 export type MyUserSessionsInput = {
   audience?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1104,6 +1186,7 @@ export type Organization = Auditable & {
   name: Scalars['String']['output'];
   permissions?: Maybe<Array<Permission>>;
   projects?: Maybe<Array<Project>>;
+  requireMfaForSensitiveActions: Scalars['Boolean']['output'];
   roles?: Maybe<Array<Role>>;
   slug: Scalars['String']['output'];
   tags?: Maybe<Array<Tag>>;
@@ -1619,6 +1702,8 @@ export type Query = {
   invitation?: Maybe<OrganizationInvitation>;
   isAuthorized: AuthorizationResult;
   me: MeResponse;
+  myMfaDevices: Array<MfaDevice>;
+  myMfaRecoveryCodeStatus: MfaRecoveryCodeStatus;
   myUserAuthenticationMethods: Array<UserAuthenticationMethod>;
   myUserDataExport: UserDataExport;
   myUserSessions: UserSessionPage;
@@ -1976,6 +2061,10 @@ export type RemoveGroupTagInput = {
   tagId: Scalars['ID']['input'];
 };
 
+export type RemoveMyMfaDeviceInput = {
+  factorId: Scalars['ID']['input'];
+};
+
 export type RemoveOrganizationGroupInput = {
   groupId: Scalars['ID']['input'];
   organizationId: Scalars['ID']['input'];
@@ -2294,6 +2383,10 @@ export type SessionExportData = {
   userAgent?: Maybe<Scalars['String']['output']>;
 };
 
+export type SetMyPrimaryMfaDeviceInput = {
+  factorId: Scalars['ID']['input'];
+};
+
 /**
  * Signing key for a scope (e.g. project). Used for RS256 API key tokens; public key is exposed in JWKS.
  * Only project scopes (accountProject, organizationProject) have manageable keys; system key is internal.
@@ -2415,6 +2508,7 @@ export type UpdateMyUserInput = {
 
 export type UpdateOrganizationInput = {
   name?: InputMaybe<Scalars['String']['input']>;
+  requireMfaForSensitiveActions?: InputMaybe<Scalars['Boolean']['input']>;
   scope: Scope;
 };
 
@@ -2771,6 +2865,18 @@ export type VerifyEmailResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type VerifyMfaInput = {
+  code: Scalars['String']['input'];
+};
+
+export type VerifyMfaRecoveryCodeInput = {
+  code: Scalars['String']['input'];
+};
+
+export type VerifyMyMfaEnrollmentInput = {
+  code: Scalars['String']['input'];
+};
+
 export type CreateApiKeyMutationVariables = Exact<{
   input: CreateApiKeyInput;
 }>;
@@ -2903,6 +3009,8 @@ export type LoginMutation = {
     __typename?: 'LoginResponse';
     accessToken: string;
     refreshToken: string;
+    mfaVerified?: boolean | null;
+    requiresMfaStepUp?: boolean | null;
     requiresEmailVerification?: boolean | null;
     verificationExpiry?: Date | null;
     email?: string | null;
@@ -3001,6 +3109,18 @@ export type ResetPasswordMutation = {
   };
 };
 
+export type SetupMfaMutationVariables = Exact<{ [key: string]: never }>;
+
+export type SetupMfaMutation = {
+  __typename?: 'Mutation';
+  setupMfa: {
+    __typename?: 'MfaSetupResponse';
+    factorId: string;
+    secret: string;
+    otpAuthUrl: string;
+  };
+};
+
 export type VerifyEmailMutationVariables = Exact<{
   input: VerifyEmailInput;
 }>;
@@ -3008,6 +3128,34 @@ export type VerifyEmailMutationVariables = Exact<{
 export type VerifyEmailMutation = {
   __typename?: 'Mutation';
   verifyEmail: { __typename?: 'VerifyEmailResponse'; success: boolean; message: string };
+};
+
+export type VerifyMfaMutationVariables = Exact<{
+  input: VerifyMfaInput;
+}>;
+
+export type VerifyMfaMutation = {
+  __typename?: 'Mutation';
+  verifyMfa: {
+    __typename?: 'MfaVerifyResponse';
+    accessToken: string;
+    refreshToken: string;
+    mfaVerified: boolean;
+  };
+};
+
+export type VerifyMfaRecoveryCodeMutationVariables = Exact<{
+  input: VerifyMfaRecoveryCodeInput;
+}>;
+
+export type VerifyMfaRecoveryCodeMutation = {
+  __typename?: 'Mutation';
+  verifyMfaRecoveryCode: {
+    __typename?: 'MfaVerifyResponse';
+    accessToken: string;
+    refreshToken: string;
+    mfaVerified: boolean;
+  };
 };
 
 export type CreateGroupMutationVariables = Exact<{
@@ -3178,6 +3326,18 @@ export type CreateMyUserAuthenticationMethodMutation = {
   };
 };
 
+export type CreateMyMfaEnrollmentMutationVariables = Exact<{ [key: string]: never }>;
+
+export type CreateMyMfaEnrollmentMutation = {
+  __typename?: 'Mutation';
+  createMyMfaEnrollment: {
+    __typename?: 'MfaEnrollment';
+    factorId: string;
+    secret: string;
+    otpAuthUrl: string;
+  };
+};
+
 export type DeleteMyAccountsMutationVariables = Exact<{
   input: DeleteMyAccountsInput;
 }>;
@@ -3214,6 +3374,15 @@ export type DeleteMyUserAuthenticationMethodMutation = {
   };
 };
 
+export type GenerateMyMfaRecoveryCodesMutationVariables = Exact<{
+  input?: InputMaybe<GenerateMyMfaRecoveryCodesInput>;
+}>;
+
+export type GenerateMyMfaRecoveryCodesMutation = {
+  __typename?: 'Mutation';
+  generateMyMfaRecoveryCodes: Array<string>;
+};
+
 export type LogoutMyUserMutationVariables = Exact<{ [key: string]: never }>;
 
 export type LogoutMyUserMutation = {
@@ -3227,6 +3396,7 @@ export type MeQuery = {
   __typename?: 'Query';
   me: {
     __typename?: 'MeResponse';
+    mfaVerified?: boolean | null;
     requiresEmailVerification?: boolean | null;
     verificationExpiry?: Date | null;
     email?: string | null;
@@ -3354,6 +3524,41 @@ export type MyUserSessionsQuery = {
   };
 };
 
+export type MyMfaDevicesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type MyMfaDevicesQuery = {
+  __typename?: 'Query';
+  myMfaDevices: Array<{
+    __typename?: 'MfaDevice';
+    id: string;
+    name: string;
+    isPrimary: boolean;
+    isEnabled: boolean;
+    createdAt: Date;
+    lastUsedAt?: Date | null;
+  }>;
+};
+
+export type MyMfaRecoveryCodeStatusQueryVariables = Exact<{ [key: string]: never }>;
+
+export type MyMfaRecoveryCodeStatusQuery = {
+  __typename?: 'Query';
+  myMfaRecoveryCodeStatus: {
+    __typename?: 'MfaRecoveryCodeStatus';
+    activeCount: number;
+    lastGeneratedAt?: Date | null;
+  };
+};
+
+export type RemoveMyMfaDeviceMutationVariables = Exact<{
+  input: RemoveMyMfaDeviceInput;
+}>;
+
+export type RemoveMyMfaDeviceMutation = {
+  __typename?: 'Mutation';
+  removeMyMfaDevice: { __typename?: 'MfaVerifyResult'; success: boolean };
+};
+
 export type RevokeMyUserSessionMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -3387,6 +3592,15 @@ export type SetMyPrimaryAuthenticationMethodMutation = {
   };
 };
 
+export type SetMyPrimaryMfaDeviceMutationVariables = Exact<{
+  input: SetMyPrimaryMfaDeviceInput;
+}>;
+
+export type SetMyPrimaryMfaDeviceMutation = {
+  __typename?: 'Mutation';
+  setMyPrimaryMfaDevice: { __typename?: 'MfaDevice'; id: string; isPrimary: boolean };
+};
+
 export type UpdateMyUserMutationVariables = Exact<{
   input: UpdateMyUserInput;
 }>;
@@ -3410,6 +3624,15 @@ export type UploadMyUserPictureMutationVariables = Exact<{
 export type UploadMyUserPictureMutation = {
   __typename?: 'Mutation';
   uploadMyUserPicture: { __typename?: 'UploadUserPictureResult'; url: string; path: string };
+};
+
+export type VerifyMyMfaEnrollmentMutationVariables = Exact<{
+  input: VerifyMyMfaEnrollmentInput;
+}>;
+
+export type VerifyMyMfaEnrollmentMutation = {
+  __typename?: 'Mutation';
+  verifyMyMfaEnrollment: { __typename?: 'MfaVerifyResult'; success: boolean };
 };
 
 export type AcceptInvitationMutationVariables = Exact<{
@@ -3705,6 +3928,7 @@ export type GetOrganizationsQuery = {
       id: string;
       name: string;
       slug: string;
+      requireMfaForSensitiveActions: boolean;
       createdAt: Date;
       updatedAt: Date;
       tags?: Array<{
@@ -3730,6 +3954,7 @@ export type UpdateOrganizationMutation = {
     id: string;
     name: string;
     slug: string;
+    requireMfaForSensitiveActions: boolean;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -4869,6 +5094,8 @@ export const LoginDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'refreshToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mfaVerified' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'requiresMfaStepUp' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'requiresEmailVerification' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'verificationExpiry' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
@@ -5131,6 +5358,33 @@ export const ResetPasswordDocument = {
     },
   ],
 } as unknown as DocumentNode<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const SetupMfaDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SetupMfa' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setupMfa' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'factorId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'secret' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'otpAuthUrl' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SetupMfaMutation, SetupMfaMutationVariables>;
 export const VerifyEmailDocument = {
   kind: 'Document',
   definitions: [
@@ -5174,6 +5428,97 @@ export const VerifyEmailDocument = {
     },
   ],
 } as unknown as DocumentNode<VerifyEmailMutation, VerifyEmailMutationVariables>;
+export const VerifyMfaDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'VerifyMfa' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'VerifyMfaInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'verifyMfa' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'refreshToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mfaVerified' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<VerifyMfaMutation, VerifyMfaMutationVariables>;
+export const VerifyMfaRecoveryCodeDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'VerifyMfaRecoveryCode' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'VerifyMfaRecoveryCodeInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'verifyMfaRecoveryCode' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'accessToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'refreshToken' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'mfaVerified' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<VerifyMfaRecoveryCodeMutation, VerifyMfaRecoveryCodeMutationVariables>;
 export const CreateGroupDocument = {
   kind: 'Document',
   definitions: [
@@ -5688,6 +6033,33 @@ export const CreateMyUserAuthenticationMethodDocument = {
   CreateMyUserAuthenticationMethodMutation,
   CreateMyUserAuthenticationMethodMutationVariables
 >;
+export const CreateMyMfaEnrollmentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateMyMfaEnrollment' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createMyMfaEnrollment' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'factorId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'secret' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'otpAuthUrl' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateMyMfaEnrollmentMutation, CreateMyMfaEnrollmentMutationVariables>;
 export const DeleteMyAccountsDocument = {
   kind: 'Document',
   definitions: [
@@ -5787,6 +6159,45 @@ export const DeleteMyUserAuthenticationMethodDocument = {
   DeleteMyUserAuthenticationMethodMutation,
   DeleteMyUserAuthenticationMethodMutationVariables
 >;
+export const GenerateMyMfaRecoveryCodesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'GenerateMyMfaRecoveryCodes' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'GenerateMyMfaRecoveryCodesInput' },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'generateMyMfaRecoveryCodes' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GenerateMyMfaRecoveryCodesMutation,
+  GenerateMyMfaRecoveryCodesMutationVariables
+>;
 export const LogoutMyUserDocument = {
   kind: 'Document',
   definitions: [
@@ -5855,6 +6266,7 @@ export const MeDocument = {
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'mfaVerified' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'requiresEmailVerification' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'verificationExpiry' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
@@ -6084,6 +6496,102 @@ export const MyUserSessionsDocument = {
     },
   ],
 } as unknown as DocumentNode<MyUserSessionsQuery, MyUserSessionsQueryVariables>;
+export const MyMfaDevicesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'MyMfaDevices' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'myMfaDevices' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isPrimary' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isEnabled' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<MyMfaDevicesQuery, MyMfaDevicesQueryVariables>;
+export const MyMfaRecoveryCodeStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'MyMfaRecoveryCodeStatus' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'myMfaRecoveryCodeStatus' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'activeCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastGeneratedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<MyMfaRecoveryCodeStatusQuery, MyMfaRecoveryCodeStatusQueryVariables>;
+export const RemoveMyMfaDeviceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveMyMfaDevice' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'RemoveMyMfaDeviceInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeMyMfaDevice' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [{ kind: 'Field', name: { kind: 'Name', value: 'success' } }],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RemoveMyMfaDeviceMutation, RemoveMyMfaDeviceMutationVariables>;
 export const RevokeMyUserSessionDocument = {
   kind: 'Document',
   definitions: [
@@ -6180,6 +6688,52 @@ export const SetMyPrimaryAuthenticationMethodDocument = {
   SetMyPrimaryAuthenticationMethodMutation,
   SetMyPrimaryAuthenticationMethodMutationVariables
 >;
+export const SetMyPrimaryMfaDeviceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SetMyPrimaryMfaDevice' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SetMyPrimaryMfaDeviceInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setMyPrimaryMfaDevice' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isPrimary' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SetMyPrimaryMfaDeviceMutation, SetMyPrimaryMfaDeviceMutationVariables>;
 export const UpdateMyUserDocument = {
   kind: 'Document',
   definitions: [
@@ -6269,6 +6823,49 @@ export const UploadMyUserPictureDocument = {
     },
   ],
 } as unknown as DocumentNode<UploadMyUserPictureMutation, UploadMyUserPictureMutationVariables>;
+export const VerifyMyMfaEnrollmentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'VerifyMyMfaEnrollment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'VerifyMyMfaEnrollmentInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'verifyMyMfaEnrollment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [{ kind: 'Field', name: { kind: 'Name', value: 'success' } }],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<VerifyMyMfaEnrollmentMutation, VerifyMyMfaEnrollmentMutationVariables>;
 export const AcceptInvitationDocument = {
   kind: 'Document',
   definitions: [
@@ -7309,6 +7906,10 @@ export const GetOrganizationsDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'requireMfaForSensitiveActions' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                       {
@@ -7386,6 +7987,7 @@ export const UpdateOrganizationDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'requireMfaForSensitiveActions' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],

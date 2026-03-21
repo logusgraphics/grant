@@ -8,7 +8,7 @@ import {
 import { PermissionSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createPermissionRequestSchema,
@@ -61,7 +61,7 @@ export function createPermissionsRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createPermissionRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Permission,
       action: ResourceAction.Create,
@@ -84,7 +84,7 @@ export function createPermissionsRouter(context: RequestContext): Router {
       body: updatePermissionRequestSchema,
       query: deletePermissionQuerySchema,
     }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Permission,
       action: ResourceAction.Update,
@@ -117,7 +117,7 @@ export function createPermissionsRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: permissionParamsSchema, query: deletePermissionQuerySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Permission,
       action: ResourceAction.Delete,

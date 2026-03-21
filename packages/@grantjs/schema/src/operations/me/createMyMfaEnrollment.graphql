@@ -1,0 +1,7 @@
+mutation CreateMyMfaEnrollment {
+  createMyMfaEnrollment {
+    factorId
+    secret
+    otpAuthUrl
+  }
+}

@@ -13,6 +13,11 @@ import { ConfigurationError } from '@/lib/errors';
 
 const env = getEnv();
 
+/** Effective minimum AAL at login for policy (`AUTH_MIN_AAL_AT_LOGIN`). */
+function resolveMinAalAtLogin(): 'aal1' | 'aal2' {
+  return env.AUTH_MIN_AAL_AT_LOGIN === 'aal2' ? 'aal2' : 'aal1';
+}
+
 // ============================================================================
 // Application Configuration
 // ============================================================================
@@ -112,6 +117,40 @@ export const AUTH_CONFIG = {
 
   /** Account lockout duration in minutes */
   lockoutDurationMinutes: env.AUTH_LOCKOUT_DURATION_MINUTES,
+
+  /** MFA (TOTP) configuration */
+  mfa: {
+    /** Issuer shown in authenticator apps for otpauth URIs */
+    totpIssuer: env.AUTH_MFA_TOTP_ISSUER,
+
+    /** TOTP period in seconds (RFC 6238 default: 30) */
+    totpPeriodSeconds: env.AUTH_MFA_TOTP_PERIOD_SECONDS,
+
+    /** Allowed time-window drift in steps during TOTP verification */
+    totpWindow: env.AUTH_MFA_TOTP_WINDOW,
+
+    /** Maximum MFA verification attempts per window */
+    verifyMaxAttempts: env.AUTH_MFA_VERIFY_MAX_ATTEMPTS,
+
+    /** MFA verification attempt window in minutes */
+    verifyWindowMinutes: env.AUTH_MFA_VERIFY_WINDOW_MINUTES,
+
+    /** Optional session-level MFA validity window in minutes */
+    sessionTtlMinutes: env.AUTH_MFA_SESSION_TTL_MINUTES,
+
+    /** Symmetric key used to encrypt persisted MFA secrets (when configured) */
+    secretEncryptionKey: env.AUTH_MFA_SECRET_ENCRYPTION_KEY || undefined,
+  },
+
+  /**
+   * Minimum AAL expected for general API access after login when the user has MFA enrolled.
+   * `aal2` means the user must complete MFA (step-up) before most routes; safe AAL1 routes are explicit.
+   * From `AUTH_MIN_AAL_AT_LOGIN`.
+   */
+  minAalAtLogin: resolveMinAalAtLogin(),
+
+  /** When &gt; 0, MFA step-up max age via `mfa_auth_time` (0 = disabled). */
+  mfaStepUpMaxAgeSeconds: env.AUTH_MFA_STEP_UP_MAX_AGE_SECONDS,
 } as const;
 
 // ============================================================================

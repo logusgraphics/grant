@@ -4,6 +4,7 @@
       "unknownError": "Ein unbekannter Fehler ist aufgetreten"
     },
     "validation": {
+      "invalidEmail": "Ungültige E-Mail-Adresse",
       "invalidUrl": "Muss eine gültige URL sein",
       "redirectUrisMinOne": "Mindestens eine Weiterleitungs-URI ist erforderlich",
       "nameTooLong": "Name ist zu lang",
@@ -2837,6 +2838,74 @@
         "changePasswordError": "Passwort konnte nicht geändert werden",
         "revokeSessionSuccess": "Sitzung erfolgreich widerrufen",
         "revokeSessionError": "Sitzung konnte nicht widerrufen werden"
+      },
+      "mfa": {
+        "devices": {
+          "title": "MFA-Geräte",
+          "description": "Verwalten Sie Ihre registrierten Authenticator-Geräte.",
+          "addDevice": "Authenticator einrichten",
+          "loading": "Geräte werden geladen...",
+          "empty": "Keine MFA-Geräte registriert.",
+          "verified": "Verifiziert",
+          "pendingVerification": "Bestätigung ausstehend",
+          "addedOn": "Hinzugefügt am {date}",
+          "lastUsedOn": "Zuletzt verwendet am {date}",
+          "setPrimary": "Als primär setzen",
+          "primary": "Primär",
+          "remove": "Entfernen",
+          "removeLastTitle": "MFA für dieses Konto deaktivieren?",
+          "removeLastDescription": "Wenn Sie Ihren letzten Authenticator entfernen, wird MFA deaktiviert. Ungenutzte Wiederherstellungscodes werden widerrufen.",
+          "removeLastOrgPolicy": "Wenn Ihre Organisation MFA für sensible Aktionen vorschreibt, bleiben diese Aktionen blockiert, bis Sie MFA erneut einrichten.",
+          "removeLastCancel": "Abbrechen",
+          "removeLastConfirm": "MFA deaktivieren",
+          "removeLastWorking": "Wird deaktiviert…"
+        },
+        "enroll": {
+          "title": "Authenticator-App einrichten",
+          "description": "Erstellen Sie eine neue Authenticator-Einrichtung und bestätigen Sie sie zur Aktivierung.",
+          "infoTitle": "Bevor Sie fortfahren",
+          "infoDescription": "Beim Starten wird eine neue TOTP-Konfiguration erstellt. Wenn bereits eine vorhanden ist, wird sie nach erfolgreicher Code-Bestätigung ersetzt.",
+          "totpLabel": "Authenticator-Code",
+          "generateSetup": "Authenticator einrichten",
+          "continue": "Weiter",
+          "preparing": "Wird vorbereitet...",
+          "verifying": "Wird überprüft...",
+          "verifyAndEnable": "Überprüfen und aktivieren",
+          "cancel": "Abbrechen",
+          "setupFailed": "MFA-Setup konnte nicht initialisiert werden.",
+          "verifyFailed": "Authenticator-Code konnte nicht verifiziert werden."
+        },
+        "challenge": {
+          "title": "Multi-Faktor-Authentifizierung",
+          "description": "Bestätigen Sie Ihren Authenticator-Code, um fortzufahren.",
+          "verifyCode": "Code prüfen",
+          "useRecoveryCode": "Wiederherstellungscode verwenden",
+          "recoveryCodePlaceholder": "Wiederherstellungscode eingeben",
+          "checking": "Wird geprüft...",
+          "useCode": "Code verwenden",
+          "invalidCode": "Ungültiger MFA-Code",
+          "invalidRecoveryCode": "Ungültiger Wiederherstellungscode"
+        },
+        "recovery": {
+          "title": "Wiederherstellungscodes",
+          "description": "Einmalige Wiederherstellungscodes für den Kontozugriff generieren.",
+          "generate": "Generieren",
+          "regenerate": "Neu generieren",
+          "copyAll": "Alle Codes kopieren",
+          "copied": "Wiederherstellungscodes kopiert",
+          "empty": "Noch keine aktiven Wiederherstellungscodes. Generieren und sicher aufbewahren.",
+          "statusLoading": "Wiederherstellungsstatus wird geladen…",
+          "oneTimeTitle": "Codes jetzt speichern",
+          "oneTimeDescription": "Dies ist das einzige Mal, dass wir die vollständige Liste anzeigen. Kopieren und sicher aufbewahren, bevor Sie diese Seite verlassen.",
+          "metadataActive": "Sie haben {count} aktive Wiederherstellungscodes. Zuletzt generiert: {date}.",
+          "unknownDate": "unbekannt"
+        },
+        "qr": {
+          "imageAlt": "MFA-QR-Code",
+          "secretLabel": "Geheimnis",
+          "copySecret": "Geheimnis kopieren",
+          "copied": "Geheimnis in die Zwischenablage kopiert"
+        }
       }
     },
     "preferences": {

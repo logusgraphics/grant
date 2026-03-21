@@ -14,6 +14,7 @@ import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 
 import { config, printConfigSummary, validateConfig } from '@/config';
+import { graphqlMinAalAtLoginMiddleware } from '@/lib/authorization/min-aal-at-login';
 import { schema } from '@/graphql/resolvers';
 import { GraphqlContext } from '@/graphql/types';
 import { i18nMiddleware, initializeI18n } from '@/i18n';
@@ -119,6 +120,7 @@ async function startServer() {
 
   app.use(
     '/graphql',
+    graphqlMinAalAtLoginMiddleware,
     expressMiddleware(apolloServer, {
       context: async ({ req, res }: { req: express.Request; res: express.Response }) => {
         const contextReq = req as ContextRequest;

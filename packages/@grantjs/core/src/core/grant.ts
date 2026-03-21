@@ -6,6 +6,7 @@ import {
   TokenType,
 } from '@grantjs/schema';
 
+import { getAalFromTokenClaims } from './aal';
 import { ConditionEvaluator } from './condition-evaluator';
 import { PermissionChecker } from './permission-checker';
 import { TokenManager } from './token-manager';
@@ -69,11 +70,25 @@ export class Grant {
       exp: expiresAt,
       jti: tokenId,
       isVerified: isVerifiedClaim,
+      mfaVerified: mfaVerifiedClaim,
       scopes: grantedScopes,
+      amr,
+      acr,
+      auth_time: authTimeClaim,
+      mfa_auth_time: mfaAuthTimeClaim,
     } = claims;
     const isVerified =
       type === TokenType.ApiKey || type === TokenType.ProjectApp ? true : isVerifiedClaim;
+    const mfaVerified =
+      type === TokenType.ApiKey || type === TokenType.ProjectApp ? true : mfaVerifiedClaim;
     const scope = requestScope && type === TokenType.Session ? requestScope : tokenScope;
+    const aal = type === TokenType.Session ? getAalFromTokenClaims(claims) : undefined;
+    const authTime =
+      type === TokenType.Session && typeof authTimeClaim === 'number' ? authTimeClaim : undefined;
+    const mfaAuthTime =
+      type === TokenType.Session && typeof mfaAuthTimeClaim === 'number'
+        ? mfaAuthTimeClaim
+        : undefined;
     return {
       userId,
       scope,
@@ -81,7 +96,15 @@ export class Grant {
       expiresAt,
       tokenId,
       isVerified,
+      mfaVerified,
       grantedScopes: type === TokenType.ProjectApp ? grantedScopes : undefined,
+      ...(type === TokenType.Session && {
+        aal,
+        ...(Array.isArray(amr) ? { amr: amr as string[] } : {}),
+        ...(typeof acr === 'string' ? { acr } : {}),
+        ...(authTime !== undefined ? { authTime } : {}),
+        ...(mfaAuthTime !== undefined ? { mfaAuthTime } : {}),
+      }),
     };
   }
 

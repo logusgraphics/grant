@@ -1,3 +1,4 @@
+export * from './aal';
 export * from './grant';
 export * from './token-manager';
 export * from './condition-evaluator';

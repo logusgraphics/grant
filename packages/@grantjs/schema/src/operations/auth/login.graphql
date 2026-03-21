@@ -2,6 +2,8 @@ mutation Login($input: LoginInput!) {
   login(input: $input) {
     accessToken
     refreshToken
+    mfaVerified
+    requiresMfaStepUp
     requiresEmailVerification
     verificationExpiry
     email

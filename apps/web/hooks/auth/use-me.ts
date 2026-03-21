@@ -5,6 +5,7 @@ import { Account, MeDocument, MeQuery } from '@grantjs/schema';
 interface UseMeResult {
   accounts: Account[];
   email: string | null;
+  mfaVerified: boolean;
   requiresEmailVerification: boolean;
   verificationExpiry: Date | null;
   loading: boolean;
@@ -21,12 +22,14 @@ export function useMe(): UseMeResult {
 
   const accounts = data?.me?.accounts ?? [];
   const email = data?.me?.email ?? null;
+  const mfaVerified = data?.me?.mfaVerified ?? false;
   const requiresEmailVerification = data?.me?.requiresEmailVerification ?? false;
   const verificationExpiry = data?.me?.verificationExpiry ?? null;
 
   return {
     accounts,
     email,
+    mfaVerified,
     requiresEmailVerification,
     verificationExpiry,
     loading,
