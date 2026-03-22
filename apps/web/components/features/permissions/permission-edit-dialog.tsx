@@ -22,7 +22,7 @@ import { useTags } from '@/hooks/tags';
 import { getDocsUrl } from '@/lib/constants';
 import { usePermissionsStore } from '@/stores/permissions.store';
 
-import { PermissionEditFormValues, editPermissionSchema } from './permission-types';
+import { editPermissionSchema, PermissionEditFormValues } from './permission-types';
 
 export function PermissionEditDialog() {
   const scope = useScopeFromParams();

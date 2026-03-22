@@ -2,7 +2,6 @@
  * API-key-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   ApiKey,
   ApiKeyPage,
@@ -10,6 +9,8 @@ import type {
   QueryApiKeysArgs,
   SigningKey,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IApiKeyRepository {
   getApiKeys(

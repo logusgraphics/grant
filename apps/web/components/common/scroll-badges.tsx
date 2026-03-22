@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode } from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/components/ui/badge';

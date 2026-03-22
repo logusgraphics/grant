@@ -1,11 +1,11 @@
 import {
   ComparisonOperator,
-  LogicalOperator,
   type ConditionExpression,
   type ExecutionContext,
-  type FieldValue,
-  type FieldReference,
   type FieldComparison,
+  type FieldReference,
+  type FieldValue,
+  LogicalOperator,
 } from '../types';
 
 export class ConditionEvaluator {

@@ -1,10 +1,10 @@
-import { getApiBaseUrl } from '@/lib/constants';
-
 import type {
   ProjectAppPublicInfo,
   ProjectConsentInfo,
   ProjectConsentRedirectResult,
 } from '@grantjs/schema';
+
+import { getApiBaseUrl } from '@/lib/constants';
 
 // Re-export for consumers that need the types
 export type { ProjectAppPublicInfo, ProjectConsentInfo } from '@grantjs/schema';

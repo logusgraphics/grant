@@ -69,6 +69,15 @@ To avoid regressions, follow these rules:
 
 Full list, descriptions, and defaults: Config app (all categories) or root **`.env.example`** (and `.env.demo.example` / `.env.test.example` for demo/E2E). Variables use prefixes (`DB_*`, `JWT_*`, `SECURITY_*`, etc.) for grouping.
 
+### Authentication assurance (AAL)
+
+| Variable                           | Default | Purpose                                                                                                                                                                                           |
+| ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_MIN_AAL_AT_LOGIN`            | `aal1`  | Minimum authentication assurance for **general** API access after login when the user has **MFA enrolled**. Use `aal2` to require MFA verification (step-up) before most routes.                  |
+| `AUTH_MFA_STEP_UP_MAX_AGE_SECONDS` | `0`     | When `AUTH_MIN_AAL_AT_LOGIN` is `aal2`, session JWTs with AAL2 whose `mfa_auth_time` is older than this many seconds are treated as AAL1 for route policy (time-based MFA step-up). `0` disables. |
+
+Session access tokens include `amr`, `acr`, and `auth_time` claims. Prefer `config.auth.minAalAtLogin` in code (derived from the above).
+
 ## Using config in code
 
 The API reads env via a centralized, type-safe config:

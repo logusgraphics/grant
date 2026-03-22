@@ -18,12 +18,27 @@ export const userAuthenticationMethodProviderSchema = z.enum(
 export const authTokensSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
+  mfaVerified: z.boolean().optional(),
 });
 
 export const loginResultSchema = z.object({
+  accounts: z.array(accountSchema),
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  mfaVerified: z.boolean().optional(),
+  requiresMfaStepUp: z.boolean().optional(),
+  requiresEmailVerification: z.boolean().optional(),
+  verificationExpiry: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+});
+
+export const registerResultSchema = z.object({
   account: accountSchema,
   accessToken: z.string(),
   refreshToken: z.string(),
+  requiresEmailVerification: z.boolean().optional(),
+  verificationExpiry: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
 });
 
 export const loginRequestSchema = z.object({
@@ -45,8 +60,6 @@ export const loginResponseSchema = createSuccessResponseSchema(
   loginResultSchema,
   'Successfully authenticated user'
 );
-
-export const registerResultSchema = loginResultSchema;
 
 export const registerRequestSchema = z.object({
   name: z
@@ -174,6 +187,42 @@ export const resetPasswordResultSchema = z.object({
 export const resetPasswordResponseSchema = createSuccessResponseSchema(
   resetPasswordResultSchema,
   'Successfully reset password'
+);
+
+export const setupMfaResultSchema = z.object({
+  factorId: z.string().uuid(),
+  secret: z.string(),
+  otpAuthUrl: z.string(),
+});
+
+export const setupMfaResponseSchema = createSuccessResponseSchema(
+  setupMfaResultSchema,
+  'Successfully initialized MFA setup'
+);
+
+export const verifyMfaRequestSchema = z.object({
+  code: z.string().min(6).max(8),
+});
+
+export const verifyMfaResultSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  mfaVerified: z.boolean(),
+});
+
+export const verifyMfaResponseSchema = createSuccessResponseSchema(
+  verifyMfaResultSchema,
+  'Successfully verified MFA challenge'
+);
+
+/** Recovery codes are 10-char hex (see UserMfaService.generateRecoveryCodes); allow flexible input */
+export const verifyMfaRecoveryCodeRequestSchema = z.object({
+  code: z.string().min(8).max(64),
+});
+
+export const verifyMfaRecoveryCodeResponseSchema = createSuccessResponseSchema(
+  verifyMfaResultSchema,
+  'Successfully verified MFA challenge with a recovery code'
 );
 
 export const userAuthenticationEmailProviderActionSchema = z.enum(

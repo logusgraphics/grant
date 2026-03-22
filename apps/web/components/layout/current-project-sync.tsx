@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-
 import { useParams } from 'next/navigation';
-
 import { ProjectSortableField, SortOrder } from '@grantjs/schema';
 
 import { useProjectScope } from '@/hooks/common';

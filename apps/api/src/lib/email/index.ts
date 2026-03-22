@@ -2,11 +2,11 @@
 export {
   ConsoleEmailAdapter,
   EmailFactory,
+  type EmailTemplates,
   MailgunEmailAdapter,
   MailjetEmailAdapter,
   SesEmailAdapter,
   SmtpEmailAdapter,
-  type EmailTemplates,
 } from '@grantjs/email';
 
 // Re-export types from @grantjs/core

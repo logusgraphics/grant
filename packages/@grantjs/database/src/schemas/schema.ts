@@ -101,6 +101,15 @@ import {
   userAuthenticationMethods,
   userAuthenticationMethodsRelations,
 } from './user-authentication-methods.schema';
+import {
+  userMfaFactorAuditLogs,
+  userMfaFactors,
+  userMfaFactorsRelations,
+} from './user-mfa-factors.schema';
+import {
+  userMfaRecoveryCodes,
+  userMfaRecoveryCodesRelations,
+} from './user-mfa-recovery-codes.schema';
 import { userRoles, userRolesRelations } from './user-roles.schema';
 import { userSessions, userSessionsRelations } from './user-sessions.schema';
 import { userTags, userTagsRelations } from './user-tags.schema';
@@ -163,6 +172,9 @@ export const schema = {
   userTags,
   users,
   userAuthenticationMethods,
+  userMfaFactors,
+  userMfaRecoveryCodes,
+  userMfaFactorAuditLogs,
   userSessions,
   accountProjectApiKeyAuditLogsRelations,
   accountProjectApiKeysRelations,
@@ -214,6 +226,8 @@ export const schema = {
   accountProjectsRelations,
   accountsRelations,
   userAuthenticationMethodsRelations,
+  userMfaFactorsRelations,
+  userMfaRecoveryCodesRelations,
   userSessionsRelations,
 };
 

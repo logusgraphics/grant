@@ -1,9 +1,8 @@
+import type { NextFunction, Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { grant, type AuthorizedRequest } from '../../express/middleware';
+import { type AuthorizedRequest, grant } from '../../express/middleware';
 import { GrantClient } from '../../grant-client';
-
-import type { Request, Response, NextFunction } from 'express';
 
 describe('grant Express Middleware', () => {
   let client: GrantClient;

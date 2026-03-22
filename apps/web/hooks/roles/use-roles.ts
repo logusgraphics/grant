@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-
 import { ApolloClient } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { GetRolesDocument, QueryRolesArgs, Role, RolePage } from '@grantjs/schema';

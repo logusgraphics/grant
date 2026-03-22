@@ -1,7 +1,7 @@
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   getSigningKeysQuerySchema,
@@ -17,7 +17,7 @@ export function createSigningKeysRoutes(context: RequestContext) {
   router.get(
     '/',
     validate({ query: getSigningKeysQuerySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ApiKey,
       action: ResourceAction.Query,
@@ -33,7 +33,7 @@ export function createSigningKeysRoutes(context: RequestContext) {
   router.post(
     '/rotate',
     validate({ body: rotateSigningKeyRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ApiKey,
       action: ResourceAction.Query,

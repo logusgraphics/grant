@@ -1,3 +1,4 @@
+import type { IRoleTagRepository } from '@grantjs/core';
 import { RoleTagModel, roleTags } from '@grantjs/database';
 import {
   AddRoleTagInput,
@@ -9,8 +10,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IRoleTagRepository } from '@grantjs/core';
 
 export class RoleTagRepository
   extends PivotRepository<RoleTagModel, RoleTag>

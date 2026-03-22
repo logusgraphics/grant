@@ -1,0 +1,5 @@
+type MfaSetupResponse {
+  factorId: ID!
+  secret: String!
+  otpAuthUrl: String!
+}

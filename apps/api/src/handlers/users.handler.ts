@@ -1,3 +1,12 @@
+import type {
+  IFileStorageServicePort,
+  IOrganizationUserService,
+  IProjectUserService,
+  ITransactionalConnection,
+  IUserRoleService,
+  IUserService,
+  IUserTagService,
+} from '@grantjs/core';
 import {
   MutationCreateUserArgs,
   MutationDeleteUserArgs,
@@ -19,16 +28,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IFileStorageServicePort,
-  IOrganizationUserService,
-  IProjectUserService,
-  ITransactionalConnection,
-  IUserRoleService,
-  IUserService,
-  IUserTagService,
-} from '@grantjs/core';
 
 export class UserHandler extends CacheHandler {
   protected readonly logger = createLogger('UserHandler');

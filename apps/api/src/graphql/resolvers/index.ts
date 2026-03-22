@@ -1,7 +1,6 @@
-import { join } from 'path';
-
 import { loadFilesSync } from '@graphql-tools/load-files';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { join } from 'path';
 
 import { Mutation } from '@/graphql/resolvers/mutations';
 import { Query } from '@/graphql/resolvers/queries';

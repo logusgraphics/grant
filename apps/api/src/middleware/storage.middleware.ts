@@ -1,6 +1,5 @@
-import * as path from 'path';
-
 import express from 'express';
+import * as path from 'path';
 
 import { config } from '@/config';
 import { logger } from '@/lib/logger';

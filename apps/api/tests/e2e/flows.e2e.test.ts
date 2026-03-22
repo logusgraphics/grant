@@ -15,8 +15,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { apiClient } from './helpers/api-client';
 import {
   closeDbHelper,
-  getMemberRoleId,
   getInvitationTokenForEmail,
+  getMemberRoleId,
   getVerificationTokenForEmail,
 } from './helpers/db-tokens';
 

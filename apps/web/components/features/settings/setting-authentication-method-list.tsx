@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import {
   UserAuthenticationEmailProviderAction,
   UserAuthenticationMethodProvider,
 } from '@grantjs/schema';
 import { Github, Mail, Shield } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import {

@@ -1,11 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-
 import { useSearchParams } from 'next/navigation';
-
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -65,12 +63,17 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     setIsSubmitting(true);
     try {
-      await login({
+      const loginData = await login({
         email: values.email,
         password: values.password,
       });
       setIsAuthSuccess(true);
-      router.push(getAuthRedirectUrl() ?? '/dashboard');
+      const returnTo = getAuthRedirectUrl() ?? '/dashboard';
+      if (loginData?.requiresMfaStepUp) {
+        router.push(`/auth/mfa?mode=challenge&returnTo=${encodeURIComponent(returnTo)}`);
+      } else {
+        router.push(returnTo);
+      }
     } catch {
       setIsSubmitting(false);
     }

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { ApolloCache } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import {
@@ -9,7 +10,6 @@ import {
   UpdateResourceDocument,
   UpdateResourceInput,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { evictResourcesCache } from './cache';

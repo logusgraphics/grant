@@ -1,8 +1,7 @@
 'use client';
 
 import { ReactNode, useMemo } from 'react';
-
-import { GrantProvider as GrantProviderBase, type GrantClientConfig } from '@grantjs/client/react';
+import { type GrantClientConfig, GrantProvider as GrantProviderBase } from '@grantjs/client/react';
 
 import { logoutSession } from '@/lib/apollo-client';
 import { getApiBaseUrl } from '@/lib/constants';

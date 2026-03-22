@@ -1,3 +1,12 @@
+export type {
+  ApiKeyCredentials,
+  GrantConfig,
+  GrantConfigFile,
+  GrantScope,
+  ProfileName,
+  SessionCredentials,
+} from '../types/config.js';
+export { resolveAccessToken } from './resolve-token.js';
 export {
   DEFAULT_PROFILE_NAME,
   getConfigDir,
@@ -10,12 +19,3 @@ export {
   resolveProfileName,
   saveConfigFile,
 } from './storage.js';
-export { resolveAccessToken } from './resolve-token.js';
-export type {
-  ApiKeyCredentials,
-  GrantConfig,
-  GrantConfigFile,
-  GrantScope,
-  ProfileName,
-  SessionCredentials,
-} from '../types/config.js';

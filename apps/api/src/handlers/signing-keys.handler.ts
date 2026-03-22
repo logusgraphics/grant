@@ -1,3 +1,4 @@
+import type { ISigningKeyService, ITransactionalConnection } from '@grantjs/core';
 import { Scope, SigningKey, Tenant } from '@grantjs/schema';
 
 import { IEntityCacheAdapter } from '@/lib/cache';
@@ -5,8 +6,6 @@ import { BadRequestError } from '@/lib/errors';
 import type { Transaction } from '@/lib/transaction-manager.lib';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type { ISigningKeyService, ITransactionalConnection } from '@grantjs/core';
 
 const ALLOWED_TENANTS: readonly string[] = [Tenant.AccountProject, Tenant.OrganizationProject];
 

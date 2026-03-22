@@ -8,7 +8,7 @@ import {
 import { ResourceSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createResourceRequestSchema,
@@ -60,7 +60,7 @@ export function createResourcesRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createResourceRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Resource,
       action: ResourceAction.Create,
@@ -83,7 +83,7 @@ export function createResourcesRouter(context: RequestContext): Router {
       body: updateResourceRequestSchema,
       query: deleteResourceQuerySchema,
     }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Resource,
       action: ResourceAction.Update,
@@ -116,7 +116,7 @@ export function createResourcesRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: resourceParamsSchema, query: deleteResourceQuerySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Resource,
       action: ResourceAction.Delete,

@@ -1,6 +1,6 @@
 'use client';
 
-import { AvatarFallback, AvatarImage, Avatar as UIAvatar } from '@/components/ui/avatar';
+import { Avatar as UIAvatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { addImageCacheBuster, cn } from '@/lib/utils';
 
 import { AvatarProps } from './common-types';

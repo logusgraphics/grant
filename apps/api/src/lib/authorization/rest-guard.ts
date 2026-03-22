@@ -1,6 +1,6 @@
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { IsAuthorizedContextInput, IsAuthorizedPermissionInput } from '@grantjs/schema';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 import { ResourceResolversMap } from '@/resource-resolvers';
 import { ContextRequest } from '@/types';

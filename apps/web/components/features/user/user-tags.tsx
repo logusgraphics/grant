@@ -1,22 +1,21 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { SortOrder, Tag, TagSortField, User } from '@grantjs/schema';
 import { Loader2, Tag as TagIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Avatar,
   DataTable,
+  type DataTableColumnConfig,
   Pagination,
   RefreshButton,
-  Toolbar,
-  type DataTableColumnConfig,
   type TableSkeletonColumnConfig,
+  Toolbar,
 } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';

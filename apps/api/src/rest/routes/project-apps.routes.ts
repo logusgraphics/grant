@@ -1,7 +1,7 @@
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createProjectAppRequestSchema,
@@ -48,7 +48,7 @@ export function createProjectAppsRouter(context: RequestContext): Router {
   router.post(
     '/',
     validate({ body: createProjectAppRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ProjectApp,
       action: ResourceAction.Create,
@@ -101,7 +101,7 @@ export function createProjectAppsRouter(context: RequestContext): Router {
   router.patch(
     '/:id',
     validate({ params: projectAppIdParamsSchema, body: updateProjectAppRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ProjectApp,
       action: ResourceAction.Update,
@@ -149,7 +149,7 @@ export function createProjectAppsRouter(context: RequestContext): Router {
   router.delete(
     '/:id',
     validate({ params: projectAppIdParamsSchema, query: deleteProjectAppQuerySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.ProjectApp,
       action: ResourceAction.Delete,

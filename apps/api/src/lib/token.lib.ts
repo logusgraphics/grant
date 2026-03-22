@@ -1,7 +1,6 @@
-import { randomBytes, randomUUID } from 'crypto';
-
 import { MILLISECONDS_PER_MINUTE } from '@grantjs/constants';
 import { compareSync, hashSync } from 'bcrypt';
+import { randomBytes, randomUUID } from 'crypto';
 
 import { config } from '@/config';
 

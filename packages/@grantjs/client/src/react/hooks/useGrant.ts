@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-
-import { useGrantClient } from '../context';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { AuthorizationResult, Scope } from '../../types';
+import { useGrantClient } from '../context';
 
 /**
  * Options for the useGrant hook

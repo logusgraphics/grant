@@ -1,22 +1,22 @@
 // Express middleware
+export type { AuthorizedRequest, GrantOptions } from './middleware';
 export { grant } from './middleware';
-export type { GrantOptions, AuthorizedRequest } from './middleware';
 
 // Re-export core types for convenience
 export type {
-  GrantServerConfig,
   AuthorizationResult,
+  GrantServerConfig,
   PermissionCheckOptions,
-  Scope,
   ResourceResolver,
+  Scope,
 } from '../types';
 
 // Re-export error classes
 export {
-  GrantServerError,
   AuthenticationError,
   AuthorizationError,
   BadRequestError,
+  GrantServerError,
   NotFoundError,
 } from '../errors';
 

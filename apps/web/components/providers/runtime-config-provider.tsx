@@ -1,8 +1,8 @@
 'use client';
 
-import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-import { getRuntimeConfig, setRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
+import { getRuntimeConfig, type RuntimeConfig, setRuntimeConfig } from '@/lib/runtime-config';
 
 const DEFAULTS: RuntimeConfig = {
   demoModeEnabled: false,

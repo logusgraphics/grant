@@ -1,3 +1,18 @@
+import type {
+  IAccountProjectService,
+  IAccountService,
+  IEmailService,
+  IOrganizationProjectService,
+  IOrganizationUserService,
+  IProjectAppService,
+  IProjectPermissionService,
+  IProjectUserService,
+  IUserAuthenticationMethodService,
+  IUserRoleService,
+  IUserService,
+} from '@grantjs/core';
+import type { Grant } from '@grantjs/core';
+import type { IGitHubOAuthService } from '@grantjs/core';
 import {
   type ProjectAppPublicInfo,
   type ProjectConsentInfo,
@@ -7,7 +22,7 @@ import {
 } from '@grantjs/schema';
 
 import { config } from '@/config';
-import { type ProjectOAuthProvider, PROJECT_OAUTH_PROVIDERS } from '@/config/env.config';
+import { PROJECT_OAUTH_PROVIDERS, type ProjectOAuthProvider } from '@/config/env.config';
 import {
   PROJECT_OAUTH_CONSENT_KEY_PREFIX,
   PROJECT_OAUTH_CONSENT_TTL_SECONDS,
@@ -29,21 +44,6 @@ import type { IProjectOAuthProvider } from '@/lib/project-oauth';
 import { generateSecureToken } from '@/lib/token.lib';
 
 import type { AuthHandler } from './auth.handler';
-import type {
-  IAccountProjectService,
-  IAccountService,
-  IEmailService,
-  IOrganizationProjectService,
-  IOrganizationUserService,
-  IProjectAppService,
-  IProjectPermissionService,
-  IProjectUserService,
-  IUserAuthenticationMethodService,
-  IUserRoleService,
-  IUserService,
-} from '@grantjs/core';
-import type { Grant } from '@grantjs/core';
-import type { IGitHubOAuthService } from '@grantjs/core';
 
 /** Used to add a user id to the users scope cache when OAuth adds/ensures project membership. */
 export interface IUsersScopeCacheUpdater {

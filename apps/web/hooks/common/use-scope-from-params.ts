@@ -1,7 +1,6 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-
 import { Scope, Tenant } from '@grantjs/schema';
 
 export function useScopeFromParams(): Scope | null {

@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
-
+import { type ReactNode, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, ChevronRight, Info } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { DefaultValues, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 

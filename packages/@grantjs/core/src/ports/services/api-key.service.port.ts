@@ -2,7 +2,6 @@
  * API-key-domain service port interfaces.
  * Covers: ApiKey, SigningKey.
  */
-import type { SelectedFields } from '../repositories/common';
 import type {
   ApiKey,
   ApiKeyPage,
@@ -13,6 +12,8 @@ import type {
   Scope,
   SigningKey,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
 
 // ---------------------------------------------------------------------------
 // Shared helper types

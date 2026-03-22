@@ -69,6 +69,11 @@ export function createMeRouter(context: RequestContext): Router {
     sendSuccessResponse(res, methods);
   });
 
+  router.get('/mfa/recovery-codes/status', authenticateRestRoute, async (req, res) => {
+    const status = await context.handlers.me.myMfaRecoveryCodeStatus();
+    sendSuccessResponse(res, status);
+  });
+
   router.post(
     '/authentication-methods',
     validate({ body: createMyUserAuthenticationMethodRequestSchema }),

@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IResourceRepository,
+  IResourceTagRepository,
+  IResourceTagService,
+  ITagRepository,
+} from '@grantjs/core';
 import {
   AddResourceTagInput,
   RemoveResourceTagInput,
@@ -19,14 +26,6 @@ import {
   resourceTagSchema,
   updateResourceTagInputSchema,
 } from './resource-tags.schemas';
-
-import type {
-  IAuditLogger,
-  IResourceRepository,
-  IResourceTagRepository,
-  IResourceTagService,
-  ITagRepository,
-} from '@grantjs/core';
 
 export class ResourceTagService implements IResourceTagService {
   constructor(

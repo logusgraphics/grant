@@ -20,6 +20,7 @@ interface AuthState {
 
   // Email verification state
   email: string | null;
+  mfaVerified: boolean;
   requiresEmailVerification: boolean;
   verificationExpiry: Date | null;
 
@@ -35,6 +36,7 @@ interface AuthState {
   syncFromMe: (data: {
     accounts: Account[];
     email: string | null;
+    mfaVerified: boolean;
     requiresEmailVerification: boolean;
     verificationExpiry: Date | null;
   }) => void;
@@ -42,6 +44,7 @@ interface AuthState {
     accounts: Account[];
     accessToken: string;
     email?: string | null;
+    mfaVerified?: boolean;
     requiresEmailVerification?: boolean;
     verificationExpiry?: Date | null;
   }) => void;
@@ -53,6 +56,7 @@ interface AuthState {
   getCurrentOrganizationAccount: () => Account | null;
   hasMultipleAccounts: () => boolean;
   setEmail: (email: string | null) => void;
+  setMfaVerified: (mfaVerified: boolean) => void;
   setRequiresEmailVerification: (requiresEmailVerification: boolean) => void;
   setVerificationExpiry: (verificationExpiry: Date | null) => void;
 }
@@ -72,6 +76,7 @@ export const useAuthStore = create<AuthState>()(
 
         // Email verification state
         email: null,
+        mfaVerified: false,
         requiresEmailVerification: false,
         verificationExpiry: null,
 
@@ -91,6 +96,7 @@ export const useAuthStore = create<AuthState>()(
             isSwitchingAccounts: false,
             accessToken: null,
             email: null,
+            mfaVerified: false,
             requiresEmailVerification: false,
             verificationExpiry: null,
           });
@@ -109,10 +115,12 @@ export const useAuthStore = create<AuthState>()(
         },
 
         syncFromMe: (data) => {
-          const { accounts, email, requiresEmailVerification, verificationExpiry } = data;
+          const { accounts, email, mfaVerified, requiresEmailVerification, verificationExpiry } =
+            data;
           set({
             accounts,
             email,
+            mfaVerified,
             requiresEmailVerification,
             verificationExpiry,
           });
@@ -120,8 +128,14 @@ export const useAuthStore = create<AuthState>()(
         },
 
         setAuthData: (data) => {
-          const { accounts, accessToken, email, requiresEmailVerification, verificationExpiry } =
-            data;
+          const {
+            accounts,
+            accessToken,
+            email,
+            mfaVerified,
+            requiresEmailVerification,
+            verificationExpiry,
+          } = data;
 
           const currentAccountId = get().currentAccountId;
           const targetAccountId =
@@ -136,6 +150,7 @@ export const useAuthStore = create<AuthState>()(
             currentAccountId: targetAccountId,
             accessToken,
             email: email ?? null,
+            mfaVerified: mfaVerified ?? false,
             requiresEmailVerification: requiresEmailVerification ?? false,
             verificationExpiry: verificationExpiry ?? null,
           });
@@ -166,6 +181,9 @@ export const useAuthStore = create<AuthState>()(
 
         setEmail: (email: string | null) => {
           set({ email });
+        },
+        setMfaVerified: (mfaVerified: boolean) => {
+          set({ mfaVerified });
         },
         setRequiresEmailVerification: (requiresEmailVerification: boolean) => {
           set({ requiresEmailVerification });

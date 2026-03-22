@@ -8,7 +8,7 @@
  */
 
 import { loadEnv as loadEnvImpl } from './load-env';
-import { envSchema, type Env } from './schema';
+import { type Env, envSchema } from './schema';
 
 if (!process.env.__GRANT_ENV_LOADED) {
   loadEnvImpl();

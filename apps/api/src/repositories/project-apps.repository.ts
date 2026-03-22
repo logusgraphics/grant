@@ -1,15 +1,17 @@
+import type { IProjectAppRepository } from '@grantjs/core';
+import type { ProjectAppModel } from '@grantjs/database';
 import { projectApps, projectAppTags } from '@grantjs/database';
 import {
-  ProjectAppSearchableField,
   type CreateProjectAppInput,
   type CreateProjectAppResult,
   type MutationDeleteProjectAppArgs,
   type ProjectApp,
   type ProjectAppPage,
-  type QueryProjectAppsArgs,
-  type UpdateProjectAppInput,
+  ProjectAppSearchableField,
   ProjectAppSortableField,
+  type QueryProjectAppsArgs,
   Tag,
+  type UpdateProjectAppInput,
 } from '@grantjs/schema';
 
 import { NotFoundError } from '@/lib/errors';
@@ -23,9 +25,6 @@ import {
   RelationsConfig,
 } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IProjectAppRepository } from '@grantjs/core';
-import type { ProjectAppModel } from '@grantjs/database';
 
 function toProjectApp(row: ProjectAppModel & { tags?: ProjectApp['tags'] }): ProjectApp {
   return {

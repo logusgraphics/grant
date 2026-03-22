@@ -2,7 +2,7 @@ import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { User, UserSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
-import { authorizeRestRoute, requireEmailVerificationRest } from '@/lib/authorization';
+import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { NotFoundError } from '@/lib/errors';
 import { validate } from '@/middleware/validation.middleware';
 import {
@@ -99,7 +99,7 @@ export function createUserRoutes(context: RequestContext) {
   router.post(
     '/',
     validate({ body: createUserRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.User,
       action: ResourceAction.Create,
@@ -124,7 +124,7 @@ export function createUserRoutes(context: RequestContext) {
   router.patch(
     '/:id',
     validate({ params: userParamsSchema, body: updateUserRequestSchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.User,
       action: ResourceAction.Update,
@@ -151,7 +151,7 @@ export function createUserRoutes(context: RequestContext) {
   router.delete(
     '/:id',
     validate({ params: userParamsSchema, query: deleteUserQuerySchema }),
-    requireEmailVerificationRest({ allowPersonalContext: true }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.User,
       action: ResourceAction.Delete,

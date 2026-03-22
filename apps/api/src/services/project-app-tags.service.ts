@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IProjectAppRepository,
+  IProjectAppTagRepository,
+  IProjectAppTagService,
+  ITagRepository,
+} from '@grantjs/core';
 import {
   AddProjectAppTagInput,
   ProjectAppTag,
@@ -18,14 +25,6 @@ import {
   removeProjectAppTagInputSchema,
   updateProjectAppTagInputSchema,
 } from './project-app-tags.schemas';
-
-import type {
-  IAuditLogger,
-  IProjectAppRepository,
-  IProjectAppTagRepository,
-  IProjectAppTagService,
-  ITagRepository,
-} from '@grantjs/core';
 
 export class ProjectAppTagService implements IProjectAppTagService {
   constructor(

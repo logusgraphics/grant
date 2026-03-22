@@ -1,5 +1,12 @@
 import crypto from 'node:crypto';
 
+import type {
+  GitHubUserInfo,
+  IGitHubOAuthService,
+  IOAuthStateService,
+  ITransactionalConnection,
+  IUserAuthenticationMethodService,
+} from '@grantjs/core';
 import {
   UserAuthenticationEmailProviderAction,
   UserAuthenticationMethodProvider,
@@ -12,14 +19,6 @@ import { CacheKey, IEntityCacheAdapter } from '@/lib/cache';
 import { AuthenticationError, ConfigurationError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
 import { Transaction } from '@/lib/transaction-manager.lib';
-
-import type {
-  GitHubUserInfo,
-  IGitHubOAuthService,
-  IOAuthStateService,
-  ITransactionalConnection,
-  IUserAuthenticationMethodService,
-} from '@grantjs/core';
 
 /** Payload stored for CLI OAuth callback and returned from POST /api/auth/cli-callback */
 export interface CliCallbackPayload {

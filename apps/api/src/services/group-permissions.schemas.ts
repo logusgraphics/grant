@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { idSchema, baseEntitySchema, deleteSchema } from './common/schemas';
+import { baseEntitySchema, deleteSchema, idSchema } from './common/schemas';
 
 export const getGroupPermissionsParamsSchema = z
   .object({

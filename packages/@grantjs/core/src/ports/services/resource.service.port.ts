@@ -2,8 +2,6 @@
  * Resource-domain service port interfaces.
  * Covers: Resource, ResourceTag.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddResourceTagInput,
   CreateResourceInput,
@@ -17,6 +15,9 @@ import type {
   UpdateResourceInput,
   UpdateResourceTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // IResourceService

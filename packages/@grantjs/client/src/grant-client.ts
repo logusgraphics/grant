@@ -1,6 +1,6 @@
 import type {
-  GrantClientConfig,
   AuthorizationResult,
+  GrantClientConfig,
   PermissionQueryOptions,
   Scope,
   SignInWithProjectAppOptions,

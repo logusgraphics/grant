@@ -1,7 +1,6 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 
 import { GrantClient } from '../grant-client';
-
 import type { GrantServerConfig } from '../types';
 
 export const GRANT_CLIENT = 'GrantClient';

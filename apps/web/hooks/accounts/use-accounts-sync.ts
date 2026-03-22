@@ -14,6 +14,7 @@ export function useAccountsSync() {
   const {
     accounts,
     email,
+    mfaVerified,
     requiresEmailVerification,
     verificationExpiry,
     loading: meLoading,
@@ -29,6 +30,7 @@ export function useAccountsSync() {
     syncFromMe({
       accounts,
       email,
+      mfaVerified,
       requiresEmailVerification,
       verificationExpiry,
     });
@@ -44,6 +46,7 @@ export function useAccountsSync() {
     loading,
     accounts,
     email,
+    mfaVerified,
     requiresEmailVerification,
     verificationExpiry,
     currentAccountId,

@@ -2,7 +2,6 @@
  * Permission-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   AddPermissionTagInput,
   CreatePermissionInput,
@@ -11,11 +10,13 @@ import type {
   Permission,
   PermissionPage,
   PermissionTag,
-  QueryPermissionTagsInput,
   QueryPermissionsArgs,
+  QueryPermissionTagsInput,
   RemovePermissionTagInput,
   UpdatePermissionTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IPermissionRepository {
   getPermissions(

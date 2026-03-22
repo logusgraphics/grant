@@ -1,3 +1,4 @@
+import type { IAccountProjectRepository } from '@grantjs/core';
 import { AccountProjectModel, accountProjects } from '@grantjs/database';
 import {
   AccountProject,
@@ -11,8 +12,6 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { Transaction } from '@/lib/transaction-manager.lib';
 
 import { PivotRepository } from './common/PivotRepository';
-
-import type { IAccountProjectRepository } from '@grantjs/core';
 
 export class AccountProjectRepository
   extends PivotRepository<AccountProjectModel, AccountProject>

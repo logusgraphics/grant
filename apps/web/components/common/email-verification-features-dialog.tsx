@@ -1,7 +1,7 @@
 'use client';
 
-import { Check, Info, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Check, Info, Lock } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

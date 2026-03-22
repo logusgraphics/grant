@@ -1,7 +1,7 @@
 'use client';
 
-import { FileQuestion, Home, ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ArrowLeft, FileQuestion, Home } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { usePageTitle } from '@/hooks';

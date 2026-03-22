@@ -1,7 +1,7 @@
 'use client';
 
-import { SortOrder, ProjectAppSortableField, ProjectAppSortInput } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { ProjectAppSortableField, ProjectAppSortInput, SortOrder } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 import { useProjectAppsStore } from '@/stores/project-apps.store';

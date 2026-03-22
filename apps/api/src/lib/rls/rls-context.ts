@@ -1,8 +1,34 @@
-import { Tenant, type Scope } from '@grantjs/schema';
+import { type Scope, Tenant } from '@grantjs/schema';
 import { sql } from 'drizzle-orm';
 
 import { config } from '@/config';
+import { ConfigurationError } from '@/lib/errors';
 import type { Transaction } from '@/lib/transaction-manager.lib';
+
+/** Unquoted PostgreSQL identifier: [a-zA-Z_][a-zA-Z0-9_]*, max 63 (server limit). */
+const PG_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+function assertSafePostgresIdentifier(name: string, settingName: string): string {
+  if (name.length === 0 || name.length > 63 || !PG_IDENTIFIER_RE.test(name)) {
+    throw new ConfigurationError(
+      `${settingName} must be a valid PostgreSQL identifier (1–63 characters; [a-zA-Z_][a-zA-Z0-9_]*)`
+    );
+  }
+  return name;
+}
+
+let cachedValidatedRlsRole: string | null = null;
+
+function getValidatedRlsRestrictedRole(): string {
+  if (cachedValidatedRlsRole) {
+    return cachedValidatedRlsRole;
+  }
+  cachedValidatedRlsRole = assertSafePostgresIdentifier(
+    config.security.rlsRestrictedRole,
+    'SECURITY_RLS_ROLE'
+  );
+  return cachedValidatedRlsRole;
+}
 
 /**
  * RLS session variable values derived from a request scope.
@@ -66,7 +92,7 @@ export function hasRlsKeys(ctx: RlsContext): boolean {
  * (the table owner role bypasses RLS by default in PostgreSQL).
  */
 export async function setRlsContext(tx: Transaction, ctx: RlsContext): Promise<void> {
-  const roleName = config.security.rlsRestrictedRole;
+  const roleName = getValidatedRlsRestrictedRole();
   await tx.execute(sql.raw(`SET LOCAL ROLE ${roleName}`));
 
   const orgVal = ctx.organizationId ?? '';

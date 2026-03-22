@@ -10,6 +10,6 @@ export * from './api-key-search';
 export * from './api-key-secret-dialog';
 export * from './api-key-sorter';
 export * from './api-key-toolbar';
-export * from './api-key-viewer';
 export * from './api-key-view-switcher';
+export * from './api-key-viewer';
 export * from './api-keys';

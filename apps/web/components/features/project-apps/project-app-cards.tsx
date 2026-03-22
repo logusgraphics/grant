@@ -1,6 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { TagColor } from '@grantjs/constants';
+import type { ProjectApp, Tag } from '@grantjs/schema';
 import {
   CopyCheck,
   Fingerprint,
@@ -11,7 +13,6 @@ import {
   Tags,
   UserPlus,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, CardHeader, CopyToClipboard, ScrollBadges } from '@/components/common';
 import { useScopeFromParams } from '@/hooks/common';
@@ -22,8 +23,6 @@ import { ProjectAppActions } from './project-app-actions';
 import { ProjectAppAudit } from './project-app-audit';
 import { ProjectAppCardSkeleton } from './project-app-card-skeleton';
 import { ProjectAppCreateDialog } from './project-app-create-dialog';
-
-import type { ProjectApp, Tag } from '@grantjs/schema';
 
 export function ProjectAppCards() {
   const t = useTranslations('projectApps');

@@ -1,7 +1,6 @@
 'use client';
 
 import { useParams, useSearchParams } from 'next/navigation';
-
 import { AccountType } from '@grantjs/schema';
 import { Github } from 'lucide-react';
 

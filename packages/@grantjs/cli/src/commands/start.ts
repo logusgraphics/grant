@@ -1,7 +1,8 @@
-import { exec } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { platform } from 'node:os';
 
+import type { Command } from 'commander';
 import inquirer from 'inquirer';
 
 import {
@@ -9,9 +10,9 @@ import {
   exchangeCliCallback,
   fetchOrganizations,
   fetchProjects,
-  loginWithEmail,
   type LoginAccount,
   type LoginResult,
+  loginWithEmail,
   type OrganizationItem,
   type ProjectItem,
 } from '../api/client.js';
@@ -21,9 +22,7 @@ import {
   loadConfigFile,
   saveConfigFile,
 } from '../config/index.js';
-
 import type { GrantConfig, GrantScope } from '../types/config.js';
-import type { Command } from 'commander';
 
 const AUTH_SESSION = 'session';
 const AUTH_API_KEY = 'api-key';
@@ -32,6 +31,15 @@ const PROJECT_TENANTS = [
   { name: 'Account project (accountId:projectId)', value: 'accountProject' },
   { name: 'Organization project (organizationId:projectId)', value: 'organizationProject' },
 ] as const;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function isValidUrl(s: string): boolean {
   try {
@@ -55,17 +63,25 @@ function isValidScopeId(s: string): boolean {
   return parts.every((p) => uuidRe.test(p.trim()));
 }
 
-/** Open URL in default browser (cross-platform). Do not encode the URL; it is already valid. */
+/** Open URL in default browser (cross-platform). Uses argv arrays to avoid shell injection. */
 function openBrowser(url: string): void {
-  const cmd =
-    platform() === 'win32'
-      ? `start "" "${url}"`
-      : platform() === 'darwin'
-        ? `open "${url}"`
-        : `xdg-open "${url}"`;
-  exec(cmd, (err) => {
-    if (err) console.error('[Grant CLI] Could not open browser:', err.message);
-  });
+  if (!isValidUrl(url)) {
+    console.error('[Grant CLI] Refusing to open invalid URL');
+    return;
+  }
+  const plat = platform();
+  const child =
+    plat === 'win32'
+      ? spawn('cmd', ['/c', 'start', '', url], {
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: true,
+        })
+      : plat === 'darwin'
+        ? spawn('open', [url], { detached: true, stdio: 'ignore' })
+        : spawn('xdg-open', [url], { detached: true, stdio: 'ignore' });
+  child.unref();
+  child.on('error', (err) => console.error('[Grant CLI] Could not open browser:', err.message));
 }
 
 /**
@@ -82,7 +98,7 @@ function runGithubOAuthCallback(apiUrl: string): Promise<string> {
       const errorDescription = url.searchParams.get('error_description') ?? '';
 
       const html = (title: string, body: string) =>
-        `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title></head><body style="font-family:sans-serif;max-width:480px;margin:2rem auto;padding:0 1rem;"><h2>${title}</h2><p>${body}</p><p>You can close this tab and return to the terminal.</p></body></html>`;
+        `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body style="font-family:sans-serif;max-width:480px;margin:2rem auto;padding:0 1rem;"><h2>${escapeHtml(title)}</h2><p>${escapeHtml(body)}</p><p>You can close this tab and return to the terminal.</p></body></html>`;
 
       if (code) {
         res.writeHead(200, { 'Content-Type': 'text/html' });

@@ -1,4 +1,5 @@
 import { GROUP_DEFINITIONS } from '@grantjs/constants';
+import type { IAuditLogger, IGroupRepository, IGroupService } from '@grantjs/core';
 import {
   CreateGroupInput,
   Group,
@@ -25,8 +26,6 @@ import {
   groupSchema,
   updateGroupParamsSchema,
 } from './groups.schemas';
-
-import type { IAuditLogger, IGroupRepository, IGroupService } from '@grantjs/core';
 
 export class GroupService implements IGroupService {
   constructor(

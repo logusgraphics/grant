@@ -8,12 +8,22 @@ import { ContextRequest } from '@/types';
 
 const SKIP_PATHS = new Set(['/health']);
 
-const AUTH_RATE_LIMIT_PATHS = new Set([
+/**
+ * Method + path keys for the shared auth-sensitive rate-limit bucket (IP-based).
+ * Exported for tests — keep in sync with middleware matching logic.
+ */
+export const AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS = [
   'POST /api/auth/login',
   'POST /api/auth/refresh',
   'POST /api/auth/cli-callback',
   'POST /api/auth/token',
-]);
+  'POST /api/auth/mfa/setup',
+  'POST /api/auth/mfa/verify',
+  'POST /api/auth/mfa/recovery/verify',
+  'GET /api/me/mfa/recovery-codes/status',
+] as const;
+
+const AUTH_RATE_LIMIT_PATHS = new Set<string>(AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS);
 
 interface WindowState {
   count: number;

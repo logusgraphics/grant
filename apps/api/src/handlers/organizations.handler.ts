@@ -1,4 +1,15 @@
 import { ORGANIZATION_ROLE_DEFINITIONS, RoleKey } from '@grantjs/constants';
+import type {
+  IOrganizationGroupService,
+  IOrganizationPermissionService,
+  IOrganizationProjectService,
+  IOrganizationRoleService,
+  IOrganizationService,
+  IOrganizationTagService,
+  IOrganizationUserService,
+  ITransactionalConnection,
+  IUserRoleService,
+} from '@grantjs/core';
 import {
   MutationCreateOrganizationArgs,
   MutationDeleteOrganizationArgs,
@@ -14,18 +25,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IOrganizationGroupService,
-  IOrganizationPermissionService,
-  IOrganizationProjectService,
-  IOrganizationRoleService,
-  IOrganizationService,
-  IOrganizationTagService,
-  IOrganizationUserService,
-  ITransactionalConnection,
-  IUserRoleService,
-} from '@grantjs/core';
 
 export class OrganizationHandler extends CacheHandler {
   constructor(

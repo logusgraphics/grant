@@ -1,8 +1,7 @@
+import type { Request, Response } from 'express';
 import promClient from 'prom-client';
 
 import { config } from '@/config';
-
-import type { Request, Response } from 'express';
 
 /**
  * Prometheus registry. Default labels and optional default metrics (CPU, memory)

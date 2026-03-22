@@ -1,12 +1,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Scope, Tenant } from '@grantjs/schema';
 import { Plus, RotateCw } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { RefreshButton, Toolbar } from '@/components/common';
 import { Button } from '@/components/ui/button';

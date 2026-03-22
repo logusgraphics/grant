@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState, useCallback, useEffect } from 'react';
-
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ThemeToggle } from '@/app/theme-toggle';
@@ -9,7 +8,7 @@ import { ConfigPageHeader } from '@/components/ConfigPageHeader';
 import { ConfigSidebar } from '@/components/ConfigSidebar';
 import { EnvironmentDropdown } from '@/components/EnvironmentDropdown';
 import { HamburgerButton } from '@/components/HamburgerButton';
-import { VarList, getNonCriticalSectionNames } from '@/components/VarList';
+import { getNonCriticalSectionNames, VarList } from '@/components/VarList';
 import { useEnvState } from '@/hooks/useEnvState';
 import type { EnvCategoryId } from '@/lib/env-metadata';
 

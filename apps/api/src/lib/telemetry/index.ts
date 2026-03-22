@@ -1,9 +1,8 @@
+import type { ITelemetryAdapter } from '@grantjs/core';
 import { TelemetryFactory } from '@grantjs/telemetry';
 
 import { config } from '@/config';
 import { loggerFactory } from '@/lib/logger';
-
-import type { ITelemetryAdapter } from '@grantjs/core';
 
 let adapter: ITelemetryAdapter | null = null;
 

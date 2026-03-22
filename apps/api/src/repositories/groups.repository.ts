@@ -1,4 +1,5 @@
-import { GroupModel, groupPermissions, groupTags, groups } from '@grantjs/database';
+import type { IGroupRepository } from '@grantjs/core';
+import { GroupModel, groupPermissions, groups, groupTags } from '@grantjs/database';
 import {
   CreateGroupInput,
   Group,
@@ -14,8 +15,6 @@ import {
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { EntityRepository, RelationsConfig } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IGroupRepository } from '@grantjs/core';
 
 export class GroupRepository
   extends EntityRepository<GroupModel, Group>

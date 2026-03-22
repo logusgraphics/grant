@@ -1,0 +1,3 @@
+mutation GenerateMyMfaRecoveryCodes($input: GenerateMyMfaRecoveryCodesInput) {
+  generateMyMfaRecoveryCodes(input: $input)
+}

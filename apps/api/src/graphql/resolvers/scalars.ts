@@ -1,4 +1,4 @@
-import { GraphQLScalarType, Kind, GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLScalarType, Kind } from 'graphql';
 import { GraphQLJSON } from 'graphql-type-json';
 
 export const resolvers = {

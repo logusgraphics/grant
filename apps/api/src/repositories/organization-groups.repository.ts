@@ -1,3 +1,4 @@
+import type { IOrganizationGroupRepository } from '@grantjs/core';
 import { OrganizationGroupModel, organizationGroups } from '@grantjs/database';
 import {
   AddOrganizationGroupInput,
@@ -9,8 +10,6 @@ import {
 import { Transaction } from '@/lib/transaction-manager.lib';
 
 import { PivotRepository } from './common/PivotRepository';
-
-import type { IOrganizationGroupRepository } from '@grantjs/core';
 
 export class OrganizationGroupRepository
   extends PivotRepository<OrganizationGroupModel, OrganizationGroup>

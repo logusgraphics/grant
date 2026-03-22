@@ -1,15 +1,13 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-
 import { useParams } from 'next/navigation';
-
+import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { canAssignRole } from '@grantjs/constants';
 import { OrganizationInvitationStatus, Tenant } from '@grantjs/schema';
 import { Ban, Copy, Mail, RefreshCw, Trash2, UserCog } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { ActionItem, Actions } from '@/components/common';

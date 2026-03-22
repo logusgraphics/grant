@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { getTempClient } from '@/lib/apollo-temp-client';
 import { refreshSessionViaCookie } from '@/lib/refresh-session';
 import { useAuthStore } from '@/stores/auth.store';
+import { useMfaStepUpStore } from '@/stores/mfa-step-up.store';
 
 interface ErrorWithGraphQLErrors {
   graphQLErrors?: readonly GraphQLError[];
@@ -160,6 +161,11 @@ function isForbiddenGraphQLError(error: GraphQLError): boolean {
   );
 }
 
+function isMfaRequiredGraphQLError(error: GraphQLError): boolean {
+  const extensions = error.extensions as { code?: string; reason?: string } | undefined;
+  return extensions?.code === 'MFA_REQUIRED' || extensions?.reason === 'MFA_REQUIRED';
+}
+
 function isUnauthorizedNetworkError(error: unknown): boolean {
   if (!isNetworkErrorWithStatus(error)) {
     return false;
@@ -282,6 +288,48 @@ function redirectToForbidden() {
   }
 }
 
+function createMfaStepUpObservable(
+  operation: Parameters<ErrorLink.ErrorHandler>[0]['operation'],
+  forward: Parameters<ErrorLink.ErrorHandler>[0]['forward'],
+  graphQLErrors: GraphQLError[]
+): Observable<ApolloLink.Result> {
+  const mfaError = graphQLErrors.find(isMfaRequiredGraphQLError);
+  const extensions = mfaError?.extensions as
+    | { hasActiveEnrollment?: boolean }
+    | undefined;
+  const hasActiveEnrollment = extensions?.hasActiveEnrollment ?? true;
+
+  return new Observable<ApolloLink.Result>((observer) => {
+    let innerSubscription: { unsubscribe: () => void } | null = null;
+
+    useMfaStepUpStore
+      .getState()
+      .requestStepUp(hasActiveEnrollment)
+      .then((verified) => {
+        if (!verified) {
+          observer.next({ errors: graphQLErrors });
+          observer.complete();
+          return;
+        }
+        const newToken = useAuthStore.getState().accessToken;
+        operation.setContext({
+          headers: {
+            ...operation.getContext().headers,
+            authorization: `Bearer ${newToken}`,
+          },
+          fetchPolicy: 'network-only',
+        });
+        innerSubscription = forward(operation).subscribe(observer);
+      })
+      .catch(() => {
+        observer.next({ errors: graphQLErrors });
+        observer.complete();
+      });
+
+    return () => innerSubscription?.unsubscribe();
+  });
+}
+
 function shouldSkipErrorRedirect(operationName: string | undefined): boolean {
   if (!operationName) return false;
   return SKIP_ERROR_REDIRECT_OPERATIONS.includes(
@@ -377,6 +425,10 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
   }
 
   if (!shouldSkipErrorRedirect(operation.operationName)) {
+    const hasMfaRequiredError = graphQLErrors.some(isMfaRequiredGraphQLError);
+    if (hasMfaRequiredError) {
+      return createMfaStepUpObservable(operation, forward, graphQLErrors);
+    }
     const hasNotFoundError = graphQLErrors.some(isNotFoundGraphQLError);
     if (hasNotFoundError) {
       redirectToNotFound();

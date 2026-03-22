@@ -1,3 +1,11 @@
+import type {
+  IAuditLogger,
+  IOrganizationRepository,
+  IOrganizationRoleRepository,
+  IOrganizationUserRepository,
+  IOrganizationUserService,
+  IUserRepository,
+} from '@grantjs/core';
 import {
   AddOrganizationUserInput,
   OrganizationUser,
@@ -15,15 +23,6 @@ import {
   organizationUserSchema,
   removeOrganizationUserParamsSchema,
 } from './organization-users.schemas';
-
-import type {
-  IAuditLogger,
-  IOrganizationRepository,
-  IOrganizationRoleRepository,
-  IOrganizationUserRepository,
-  IOrganizationUserService,
-  IUserRepository,
-} from '@grantjs/core';
 
 export class OrganizationUserService implements IOrganizationUserService {
   constructor(

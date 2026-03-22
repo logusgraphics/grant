@@ -1,12 +1,13 @@
+import type { IOrganizationRepository } from '@grantjs/core';
 import {
-  OrganizationModel,
   organizationGroups,
+  OrganizationModel,
   organizationPermissions,
   organizationProjects,
   organizationRoles,
+  organizations,
   organizationTags,
   organizationUsers,
-  organizations,
 } from '@grantjs/database';
 import {
   CreateOrganizationInput,
@@ -34,8 +35,6 @@ import {
   RelationsConfig,
 } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IOrganizationRepository } from '@grantjs/core';
 
 export class OrganizationRepository
   extends EntityRepository<OrganizationModel, Organization>
@@ -117,6 +116,7 @@ export class OrganizationRepository
       input: {
         name: params.input.name,
         slug: params.input.name ? this.generateSlug(params.input.name) : undefined,
+        requireMfaForSensitiveActions: params.input.requireMfaForSensitiveActions,
       },
     };
 

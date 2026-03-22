@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { ApolloCache } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import {
@@ -12,7 +13,6 @@ import {
   UploadUserPictureResult,
   User,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { evictUsersCache } from './cache';

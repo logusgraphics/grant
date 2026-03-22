@@ -119,9 +119,12 @@ export function mapDomainToHttp(error: GrantException): HttpException {
 
   // Authorization
   if (error instanceof AuthorizationError) {
+    const extensions: Record<string, unknown> = {};
+    if (error.reason) extensions.reason = error.reason;
+    if (error.metadata) Object.assign(extensions, error.metadata);
     return new HttpForbiddenError(error.message, {
       translationKey: 'errors.auth.forbidden',
-      extensions: error.reason ? { reason: error.reason } : undefined,
+      extensions: Object.keys(extensions).length > 0 ? extensions : undefined,
     });
   }
 

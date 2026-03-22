@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-
 import { Project, Tag, Tenant } from '@grantjs/schema';
 
 import { useProjectScope } from './use-project-scope';

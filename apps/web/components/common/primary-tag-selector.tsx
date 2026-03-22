@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Tag } from '@grantjs/schema';
 import { ChevronDownIcon } from 'lucide-react';

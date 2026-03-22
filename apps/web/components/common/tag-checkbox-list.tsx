@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Tag } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { Control } from 'react-hook-form';
 
 import { FormField, FormItem, FormLabel, TranslatedFormMessage } from '@/components/ui/form';

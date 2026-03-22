@@ -1,6 +1,5 @@
+import type { AuthorizationResult, GrantServerConfig, PermissionCheckOptions } from './types';
 import { extractTokenFromRequest } from './utils/token-extractor';
-
-import type { GrantServerConfig, AuthorizationResult, PermissionCheckOptions } from './types';
 
 /**
  * Grant Client for server-side applications

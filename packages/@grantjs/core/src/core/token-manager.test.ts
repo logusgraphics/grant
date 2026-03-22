@@ -9,10 +9,6 @@ import {
   TokenExpiredError,
   TokenInvalidError,
 } from '../errors/grant-exception';
-import { TokenClaims } from '../types';
-
-import { TokenManager } from './token-manager';
-
 import type {
   ITokenProvider,
   TokenDecodeResult,
@@ -20,6 +16,8 @@ import type {
   TokenVerifyOptions,
 } from '../ports/token.port';
 import type { GrantService } from '../types';
+import { TokenClaims } from '../types';
+import { TokenManager } from './token-manager';
 
 const TEST_KID = 'test-kid';
 const { publicKey: publicKeyPem, privateKey: privateKeyPem } = crypto.generateKeyPairSync('rsa', {

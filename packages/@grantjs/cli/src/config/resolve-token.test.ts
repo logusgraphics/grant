@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-import { resolveAccessToken } from './resolve-token.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { GrantConfig } from '../types/config.js';
+import { resolveAccessToken } from './resolve-token.js';
 
 vi.mock('../api/client.js', () => ({
   exchangeApiKey: vi.fn(),

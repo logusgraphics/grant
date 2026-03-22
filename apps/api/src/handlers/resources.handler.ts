@@ -1,3 +1,14 @@
+import type {
+  IGroupPermissionService,
+  IOrganizationPermissionService,
+  IPermissionService,
+  IPermissionTagService,
+  IProjectPermissionService,
+  IProjectResourceService,
+  IResourceService,
+  IResourceTagService,
+  ITransactionalConnection,
+} from '@grantjs/core';
 import {
   MutationCreateResourceArgs,
   MutationDeleteResourceArgs,
@@ -15,18 +26,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IGroupPermissionService,
-  IOrganizationPermissionService,
-  IPermissionService,
-  IPermissionTagService,
-  IProjectPermissionService,
-  IProjectResourceService,
-  IResourceService,
-  IResourceTagService,
-  ITransactionalConnection,
-} from '@grantjs/core';
 
 export class ResourceHandler extends CacheHandler {
   constructor(

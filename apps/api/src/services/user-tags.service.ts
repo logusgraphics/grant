@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  ITagRepository,
+  IUserRepository,
+  IUserTagRepository,
+  IUserTagService,
+} from '@grantjs/core';
 import { AddUserTagInput, RemoveUserTagInput, UpdateUserTagInput, UserTag } from '@grantjs/schema';
 
 import { ConflictError, NotFoundError } from '@/lib/errors';
@@ -9,19 +16,11 @@ import {
   addUserTagInputSchema,
   getUserTagIntersectionInputSchema,
   queryUserTagsArgsSchema,
-  removeUserTagInputSchema,
   removeUsersTagsInputSchema,
+  removeUserTagInputSchema,
   updateUserTagInputSchema,
   userTagSchema,
 } from './user-tags.schemas';
-
-import type {
-  IAuditLogger,
-  ITagRepository,
-  IUserRepository,
-  IUserTagRepository,
-  IUserTagService,
-} from '@grantjs/core';
 
 export class UserTagService implements IUserTagService {
   constructor(

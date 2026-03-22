@@ -25,7 +25,7 @@ import { useTags } from '@/hooks/tags';
 import { getDocsUrl } from '@/lib/constants';
 import { useGroupsStore } from '@/stores/groups.store';
 
-import { GroupCreateFormValues, createGroupSchema } from './group-types';
+import { createGroupSchema, GroupCreateFormValues } from './group-types';
 
 export function GroupCreateDialog({
   triggerAlwaysShowLabel,

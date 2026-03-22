@@ -1,10 +1,10 @@
+import type { NextFunction, Request, Response } from 'express';
+
 import { AuthenticationError, AuthorizationError, BadRequestError, NotFoundError } from '../errors';
 import { GrantClient } from '../grant-client';
+import type { AuthorizationResult, ResourceResolver } from '../types';
 import { debugGrant } from '../utils/debug';
 import { extractTokenFromRequest } from '../utils/token-extractor';
-
-import type { ResourceResolver, AuthorizationResult } from '../types';
-import type { Request, Response, NextFunction } from 'express';
 
 /**
  * Extended Express Request with authorization result

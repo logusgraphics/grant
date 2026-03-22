@@ -1,3 +1,4 @@
+import type { IAuditLogger, IProjectRepository, IProjectService } from '@grantjs/core';
 import {
   CreateProjectInput,
   MutationDeleteProjectArgs,
@@ -24,8 +25,6 @@ import {
   projectSchema,
   updateProjectParamsSchema,
 } from './projects.schemas';
-
-import type { IAuditLogger, IProjectRepository, IProjectService } from '@grantjs/core';
 
 export class ProjectService implements IProjectService {
   constructor(

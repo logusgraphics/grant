@@ -1,9 +1,8 @@
 import { AnalyticsFactory } from '@grantjs/analytics';
+import type { IAnalyticsAdapter } from '@grantjs/core';
 
 import { config } from '@/config';
 import { loggerFactory } from '@/lib/logger';
-
-import type { IAnalyticsAdapter } from '@grantjs/core';
 
 let adapter: IAnalyticsAdapter | null = null;
 

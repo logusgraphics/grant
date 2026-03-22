@@ -1,7 +1,7 @@
 'use client';
 
-import { AlertCircle, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { AlertCircle, Download } from 'lucide-react';
 
 import { CopyToClipboard } from '@/components/common';
 import { Button } from '@/components/ui/button';

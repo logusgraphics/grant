@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IProjectRepository,
+  IProjectResourceRepository,
+  IProjectResourceService,
+  IResourceRepository,
+} from '@grantjs/core';
 import {
   AddProjectResourceInput,
   ProjectResource,
@@ -16,14 +23,6 @@ import {
   projectResourceSchema,
   removeProjectResourceInputSchema,
 } from './project-resources.schemas';
-
-import type {
-  IAuditLogger,
-  IProjectRepository,
-  IProjectResourceRepository,
-  IProjectResourceService,
-  IResourceRepository,
-} from '@grantjs/core';
 
 export class ProjectResourceService implements IProjectResourceService {
   constructor(

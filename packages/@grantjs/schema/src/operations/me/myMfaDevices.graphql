@@ -1,0 +1,10 @@
+query MyMfaDevices {
+  myMfaDevices {
+    id
+    name
+    isPrimary
+    isEnabled
+    createdAt
+    lastUsedAt
+  }
+}

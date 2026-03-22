@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { GetSigningKeysQuery } from '@grantjs/schema';
 import { Calendar, Fingerprint } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CardBody, CardGrid, CardHeader, CopyToClipboard } from '@/components/common';
 import { Button } from '@/components/ui/button';

@@ -2,7 +2,6 @@
  * User-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   AddUserRoleInput,
   AddUserTagInput,
@@ -15,8 +14,8 @@ import type {
   GetUserSessionsInput,
   MutationDeleteUserArgs,
   QueryUserRolesInput,
-  QueryUserTagsInput,
   QueryUsersArgs,
+  QueryUserTagsInput,
   RemoveUserRoleInput,
   RemoveUserTagInput,
   UpdateUserAuthenticationMethodInput,
@@ -31,6 +30,8 @@ import type {
   UserSessionPage,
   UserTag,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IUserRepository {
   getUsers(
@@ -160,4 +161,76 @@ export interface IUserAuthenticationMethodRepository {
   findByToken(token: string, transaction?: unknown): Promise<UserAuthenticationMethod | null>;
 
   findByEmail(email: string, transaction?: unknown): Promise<UserAuthenticationMethod | null>;
+}
+
+export interface IUserMfaFactorRecord {
+  id: string;
+  userId: string;
+  type: string;
+  encryptedSecret: string;
+  secretIv: string;
+  secretTag: string;
+  isPrimary: boolean;
+  isEnabled: boolean;
+  lastUsedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface IUserMfaFactorRepository {
+  listFactors(userId: string, transaction?: unknown): Promise<IUserMfaFactorRecord[]>;
+  getPrimaryFactor(userId: string, transaction?: unknown): Promise<IUserMfaFactorRecord | null>;
+  upsertPrimaryFactor(
+    params: {
+      userId: string;
+      type: string;
+      encryptedSecret: string;
+      secretIv: string;
+      secretTag: string;
+      isEnabled: boolean;
+    },
+    transaction?: unknown
+  ): Promise<IUserMfaFactorRecord>;
+  enableFactor(factorId: string, transaction?: unknown): Promise<IUserMfaFactorRecord>;
+  touchFactorLastUsed(factorId: string, transaction?: unknown): Promise<IUserMfaFactorRecord>;
+  setPrimaryFactor(
+    factorId: string,
+    userId: string,
+    transaction?: unknown
+  ): Promise<IUserMfaFactorRecord>;
+  removeFactor(
+    factorId: string,
+    userId: string,
+    transaction?: unknown
+  ): Promise<IUserMfaFactorRecord>;
+}
+
+export interface IUserMfaRecoveryCodeRecord {
+  id: string;
+  userId: string;
+  userMfaFactorId?: string | null;
+  codeHash: string;
+  isUsed: boolean;
+  usedAt?: Date | null;
+  createdAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface IMfaRecoveryCodeStatus {
+  activeCount: number;
+  lastGeneratedAt: Date | null;
+}
+
+export interface IUserMfaRecoveryCodeRepository {
+  listCodes(userId: string, transaction?: unknown): Promise<IUserMfaRecoveryCodeRecord[]>;
+  createCodes(
+    userId: string,
+    codeHashes: string[],
+    userMfaFactorId?: string | null,
+    transaction?: unknown
+  ): Promise<IUserMfaRecoveryCodeRecord[]>;
+  softDeleteAllCodes(userId: string, transaction?: unknown): Promise<void>;
+  markCodeUsed(codeId: string, transaction?: unknown): Promise<IUserMfaRecoveryCodeRecord>;
+  getRecoveryCodeStatus(userId: string, transaction?: unknown): Promise<IMfaRecoveryCodeStatus>;
 }

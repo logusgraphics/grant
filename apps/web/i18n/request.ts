@@ -1,6 +1,6 @@
-import { getMergedMessages } from '@grantjs/i18n/loader';
 import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
+import { getMergedMessages } from '@grantjs/i18n/loader';
 
 import { routing } from './routing';
 

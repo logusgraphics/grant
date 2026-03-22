@@ -1,9 +1,9 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Scope } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 
 import { useScopeFromParams } from '@/hooks/common';
 import { useApiKeysStore } from '@/stores/api-keys.store';

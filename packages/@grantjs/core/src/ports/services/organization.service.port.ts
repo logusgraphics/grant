@@ -5,8 +5,6 @@
  *         OrganizationProjectApiKey, OrganizationTag, OrganizationMember,
  *         OrganizationInvitation.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddOrganizationGroupInput,
   AddOrganizationPermissionInput,
@@ -53,6 +51,9 @@ import type {
   UpdateOrganizationMemberInput,
   UpdateOrganizationProjectTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // IOrganizationService

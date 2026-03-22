@@ -24,7 +24,7 @@ import { useTags } from '@/hooks/tags';
 import { getDocsUrl } from '@/lib/constants';
 import { useRolesStore } from '@/stores/roles.store';
 
-import { RoleEditFormValues, editRoleSchema } from './role-types';
+import { editRoleSchema, RoleEditFormValues } from './role-types';
 
 export function RoleEditDialog() {
   const scope = useScopeFromParams();

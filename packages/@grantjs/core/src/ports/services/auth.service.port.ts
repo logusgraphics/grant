@@ -2,7 +2,6 @@
  * Auth-domain service port interfaces.
  * Covers: Auth, GitHubOAuth, OAuthState, Me.
  */
-import type { GrantAuth } from '../../types';
 import type {
   Account,
   AuthorizationResult,
@@ -10,6 +9,8 @@ import type {
   MeResponse,
   UserAuthenticationEmailProviderAction,
 } from '@grantjs/schema';
+
+import type { GrantAuth } from '../../types';
 
 // ---------------------------------------------------------------------------
 // Shared helper types

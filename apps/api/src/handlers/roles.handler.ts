@@ -1,3 +1,12 @@
+import type {
+  IOrganizationRoleService,
+  IProjectRoleService,
+  IRoleGroupService,
+  IRoleService,
+  IRoleTagService,
+  ITransactionalConnection,
+  IUserRoleService,
+} from '@grantjs/core';
 import {
   Group,
   MutationCreateRoleArgs,
@@ -15,16 +24,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IOrganizationRoleService,
-  IProjectRoleService,
-  IRoleGroupService,
-  IRoleService,
-  IRoleTagService,
-  ITransactionalConnection,
-  IUserRoleService,
-} from '@grantjs/core';
 
 export class RoleHandler extends CacheHandler {
   constructor(

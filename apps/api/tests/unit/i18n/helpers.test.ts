@@ -1,11 +1,10 @@
 /**
  * Unit tests: i18n helpers (translateError, t, getLocale, translateStatic).
  */
+import type { Request } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { HttpException } from '@/lib/errors';
-
-import type { Request } from 'express';
 
 const mockGetFixedT = vi.fn();
 const mockConfig = vi.hoisted(() => ({

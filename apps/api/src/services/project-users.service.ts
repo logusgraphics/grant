@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IProjectRepository,
+  IProjectUserRepository,
+  IProjectUserService,
+  IUserRepository,
+} from '@grantjs/core';
 import { AddProjectUserInput, ProjectUser, RemoveProjectUserInput } from '@grantjs/schema';
 
 import { ConflictError, NotFoundError } from '@/lib/errors';
@@ -11,14 +18,6 @@ import {
   projectUserSchema,
   removeProjectUserParamsSchema,
 } from './project-users.schemas';
-
-import type {
-  IAuditLogger,
-  IProjectRepository,
-  IProjectUserRepository,
-  IProjectUserService,
-  IUserRepository,
-} from '@grantjs/core';
 
 export class ProjectUserService implements IProjectUserService {
   constructor(

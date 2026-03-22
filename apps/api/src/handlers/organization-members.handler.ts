@@ -1,3 +1,4 @@
+import type { IOrganizationMemberService, ITransactionalConnection } from '@grantjs/core';
 import {
   MutationRemoveOrganizationMemberArgs,
   MutationUpdateOrganizationMemberArgs,
@@ -10,8 +11,6 @@ import { IEntityCacheAdapter } from '@/lib/cache';
 import type { Transaction } from '@/lib/transaction-manager.lib';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type { IOrganizationMemberService, ITransactionalConnection } from '@grantjs/core';
 
 export class OrganizationMembersHandler extends CacheHandler {
   constructor(

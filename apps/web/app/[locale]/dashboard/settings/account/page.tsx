@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-
-import { AccountType } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { AccountType } from '@grantjs/schema';
 
 import { SettingAccountDetailsCard } from '@/components/features/settings';
 import { DashboardLayout } from '@/components/layout';

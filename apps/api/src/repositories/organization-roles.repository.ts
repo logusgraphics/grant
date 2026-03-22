@@ -1,3 +1,4 @@
+import type { IOrganizationRoleRepository } from '@grantjs/core';
 import { OrganizationRoleModel, organizationRoles } from '@grantjs/database';
 import {
   AddOrganizationRoleInput,
@@ -8,8 +9,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IOrganizationRoleRepository } from '@grantjs/core';
 
 export class OrganizationRoleRepository
   extends PivotRepository<OrganizationRoleModel, OrganizationRole>

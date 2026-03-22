@@ -1,11 +1,10 @@
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 
 import { AuthenticationError, AuthorizationError, BadRequestError, NotFoundError } from '../errors';
 import { GrantClient } from '../grant-client';
+import type { AuthorizationResult, GrantServerConfig, ResourceResolver } from '../types';
 import { debugGrant } from '../utils/debug';
 import { extractTokenFromRequest } from '../utils/token-extractor';
-
-import type { ResourceResolver, AuthorizationResult, GrantServerConfig } from '../types';
 
 /**
  * Extended Fastify Request with authorization result

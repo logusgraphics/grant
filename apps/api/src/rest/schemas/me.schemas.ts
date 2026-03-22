@@ -262,5 +262,21 @@ export const logoutMyUserResponseSchema = createSuccessResponseSchema(
   'Successfully logged out'
 );
 
+export const mfaRecoveryCodeStatusSchema = z.object({
+  activeCount: z.number().int().min(0).openapi({
+    description: 'Number of unused recovery codes not soft-deleted',
+    example: 8,
+  }),
+  lastGeneratedAt: z.string().datetime().nullable().openapi({
+    description: 'Latest createdAt among active recovery codes',
+    example: '2026-03-20T12:00:00.000Z',
+  }),
+});
+
+export const getMyMfaRecoveryCodeStatusResponseSchema = createSuccessResponseSchema(
+  mfaRecoveryCodeStatusSchema,
+  'Recovery code metadata (no plaintext)'
+);
+
 // Data Export Schema (reuse from users.schemas.ts)
 export { exportUserDataResponseSchema } from './users.schemas';

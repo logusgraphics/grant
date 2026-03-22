@@ -1,23 +1,22 @@
+import type { IRoleRepository } from '@grantjs/core';
 import { groups } from '@grantjs/database';
 import { tags } from '@grantjs/database';
 import { RoleModel, roles } from '@grantjs/database';
 import {
-  Role,
-  QueryRolesArgs,
-  RolePage,
-  MutationDeleteRoleArgs,
-  RoleTag,
-  RoleGroup,
   CreateRoleInput,
+  MutationDeleteRoleArgs,
+  QueryRolesArgs,
+  Role,
+  RoleGroup,
+  RolePage,
   RoleSearchableField,
+  RoleTag,
   UpdateRoleInput,
 } from '@grantjs/schema';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { EntityRepository, RelationsConfig } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IRoleRepository } from '@grantjs/core';
 
 export class RoleRepository extends EntityRepository<RoleModel, Role> implements IRoleRepository {
   protected table = roles;

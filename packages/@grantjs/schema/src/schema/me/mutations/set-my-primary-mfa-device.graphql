@@ -1,0 +1,3 @@
+extend type Mutation {
+  setMyPrimaryMfaDevice(input: SetMyPrimaryMfaDeviceInput!): MfaDevice!
+}

@@ -1,11 +1,9 @@
 'use client';
 
-import { forwardRef, useCallback, type ReactNode } from 'react';
-
+import { forwardRef, type ReactNode, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-
-import { Globe } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Globe } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {

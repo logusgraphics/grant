@@ -1,9 +1,10 @@
+import type { IUserRepository } from '@grantjs/core';
 import {
-  UserModel,
   accounts,
   roles,
   tags,
   userAuthenticationMethods,
+  UserModel,
   users,
 } from '@grantjs/database';
 import {
@@ -23,8 +24,6 @@ import {
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { EntityRepository, RelationsConfig } from '@/repositories/common';
 import { SelectedFields } from '@/types';
-
-import type { IUserRepository } from '@grantjs/core';
 
 export class UserRepository extends EntityRepository<UserModel, User> implements IUserRepository {
   protected table = users;

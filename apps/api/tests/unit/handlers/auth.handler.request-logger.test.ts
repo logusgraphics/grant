@@ -3,11 +3,10 @@
  * so handler-originated logs include requestId when called from routes/resolvers.
  */
 
+import type { ILogger } from '@grantjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthHandler } from '@/handlers/auth.handler';
-
-import type { ILogger } from '@grantjs/core';
 
 const mockResendVerificationEmail = vi.fn();
 const mockSendOtp = vi.fn();
@@ -28,6 +27,7 @@ const mockUsers = { createUser: vi.fn(), getUsers: vi.fn(), deleteOwnUser: vi.fn
 const mockAccounts = { createAccount: vi.fn(), getOwnerAccounts: vi.fn(), deleteAccount: vi.fn() };
 const mockAccountRoles = { seedAccountRoles: vi.fn() };
 const mockUserRoles = { addUserRole: vi.fn(), getUserRoles: vi.fn() };
+const mockUserMfa = { setupTotp: vi.fn(), verifyTotp: vi.fn() };
 const mockUserSessions = { createSession: vi.fn() };
 const mockEmail = { sendOtp: mockSendOtp, sendPasswordReset: vi.fn(), sendInvitation: vi.fn() };
 const mockAuth = { getAuth: vi.fn() };
@@ -42,6 +42,7 @@ function createHandler(): AuthHandler {
     mockAccounts as never,
     mockAccountRoles as never,
     mockUserRoles as never,
+    mockUserMfa as never,
     mockUserSessions as never,
     mockEmail as never,
     mockAuth as never,

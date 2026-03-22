@@ -1,12 +1,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Role } from '@grantjs/schema';
 import { Edit, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { ActionItem, Actions } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';

@@ -1,20 +1,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
+import type { CreateProjectAppResult, Scope } from '@grantjs/schema';
 import { UserAuthenticationMethodProvider } from '@grantjs/schema';
 import { LayoutGrid } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import type { DefaultValues } from 'react-hook-form';
 import { z } from 'zod';
 
 import {
+  CheckboxList,
+  type CheckboxListProps,
   CreateDialog,
   type DialogField,
   type DialogRelationship,
-  CheckboxList,
-  type CheckboxListProps,
   PrimaryTagSelector,
   type PrimaryTagSelectorProps,
   TagCheckboxList,
@@ -26,9 +27,6 @@ import { useScopeFromParams } from '@/hooks/common';
 import { useProjectAppFormData, useProjectAppMutations } from '@/hooks/project-apps';
 import { useTags } from '@/hooks/tags';
 import { useProjectAppsStore } from '@/stores/project-apps.store';
-
-import type { CreateProjectAppResult, Scope } from '@grantjs/schema';
-import type { DefaultValues } from 'react-hook-form';
 
 /** Providers available for project OAuth (subset of UserAuthenticationMethodProvider). */
 const PROJECT_OAUTH_PROVIDER_OPTIONS = [

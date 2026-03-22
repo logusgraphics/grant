@@ -1,14 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import { useParams } from 'next/navigation';
-
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { ProjectSortableField, SortOrder, Tenant } from '@grantjs/schema';
 import { Check, FolderOpen, PlusCircle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { SidebarPopover } from '@/components/common';
 import {

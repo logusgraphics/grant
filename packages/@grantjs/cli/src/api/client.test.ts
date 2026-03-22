@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { exchangeApiKey, exchangeCliCallback, fetchResources, fetchPermissions } from './client.js';
+import { exchangeApiKey, exchangeCliCallback, fetchPermissions, fetchResources } from './client.js';
 
 describe('exchangeApiKey', () => {
   beforeEach(() => {

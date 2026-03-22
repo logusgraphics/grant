@@ -2,20 +2,21 @@
  * Resource-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   AddResourceTagInput,
   CreateResourceInput,
   MutationDeleteResourceArgs,
   MutationUpdateResourceArgs,
-  QueryResourceTagsInput,
   QueryResourcesArgs,
+  QueryResourceTagsInput,
   RemoveResourceTagInput,
   Resource,
   ResourcePage,
   ResourceTag,
   UpdateResourceTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IResourceRepository {
   getResources(

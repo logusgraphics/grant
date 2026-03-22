@@ -1,3 +1,15 @@
+import type {
+  IAccountTagService,
+  IGroupTagService,
+  IOrganizationTagService,
+  IPermissionTagService,
+  IProjectTagService,
+  IResourceTagService,
+  IRoleTagService,
+  ITagService,
+  ITransactionalConnection,
+  IUserTagService,
+} from '@grantjs/core';
 import {
   MutationCreateTagArgs,
   MutationDeleteTagArgs,
@@ -13,19 +25,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IAccountTagService,
-  IGroupTagService,
-  IOrganizationTagService,
-  IPermissionTagService,
-  IProjectTagService,
-  IResourceTagService,
-  IRoleTagService,
-  ITagService,
-  ITransactionalConnection,
-  IUserTagService,
-} from '@grantjs/core';
 
 export class TagHandler extends CacheHandler {
   constructor(

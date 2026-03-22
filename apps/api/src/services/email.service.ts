@@ -1,3 +1,9 @@
+import type {
+  IEmailService,
+  SendInvitationParams,
+  SendProjectOAuthMagicLinkParams,
+} from '@grantjs/core';
+import type { EmailTemplates } from '@grantjs/email';
 import { EmailFactory } from '@grantjs/email';
 
 import { config } from '@/config';
@@ -16,13 +22,6 @@ import {
   getProjectOAuthMagicLinkEmailText,
 } from '@/lib/email/templates';
 import { loggerFactory } from '@/lib/logger';
-
-import type {
-  IEmailService,
-  SendInvitationParams,
-  SendProjectOAuthMagicLinkParams,
-} from '@grantjs/core';
-import type { EmailTemplates } from '@grantjs/email';
 
 /** API-specific template implementation wrapping MJML template functions */
 const templates: EmailTemplates = {

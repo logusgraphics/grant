@@ -1,19 +1,18 @@
 'use client';
 
 import * as React from 'react';
-
+import { useTranslations } from 'next-intl';
 import { isTranslationKey } from '@grantjs/i18n';
 import * as LabelPrimitive from '@radix-ui/react-label';
 import { Slot } from '@radix-ui/react-slot';
-import { useTranslations } from 'next-intl';
 import {
   Controller,
-  FormProvider,
-  useFormContext,
-  useFormState,
   type ControllerProps,
   type FieldPath,
   type FieldValues,
+  FormProvider,
+  useFormContext,
+  useFormState,
 } from 'react-hook-form';
 
 import { Label } from '@/components/ui/label';
@@ -176,13 +175,13 @@ function TranslatedFormMessage({ className, ...props }: React.ComponentProps<'p'
 }
 
 export {
-  useFormField,
   Form,
-  FormItem,
-  FormLabel,
   FormControl,
   FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
   FormMessage,
   TranslatedFormMessage,
-  FormField,
+  useFormField,
 };

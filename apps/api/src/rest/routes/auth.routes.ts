@@ -27,6 +27,8 @@ import {
   resendVerificationRequestSchema,
   resetPasswordRequestSchema,
   verifyEmailRequestSchema,
+  verifyMfaRecoveryCodeRequestSchema,
+  verifyMfaRequestSchema,
 } from '@/rest/schemas';
 import { exchangeApiKeyRequestSchema } from '@/rest/schemas/api-keys.schemas';
 import { TypedRequest } from '@/rest/types';
@@ -68,6 +70,69 @@ export function createAuthRoutes(context: RequestContext) {
         context.requestBaseUrl
       );
 
+      setRefreshTokenCookie(res, result.refreshToken);
+      sendSuccessResponse(res, result);
+    }
+  );
+
+  router.post(
+    '/mfa/setup',
+    authenticateRestRoute,
+    async (_req: TypedRequest<Record<string, never>>, res: Response) => {
+      const user = context.user;
+      const userId = user?.userId;
+      if (!userId) {
+        throw new AuthenticationError('Unauthorized');
+      }
+      const me = await context.handlers.me.getMe();
+      const accountName = me.email?.trim() || userId;
+      const result = await context.handlers.auth.setupMfa(userId, accountName);
+      sendSuccessResponse(res, result);
+    }
+  );
+
+  router.post(
+    '/mfa/verify',
+    authenticateRestRoute,
+    validateBody(verifyMfaRequestSchema),
+    async (req: TypedRequest<{ body: typeof verifyMfaRequestSchema }>, res: Response) => {
+      const user = context.user;
+      const userId = user?.userId;
+      const sessionId = user?.tokenId;
+      if (!userId || !sessionId) {
+        throw new AuthenticationError('Unauthorized');
+      }
+      const result = await context.handlers.auth.verifyMfa(
+        userId,
+        sessionId,
+        req.body.code,
+        context.requestBaseUrl
+      );
+      setRefreshTokenCookie(res, result.refreshToken);
+      sendSuccessResponse(res, result);
+    }
+  );
+
+  router.post(
+    '/mfa/recovery/verify',
+    authenticateRestRoute,
+    validateBody(verifyMfaRecoveryCodeRequestSchema),
+    async (
+      req: TypedRequest<{ body: typeof verifyMfaRecoveryCodeRequestSchema }>,
+      res: Response
+    ) => {
+      const user = context.user;
+      const userId = user?.userId;
+      const sessionId = user?.tokenId;
+      if (!userId || !sessionId) {
+        throw new AuthenticationError('Unauthorized');
+      }
+      const result = await context.handlers.auth.verifyMfaRecoveryCode(
+        userId,
+        sessionId,
+        req.body.code,
+        context.requestBaseUrl
+      );
       setRefreshTokenCookie(res, result.refreshToken);
       sendSuccessResponse(res, result);
     }

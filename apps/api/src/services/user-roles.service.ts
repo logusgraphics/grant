@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IRoleRepository,
+  IUserRepository,
+  IUserRoleRepository,
+  IUserRoleService,
+} from '@grantjs/core';
 import {
   AddUserRoleInput,
   QueryUserRolesInput,
@@ -16,14 +23,6 @@ import {
   removeUserRoleInputSchema,
   userRoleSchema,
 } from './user-roles.schemas';
-
-import type {
-  IAuditLogger,
-  IRoleRepository,
-  IUserRepository,
-  IUserRoleRepository,
-  IUserRoleService,
-} from '@grantjs/core';
 
 export class UserRoleService implements IUserRoleService {
   constructor(

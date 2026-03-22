@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { pgTable, pgPolicy, varchar, timestamp, uuid, index } from 'drizzle-orm/pg-core';
+import { index, pgPolicy, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 import { organizations } from './organizations.schema';
 import { permissions } from './permissions.schema';

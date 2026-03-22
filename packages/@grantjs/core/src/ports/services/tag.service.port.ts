@@ -2,8 +2,6 @@
  * Tag-domain service port interface.
  * Covers: Tag.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   CreateTagInput,
   MutationDeleteTagArgs,
@@ -12,6 +10,9 @@ import type {
   TagPage,
   UpdateTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // ITagService

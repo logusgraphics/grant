@@ -1,11 +1,13 @@
+import { useTranslations } from 'next-intl';
 import { useMutation } from '@apollo/client/react';
 import {
   AccountType,
   CreateAccountResult,
   LoginDocument,
   LoginResponse,
-  RegisterDocument,
   RefreshSessionDocument,
+  RefreshSessionResponse,
+  RegisterDocument,
   RequestPasswordResetDocument,
   RequestPasswordResetResponse,
   ResendVerificationDocument,
@@ -16,9 +18,7 @@ import {
   UserAuthenticationMethodProvider,
   VerifyEmailDocument,
   VerifyEmailResponse,
-  RefreshSessionResponse,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { useAuthStore } from '@/stores/auth.store';
@@ -80,9 +80,14 @@ export function useAuthMutations() {
           accounts: loginData.accounts,
           accessToken: loginData.accessToken,
           email: loginData.email ?? null,
+          mfaVerified: loginData.mfaVerified ?? false,
           requiresEmailVerification: loginData.requiresEmailVerification ?? false,
           verificationExpiry: loginData.verificationExpiry ?? null,
         });
+      }
+
+      if (loginData?.requiresMfaStepUp) {
+        return loginData;
       }
 
       if (loginData?.requiresEmailVerification) {
@@ -166,6 +171,7 @@ export function useAuthMutations() {
           accounts,
           accessToken: registerData.accessToken,
           email: registerData.email ?? null,
+          mfaVerified: false,
           requiresEmailVerification: registerData.requiresEmailVerification ?? false,
           verificationExpiry: registerData.verificationExpiry ?? null,
         });
@@ -228,6 +234,7 @@ export function useAuthMutations() {
           accounts: currentState.accounts,
           accessToken: accessTokenToSet,
           email: currentState.email,
+          mfaVerified: true,
           requiresEmailVerification: false,
           verificationExpiry: null,
         });

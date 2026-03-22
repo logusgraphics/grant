@@ -1,0 +1,3 @@
+extend type Mutation {
+  removeMyMfaDevice(input: RemoveMyMfaDeviceInput!): MfaVerifyResult!
+}

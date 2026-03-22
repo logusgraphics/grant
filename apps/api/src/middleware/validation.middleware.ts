@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { ZodError, z } from 'zod';
+import { z, ZodError } from 'zod';
 
 import { isTranslationKey, t, translateMessage } from '@/i18n';
 import { createLogger } from '@/lib/logger';

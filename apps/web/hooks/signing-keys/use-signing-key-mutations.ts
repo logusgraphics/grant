@@ -1,6 +1,6 @@
+import { useTranslations } from 'next-intl';
 import { useMutation } from '@apollo/client/react';
 import { RotateSigningKeyDocument, RotateSigningKeyMutation, Scope } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { evictSigningKeysCache } from './cache';

@@ -4,4 +4,7 @@ export * from './register.resolver';
 export * from './request-password-reset.resolver';
 export * from './resend-verification.resolver';
 export * from './reset-password.resolver';
+export * from './setup-mfa.resolver';
 export * from './verify-email.resolver';
+export * from './verify-mfa.resolver';
+export * from './verify-mfa-recovery-code.resolver';

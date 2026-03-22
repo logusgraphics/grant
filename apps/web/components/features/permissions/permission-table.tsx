@@ -1,15 +1,15 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Permission, Tag } from '@grantjs/schema';
 import { CopyCheck } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Avatar,
   DataTable,
-  ScrollBadges,
   type DataTableColumnConfig,
+  ScrollBadges,
   type TableSkeletonColumnConfig,
 } from '@/components/common';
 import { Badge } from '@/components/ui/badge';

@@ -1,5 +1,4 @@
 import { exchangeApiKey } from '../api/client.js';
-
 import type { GrantConfig } from '../types/config.js';
 
 /**

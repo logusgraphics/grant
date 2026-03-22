@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-
-import { Copy, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Check, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';

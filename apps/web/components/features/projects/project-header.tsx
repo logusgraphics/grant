@@ -1,8 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { TagColor } from '@grantjs/constants';
 import { Project, Tag } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 
 import { CardHeader } from '@/components/common';
 

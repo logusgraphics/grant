@@ -1,13 +1,13 @@
 import { relations } from 'drizzle-orm';
 import {
-  pgTable,
-  uuid,
-  timestamp,
-  varchar,
   boolean,
-  text,
-  uniqueIndex,
   index,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
 
 import { users } from './users.schema';

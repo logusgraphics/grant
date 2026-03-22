@@ -5,8 +5,8 @@ import crypto from 'node:crypto';
 import { getEnv, resolveDatabaseUrl } from '@grantjs/env';
 import { and, eq } from 'drizzle-orm';
 
-import { closeDatabase, initializeDBConnection } from '@/connection';
 import type { DbSchema } from '@/connection';
+import { closeDatabase, initializeDBConnection } from '@/connection';
 import { signingKeys, users } from '@/schemas';
 
 /**

@@ -49,6 +49,8 @@ export const userSessionSchema = baseEntitySchema.extend({
   audience: z.string(),
   userAuthenticationMethodId: idSchema,
   expiresAt: z.date(),
+  emailVerified: z.boolean().optional(),
+  mfaVerifiedAt: z.date().nullable().optional(),
   lastUsedAt: z.date().nullable().optional(),
   userAgent: z.string().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
@@ -70,6 +72,7 @@ export const createSessionSchema = z.object({
   userAuthenticationMethodId: idSchema,
   userAgent: z.string().max(500).nullable().optional(),
   ipAddress: z.string().max(45).nullable().optional(),
+  mfaVerifiedAt: z.date().nullable().optional(),
 });
 
 // Bulk session operations
@@ -85,6 +88,7 @@ export const cleanupExpiredSessionsSchema = z.object({
 export const updateUserSessionSchema = z.object({
   id: idSchema,
   lastUsedAt: z.date().nullable().optional(),
+  mfaVerifiedAt: z.date().nullable().optional(),
   userAgent: z.string().max(500).nullable().optional(),
   ipAddress: z.string().max(45).nullable().optional(),
 });

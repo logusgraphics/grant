@@ -1,10 +1,10 @@
 'use client';
 
-import { LayoutGrid, Table } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LayoutGrid, Table } from 'lucide-react';
 
-import { ViewSwitcher, type ViewOption } from '@/components/common';
-import { useSigningKeysStore, type SigningKeyView } from '@/stores/signing-keys.store';
+import { type ViewOption, ViewSwitcher } from '@/components/common';
+import { type SigningKeyView, useSigningKeysStore } from '@/stores/signing-keys.store';
 
 export function SigningKeyViewSwitcher() {
   const t = useTranslations('signingKeys');

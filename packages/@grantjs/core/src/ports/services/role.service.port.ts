@@ -2,8 +2,6 @@
  * Role-domain service port interfaces.
  * Covers: Role, RoleGroup, RoleTag.
  */
-import type { DeleteParams } from './user.service.port';
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddRoleGroupInput,
   AddRoleTagInput,
@@ -20,6 +18,9 @@ import type {
   UpdateRoleInput,
   UpdateRoleTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
+import type { DeleteParams } from './user.service.port';
 
 // ---------------------------------------------------------------------------
 // IRoleService

@@ -1,3 +1,5 @@
+import type { Grant, ITransactionalConnection } from '@grantjs/core';
+
 import { IEntityCacheAdapter } from '@/lib/cache';
 import type { Transaction } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
@@ -19,8 +21,6 @@ import { RoleHandler } from './roles.handler';
 import { SigningKeysHandler } from './signing-keys.handler';
 import { TagHandler } from './tags.handler';
 import { UserHandler } from './users.handler';
-
-import type { Grant, ITransactionalConnection } from '@grantjs/core';
 
 export type Handlers = ReturnType<typeof createHandlers>;
 
@@ -47,6 +47,7 @@ export function createHandlers(
     services.accounts,
     services.accountRoles,
     services.userRoles,
+    services.userMfa,
     services.userSessions,
     services.email,
     services.auth,
@@ -63,6 +64,7 @@ export function createHandlers(
       services.accounts,
       services.users,
       services.userAuthenticationMethods,
+      services.userMfa,
       services.userSessions,
       services.fileStorage,
       services.email,

@@ -1,8 +1,7 @@
 'use client';
 
 import { type ReactNode } from 'react';
-
-import { TagColor, getTagBorderClasses } from '@grantjs/constants';
+import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 
 import { CardDescription, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';

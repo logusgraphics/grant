@@ -61,7 +61,9 @@ export class InMemoryCacheAdapter implements ICacheAdapter {
     if (!pattern) {
       return allKeys;
     }
-    const regex = new RegExp(pattern.replace('*', '.*'));
+    const regex = new RegExp(
+      '^' + pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$'
+    );
     return allKeys.filter((key) => regex.test(key));
   }
 

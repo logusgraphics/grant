@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { renderHook } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GrantClient } from '../../grant-client';

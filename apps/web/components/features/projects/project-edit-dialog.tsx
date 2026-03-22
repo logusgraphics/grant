@@ -15,7 +15,7 @@ import {
   TagCheckboxListProps,
 } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
-import { useScopeFromParams, useProjectTags } from '@/hooks/common';
+import { useProjectTags, useScopeFromParams } from '@/hooks/common';
 import { useProjectMutations } from '@/hooks/projects';
 import { useTags } from '@/hooks/tags';
 import { useProjectsStore } from '@/stores/projects.store';

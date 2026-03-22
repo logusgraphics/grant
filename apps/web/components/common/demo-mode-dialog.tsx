@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-
+import { useLocale, useTranslations } from 'next-intl';
 import cronstrue from 'cronstrue/i18n';
 import {
   Activity,
@@ -13,7 +13,6 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
 
 import { useRuntimeConfig } from '@/components/providers/runtime-config-provider';
 import { Button } from '@/components/ui/button';

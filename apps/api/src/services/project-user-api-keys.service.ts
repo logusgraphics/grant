@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IProjectRepository,
+  IProjectUserApiKeyRepository,
+  IProjectUserApiKeyService,
+  IUserRepository,
+} from '@grantjs/core';
 import { ProjectUserApiKey } from '@grantjs/schema';
 
 import { NotFoundError } from '@/lib/errors';
@@ -9,14 +16,6 @@ import {
   addProjectUserApiKeyParamsSchema,
   removeProjectUserApiKeyParamsSchema,
 } from './project-user-api-keys.schemas';
-
-import type {
-  IAuditLogger,
-  IProjectRepository,
-  IProjectUserApiKeyRepository,
-  IProjectUserApiKeyService,
-  IUserRepository,
-} from '@grantjs/core';
 
 export class ProjectUserApiKeyService implements IProjectUserApiKeyService {
   constructor(

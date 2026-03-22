@@ -1,10 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { Project, Tenant } from '@grantjs/schema';
 import { ChevronRight } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { useProjectScope } from '@/hooks/common';

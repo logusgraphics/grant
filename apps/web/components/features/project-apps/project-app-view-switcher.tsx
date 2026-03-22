@@ -1,10 +1,10 @@
 'use client';
 
-import { LayoutGrid, Table } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LayoutGrid, Table } from 'lucide-react';
 
-import { ViewSwitcher, type ViewOption } from '@/components/common';
-import { useProjectAppsStore, type ProjectAppView } from '@/stores/project-apps.store';
+import { type ViewOption, ViewSwitcher } from '@/components/common';
+import { type ProjectAppView, useProjectAppsStore } from '@/stores/project-apps.store';
 
 export function ProjectAppViewSwitcher() {
   const t = useTranslations('projectApps');

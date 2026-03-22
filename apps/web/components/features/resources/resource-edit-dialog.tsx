@@ -21,7 +21,7 @@ import { useTags } from '@/hooks/tags';
 import { slugifyAction } from '@/lib/slugify';
 import { useResourcesStore } from '@/stores/resources.store';
 
-import { ResourceEditFormValues, editResourceSchema } from './resource-types';
+import { editResourceSchema, ResourceEditFormValues } from './resource-types';
 
 export function ResourceEditDialog() {
   const scope = useScopeFromParams();

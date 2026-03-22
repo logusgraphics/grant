@@ -1,3 +1,4 @@
+import type { IUserTagRepository } from '@grantjs/core';
 import { UserTagModel, userTags } from '@grantjs/database';
 import {
   AddUserTagInput,
@@ -9,8 +10,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IUserTagRepository } from '@grantjs/core';
 
 export class UserTagRepository
   extends PivotRepository<UserTagModel, UserTag>

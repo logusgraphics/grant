@@ -1,0 +1,8 @@
+type MfaDevice {
+  id: ID!
+  name: String!
+  isPrimary: Boolean!
+  isEnabled: Boolean!
+  createdAt: Date!
+  lastUsedAt: Date
+}

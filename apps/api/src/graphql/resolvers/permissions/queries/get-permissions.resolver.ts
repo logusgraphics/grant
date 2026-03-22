@@ -1,4 +1,4 @@
-import { QueryResolvers, Permission } from '@grantjs/schema';
+import { Permission, QueryResolvers } from '@grantjs/schema';
 
 import { GraphqlContext } from '@/graphql/types';
 import { getDirectFieldSelection } from '@/lib/field-selection.lib';

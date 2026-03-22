@@ -1,7 +1,6 @@
 export * from './accounts';
 export * from './api-keys';
 export * from './auth';
-export * from './signing-keys';
 export * from './common';
 export * from './groups';
 export * from './me';
@@ -13,5 +12,6 @@ export * from './project-apps';
 export * from './projects';
 export * from './resources';
 export * from './roles';
+export * from './signing-keys';
 export * from './tags';
 export * from './users';

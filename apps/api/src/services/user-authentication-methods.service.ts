@@ -1,3 +1,9 @@
+import type {
+  IAuditLogger,
+  IUserAuthenticationMethodRepository,
+  IUserAuthenticationMethodService,
+  IUserSessionRepository,
+} from '@grantjs/core';
 import {
   CreateUserAuthenticationMethodInput,
   DeleteUserAuthenticationMethodInput,
@@ -19,8 +25,8 @@ import {
 } from '@/lib/errors';
 import { generateSecureToken, hashSecret, isTokenValid, verifySecret } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
-import { DeleteParams, SelectedFields } from '@/types';
 import type { Otp } from '@/types';
+import { DeleteParams, SelectedFields } from '@/types';
 
 import { createDynamicSingleSchema, emailSchema, validateInput, validateOutput } from './common';
 import {
@@ -34,13 +40,6 @@ import {
   updateUserAuthenticationMethodInputSchema,
   userAuthenticationMethodSchema,
 } from './user-authentication-methods.schemas';
-
-import type {
-  IAuditLogger,
-  IUserAuthenticationMethodRepository,
-  IUserAuthenticationMethodService,
-  IUserSessionRepository,
-} from '@grantjs/core';
 
 interface ProcessedProvider {
   providerData: Record<string, unknown>;

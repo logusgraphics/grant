@@ -1,13 +1,13 @@
 import { Grant, GrantAuth } from '@grantjs/core';
 import {
-  DbSchema,
   accountAuditLogs,
   accountProjectApiKeyAuditLogs,
-  accountProjectTagAuditLogs,
   accountProjectsAuditLogs,
+  accountProjectTagAuditLogs,
   accountRoleAuditLogs,
   accountTagAuditLogs,
   apiKeyAuditLogs,
+  DbSchema,
   groupAuditLogs,
   groupPermissionsAuditLogs,
   groupTagsAuditLogs,
@@ -16,8 +16,8 @@ import {
   organizationInvitationsAuditLogs,
   organizationPermissionsAuditLogs,
   organizationProjectApiKeyAuditLogs,
-  organizationProjectTagAuditLogs,
   organizationProjectsAuditLogs,
+  organizationProjectTagAuditLogs,
   organizationRolesAuditLogs,
   organizationTagAuditLogs,
   organizationUsersAuditLogs,
@@ -42,6 +42,7 @@ import {
   tagAuditLogs,
   userAuditLogs,
   userAuthenticationMethodsAuditLogs,
+  userMfaFactorAuditLogs,
   userRolesAuditLogs,
   userSessionAuditLogs,
   userTagsAuditLogs,
@@ -98,6 +99,7 @@ import { RoleService } from './roles.service';
 import { SigningKeyService } from './signing-keys.service';
 import { TagService } from './tags.service';
 import { UserAuthenticationMethodService } from './user-authentication-methods.service';
+import { UserMfaService } from './user-mfa.service';
 import { UserRoleService } from './user-roles.service';
 import { UserSessionService } from './user-sessions.service';
 import { UserTagService } from './user-tags.service';
@@ -172,6 +174,11 @@ export function createServices(
       repositories.userAuthenticationMethodRepository,
       repositories.userSessionRepository,
       audit(userAuthenticationMethodsAuditLogs, 'userAuthenticationMethodId', user, db)
+    ),
+    userMfa: new UserMfaService(
+      repositories.userMfaFactorRepository,
+      repositories.userMfaRecoveryCodeRepository,
+      audit(userMfaFactorAuditLogs, 'userMfaFactorId', user, db)
     ),
     userSessions: new UserSessionService(
       repositories.userSessionRepository,

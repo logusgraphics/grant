@@ -1,10 +1,9 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { AccountType } from '@grantjs/schema';
 import { Building2, Check, Layers, PlusCircle, User } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { SidebarPopover } from '@/components/common';
 import {

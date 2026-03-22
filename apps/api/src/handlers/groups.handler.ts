@@ -1,3 +1,12 @@
+import type {
+  IGroupPermissionService,
+  IGroupService,
+  IGroupTagService,
+  IOrganizationGroupService,
+  IProjectGroupService,
+  IRoleGroupService,
+  ITransactionalConnection,
+} from '@grantjs/core';
 import {
   Group,
   GroupPage,
@@ -15,16 +24,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IGroupPermissionService,
-  IGroupService,
-  IGroupTagService,
-  IOrganizationGroupService,
-  IProjectGroupService,
-  IRoleGroupService,
-  ITransactionalConnection,
-} from '@grantjs/core';
 
 export class GroupHandler extends CacheHandler {
   constructor(

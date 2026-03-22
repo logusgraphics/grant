@@ -1,6 +1,6 @@
-import { getPackageVersion } from '../utils/package.js';
-
 import type { Command } from 'commander';
+
+import { getPackageVersion } from '../utils/package.js';
 
 export function createVersionCommand(program: Command): void {
   program

@@ -2,13 +2,14 @@
  * Grant-domain service port interface.
  * Covers: Grant (signing keys, user permissions/roles/groups resolution).
  */
+import type { Permission, Scope, TokenType } from '@grantjs/schema';
+
 import type {
   ExecutionContextGroup,
   ExecutionContextRole,
   ExecutionContextUser,
   SessionSigningKey,
 } from '../../types';
-import type { Permission, Scope, TokenType } from '@grantjs/schema';
 
 // ---------------------------------------------------------------------------
 // IGrantService

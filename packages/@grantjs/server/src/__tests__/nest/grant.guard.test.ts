@@ -1,10 +1,9 @@
-import { UnauthorizedException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
+import { ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GrantClient } from '../../grant-client';
 import { GrantGuard } from '../../nest/grant.guard';
-
-import type { ExecutionContext } from '@nestjs/common';
 
 function createMockContext(request: Record<string, unknown>): ExecutionContext {
   return {

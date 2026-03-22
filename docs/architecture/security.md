@@ -286,6 +286,132 @@ Both REST and GraphQL endpoints use the same guard pattern:
 
 When a blocked operation is attempted, the API returns `403` with code `EMAIL_VERIFICATION_REQUIRED`.
 
+### Email verification only (no MFA in this subsection)
+
+For the email-verification model and guard table, see the previous subsection. **MFA** is documented in [Multi-factor authentication (MFA)](#multi-factor-authentication-mfa) below.
+
+## Multi-factor authentication (MFA)
+
+::: info What MFA does here
+Grant adds **TOTP** (authenticator app) MFA. Sessions can carry `mfaVerified=false` until the user proves possession of a factor (**TOTP** or **recovery code**). **AAL** (authentication assurance level) in JWTs comes from claims such as `amr`, `acr`, and `auth_time` / `mfa_auth_time` (`@grantjs/core`). Two knobs interact: **sensitive-route guards** (`requireMfa*`) and **minimum AAL at login** (`AUTH_MIN_AAL_AT_LOGIN`).
+:::
+
+### Enrollment, verification, and tokens
+
+| Step                        | Behavior                                                                                                                                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Enroll**                  | Server generates a TOTP secret; persisted **encrypted at rest** (`AUTH_MFA_SECRET_ENCRYPTION_KEY` required).                                                                             |
+| **Verify**                  | `verifyMfa` / `verifyMfaRecoveryCode` (GraphQL or REST) validates the code, sets session MFA state, **re-mints** access + refresh tokens with `mfaVerified=true` and updated AAL claims. |
+| **Non-session credentials** | **API keys** and **project-app tokens** skip interactive MFA in guards (non-interactive credentials).                                                                                    |
+
+### Flow: default minimum AAL at login (`aal1`)
+
+When **`AUTH_MIN_AAL_AT_LOGIN=aal1`** (default), most routes are reachable at **AAL1** after login. **Sensitive organization-scoped** operations still hit **MFA guards** when org policy or user enrollment requires a verified MFA step.
+
+```bmermaid diagram-narrow
+sequenceDiagram
+  participant C as Client
+  participant API as API
+  C->>API: Login / OAuth
+  API-->>C: Session JWT (AAL1)
+  C->>API: Sensitive org-scoped mutation
+  API->>API: MFA guard
+  alt Policy OK or mfaVerified
+    API-->>C: 200
+  else MFA_REQUIRED
+    API-->>C: MFA_REQUIRED
+    C->>API: verifyMfa / recovery verify
+    API-->>C: New JWT (mfaVerified)
+    C->>API: Retry mutation
+    API-->>C: 200
+  end
+```
+
+### Flow: minimum AAL2 at login (`aal2`)
+
+When **`AUTH_MIN_AAL_AT_LOGIN=aal2`** and the user **has MFA enrolled**, the platform expects **AAL2** (MFA-verified session) for **general** access. **GraphQL + REST middleware** (`min-aal-at-login`) blocks sub-AAL2 traffic except for **allowlisted** operations/paths (e.g. `VerifyMfa`, `Me`, `RefreshSession`, MFA recovery). Login may return **`requiresMfaStepUp`**.
+
+```bmermaid diagram-narrow
+sequenceDiagram
+  participant C as Client
+  participant API as API
+  Note over C,API: AUTH_MIN_AAL_AT_LOGIN=aal2, MFA enrolled
+  C->>API: Login
+  API-->>C: AAL1 JWT, requiresMfaStepUp
+  C->>API: Request (GraphQL / REST)
+  alt Allowlisted op or path
+    API-->>C: 200 during step-up
+  else Needs AAL2
+    API-->>C: MFA_REQUIRED / blocked
+    C->>API: verifyMfa / recovery
+    API-->>C: AAL2 JWT
+    C->>API: Retry request
+    API-->>C: 200
+  end
+```
+
+::: tip Step-up staleness
+When **`AUTH_MFA_STEP_UP_MAX_AGE_SECONDS`** is set to a **positive** number, an old AAL2 session can be treated as **AAL1** for policy so users must step up again after the window. **`0`** disables this behavior.
+:::
+
+### Composable guards (canonical order)
+
+Email verification and MFA are **separate** guards, composed at call sites:
+
+| Export                                                             | Role                                                                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `requireEmailVerificationGraphQL` / `requireEmailVerificationRest` | Email only → `EMAIL_VERIFICATION_REQUIRED`                                          |
+| `requireMfaGraphQL` / `requireMfaRest`                             | MFA step-up → `MFA_REQUIRED` when policy requires it and JWT `mfaVerified` is false |
+| `requireEmailThenMfaGraphQL` / `requireEmailThenMfaRest`           | **Email → MFA → RBAC → handler**                                                    |
+
+When changing guards, follow [MFA testing](/contributing/testing#mfa-testing): ensure sensitive routes use **`requireEmailThenMfa*`** where intended.
+
+### MFA policy (session requests on org-related scopes)
+
+The MFA guard requires a verified MFA step when **either**:
+
+1. **Organization policy:** `requireMfaForSensitiveActions=true` for the governing org, or
+2. **User enrollment:** at least one **active** factor (`isEnabled`, not soft-deleted) — **not** primary-only.
+
+Uses `handlers.me.hasActiveMfaEnrollmentForUser`. Org id resolution: **`organization`** scope uses `scope.id`; **project** scopes derive org id from composite `scope.id` (`mfa-org-requirement`).
+
+::: tip Project-scoped routes
+**Organization project** scopes can behave **stricter** than org-only routes with the flag off; do not assume identical policy across tenant types.
+:::
+
+### MFA-related environment variables
+
+Values below match **`apps/api`** defaults in **`.env.example`**. See [Authentication assurance](/getting-started/configuration#authentication-assurance-aal) and full [Configuration](/getting-started/configuration) for the rest of the stack.
+
+| Variable                               | Default   | Purpose                                                                                                                         |
+| -------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **`AUTH_MIN_AAL_AT_LOGIN`**            | `aal1`    | `aal1`: sensitive routes use MFA guards; **`aal2`**: min AAL2 for most API traffic when MFA enrolled (middleware + allowlists). |
+| **`AUTH_MFA_STEP_UP_MAX_AGE_SECONDS`** | `0`       | After `aal2`, treat AAL2 older than this many seconds as needing step-up again; `0` = off.                                      |
+| **`AUTH_MFA_SECRET_ENCRYPTION_KEY`**   | _(empty)_ | **Required** to encrypt TOTP secrets at rest. Use a long random value; never commit production values.                          |
+| **`AUTH_MFA_TOTP_ISSUER`**             | `Grant`   | Issuer label in `otpauth://` URIs.                                                                                              |
+| **`AUTH_MFA_TOTP_PERIOD_SECONDS`**     | `30`      | TOTP time step.                                                                                                                 |
+| **`AUTH_MFA_TOTP_WINDOW`**             | `1`       | Allowed drift windows (±) for clock skew.                                                                                       |
+| **`AUTH_MFA_VERIFY_MAX_ATTEMPTS`**     | `5`       | Max verification attempts per rolling window (when wired on the verify path).                                                   |
+| **`AUTH_MFA_VERIFY_WINDOW_MINUTES`**   | `15`      | Rolling window for verify attempts.                                                                                             |
+| **`AUTH_MFA_SESSION_TTL_MINUTES`**     | `1440`    | How long MFA verification stays valid for sensitive actions (minutes; see Config app / `env.config`).                           |
+
+::: warning Secret encryption key
+Without **`AUTH_MFA_SECRET_ENCRYPTION_KEY`**, MFA enrollment cannot be persisted securely — the API will fail configuration checks for TOTP setup.
+:::
+
+::: details GraphQL `operationName` and min-AAL
+Name-based min-AAL enforcement uses the GraphQL **`operationName`**. Clients that omit it may skip that gate in the current implementation — **send `operationName`** in production. Tightening server-side resolution from the document alone is a possible hardening follow-up.
+:::
+
+### Rate limiting
+
+MFA **setup**, **verify**, **recovery verify**, and recovery **status** share the **auth-sensitive** rate-limit bucket with login/refresh (`AUTH_SENSITIVE_RATE_LIMIT_METHOD_PATHS`). Tune **`SECURITY_RATE_LIMIT_AUTH_MAX`** / **`SECURITY_RATE_LIMIT_AUTH_WINDOW_MINUTES`** with global limits.
+
+### Automated testing and recovery
+
+- [MFA testing](/contributing/testing#mfa-testing) — unit, integration, E2E; optional **`aal2`** job / **`E2E_EXPECT_MIN_AAL_AT_LOGIN`**.
+- [MFA recovery codes and self-service disable](/core-concepts/mfa-recovery) — hashes, recovery verify, last-factor disable, org policy vs user choice.
+
 ## Rate Limiting
 
 Rate limiting protects against brute force, abuse, and noisy-neighbor scenarios by capping requests per client IP.

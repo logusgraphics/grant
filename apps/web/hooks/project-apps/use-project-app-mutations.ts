@@ -1,16 +1,16 @@
+import { useTranslations } from 'next-intl';
 import { ApolloCache } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import {
   CreateProjectAppDocument,
-  UpdateProjectAppDocument,
   type CreateProjectAppInput,
   type CreateProjectAppResult,
-  type ProjectApp,
-  type UpdateProjectAppInput,
   DeleteProjectAppDocument,
+  type ProjectApp,
   Scope,
+  UpdateProjectAppDocument,
+  type UpdateProjectAppInput,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { evictProjectAppsCache } from './cache';

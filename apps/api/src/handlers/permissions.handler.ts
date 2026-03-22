@@ -1,3 +1,11 @@
+import type {
+  IGroupPermissionService,
+  IOrganizationPermissionService,
+  IPermissionService,
+  IPermissionTagService,
+  IProjectPermissionService,
+  ITransactionalConnection,
+} from '@grantjs/core';
 import {
   MutationCreatePermissionArgs,
   MutationDeletePermissionArgs,
@@ -14,15 +22,6 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-import type {
-  IGroupPermissionService,
-  IOrganizationPermissionService,
-  IPermissionService,
-  IPermissionTagService,
-  IProjectPermissionService,
-  ITransactionalConnection,
-} from '@grantjs/core';
 
 export class PermissionHandler extends CacheHandler {
   constructor(

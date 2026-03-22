@@ -2,7 +2,6 @@
  * Organization-domain repository port interfaces.
  * Implementations (Drizzle-based) live in apps/api.
  */
-import type { SelectedFields } from './common';
 import type {
   AddOrganizationGroupInput,
   AddOrganizationPermissionInput,
@@ -39,9 +38,9 @@ import type {
   QueryOrganizationProjectsInput,
   QueryOrganizationProjectTagInput,
   QueryOrganizationRolesInput,
+  QueryOrganizationsArgs,
   QueryOrganizationTagsInput,
   QueryOrganizationUsersInput,
-  QueryOrganizationsArgs,
   RemoveOrganizationGroupInput,
   RemoveOrganizationPermissionInput,
   RemoveOrganizationProjectInput,
@@ -53,6 +52,8 @@ import type {
   UpdateOrganizationProjectTagInput,
   UpdateOrganizationTagInput,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from './common';
 
 export interface IOrganizationRepository {
   getOrganizations(

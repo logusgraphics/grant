@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
 import { useRouter, useSearchParams } from 'next/navigation';
-
 import { ChevronDown } from 'lucide-react';
 
 import type { EnvEnvironment } from '@/lib/env-files';

@@ -1,3 +1,20 @@
+import type {
+  IAccountRoleService,
+  IAccountService,
+  IAuthService,
+  IEmailService,
+  IFileStorageServicePort,
+  ILogger,
+  IMeService,
+  IOrganizationUserService,
+  IProjectUserService,
+  ITransactionalConnection,
+  IUserAuthenticationMethodService,
+  IUserMfaService,
+  IUserRoleService,
+  IUserService,
+  IUserSessionService,
+} from '@grantjs/core';
 import { GrantAuth } from '@grantjs/core';
 import { SupportedLocale } from '@grantjs/i18n';
 import {
@@ -24,23 +41,6 @@ import { Otp } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
 
-import type {
-  IAccountRoleService,
-  IAccountService,
-  IAuthService,
-  IEmailService,
-  IFileStorageServicePort,
-  ILogger,
-  IMeService,
-  IOrganizationUserService,
-  IProjectUserService,
-  ITransactionalConnection,
-  IUserAuthenticationMethodService,
-  IUserRoleService,
-  IUserService,
-  IUserSessionService,
-} from '@grantjs/core';
-
 export class MeHandler extends CacheHandler {
   protected readonly logger = createLogger('MeHandler');
 
@@ -51,6 +51,7 @@ export class MeHandler extends CacheHandler {
     private readonly accounts: IAccountService,
     private readonly users: IUserService,
     private readonly userAuthenticationMethods: IUserAuthenticationMethodService,
+    private readonly userMfa: IUserMfaService,
     private readonly userSessions: IUserSessionService,
     private readonly fileStorage: IFileStorageServicePort,
     private readonly email: IEmailService,
@@ -344,6 +345,56 @@ export class MeHandler extends CacheHandler {
       data: exportData,
       filename: `user-data-${userId}-${Date.now()}.json`,
     };
+  }
+
+  public async myMfaDevices() {
+    const userId = this.getAuthenticatedUserId();
+    return this.userMfa.listDevices(userId);
+  }
+
+  public async myMfaRecoveryCodeStatus() {
+    const userId = this.getAuthenticatedUserId();
+    return this.userMfa.getMyMfaRecoveryCodeStatus(userId);
+  }
+
+  /** Used by MFA guards: any non-deleted enabled factor counts (not primary-only). */
+  public async hasActiveMfaEnrollmentForUser(userId: string): Promise<boolean> {
+    return this.userMfa.hasActiveMfaEnrollment(userId);
+  }
+
+  public async createMyMfaEnrollment(): Promise<{
+    factorId: string;
+    secret: string;
+    otpAuthUrl: string;
+  }> {
+    const userId = this.getAuthenticatedUserId();
+    return await this.db.withTransaction(async (tx: Transaction) => {
+      const me = await this.me.getMe(tx);
+      const accountLabel = me.email?.trim() || userId;
+      return this.userMfa.setupTotp(userId, accountLabel, tx);
+    });
+  }
+
+  public async verifyMyMfaEnrollment(code: string): Promise<boolean> {
+    const userId = this.getAuthenticatedUserId();
+    const result = await this.userMfa.verifyTotp(userId, code);
+    return result.verified;
+  }
+
+  public async setMyPrimaryMfaDevice(factorId: string) {
+    const userId = this.getAuthenticatedUserId();
+    return this.userMfa.setPrimaryDevice(userId, factorId);
+  }
+
+  public async removeMyMfaDevice(factorId: string): Promise<boolean> {
+    const userId = this.getAuthenticatedUserId();
+    await this.userMfa.removeDevice(userId, factorId);
+    return true;
+  }
+
+  public async generateMyMfaRecoveryCodes(factorId?: string | null): Promise<string[]> {
+    const userId = this.getAuthenticatedUserId();
+    return this.userMfa.generateRecoveryCodes(userId, factorId ?? null);
   }
 
   public async createMyUserAuthenticationMethod(

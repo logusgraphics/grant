@@ -1,9 +1,9 @@
 'use client';
 
-import { LayoutGrid, Table } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LayoutGrid, Table } from 'lucide-react';
 
-import { ViewSwitcher, type ViewOption } from '@/components/common';
+import { type ViewOption, ViewSwitcher } from '@/components/common';
 import { useTagsStore } from '@/stores/tags.store';
 
 import { TagView } from './tag-types';

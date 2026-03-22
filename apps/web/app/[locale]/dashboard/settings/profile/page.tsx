@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-
-import { useApolloClient } from '@apollo/client/react';
 import { useTranslations } from 'next-intl';
+import { useApolloClient } from '@apollo/client/react';
 
 import { SettingProfileInformationForm } from '@/components/features/settings';
 import { DashboardLayout } from '@/components/layout';

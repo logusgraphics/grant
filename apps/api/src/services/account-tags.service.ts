@@ -1,3 +1,10 @@
+import type {
+  IAccountRepository,
+  IAccountTagRepository,
+  IAccountTagService,
+  IAuditLogger,
+  ITagRepository,
+} from '@grantjs/core';
 import { AccountTag, AddAccountTagInput, RemoveAccountTagInput } from '@grantjs/schema';
 
 import { ConflictError, NotFoundError } from '@/lib/errors';
@@ -11,14 +18,6 @@ import {
   removeAccountTagInputSchema,
 } from './account-tags.schemas';
 import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
-
-import type {
-  IAuditLogger,
-  IAccountRepository,
-  ITagRepository,
-  IAccountTagRepository,
-  IAccountTagService,
-} from '@grantjs/core';
 
 export class AccountTagsService implements IAccountTagService {
   constructor(

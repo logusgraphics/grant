@@ -1,10 +1,10 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { getAvailableTagColors } from '@grantjs/constants';
 import { Tag } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { DefaultValues } from 'react-hook-form';
 
 import {
@@ -19,7 +19,7 @@ import { useScopeFromParams } from '@/hooks/common';
 import { useTagMutations, useTags } from '@/hooks/tags';
 import { useTagsStore } from '@/stores/tags.store';
 
-import { TagCreateFormValues, createTagSchema } from './tag-types';
+import { createTagSchema, TagCreateFormValues } from './tag-types';
 
 export function TagCreateDialog({
   triggerAlwaysShowLabel,

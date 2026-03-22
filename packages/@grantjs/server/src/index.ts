@@ -1,24 +1,24 @@
 // Core client
 export { GrantClient } from './grant-client';
-export type { GrantServerConfig, AuthorizationResult, PermissionCheckOptions } from './types';
+export type { AuthorizationResult, GrantServerConfig, PermissionCheckOptions } from './types';
 
 // Error classes
 export {
-  GrantServerError,
   AuthenticationError,
   AuthorizationError,
   BadRequestError,
+  GrantServerError,
   NotFoundError,
 } from './errors';
 
 // Utilities
-export { extractTokenFromRequest, extractBearerToken } from './utils/token-extractor';
+export { extractBearerToken, extractTokenFromRequest } from './utils/token-extractor';
 
 // Types
 export type {
-  Scope,
-  Tenant,
   ResourceResolver,
   ResourceResolverParams,
   ResourceResolverResult,
+  Scope,
+  Tenant,
 } from './types';

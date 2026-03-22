@@ -1,4 +1,20 @@
 import { MILLISECONDS_PER_DAY } from '@grantjs/constants';
+import type {
+  IAccountRoleService,
+  IAccountService,
+  IAuthService,
+  IEmailService,
+  ILogger,
+  IOrganizationInvitationService,
+  IOrganizationRoleService,
+  IOrganizationService,
+  IOrganizationUserService,
+  IRoleService,
+  ITransactionalConnection,
+  IUserAuthenticationMethodService,
+  IUserRoleService,
+  IUserService,
+} from '@grantjs/core';
 import {
   AcceptInvitationInput,
   AcceptInvitationResult,
@@ -23,23 +39,6 @@ import { createLogger } from '@/lib/logger';
 import { generateSecureTokenMs } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { SelectedFields } from '@/types';
-
-import type {
-  IAccountRoleService,
-  IAccountService,
-  IAuthService,
-  IEmailService,
-  ILogger,
-  IOrganizationInvitationService,
-  IOrganizationRoleService,
-  IOrganizationService,
-  IOrganizationUserService,
-  IRoleService,
-  ITransactionalConnection,
-  IUserAuthenticationMethodService,
-  IUserRoleService,
-  IUserService,
-} from '@grantjs/core';
 
 export class OrganizationInvitationsHandler {
   private readonly logger = createLogger('OrganizationInvitationsHandler');

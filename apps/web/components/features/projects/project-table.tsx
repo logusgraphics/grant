@@ -1,15 +1,15 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { getTagBorderClasses, TagColor } from '@grantjs/constants';
 import { Project, Tag } from '@grantjs/schema';
 import { FolderOpen } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Avatar,
   DataTable,
-  ScrollBadges,
   type DataTableColumnConfig,
+  ScrollBadges,
   type TableSkeletonColumnConfig,
 } from '@/components/common';
 import { useProjectTags } from '@/hooks/common';

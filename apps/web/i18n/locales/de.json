@@ -4,6 +4,7 @@
       "unknownError": "Ein unbekannter Fehler ist aufgetreten"
     },
     "validation": {
+      "invalidEmail": "Ungültige E-Mail-Adresse",
       "invalidUrl": "Muss eine gültige URL sein",
       "redirectUrisMinOne": "Mindestens eine Weiterleitungs-URI ist erforderlich",
       "nameTooLong": "Name ist zu lang",
@@ -344,6 +345,24 @@
           "title": "Später anders entscheiden?",
           "description": "Sie können den Zugriff dieser App jederzeit in Ihren Kontoeinstellungen widerrufen. Durch den Widerruf kann die App Ihre Daten nicht mehr nutzen; Sie können sich bei Bedarf später erneut anmelden und erneut autorisieren."
         }
+      },
+      "mfa": {
+        "whyAuthenticator": {
+          "title": "Warum wird ein Code verlangt?",
+          "description": "Die mehrstufige Authentifizierung ergänzt Ihr Passwort. Sie zeigen mit einem kurzen Code, dass Sie Ihr Smartphone oder Ihre Authenticator-App haben—selbst wenn jemand Ihr Passwort kennt, kann er sich nicht als Sie anmelden."
+        },
+        "sixDigitCode": {
+          "title": "Woher bekomme ich den Code?",
+          "description": "Öffnen Sie Ihre Authenticator-App (Google Authenticator, Microsoft Authenticator, Authy, 1Password oder ähnlich), wählen Sie den Eintrag für dieses Konto und geben Sie den angezeigten 6-stelligen Code ein. Wenn Sie MFA zum ersten Mal einrichten, scannen Sie zuerst den QR-Code mit Ihrer App und geben Sie dann den generierten Code zur Bestätigung ein."
+        },
+        "recoveryCodes": {
+          "title": "Keine Authenticator-App nutzbar?",
+          "description": "Wenn Sie Ihr Telefon verloren haben oder die App nicht öffnen können, verwenden Sie stattdessen einen einmaligen Wiederherstellungscode. Klicken Sie unter dem Formular auf „Wiederherstellungscode verwenden“, geben Sie einen der beim Aktivieren von MFA gespeicherten Codes ein und melden Sie sich an. Jeder Code ist nur einmal gültig—generieren Sie in den Kontoeinstellungen neue Codes, bevor sie zur Neige gehen."
+        },
+        "troubleshooting": {
+          "title": "Code wird nicht akzeptiert?",
+          "description": "Warten Sie auf einen neuen Code (meist alle 30 Sekunden) und versuchen Sie es erneut. Stellen Sie sicher, dass Datum und Uhrzeit Ihres Geräts automatisch gesetzt sind, damit die Codes synchron bleiben. Prüfen Sie, dass Sie den Code für dieses Konto eingeben und die Feststelltaste aus ist. Wenn Sie MFA kürzlich zurückgesetzt haben, verwenden Sie die neue Einrichtung in Ihrer App."
+        }
       }
     },
     "form": {
@@ -680,6 +699,27 @@
         "noOpener": "Diese Seite sollte als Popup der App geöffnet werden.",
         "closeTab": "Sie können diesen Tab schließen.",
         "error": "Ergebnis konnte nicht gesendet werden"
+      }
+    },
+    "mfaStepUp": {
+      "title": "Verifizierung erforderlich",
+      "description": "Diese Aktion erfordert Multi-Faktor-Authentifizierung. Geben Sie Ihren Authenticator-Code ein, um fortzufahren.",
+      "totpLabel": "Authenticator-Code",
+      "verify": "Verifizieren",
+      "verifying": "Wird verifiziert…",
+      "cancel": "Abbrechen",
+      "invalidCode": "Ungültiger Authenticator-Code. Bitte versuchen Sie es erneut.",
+      "invalidRecoveryCode": "Ungültiger Wiederherstellungscode. Bitte versuchen Sie es erneut.",
+      "recoveryPrompt": "Kein Zugriff auf Ihre Authenticator-App?",
+      "recoveryLink": "Wiederherstellungscode verwenden",
+      "recoveryCodeLabel": "Wiederherstellungscode",
+      "recoveryCodePlaceholder": "Wiederherstellungscode eingeben",
+      "backToAuthenticator": "Stattdessen Authenticator-Code verwenden",
+      "noEnrollment": {
+        "description": "Diese Aktion erfordert Multi-Faktor-Authentifizierung, aber Sie haben noch kein Authenticator-Gerät eingerichtet.",
+        "alertTitle": "Kein Authenticator registriert",
+        "alertDescription": "Ihre Organisation erfordert MFA für diese Aktion. Richten Sie ein Authenticator-Gerät in Ihren Sicherheitseinstellungen ein, bevor Sie fortfahren können.",
+        "goToSettings": "Zu den Sicherheitseinstellungen"
       }
     }
   },
@@ -2052,6 +2092,7 @@
       "name": "Name",
       "description": "Beschreibung",
       "roles": "Rollen",
+      "requireMfaForSensitiveActions": "MFA für sensible Aktionen erforderlich",
       "tags": "Tags",
       "tagsLoading": "Tags werden geladen...",
       "noTagsAvailable": "Keine Tags verfügbar",
@@ -2837,6 +2878,77 @@
         "changePasswordError": "Passwort konnte nicht geändert werden",
         "revokeSessionSuccess": "Sitzung erfolgreich widerrufen",
         "revokeSessionError": "Sitzung konnte nicht widerrufen werden"
+      },
+      "mfa": {
+        "devices": {
+          "title": "MFA-Geräte",
+          "description": "Verwalten Sie Ihre registrierten Authenticator-Geräte.",
+          "addDevice": "Authenticator einrichten",
+          "loading": "Geräte werden geladen...",
+          "empty": "Keine MFA-Geräte registriert.",
+          "verified": "Verifiziert",
+          "pendingVerification": "Bestätigung ausstehend",
+          "addedOn": "Hinzugefügt am {date}",
+          "lastUsedOn": "Zuletzt verwendet am {date}",
+          "setPrimary": "Als primär setzen",
+          "primary": "Primär",
+          "remove": "Entfernen",
+          "removeLastTitle": "MFA für dieses Konto deaktivieren?",
+          "removeLastDescription": "Wenn Sie Ihren letzten Authenticator entfernen, wird MFA deaktiviert. Ungenutzte Wiederherstellungscodes werden widerrufen.",
+          "removeLastOrgPolicy": "Wenn Ihre Organisation MFA für sensible Aktionen vorschreibt, bleiben diese Aktionen blockiert, bis Sie MFA erneut einrichten.",
+          "removeLastCancel": "Abbrechen",
+          "removeLastConfirm": "MFA deaktivieren",
+          "removeLastWorking": "Wird deaktiviert…"
+        },
+        "enroll": {
+          "title": "Authenticator-App einrichten",
+          "description": "Erstellen Sie eine neue Authenticator-Einrichtung und bestätigen Sie sie zur Aktivierung.",
+          "infoTitle": "Bevor Sie fortfahren",
+          "infoDescription": "Beim Starten wird eine neue TOTP-Konfiguration erstellt. Wenn bereits eine vorhanden ist, wird sie nach erfolgreicher Code-Bestätigung ersetzt.",
+          "totpLabel": "Authenticator-Code",
+          "generateSetup": "Authenticator einrichten",
+          "continue": "Weiter",
+          "preparing": "Wird vorbereitet...",
+          "verifying": "Wird überprüft...",
+          "verifyAndEnable": "Überprüfen und aktivieren",
+          "cancel": "Abbrechen",
+          "setupFailed": "MFA-Setup konnte nicht initialisiert werden.",
+          "verifyFailed": "Authenticator-Code konnte nicht verifiziert werden."
+        },
+        "challenge": {
+          "title": "Multi-Faktor-Authentifizierung",
+          "description": "Bestätigen Sie Ihren Authenticator-Code, um fortzufahren.",
+          "verifyCode": "Code prüfen",
+          "recoveryPrompt": "Kein Zugriff auf Ihre Authenticator-App?",
+          "recoveryLink": "Wiederherstellungscode verwenden",
+          "backToAuthenticator": "Stattdessen Authenticator-Code verwenden",
+          "useRecoveryCode": "Wiederherstellungscode verwenden",
+          "recoveryCodePlaceholder": "Wiederherstellungscode eingeben",
+          "checking": "Wird geprüft...",
+          "useCode": "Code verwenden",
+          "invalidCode": "Ungültiger MFA-Code",
+          "invalidRecoveryCode": "Ungültiger Wiederherstellungscode"
+        },
+        "recovery": {
+          "title": "Wiederherstellungscodes",
+          "description": "Einmalige Wiederherstellungscodes für den Kontozugriff generieren.",
+          "generate": "Generieren",
+          "regenerate": "Neu generieren",
+          "copyAll": "Alle Codes kopieren",
+          "copied": "Wiederherstellungscodes kopiert",
+          "empty": "Noch keine aktiven Wiederherstellungscodes. Generieren und sicher aufbewahren.",
+          "statusLoading": "Wiederherstellungsstatus wird geladen…",
+          "oneTimeTitle": "Codes jetzt speichern",
+          "oneTimeDescription": "Dies ist das einzige Mal, dass wir die vollständige Liste anzeigen. Kopieren und sicher aufbewahren, bevor Sie diese Seite verlassen.",
+          "metadataActive": "Sie haben {count} aktive Wiederherstellungscodes. Zuletzt generiert: {date}.",
+          "unknownDate": "unbekannt"
+        },
+        "qr": {
+          "imageAlt": "MFA-QR-Code",
+          "secretLabel": "Geheimnis",
+          "copySecret": "Geheimnis kopieren",
+          "copied": "Geheimnis in die Zwischenablage kopiert"
+        }
       }
     },
     "preferences": {

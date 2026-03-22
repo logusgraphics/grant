@@ -1,3 +1,4 @@
+import type { IAccountRepository, IAccountService, IAuditLogger } from '@grantjs/core';
 import { GrantAuth } from '@grantjs/core';
 import {
   Account,
@@ -23,8 +24,6 @@ import {
   validateInput,
   validateOutput,
 } from './common';
-
-import type { IAuditLogger, IAccountRepository, IAccountService } from '@grantjs/core';
 
 export class AccountService implements IAccountService {
   constructor(

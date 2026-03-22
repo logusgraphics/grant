@@ -1,12 +1,10 @@
 import { AuthorizationReason, Permission, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ComparisonOperator, LogicalOperator, type ConditionExpression } from '../types';
-
+import type { GrantService } from '../types';
+import { ComparisonOperator, type ConditionExpression, LogicalOperator } from '../types';
 import { ConditionEvaluator } from './condition-evaluator';
 import { PermissionChecker } from './permission-checker';
-
-import type { GrantService } from '../types';
 
 describe('PermissionChecker', () => {
   const conditionEvaluator = new ConditionEvaluator();

@@ -1,10 +1,10 @@
-import { config } from '@/config';
-import { createLogger } from '@/lib/logger';
-import type { Transaction } from '@/lib/transaction-manager.lib';
-
 import type { GrantAuth, IAuditLogger } from '@grantjs/core';
 import type { DbSchema } from '@grantjs/database';
 import type { Scope } from '@grantjs/schema';
+
+import { config } from '@/config';
+import { createLogger } from '@/lib/logger';
+import type { Transaction } from '@/lib/transaction-manager.lib';
 
 const logger = createLogger('AuditLogger');
 

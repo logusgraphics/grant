@@ -1,3 +1,4 @@
+import type { IOrganizationMemberRepository } from '@grantjs/core';
 import {
   DbSchema,
   organizationInvitations,
@@ -23,8 +24,6 @@ import { and, eq, ilike, isNull, or, sql } from 'drizzle-orm';
 import { BadRequestError, NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
 import { Transaction } from '@/lib/transaction-manager.lib';
-
-import type { IOrganizationMemberRepository } from '@grantjs/core';
 
 export class OrganizationMemberRepository implements IOrganizationMemberRepository {
   private readonly logger = createLogger('OrganizationMemberRepository');

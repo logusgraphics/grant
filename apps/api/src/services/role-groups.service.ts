@@ -1,3 +1,10 @@
+import type {
+  IAuditLogger,
+  IGroupRepository,
+  IRoleGroupRepository,
+  IRoleGroupService,
+  IRoleRepository,
+} from '@grantjs/core';
 import {
   AddRoleGroupInput,
   QueryRoleGroupsInput,
@@ -16,14 +23,6 @@ import {
   removeRoleGroupInputSchema,
   roleGroupSchema,
 } from './role-groups.schemas';
-
-import type {
-  IAuditLogger,
-  IGroupRepository,
-  IRoleGroupRepository,
-  IRoleGroupService,
-  IRoleRepository,
-} from '@grantjs/core';
 
 export class RoleGroupService implements IRoleGroupService {
   constructor(

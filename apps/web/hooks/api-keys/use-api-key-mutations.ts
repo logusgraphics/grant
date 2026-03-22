@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { ApolloCache } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import {
@@ -13,7 +14,6 @@ import {
   RevokeApiKeyDocument,
   RevokeApiKeyInput,
 } from '@grantjs/schema';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { evictApiKeysCache } from './cache';

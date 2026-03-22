@@ -1,3 +1,4 @@
+import type { IRoleGroupRepository } from '@grantjs/core';
 import { RoleGroupModel, roleGroups } from '@grantjs/database';
 import {
   AddRoleGroupInput,
@@ -8,8 +9,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IRoleGroupRepository } from '@grantjs/core';
 
 export class RoleGroupRepository
   extends PivotRepository<RoleGroupModel, RoleGroup>

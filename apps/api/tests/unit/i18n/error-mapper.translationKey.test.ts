@@ -3,10 +3,10 @@
  * for each domain exception type. Ensures the API's i18n contract is stable.
  */
 import {
+  NoSessionSigningKeyError,
   TokenExpiredError,
   TokenInvalidError,
   TokenValidationError,
-  NoSessionSigningKeyError,
 } from '@grantjs/core';
 import { describe, expect, it } from 'vitest';
 

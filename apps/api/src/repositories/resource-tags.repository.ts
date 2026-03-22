@@ -1,3 +1,4 @@
+import type { IResourceTagRepository } from '@grantjs/core';
 import { ResourceTagModel, resourceTags } from '@grantjs/database';
 import {
   AddResourceTagInput,
@@ -9,8 +10,6 @@ import {
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IResourceTagRepository } from '@grantjs/core';
 
 export class ResourceTagRepository
   extends PivotRepository<ResourceTagModel, ResourceTag>

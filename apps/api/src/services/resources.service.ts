@@ -1,3 +1,4 @@
+import type { IAuditLogger, IResourceRepository, IResourceService } from '@grantjs/core';
 import {
   CreateResourceInput,
   MutationDeleteResourceArgs,
@@ -25,8 +26,6 @@ import {
   resourceSchema,
   updateResourceParamsSchema,
 } from './resources.schemas';
-
-import type { IAuditLogger, IResourceRepository, IResourceService } from '@grantjs/core';
 
 export class ResourceService implements IResourceService {
   constructor(

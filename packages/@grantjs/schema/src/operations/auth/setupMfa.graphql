@@ -1,0 +1,7 @@
+mutation SetupMfa {
+  setupMfa {
+    factorId
+    secret
+    otpAuthUrl
+  }
+}

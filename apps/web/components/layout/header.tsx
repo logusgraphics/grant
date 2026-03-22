@@ -1,9 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-
-import { BookOpen, FileJson, Globe, Menu, Moon, Network, Sun, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { BookOpen, FileJson, Globe, Menu, Moon, Network, Sun, X } from 'lucide-react';
 
 import { DemoModeDialogProvider, DemoModeDialogTrigger, Logo } from '@/components/common';
 import { LanguageSwitcher, ThemeToggle } from '@/components/features/settings';

@@ -1,0 +1,6 @@
+query MyMfaRecoveryCodeStatus {
+  myMfaRecoveryCodeStatus {
+    activeCount
+    lastGeneratedAt
+  }
+}

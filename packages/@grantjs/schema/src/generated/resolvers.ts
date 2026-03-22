@@ -633,6 +633,10 @@ export type ExchangeApiKeyResult = {
   expiresIn: Scalars['Int']['output'];
 };
 
+export type GenerateMyMfaRecoveryCodesInput = {
+  factorId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type GetUserAuthenticationMethodsInput = {
   provider?: InputMaybe<UserAuthenticationMethodProvider>;
   userId?: InputMaybe<Scalars['ID']['input']>;
@@ -758,8 +762,11 @@ export type LoginResponse = {
   accessToken: Scalars['String']['output'];
   accounts: Array<Account>;
   email?: Maybe<Scalars['String']['output']>;
+  mfaVerified?: Maybe<Scalars['Boolean']['output']>;
   refreshToken: Scalars['String']['output'];
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
+  /** When true, the client should complete MFA before expecting full API access (see AUTH_MIN_AAL_AT_LOGIN). */
+  requiresMfaStepUp?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
 };
 
@@ -772,6 +779,7 @@ export type MeResponse = {
   __typename?: 'MeResponse';
   accounts: Array<Account>;
   email?: Maybe<Scalars['String']['output']>;
+  mfaVerified?: Maybe<Scalars['Boolean']['output']>;
   requiresEmailVerification?: Maybe<Scalars['Boolean']['output']>;
   verificationExpiry?: Maybe<Scalars['Date']['output']>;
 };
@@ -781,6 +789,48 @@ export enum MemberType {
   Member = 'member',
 }
 
+export type MfaDevice = {
+  __typename?: 'MfaDevice';
+  createdAt: Scalars['Date']['output'];
+  id: Scalars['ID']['output'];
+  isEnabled: Scalars['Boolean']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  lastUsedAt?: Maybe<Scalars['Date']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type MfaEnrollment = {
+  __typename?: 'MfaEnrollment';
+  factorId: Scalars['ID']['output'];
+  otpAuthUrl: Scalars['String']['output'];
+  secret: Scalars['String']['output'];
+};
+
+export type MfaRecoveryCodeStatus = {
+  __typename?: 'MfaRecoveryCodeStatus';
+  activeCount: Scalars['Int']['output'];
+  lastGeneratedAt?: Maybe<Scalars['Date']['output']>;
+};
+
+export type MfaSetupResponse = {
+  __typename?: 'MfaSetupResponse';
+  factorId: Scalars['ID']['output'];
+  otpAuthUrl: Scalars['String']['output'];
+  secret: Scalars['String']['output'];
+};
+
+export type MfaVerifyResponse = {
+  __typename?: 'MfaVerifyResponse';
+  accessToken: Scalars['String']['output'];
+  mfaVerified: Scalars['Boolean']['output'];
+  refreshToken: Scalars['String']['output'];
+};
+
+export type MfaVerifyResult = {
+  __typename?: 'MfaVerifyResult';
+  success: Scalars['Boolean']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
@@ -788,6 +838,7 @@ export type Mutation = {
   changeMyPassword: ChangeMyPasswordResult;
   createApiKey: CreateApiKeyResult;
   createGroup: Group;
+  createMyMfaEnrollment: MfaEnrollment;
   createMySecondaryAccount: CreateMySecondaryAccountResult;
   createMyUserAuthenticationMethod: UserAuthenticationMethod;
   createOrganization: Organization;
@@ -812,11 +863,13 @@ export type Mutation = {
   deleteTag: Tag;
   deleteUser: User;
   exchangeApiKey: ExchangeApiKeyResult;
+  generateMyMfaRecoveryCodes: Array<Scalars['String']['output']>;
   inviteMember: OrganizationInvitation;
   login: LoginResponse;
   logoutMyUser: LogoutMyUserResponse;
   refreshSession: RefreshSessionResponse;
   register: CreateAccountResult;
+  removeMyMfaDevice: MfaVerifyResult;
   removeOrganizationMember: OrganizationMember;
   renewInvitation: OrganizationInvitation;
   requestPasswordReset: RequestPasswordResetResponse;
@@ -833,6 +886,8 @@ export type Mutation = {
    */
   rotateSigningKey: SigningKey;
   setMyPrimaryAuthenticationMethod: UserAuthenticationMethod;
+  setMyPrimaryMfaDevice: MfaDevice;
+  setupMfa: MfaSetupResponse;
   updateGroup: Group;
   updateMyUser: User;
   updateOrganization: Organization;
@@ -848,6 +903,9 @@ export type Mutation = {
   uploadMyUserPicture: UploadUserPictureResult;
   uploadUserPicture: UploadUserPictureResult;
   verifyEmail: VerifyEmailResponse;
+  verifyMfa: MfaVerifyResponse;
+  verifyMfaRecoveryCode: MfaVerifyResponse;
+  verifyMyMfaEnrollment: MfaVerifyResult;
 };
 
 export type MutationAcceptInvitationArgs = {
@@ -963,6 +1021,10 @@ export type MutationExchangeApiKeyArgs = {
   input: ExchangeApiKeyInput;
 };
 
+export type MutationGenerateMyMfaRecoveryCodesArgs = {
+  input?: InputMaybe<GenerateMyMfaRecoveryCodesInput>;
+};
+
 export type MutationInviteMemberArgs = {
   input: InviteMemberInput;
 };
@@ -973,6 +1035,10 @@ export type MutationLoginArgs = {
 
 export type MutationRegisterArgs = {
   input: RegisterInput;
+};
+
+export type MutationRemoveMyMfaDeviceArgs = {
+  input: RemoveMyMfaDeviceInput;
 };
 
 export type MutationRemoveOrganizationMemberArgs = {
@@ -1021,6 +1087,10 @@ export type MutationRotateSigningKeyArgs = {
 
 export type MutationSetMyPrimaryAuthenticationMethodArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationSetMyPrimaryMfaDeviceArgs = {
+  input: SetMyPrimaryMfaDeviceInput;
 };
 
 export type MutationUpdateGroupArgs = {
@@ -1089,6 +1159,18 @@ export type MutationVerifyEmailArgs = {
   input: VerifyEmailInput;
 };
 
+export type MutationVerifyMfaArgs = {
+  input: VerifyMfaInput;
+};
+
+export type MutationVerifyMfaRecoveryCodeArgs = {
+  input: VerifyMfaRecoveryCodeInput;
+};
+
+export type MutationVerifyMyMfaEnrollmentArgs = {
+  input: VerifyMyMfaEnrollmentInput;
+};
+
 export type MyUserSessionsInput = {
   audience?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1105,6 +1187,7 @@ export type Organization = Auditable & {
   name: Scalars['String']['output'];
   permissions?: Maybe<Array<Permission>>;
   projects?: Maybe<Array<Project>>;
+  requireMfaForSensitiveActions: Scalars['Boolean']['output'];
   roles?: Maybe<Array<Role>>;
   slug: Scalars['String']['output'];
   tags?: Maybe<Array<Tag>>;
@@ -1620,6 +1703,8 @@ export type Query = {
   invitation?: Maybe<OrganizationInvitation>;
   isAuthorized: AuthorizationResult;
   me: MeResponse;
+  myMfaDevices: Array<MfaDevice>;
+  myMfaRecoveryCodeStatus: MfaRecoveryCodeStatus;
   myUserAuthenticationMethods: Array<UserAuthenticationMethod>;
   myUserDataExport: UserDataExport;
   myUserSessions: UserSessionPage;
@@ -1977,6 +2062,10 @@ export type RemoveGroupTagInput = {
   tagId: Scalars['ID']['input'];
 };
 
+export type RemoveMyMfaDeviceInput = {
+  factorId: Scalars['ID']['input'];
+};
+
 export type RemoveOrganizationGroupInput = {
   groupId: Scalars['ID']['input'];
   organizationId: Scalars['ID']['input'];
@@ -2295,6 +2384,10 @@ export type SessionExportData = {
   userAgent?: Maybe<Scalars['String']['output']>;
 };
 
+export type SetMyPrimaryMfaDeviceInput = {
+  factorId: Scalars['ID']['input'];
+};
+
 /**
  * Signing key for a scope (e.g. project). Used for RS256 API key tokens; public key is exposed in JWKS.
  * Only project scopes (accountProject, organizationProject) have manageable keys; system key is internal.
@@ -2416,6 +2509,7 @@ export type UpdateMyUserInput = {
 
 export type UpdateOrganizationInput = {
   name?: InputMaybe<Scalars['String']['input']>;
+  requireMfaForSensitiveActions?: InputMaybe<Scalars['Boolean']['input']>;
   scope: Scope;
 };
 
@@ -2772,6 +2866,18 @@ export type VerifyEmailResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type VerifyMfaInput = {
+  code: Scalars['String']['input'];
+};
+
+export type VerifyMfaRecoveryCodeInput = {
+  code: Scalars['String']['input'];
+};
+
+export type VerifyMyMfaEnrollmentInput = {
+  code: Scalars['String']['input'];
+};
+
 export type WithIndex<TObject> = TObject & Record<string, any>;
 export type ResolversObject<TObject> = WithIndex<TObject>;
 
@@ -3018,6 +3124,7 @@ export type ResolversTypes = ResolversObject<{
   DeleteUserSessionInput: DeleteUserSessionInput;
   ExchangeApiKeyInput: ExchangeApiKeyInput;
   ExchangeApiKeyResult: ResolverTypeWrapper<ExchangeApiKeyResult>;
+  GenerateMyMfaRecoveryCodesInput: GenerateMyMfaRecoveryCodesInput;
   GetUserAuthenticationMethodsInput: GetUserAuthenticationMethodsInput;
   GetUserSessionsInput: GetUserSessionsInput;
   Group: ResolverTypeWrapper<Group>;
@@ -3039,6 +3146,12 @@ export type ResolversTypes = ResolversObject<{
   LogoutMyUserResponse: ResolverTypeWrapper<LogoutMyUserResponse>;
   MeResponse: ResolverTypeWrapper<MeResponse>;
   MemberType: MemberType;
+  MfaDevice: ResolverTypeWrapper<MfaDevice>;
+  MfaEnrollment: ResolverTypeWrapper<MfaEnrollment>;
+  MfaRecoveryCodeStatus: ResolverTypeWrapper<MfaRecoveryCodeStatus>;
+  MfaSetupResponse: ResolverTypeWrapper<MfaSetupResponse>;
+  MfaVerifyResponse: ResolverTypeWrapper<MfaVerifyResponse>;
+  MfaVerifyResult: ResolverTypeWrapper<MfaVerifyResult>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   MyUserSessionsInput: MyUserSessionsInput;
   Organization: ResolverTypeWrapper<Organization>;
@@ -3135,6 +3248,7 @@ export type ResolversTypes = ResolversObject<{
   RemoveAccountTagInput: RemoveAccountTagInput;
   RemoveGroupPermissionInput: RemoveGroupPermissionInput;
   RemoveGroupTagInput: RemoveGroupTagInput;
+  RemoveMyMfaDeviceInput: RemoveMyMfaDeviceInput;
   RemoveOrganizationGroupInput: RemoveOrganizationGroupInput;
   RemoveOrganizationMemberInput: RemoveOrganizationMemberInput;
   RemoveOrganizationPermissionInput: RemoveOrganizationPermissionInput;
@@ -3182,6 +3296,7 @@ export type ResolversTypes = ResolversObject<{
   Scope: Scope;
   Searchable: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Searchable']>;
   SessionExportData: ResolverTypeWrapper<SessionExportData>;
+  SetMyPrimaryMfaDeviceInput: SetMyPrimaryMfaDeviceInput;
   SigningKey: ResolverTypeWrapper<SigningKey>;
   SortOrder: SortOrder;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
@@ -3241,6 +3356,9 @@ export type ResolversTypes = ResolversObject<{
   UserTag: ResolverTypeWrapper<UserTag>;
   VerifyEmailInput: VerifyEmailInput;
   VerifyEmailResponse: ResolverTypeWrapper<VerifyEmailResponse>;
+  VerifyMfaInput: VerifyMfaInput;
+  VerifyMfaRecoveryCodeInput: VerifyMfaRecoveryCodeInput;
+  VerifyMyMfaEnrollmentInput: VerifyMyMfaEnrollmentInput;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -3321,6 +3439,7 @@ export type ResolversParentTypes = ResolversObject<{
   DeleteUserSessionInput: DeleteUserSessionInput;
   ExchangeApiKeyInput: ExchangeApiKeyInput;
   ExchangeApiKeyResult: ExchangeApiKeyResult;
+  GenerateMyMfaRecoveryCodesInput: GenerateMyMfaRecoveryCodesInput;
   GetUserAuthenticationMethodsInput: GetUserAuthenticationMethodsInput;
   GetUserSessionsInput: GetUserSessionsInput;
   Group: Group;
@@ -3339,6 +3458,12 @@ export type ResolversParentTypes = ResolversObject<{
   LoginResponse: LoginResponse;
   LogoutMyUserResponse: LogoutMyUserResponse;
   MeResponse: MeResponse;
+  MfaDevice: MfaDevice;
+  MfaEnrollment: MfaEnrollment;
+  MfaRecoveryCodeStatus: MfaRecoveryCodeStatus;
+  MfaSetupResponse: MfaSetupResponse;
+  MfaVerifyResponse: MfaVerifyResponse;
+  MfaVerifyResult: MfaVerifyResult;
   Mutation: Record<PropertyKey, never>;
   MyUserSessionsInput: MyUserSessionsInput;
   Organization: Organization;
@@ -3420,6 +3545,7 @@ export type ResolversParentTypes = ResolversObject<{
   RemoveAccountTagInput: RemoveAccountTagInput;
   RemoveGroupPermissionInput: RemoveGroupPermissionInput;
   RemoveGroupTagInput: RemoveGroupTagInput;
+  RemoveMyMfaDeviceInput: RemoveMyMfaDeviceInput;
   RemoveOrganizationGroupInput: RemoveOrganizationGroupInput;
   RemoveOrganizationMemberInput: RemoveOrganizationMemberInput;
   RemoveOrganizationPermissionInput: RemoveOrganizationPermissionInput;
@@ -3463,6 +3589,7 @@ export type ResolversParentTypes = ResolversObject<{
   Scope: Scope;
   Searchable: ResolversInterfaceTypes<ResolversParentTypes>['Searchable'];
   SessionExportData: SessionExportData;
+  SetMyPrimaryMfaDeviceInput: SetMyPrimaryMfaDeviceInput;
   SigningKey: SigningKey;
   String: Scalars['String']['output'];
   Tag: Tag;
@@ -3511,6 +3638,9 @@ export type ResolversParentTypes = ResolversObject<{
   UserTag: UserTag;
   VerifyEmailInput: VerifyEmailInput;
   VerifyEmailResponse: VerifyEmailResponse;
+  VerifyMfaInput: VerifyMfaInput;
+  VerifyMfaRecoveryCodeInput: VerifyMfaRecoveryCodeInput;
+  VerifyMyMfaEnrollmentInput: VerifyMyMfaEnrollmentInput;
 }>;
 
 export type AcceptInvitationResultResolvers<
@@ -3930,8 +4060,10 @@ export type LoginResponseResolvers<
   accessToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   accounts?: Resolver<Array<ResolversTypes['Account']>, ParentType, ContextType>;
   email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  mfaVerified?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   refreshToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   requiresEmailVerification?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  requiresMfaStepUp?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   verificationExpiry?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
 }>;
 
@@ -3949,8 +4081,67 @@ export type MeResponseResolvers<
 > = ResolversObject<{
   accounts?: Resolver<Array<ResolversTypes['Account']>, ParentType, ContextType>;
   email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  mfaVerified?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   requiresEmailVerification?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   verificationExpiry?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+}>;
+
+export type MfaDeviceResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MfaDevice'] = ResolversParentTypes['MfaDevice'],
+> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isEnabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isPrimary?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  lastUsedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
+export type MfaEnrollmentResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MfaEnrollment'] = ResolversParentTypes['MfaEnrollment'],
+> = ResolversObject<{
+  factorId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  otpAuthUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  secret?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
+export type MfaRecoveryCodeStatusResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MfaRecoveryCodeStatus'] =
+    ResolversParentTypes['MfaRecoveryCodeStatus'],
+> = ResolversObject<{
+  activeCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  lastGeneratedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+}>;
+
+export type MfaSetupResponseResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MfaSetupResponse'] =
+    ResolversParentTypes['MfaSetupResponse'],
+> = ResolversObject<{
+  factorId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  otpAuthUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  secret?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
+export type MfaVerifyResponseResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MfaVerifyResponse'] =
+    ResolversParentTypes['MfaVerifyResponse'],
+> = ResolversObject<{
+  accessToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  mfaVerified?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  refreshToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
+export type MfaVerifyResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['MfaVerifyResult'] =
+    ResolversParentTypes['MfaVerifyResult'],
+> = ResolversObject<{
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
 }>;
 
 export type MutationResolvers<
@@ -3982,6 +4173,7 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateGroupArgs, 'input'>
   >;
+  createMyMfaEnrollment?: Resolver<ResolversTypes['MfaEnrollment'], ParentType, ContextType>;
   createMySecondaryAccount?: Resolver<
     ResolversTypes['CreateMySecondaryAccountResult'],
     ParentType,
@@ -4119,6 +4311,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationExchangeApiKeyArgs, 'input'>
   >;
+  generateMyMfaRecoveryCodes?: Resolver<
+    Array<ResolversTypes['String']>,
+    ParentType,
+    ContextType,
+    Partial<MutationGenerateMyMfaRecoveryCodesArgs>
+  >;
   inviteMember?: Resolver<
     ResolversTypes['OrganizationInvitation'],
     ParentType,
@@ -4138,6 +4336,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationRegisterArgs, 'input'>
+  >;
+  removeMyMfaDevice?: Resolver<
+    ResolversTypes['MfaVerifyResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemoveMyMfaDeviceArgs, 'input'>
   >;
   removeOrganizationMember?: Resolver<
     ResolversTypes['OrganizationMember'],
@@ -4205,6 +4409,13 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationSetMyPrimaryAuthenticationMethodArgs, 'id'>
   >;
+  setMyPrimaryMfaDevice?: Resolver<
+    ResolversTypes['MfaDevice'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationSetMyPrimaryMfaDeviceArgs, 'input'>
+  >;
+  setupMfa?: Resolver<ResolversTypes['MfaSetupResponse'], ParentType, ContextType>;
   updateGroup?: Resolver<
     ResolversTypes['Group'],
     ParentType,
@@ -4289,6 +4500,24 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationVerifyEmailArgs, 'input'>
   >;
+  verifyMfa?: Resolver<
+    ResolversTypes['MfaVerifyResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationVerifyMfaArgs, 'input'>
+  >;
+  verifyMfaRecoveryCode?: Resolver<
+    ResolversTypes['MfaVerifyResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationVerifyMfaRecoveryCodeArgs, 'input'>
+  >;
+  verifyMyMfaEnrollment?: Resolver<
+    ResolversTypes['MfaVerifyResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationVerifyMyMfaEnrollmentArgs, 'input'>
+  >;
 }>;
 
 export type OrganizationResolvers<
@@ -4302,6 +4531,7 @@ export type OrganizationResolvers<
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   permissions?: Resolver<Maybe<Array<ResolversTypes['Permission']>>, ParentType, ContextType>;
   projects?: Resolver<Maybe<Array<ResolversTypes['Project']>>, ParentType, ContextType>;
+  requireMfaForSensitiveActions?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   roles?: Resolver<Maybe<Array<ResolversTypes['Role']>>, ParentType, ContextType>;
   slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<ResolversTypes['Tag']>>, ParentType, ContextType>;
@@ -4863,6 +5093,12 @@ export type QueryResolvers<
     RequireFields<QueryIsAuthorizedArgs, 'input'>
   >;
   me?: Resolver<ResolversTypes['MeResponse'], ParentType, ContextType>;
+  myMfaDevices?: Resolver<Array<ResolversTypes['MfaDevice']>, ParentType, ContextType>;
+  myMfaRecoveryCodeStatus?: Resolver<
+    ResolversTypes['MfaRecoveryCodeStatus'],
+    ParentType,
+    ContextType
+  >;
   myUserAuthenticationMethods?: Resolver<
     Array<ResolversTypes['UserAuthenticationMethod']>,
     ParentType,
@@ -5406,6 +5642,12 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   LoginResponse?: LoginResponseResolvers<ContextType>;
   LogoutMyUserResponse?: LogoutMyUserResponseResolvers<ContextType>;
   MeResponse?: MeResponseResolvers<ContextType>;
+  MfaDevice?: MfaDeviceResolvers<ContextType>;
+  MfaEnrollment?: MfaEnrollmentResolvers<ContextType>;
+  MfaRecoveryCodeStatus?: MfaRecoveryCodeStatusResolvers<ContextType>;
+  MfaSetupResponse?: MfaSetupResponseResolvers<ContextType>;
+  MfaVerifyResponse?: MfaVerifyResponseResolvers<ContextType>;
+  MfaVerifyResult?: MfaVerifyResultResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Organization?: OrganizationResolvers<ContextType>;
   OrganizationGroup?: OrganizationGroupResolvers<ContextType>;

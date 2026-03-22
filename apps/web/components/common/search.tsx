@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-
+import { useEffect, useRef, useState } from 'react';
 import { Search as SearchIcon, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';

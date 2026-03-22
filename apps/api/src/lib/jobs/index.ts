@@ -1,7 +1,7 @@
 // Re-export from @grantjs/jobs — canonical adapter implementations live there
 export {
-  BullMQJobAdapter,
   Job as BaseJob,
+  BullMQJobAdapter,
   JobFactory,
   jobRegistry,
   NodeCronJobAdapter,

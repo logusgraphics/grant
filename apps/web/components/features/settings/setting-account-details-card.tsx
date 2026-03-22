@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { AccountType } from '@grantjs/schema';
+import type { LucideIcon } from 'lucide-react';
 import {
   Briefcase,
   Building2,
@@ -17,7 +18,6 @@ import {
   Users,
   UserX,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CopyToClipboard } from '@/components/common';
 import { SettingCard } from '@/components/features/settings';
@@ -38,8 +38,6 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store';
 
 import { SettingAccountDetailsCardProps } from './setting-types';
-
-import type { LucideIcon } from 'lucide-react';
 
 const VISIBLE_FEATURE_COUNT = 3;
 const TOTAL_FEATURE_KEYS = ['feature1', 'feature2', 'feature3', 'feature4', 'feature5'] as const;

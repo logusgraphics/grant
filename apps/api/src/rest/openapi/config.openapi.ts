@@ -1,9 +1,9 @@
-import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
+import { OpenApiGeneratorV3, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 
 import { config } from '@/config';
 import {
-  authTokensSchema,
   authenticationErrorResponseSchema,
+  authTokensSchema,
   errorResponseSchema,
   loginRequestSchema,
   loginResultSchema,

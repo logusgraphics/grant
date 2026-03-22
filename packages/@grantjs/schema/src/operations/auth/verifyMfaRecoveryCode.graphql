@@ -1,0 +1,7 @@
+mutation VerifyMfaRecoveryCode($input: VerifyMfaRecoveryCodeInput!) {
+  verifyMfaRecoveryCode(input: $input) {
+    accessToken
+    refreshToken
+    mfaVerified
+  }
+}

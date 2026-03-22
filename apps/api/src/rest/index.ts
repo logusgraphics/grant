@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { minAalAtLoginRestMiddleware } from '@/lib/authorization/min-aal-at-login';
 import { createApiKeysRoutes } from '@/rest/routes/api-keys.routes';
 import { createAuthRoutes } from '@/rest/routes/auth.routes';
 import { createConfigRoutes } from '@/rest/routes/config.routes';
@@ -20,6 +21,8 @@ import { RequestContext } from '@/types';
 
 export function createRestRouter(context: RequestContext): Router {
   const router = Router();
+
+  router.use(minAalAtLoginRestMiddleware);
 
   router.use('/config', createConfigRoutes());
   router.use('/api-keys', createApiKeysRoutes(context));

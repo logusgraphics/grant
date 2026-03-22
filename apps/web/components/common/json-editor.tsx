@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-
 import { useTheme } from 'next-themes';
 import { createJSONEditor, JSONEditorPropsOptional, Mode } from 'vanilla-jsoneditor';
 

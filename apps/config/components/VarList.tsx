@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-
+import { useCallback, useMemo, useState } from 'react';
 import { Mail } from 'lucide-react';
 
 import type { EnvStateResponse, EnvVarValue } from '@/app/types/env';

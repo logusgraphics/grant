@@ -1,3 +1,16 @@
+import type {
+  IAccountRoleService,
+  IAccountService,
+  IAuthService,
+  IEmailService,
+  ILogger,
+  ITransactionalConnection,
+  IUserAuthenticationMethodService,
+  IUserMfaService,
+  IUserRoleService,
+  IUserService,
+  IUserSessionService,
+} from '@grantjs/core';
 import { SupportedLocale } from '@grantjs/i18n';
 import {
   AccountType,
@@ -33,21 +46,23 @@ import { Otp } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
 
-import type {
-  IAccountRoleService,
-  IAccountService,
-  IAuthService,
-  IEmailService,
-  ILogger,
-  ITransactionalConnection,
-  IUserAuthenticationMethodService,
-  IUserRoleService,
-  IUserSessionService,
-  IUserService,
-} from '@grantjs/core';
-
 export class AuthHandler extends CacheHandler {
   protected readonly logger = createLogger('AuthHandler');
+
+  /** UX hint when platform requires AAL2 at login but the session is still AAL1 (MFA enrolled). */
+  private async computeRequiresMfaStepUp(
+    userId: string,
+    mfaVerified: boolean,
+    tx: Transaction
+  ): Promise<boolean> {
+    if (config.auth.minAalAtLogin !== 'aal2') {
+      return false;
+    }
+    if (mfaVerified) {
+      return false;
+    }
+    return this.userMfa.hasActiveMfaEnrollment(userId, tx);
+  }
 
   constructor(
     private readonly userAuthenticationMethods: IUserAuthenticationMethodService,
@@ -55,6 +70,7 @@ export class AuthHandler extends CacheHandler {
     private readonly accounts: IAccountService,
     private readonly accountRoles: IAccountRoleService,
     private readonly userRoles: IUserRoleService,
+    private readonly userMfa: IUserMfaService,
     private readonly userSessions: IUserSessionService,
     private readonly email: IEmailService,
     private readonly auth: IAuthService,
@@ -283,14 +299,25 @@ export class AuthHandler extends CacheHandler {
       if (matchingSession) {
         await this.userSessions.refreshSessionLastUsed(matchingSession.id, tx);
 
+        const mfaVerifiedSession = Boolean(
+          (matchingSession as unknown as { mfaVerifiedAt?: Date | null }).mfaVerifiedAt
+        );
         const { accessToken, refreshToken } = await this.userSessions.signSession(
           matchingSession,
           userAuthenticationMethod.isVerified,
+          mfaVerifiedSession,
           requestBaseUrl
+        );
+        const requiresMfaStepUp = await this.computeRequiresMfaStepUp(
+          user.id,
+          mfaVerifiedSession,
+          tx
         );
         return {
           accessToken,
           refreshToken,
+          mfaVerified: mfaVerifiedSession,
+          requiresMfaStepUp,
           accounts: user.accounts ?? [],
           requiresEmailVerification: !userAuthenticationMethod.isVerified,
           verificationExpiry: userAuthenticationMethod.isVerified
@@ -314,9 +341,13 @@ export class AuthHandler extends CacheHandler {
         requestBaseUrl
       );
 
+      const requiresMfaStepUp = await this.computeRequiresMfaStepUp(user.id, false, tx);
+
       return {
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
+        mfaVerified: false,
+        requiresMfaStepUp,
         accounts: user.accounts ?? [],
         requiresEmailVerification: !userAuthenticationMethod.isVerified,
         verificationExpiry: userAuthenticationMethod.isVerified
@@ -342,6 +373,7 @@ export class AuthHandler extends CacheHandler {
         userAgent,
         ipAddress,
         undefined, // isVerified defaults to true in signSession
+        undefined, // mfaVerified derives from session state
         requestBaseUrl
       );
 
@@ -350,6 +382,66 @@ export class AuthHandler extends CacheHandler {
       }
 
       return session;
+    });
+  }
+
+  public async setupMfa(
+    userId: string,
+    accountName: string
+  ): Promise<{
+    factorId: string;
+    secret: string;
+    otpAuthUrl: string;
+  }> {
+    return this.db.withTransaction(async (tx: Transaction) => {
+      return this.userMfa.setupTotp(userId, accountName, tx);
+    });
+  }
+
+  public async verifyMfa(
+    userId: string,
+    sessionId: string,
+    code: string,
+    requestBaseUrl?: string
+  ): Promise<{ accessToken: string; refreshToken: string; mfaVerified: boolean }> {
+    return this.db.withTransaction(async (tx: Transaction) => {
+      const result = await this.userMfa.verifyTotp(userId, code, tx);
+      if (!result.verified) {
+        throw new AuthenticationError('Invalid MFA code');
+      }
+      await this.userSessions.markMfaVerified(sessionId, tx);
+      const session = await this.userSessions.getUserSession(sessionId, tx);
+      const signed = await this.userSessions.signSession(session, true, true, requestBaseUrl);
+      return {
+        accessToken: signed.accessToken,
+        refreshToken: signed.refreshToken,
+        mfaVerified: true,
+      };
+    });
+  }
+
+  /**
+   * Completes MFA challenge using a one-time recovery code (same session elevation as verifyMfa).
+   */
+  public async verifyMfaRecoveryCode(
+    userId: string,
+    sessionId: string,
+    code: string,
+    requestBaseUrl?: string
+  ): Promise<{ accessToken: string; refreshToken: string; mfaVerified: boolean }> {
+    return this.db.withTransaction(async (tx: Transaction) => {
+      const ok = await this.userMfa.verifyRecoveryCode(userId, code, tx);
+      if (!ok) {
+        throw new AuthenticationError('Invalid recovery code');
+      }
+      await this.userSessions.markMfaVerified(sessionId, tx);
+      const session = await this.userSessions.getUserSession(sessionId, tx);
+      const signed = await this.userSessions.signSession(session, true, true, requestBaseUrl);
+      return {
+        accessToken: signed.accessToken,
+        refreshToken: signed.refreshToken,
+        mfaVerified: true,
+      };
     });
   }
 
@@ -586,9 +678,13 @@ export class AuthHandler extends CacheHandler {
         requestBaseUrl
       );
 
+      const requiresMfaStepUp = await this.computeRequiresMfaStepUp(user.id, false, tx);
+
       return {
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
+        mfaVerified: false,
+        requiresMfaStepUp,
         accounts: user.accounts ?? [],
         requiresEmailVerification: false,
         verificationExpiry: null,

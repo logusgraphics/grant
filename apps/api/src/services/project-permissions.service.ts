@@ -1,22 +1,3 @@
-import {
-  ProjectPermission,
-  RemoveProjectPermissionInput,
-  AddProjectPermissionInput,
-  QueryProjectPermissionsInput,
-} from '@grantjs/schema';
-
-import { ConflictError, NotFoundError } from '@/lib/errors';
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { DeleteParams } from '@/types';
-
-import { validateInput, validateOutput, createDynamicSingleSchema } from './common';
-import {
-  getProjectPermissionsParamsSchema,
-  projectPermissionSchema,
-  addProjectPermissionInputSchema,
-  removeProjectPermissionInputSchema,
-} from './project-permissions.schemas';
-
 import type {
   IAuditLogger,
   IPermissionRepository,
@@ -24,6 +5,24 @@ import type {
   IProjectPermissionService,
   IProjectRepository,
 } from '@grantjs/core';
+import {
+  AddProjectPermissionInput,
+  ProjectPermission,
+  QueryProjectPermissionsInput,
+  RemoveProjectPermissionInput,
+} from '@grantjs/schema';
+
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { DeleteParams } from '@/types';
+
+import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
+import {
+  addProjectPermissionInputSchema,
+  getProjectPermissionsParamsSchema,
+  projectPermissionSchema,
+  removeProjectPermissionInputSchema,
+} from './project-permissions.schemas';
 
 export class ProjectPermissionService implements IProjectPermissionService {
   constructor(

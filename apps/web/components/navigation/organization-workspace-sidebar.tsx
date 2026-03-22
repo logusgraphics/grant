@@ -1,9 +1,8 @@
 'use client';
 
 import { ComponentProps } from 'react';
-
-import { Building2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Building2 } from 'lucide-react';
 
 import { WorkspaceSwitcher } from '@/components/common';
 import { Sidebar } from '@/components/ui/sidebar';

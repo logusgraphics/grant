@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-
+import { useLocale, useTranslations } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FlaskConical } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -41,6 +40,12 @@ function generateState(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  // codeql[js/insecure-randomness]: Last-resort fallback when Web Crypto is unavailable (non-crypto UI state).
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 

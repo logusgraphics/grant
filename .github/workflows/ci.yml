@@ -46,6 +46,8 @@ jobs:
     runs-on: self-hosted
     needs: changes
     if: needs.changes.outputs.code == 'true'
+    permissions:
+      contents: read
     # Optional: skip CI for Dependabot PRs to free the runner — uncomment next line:
     # if: github.actor != 'dependabot[bot]'
     steps:

@@ -1,17 +1,3 @@
-import { ProjectGroup, RemoveProjectGroupInput, AddProjectGroupInput } from '@grantjs/schema';
-
-import { ConflictError, NotFoundError } from '@/lib/errors';
-import { Transaction } from '@/lib/transaction-manager.lib';
-import { DeleteParams } from '@/types';
-
-import { validateInput, validateOutput, createDynamicSingleSchema } from './common';
-import {
-  getProjectGroupsParamsSchema,
-  projectGroupSchema,
-  addProjectGroupInputSchema,
-  removeProjectGroupInputSchema,
-} from './project-groups.schemas';
-
 import type {
   IAuditLogger,
   IGroupRepository,
@@ -19,6 +5,19 @@ import type {
   IProjectGroupService,
   IProjectRepository,
 } from '@grantjs/core';
+import { AddProjectGroupInput, ProjectGroup, RemoveProjectGroupInput } from '@grantjs/schema';
+
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { Transaction } from '@/lib/transaction-manager.lib';
+import { DeleteParams } from '@/types';
+
+import { createDynamicSingleSchema, validateInput, validateOutput } from './common';
+import {
+  addProjectGroupInputSchema,
+  getProjectGroupsParamsSchema,
+  projectGroupSchema,
+  removeProjectGroupInputSchema,
+} from './project-groups.schemas';
 
 export class ProjectGroupService implements IProjectGroupService {
   constructor(

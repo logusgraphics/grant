@@ -1,3 +1,14 @@
+import type { IAuditLogger, IProjectAppRepository, IProjectAppService } from '@grantjs/core';
+import type {
+  CreateProjectAppInput,
+  CreateProjectAppResult,
+  MutationDeleteProjectAppArgs,
+  ProjectApp,
+  ProjectAppPage,
+  QueryProjectAppsArgs,
+  UpdateProjectAppInput,
+} from '@grantjs/schema';
+
 import { NotFoundError } from '@/lib/errors';
 import { generateRandomBytes, hashSecret } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -17,17 +28,6 @@ import {
   projectAppSchema,
   updateProjectAppParamsSchema,
 } from './project-apps.schemas';
-
-import type { IAuditLogger, IProjectAppRepository, IProjectAppService } from '@grantjs/core';
-import type {
-  CreateProjectAppInput,
-  CreateProjectAppResult,
-  MutationDeleteProjectAppArgs,
-  ProjectApp,
-  ProjectAppPage,
-  QueryProjectAppsArgs,
-  UpdateProjectAppInput,
-} from '@grantjs/schema';
 
 export class ProjectAppService implements IProjectAppService {
   constructor(

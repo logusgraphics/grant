@@ -1,4 +1,5 @@
-import { OrganizationUserModel, organizationUsers, organizations, roles } from '@grantjs/database';
+import type { IOrganizationUserRepository } from '@grantjs/core';
+import { organizations, OrganizationUserModel, organizationUsers, roles } from '@grantjs/database';
 import {
   AddOrganizationUserInput,
   OrganizationUser,
@@ -10,8 +11,6 @@ import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 import { NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IOrganizationUserRepository } from '@grantjs/core';
 
 export class OrganizationUserRepository
   extends PivotRepository<OrganizationUserModel, OrganizationUser>

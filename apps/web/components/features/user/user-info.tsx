@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { User } from '@grantjs/schema';
+import type { LucideIcon } from 'lucide-react';
 import { Calendar, Check, Fingerprint, Github, Info, LogIn, Mail, Pencil, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { Avatar, CopyToClipboard, EditableText, JsonEditor } from '@/components/common';
 import { SettingImageUploadDialog } from '@/components/features/settings';
@@ -16,8 +16,6 @@ import { useScopeFromParams } from '@/hooks';
 import { useUserMutations } from '@/hooks/users';
 import { getDocsUrl } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
-
-import type { LucideIcon } from 'lucide-react';
 
 interface UserInfoProps {
   user: User;

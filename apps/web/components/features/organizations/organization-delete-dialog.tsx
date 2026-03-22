@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-
+import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 import { Tenant } from '@grantjs/schema';
 import { AlertTriangle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { CopyToClipboard } from '@/components/common';
 import { Alert, AlertDescription } from '@/components/ui/alert';

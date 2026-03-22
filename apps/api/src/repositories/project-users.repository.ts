@@ -1,8 +1,9 @@
+import type { IProjectUserRepository } from '@grantjs/core';
 import {
-  ProjectUserModel,
   projectRoles,
-  projectUsers,
   projects,
+  ProjectUserModel,
+  projectUsers,
   roles,
   userRoles,
 } from '@grantjs/database';
@@ -16,8 +17,6 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IProjectUserRepository } from '@grantjs/core';
 
 export class ProjectUserRepository
   extends PivotRepository<ProjectUserModel, ProjectUser>

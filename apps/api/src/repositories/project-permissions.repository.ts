@@ -1,3 +1,4 @@
+import type { IProjectPermissionRepository } from '@grantjs/core';
 import {
   permissions,
   ProjectPermissionModel,
@@ -14,8 +15,6 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { PivotRepository } from '@/repositories/common';
-
-import type { IProjectPermissionRepository } from '@grantjs/core';
 
 export class ProjectPermissionRepository
   extends PivotRepository<ProjectPermissionModel, ProjectPermission>

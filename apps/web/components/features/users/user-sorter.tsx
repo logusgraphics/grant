@@ -1,5 +1,5 @@
-import { SortOrder, UserSortableField, UserSortInput } from '@grantjs/schema';
 import { useTranslations } from 'next-intl';
+import { SortOrder, UserSortableField, UserSortInput } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
 import { useUsersStore } from '@/stores/users.store';

@@ -1,9 +1,10 @@
+import type { IAuditLogger, IPermissionRepository, IPermissionService } from '@grantjs/core';
 import {
-  QueryPermissionsArgs,
+  CreatePermissionInput,
   MutationDeletePermissionArgs,
   Permission,
   PermissionPage,
-  CreatePermissionInput,
+  QueryPermissionsArgs,
   UpdatePermissionInput,
 } from '@grantjs/schema';
 
@@ -12,20 +13,18 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import {
-  validateInput,
-  validateOutput,
   createDynamicPaginatedSchema,
   createDynamicSingleSchema,
+  validateInput,
+  validateOutput,
 } from './common';
 import {
-  getPermissionsParamsSchema,
   createPermissionParamsSchema,
-  updatePermissionParamsSchema,
   deletePermissionParamsSchema,
+  getPermissionsParamsSchema,
   permissionSchema,
+  updatePermissionParamsSchema,
 } from './permissions.schemas';
-
-import type { IAuditLogger, IPermissionRepository, IPermissionService } from '@grantjs/core';
 
 export class PermissionService implements IPermissionService {
   constructor(

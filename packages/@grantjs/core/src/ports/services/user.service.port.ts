@@ -2,7 +2,6 @@
  * User-domain service port interfaces.
  * Covers: User, UserRole, UserTag, UserSession, UserAuthenticationMethod.
  */
-import type { SelectedFields } from '../repositories/common';
 import type {
   AddUserRoleInput,
   AddUserTagInput,
@@ -29,6 +28,8 @@ import type {
   UserSessionPage,
   UserTag,
 } from '@grantjs/schema';
+
+import type { SelectedFields } from '../repositories/common';
 
 // ---------------------------------------------------------------------------
 // Shared
@@ -117,6 +118,27 @@ interface CreateSessionResult {
   accessToken: string;
 }
 
+export interface MfaSetupResult {
+  factorId: string;
+  secret: string;
+  otpAuthUrl: string;
+}
+
+export interface MfaDeviceInfo {
+  id: string;
+  name: string;
+  isPrimary: boolean;
+  isEnabled: boolean;
+  createdAt: Date;
+  lastUsedAt?: Date | null;
+}
+
+/** Optional claims when signing session JWTs (amr/acr/auth_time are derived if omitted). */
+export interface SessionSignOptions {
+  /** Unix seconds for `auth_time` claim; defaults from session `createdAt` when available. */
+  authTimeSeconds?: number;
+}
+
 export interface IUserSessionService {
   getUserSession(userSessionId: string, transaction?: unknown): Promise<UserSession>;
 
@@ -128,12 +150,15 @@ export interface IUserSessionService {
   signSession(
     session: UserSession,
     isVerified?: boolean,
-    issuerBaseUrl?: string
+    mfaVerified?: boolean,
+    issuerBaseUrl?: string,
+    signOptions?: SessionSignOptions
   ): Promise<CreateSessionResult>;
 
   createSession(
     params: Omit<CreateUserSessionInput, 'expiresAt' | 'token' | 'lastUsedAt'> & {
       isVerified?: boolean;
+      mfaVerifiedAt?: Date | null;
     },
     transaction?: unknown,
     issuerBaseUrl?: string
@@ -145,14 +170,43 @@ export interface IUserSessionService {
     userAgent?: string | null,
     ipAddress?: string | null,
     isVerified?: boolean,
+    mfaVerified?: boolean,
     issuerBaseUrl?: string
   ): Promise<CreateSessionResult | null>;
+
+  markMfaVerified(sessionId: string, transaction?: unknown): Promise<UserSession>;
 
   revokeSession(id: string, transaction?: unknown): Promise<UserSession>;
 
   revokeSessionByRefreshToken(refreshToken: string, transaction?: unknown): Promise<boolean>;
 
   refreshSessionLastUsed(sessionId: string, transaction?: unknown): Promise<UserSession>;
+}
+
+export interface IUserMfaService {
+  listDevices(userId: string, transaction?: unknown): Promise<MfaDeviceInfo[]>;
+  setupTotp(userId: string, accountName: string, transaction?: unknown): Promise<MfaSetupResult>;
+  verifyTotp(
+    userId: string,
+    code: string,
+    transaction?: unknown
+  ): Promise<{ factorId: string; verified: boolean }>;
+  setPrimaryDevice(userId: string, factorId: string, transaction?: unknown): Promise<MfaDeviceInfo>;
+  removeDevice(userId: string, factorId: string, transaction?: unknown): Promise<void>;
+  generateRecoveryCodes(
+    userId: string,
+    factorId?: string | null,
+    transaction?: unknown
+  ): Promise<string[]>;
+  verifyRecoveryCode(userId: string, recoveryCode: string, transaction?: unknown): Promise<boolean>;
+
+  getMyMfaRecoveryCodeStatus(
+    userId: string,
+    transaction?: unknown
+  ): Promise<{ activeCount: number; lastGeneratedAt: Date | null }>;
+
+  /** True if the user has at least one non-deleted MFA factor with isEnabled (fully enrolled). */
+  hasActiveMfaEnrollment(userId: string, transaction?: unknown): Promise<boolean>;
 }
 
 // ---------------------------------------------------------------------------

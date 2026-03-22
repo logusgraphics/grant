@@ -1,4 +1,5 @@
-import { signingKeys, type NewSigningKeyModel, type SigningKeyModel } from '@grantjs/database';
+import type { ISigningKeyRepository } from '@grantjs/core';
+import { type NewSigningKeyModel, type SigningKeyModel, signingKeys } from '@grantjs/database';
 import { SigningKey, SortOrder } from '@grantjs/schema';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -8,8 +9,6 @@ import {
   type FilterCondition,
   type RelationsConfig,
 } from '@/repositories/common';
-
-import type { ISigningKeyRepository } from '@grantjs/core';
 
 export interface SigningKeyPublic {
   kid: string;

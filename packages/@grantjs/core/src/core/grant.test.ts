@@ -5,16 +5,14 @@ import jwt from 'jsonwebtoken';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TokenExpiredError, TokenInvalidError } from '../errors/grant-exception';
-import { type GrantService } from '../types';
-
-import { Grant } from './grant';
-
 import type {
   ITokenProvider,
   TokenDecodeResult,
   TokenSignOptions,
   TokenVerifyOptions,
 } from '../ports/token.port';
+import { type GrantService } from '../types';
+import { Grant } from './grant';
 
 const TEST_KID = 'test-kid';
 const { publicKey: publicKeyPem, privateKey: privateKeyPem } = crypto.generateKeyPairSync('rsa', {
