@@ -97,11 +97,18 @@ export class AuthenticationError extends GrantException {
  */
 export class AuthorizationError extends GrantException {
   public readonly reason?: string;
+  public readonly metadata?: Record<string, unknown>;
 
-  constructor(message: string = 'Forbidden', reason?: string, originalError?: Error) {
+  constructor(
+    message: string = 'Forbidden',
+    reason?: string,
+    originalError?: Error,
+    metadata?: Record<string, unknown>
+  ) {
     super(message, 'FORBIDDEN', originalError);
     this.name = 'AuthorizationError';
     this.reason = reason;
+    this.metadata = metadata;
   }
 }
 

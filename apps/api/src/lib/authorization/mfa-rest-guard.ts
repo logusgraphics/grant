@@ -48,6 +48,10 @@ export function requireMfaRest(options: MfaRestGuardOptions = {}) {
     if (!requiresMfa || user!.mfaVerified) {
       return next();
     }
-    return res.status(403).json({ error: 'MFA required', code: 'MFA_REQUIRED' });
+    return res.status(403).json({
+      error: 'MFA required',
+      code: 'MFA_REQUIRED',
+      hasActiveEnrollment: userRequiresMfa,
+    });
   };
 }

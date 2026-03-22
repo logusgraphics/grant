@@ -700,6 +700,27 @@
         "closeTab": "Sie können diesen Tab schließen.",
         "error": "Ergebnis konnte nicht gesendet werden"
       }
+    },
+    "mfaStepUp": {
+      "title": "Verifizierung erforderlich",
+      "description": "Diese Aktion erfordert Multi-Faktor-Authentifizierung. Geben Sie Ihren Authenticator-Code ein, um fortzufahren.",
+      "totpLabel": "Authenticator-Code",
+      "verify": "Verifizieren",
+      "verifying": "Wird verifiziert…",
+      "cancel": "Abbrechen",
+      "invalidCode": "Ungültiger Authenticator-Code. Bitte versuchen Sie es erneut.",
+      "invalidRecoveryCode": "Ungültiger Wiederherstellungscode. Bitte versuchen Sie es erneut.",
+      "recoveryPrompt": "Kein Zugriff auf Ihre Authenticator-App?",
+      "recoveryLink": "Wiederherstellungscode verwenden",
+      "recoveryCodeLabel": "Wiederherstellungscode",
+      "recoveryCodePlaceholder": "Wiederherstellungscode eingeben",
+      "backToAuthenticator": "Stattdessen Authenticator-Code verwenden",
+      "noEnrollment": {
+        "description": "Diese Aktion erfordert Multi-Faktor-Authentifizierung, aber Sie haben noch kein Authenticator-Gerät eingerichtet.",
+        "alertTitle": "Kein Authenticator registriert",
+        "alertDescription": "Ihre Organisation erfordert MFA für diese Aktion. Richten Sie ein Authenticator-Gerät in Ihren Sicherheitseinstellungen ein, bevor Sie fortfahren können.",
+        "goToSettings": "Zu den Sicherheitseinstellungen"
+      }
     }
   },
   "users": {

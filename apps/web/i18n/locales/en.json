@@ -700,6 +700,27 @@
         "closeTab": "You can close this tab.",
         "error": "Failed to send result"
       }
+    },
+    "mfaStepUp": {
+      "title": "Verification required",
+      "description": "This action requires multi-factor authentication. Enter your authenticator code to continue.",
+      "totpLabel": "Authenticator code",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "cancel": "Cancel",
+      "invalidCode": "Invalid authenticator code. Please try again.",
+      "invalidRecoveryCode": "Invalid recovery code. Please try again.",
+      "recoveryPrompt": "Can't access your authenticator app?",
+      "recoveryLink": "Use a recovery code",
+      "recoveryCodeLabel": "Recovery code",
+      "recoveryCodePlaceholder": "Enter recovery code",
+      "backToAuthenticator": "Use authenticator code instead",
+      "noEnrollment": {
+        "description": "This action requires multi-factor authentication, but you don't have an authenticator device set up yet.",
+        "alertTitle": "No authenticator registered",
+        "alertDescription": "Your organization requires MFA for this action. Set up an authenticator device in your security settings before you can continue.",
+        "goToSettings": "Go to security settings"
+      }
     }
   },
   "users": {
