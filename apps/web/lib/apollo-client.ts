@@ -166,6 +166,27 @@ function isMfaRequiredGraphQLError(error: GraphQLError): boolean {
   return extensions?.code === 'MFA_REQUIRED' || extensions?.reason === 'MFA_REQUIRED';
 }
 
+/**
+ * Detects MFA_REQUIRED from HTTP-level (server) errors. In Apollo Client 4,
+ * the min-AAL-at-login Express middleware rejects the request before Apollo
+ * processes it, producing a `ServerError` with `statusCode` and `bodyText`
+ * (not a GraphQL-formatted error).
+ */
+function isMfaRequiredServerError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as { statusCode?: number; bodyText?: string };
+  if (err.statusCode !== 403 || typeof err.bodyText !== 'string') return false;
+  try {
+    const body = JSON.parse(err.bodyText) as {
+      code?: string;
+      extensions?: { reason?: string };
+    };
+    return body.code === 'MFA_REQUIRED' || body.extensions?.reason === 'MFA_REQUIRED';
+  } catch {
+    return false;
+  }
+}
+
 function isUnauthorizedNetworkError(error: unknown): boolean {
   if (!isNetworkErrorWithStatus(error)) {
     return false;
@@ -317,7 +338,11 @@ function createMfaStepUpObservable(
           },
           fetchPolicy: 'network-only',
         });
-        innerSubscription = forward(operation).subscribe(observer);
+        innerSubscription = forward(operation).subscribe({
+          next: (result) => observer.next(result),
+          error: (err) => observer.error(err),
+          complete: () => observer.complete(),
+        });
       })
       .catch(() => {
         observer.next({ errors: graphQLErrors });
@@ -423,9 +448,17 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
   }
 
   if (!shouldSkipErrorRedirect(operation.operationName)) {
-    const hasMfaRequiredError = graphQLErrors.some(isMfaRequiredGraphQLError);
-    if (hasMfaRequiredError) {
-      return createMfaStepUpObservable(operation, forward, graphQLErrors);
+    const hasMfaRequiredGqlError = graphQLErrors.some(isMfaRequiredGraphQLError);
+    const hasMfaRequiredFromServer = isMfaRequiredServerError(error);
+    if (hasMfaRequiredGqlError || hasMfaRequiredFromServer) {
+      const mfaErrors = hasMfaRequiredGqlError
+        ? graphQLErrors
+        : [
+            new GraphQLError('MFA required', {
+              extensions: { code: 'FORBIDDEN', reason: 'MFA_REQUIRED', hasActiveEnrollment: true },
+            }),
+          ];
+      return createMfaStepUpObservable(operation, forward, mfaErrors);
     }
     const hasNotFoundError = graphQLErrors.some(isNotFoundGraphQLError);
     if (hasNotFoundError) {

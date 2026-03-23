@@ -64,6 +64,13 @@ export interface GrantClientConfig {
   onRefreshWithCredentials?: () => Promise<boolean>;
 
   /**
+   * Called when a request is rejected with MFA_REQUIRED (HTTP 403).
+   * Return `true` after the user completes MFA verification so the client retries the request
+   * with the updated access token, or `false` to accept the denial.
+   */
+  onMfaRequired?: () => Promise<boolean>;
+
+  /**
    * Custom fetch implementation
    * Defaults to globalThis.fetch
    */

@@ -7,6 +7,7 @@ import { logoutSession } from '@/lib/apollo-client';
 import { getApiBaseUrl } from '@/lib/constants';
 import { refreshSessionViaCookie } from '@/lib/refresh-session';
 import { useAuthStore } from '@/stores/auth.store';
+import { useMfaStepUpStore } from '@/stores/mfa-step-up.store';
 
 interface GrantProviderProps {
   children: ReactNode;
@@ -38,6 +39,9 @@ export function GrantProvider({ children }: GrantProviderProps) {
 
       // Cookie-only refresh on 401; uses shared refresh so Apollo + Grant trigger a single refresh
       onRefreshWithCredentials: () => refreshSessionViaCookie(),
+
+      // MFA step-up on 403 MFA_REQUIRED; reuses the same dialog as Apollo error link
+      onMfaRequired: () => useMfaStepUpStore.getState().requestStepUp(true),
 
       // Cache configuration
       cache: {
