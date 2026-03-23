@@ -6,6 +6,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: grant-${{ github.workflow }}-${{ github.ref }}

@@ -7,7 +7,7 @@ import type {
 } from './types';
 
 /**
- * Module-level shared promise for cookie-only refresh so that all 401s
+ * Module-level shared promise for cookie-only credential refresh so that all 401s
  * (across all GrantClient instances and in-flight requests) coalesce into one refresh.
  */
 let sharedCredentialsRefreshPromise: Promise<boolean> | null = null;
