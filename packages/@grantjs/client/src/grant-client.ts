@@ -13,6 +13,12 @@ import type {
 let sharedCredentialsRefreshPromise: Promise<boolean> | null = null;
 
 /**
+ * Module-level shared promise for MFA step-up so that concurrent 403 MFA_REQUIRED
+ * responses coalesce into a single step-up dialog.
+ */
+let sharedMfaStepUpPromise: Promise<boolean> | null = null;
+
+/**
  * Grant Client for browser applications
  *
  * Makes HTTP requests to the Grant API to check permissions
@@ -198,9 +204,24 @@ export class GrantClient {
 
   /**
    * Make an authenticated fetch request with automatic token refresh on 401
+   * and MFA step-up on 403 MFA_REQUIRED.
    */
   private async fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
     const response = await this.doFetch(url, init);
+
+    if (response.status === 403 && this.config.onMfaRequired) {
+      const cloned = response.clone();
+      const body = await cloned.json().catch(() => null);
+      if (body && (body.code === 'MFA_REQUIRED' || body.extensions?.reason === 'MFA_REQUIRED')) {
+        if (!sharedMfaStepUpPromise) {
+          sharedMfaStepUpPromise = this.config.onMfaRequired().finally(() => {
+            sharedMfaStepUpPromise = null;
+          });
+        }
+        const verified = await sharedMfaStepUpPromise;
+        if (verified) return this.doFetch(url, init);
+      }
+    }
 
     if (response.status !== 401) return response;
 

@@ -88,7 +88,9 @@ export async function assertMinAalAtLoginGraphql(
   if (SAFE_AAL1_GRAPHQL_OPERATION_NAMES.has(operationName)) {
     return;
   }
-  throw new AuthorizationError('MFA required', 'MFA_REQUIRED');
+  throw new AuthorizationError('MFA required', 'MFA_REQUIRED', undefined, {
+    hasActiveEnrollment: true,
+  });
 }
 
 /**
@@ -115,10 +117,16 @@ function extractGraphqlOperationName(req: Request): string | undefined {
 
 /**
  * Runs before Apollo — enforces min-AAL policy using operation name from the GraphQL request body.
+ *
+ * MFA_REQUIRED rejections are returned as `application/graphql-response+json`
+ * so Apollo Client 4 routes them through the GraphQL error path (ErrorLink `next`
+ * handler) rather than the network-error path (`error` handler). This allows the
+ * frontend MFA step-up dialog to intercept, verify, and **replay** the original
+ * operation transparently.
  */
 export function graphqlMinAalAtLoginMiddleware(
   req: Request,
-  _res: Response,
+  res: Response,
   next: NextFunction
 ): void {
   if (req.method === 'GET') {
@@ -131,12 +139,35 @@ export function graphqlMinAalAtLoginMiddleware(
       return;
     }
     const opName = extractGraphqlOperationName(req);
-    const gqlCtx = { ...ctx, req, res: _res } as GraphqlContext;
+    const gqlCtx = { ...ctx, req, res } as GraphqlContext;
     await assertMinAalAtLoginGraphql(gqlCtx, opName);
   };
   void run()
     .then(() => next())
-    .catch(next);
+    .catch((err: unknown) => {
+      if (err instanceof AuthorizationError && err.reason === 'MFA_REQUIRED') {
+        res
+          .status(200)
+          .set('Content-Type', 'application/graphql-response+json')
+          .json({
+            data: null,
+            errors: [
+              {
+                message: err.message,
+                extensions: {
+                  code: 'FORBIDDEN',
+                  reason: 'MFA_REQUIRED',
+                  hasActiveEnrollment: true,
+                  translationKey: 'errors.auth.forbidden',
+                  http: { status: 403 },
+                },
+              },
+            ],
+          });
+        return;
+      }
+      next(err);
+    });
 }
 
 export function minAalAtLoginRestMiddleware(
@@ -164,7 +195,9 @@ export function minAalAtLoginRestMiddleware(
     if (SAFE_AAL1_REST_FULL_PATHS.has(normalized)) {
       return;
     }
-    throw new AuthorizationError('MFA required', 'MFA_REQUIRED');
+    throw new AuthorizationError('MFA required', 'MFA_REQUIRED', undefined, {
+      hasActiveEnrollment: true,
+    });
   };
 
   void run().then(next).catch(next);

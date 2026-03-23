@@ -191,6 +191,7 @@ export interface GithubCallbackAuthResult {
   accessToken: string;
   refreshToken: string;
   accounts: Array<{ id: string; type: string; ownerId?: string | null; [key: string]: unknown }>;
+  requiresMfaStepUp: boolean;
 }
 
 /**
@@ -220,6 +221,7 @@ export async function handleGithubCallbackAuth(
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
       accounts: result.accounts ?? [],
+      requiresMfaStepUp: result.requiresMfaStepUp ?? false,
     };
   }
 
@@ -243,10 +245,11 @@ export async function handleGithubCallbackAuth(
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
       accounts: result.accounts ?? [],
+      requiresMfaStepUp: result.requiresMfaStepUp ?? false,
     };
   }
 
-  // New user - register
+  // New user - register (new users cannot have MFA enrolled)
   const accountType =
     oauthResult.accountType === AccountType.Organization
       ? AccountType.Organization
@@ -269,6 +272,7 @@ export async function handleGithubCallbackAuth(
     accessToken: result.accessToken,
     refreshToken: result.refreshToken,
     accounts: [result.account],
+    requiresMfaStepUp: false,
   };
 }
 
