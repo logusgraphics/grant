@@ -377,10 +377,17 @@ export function createAuthRoutes(context: RequestContext) {
           return;
         }
 
-        // Browser flow: set refresh token cookie and redirect to nextUrl (e.g. /dashboard).
-        const nextUrl = buildAuthRedirectUrl(oauthResult, locale);
+        // Browser flow: set refresh token cookie and redirect.
         setRefreshTokenCookie(res, loginResult.refreshToken);
-        res.redirect(nextUrl);
+
+        if (loginResult.requiresMfaStepUp) {
+          const returnTo = buildAuthRedirectUrl(oauthResult, locale);
+          res.redirect(
+            `${frontendUrl}/${locale}/auth/mfa?mode=challenge&returnTo=${encodeURIComponent(returnTo)}`
+          );
+        } else {
+          res.redirect(buildAuthRedirectUrl(oauthResult, locale));
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         const errorCode = determineErrorCode(err);
