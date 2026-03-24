@@ -7,6 +7,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Skip path-filter checks and run all jobs'
+        type: boolean
+        default: false
 
 concurrency:
   group: grant-${{ github.workflow }}-${{ github.ref }}
@@ -72,20 +77,21 @@ jobs:
           echo 'docker_matrix=[]' >> "$GITHUB_OUTPUT"
 
           items=()
+          force="${{ inputs.force }}"
 
-          if [[ "${{ steps.filter.outputs.api }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
+          if [[ "$force" == "true" || "${{ steps.filter.outputs.api }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
             items+=( '{"image":"grant-api","file":"apps/api/Dockerfile"}' )
           fi
 
-          if [[ "${{ steps.filter.outputs.web }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
+          if [[ "$force" == "true" || "${{ steps.filter.outputs.web }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
             items+=( '{"image":"grant-web","file":"apps/web/Dockerfile"}' )
           fi
 
-          if [[ "${{ steps.filter.outputs.docs }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
+          if [[ "$force" == "true" || "${{ steps.filter.outputs.docs }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
             items+=( '{"image":"grant-docs","file":"docs/Dockerfile"}' )
           fi
 
-          if [[ "${{ steps.filter.outputs.example }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
+          if [[ "$force" == "true" || "${{ steps.filter.outputs.example }}" == "true" || "${{ steps.filter.outputs.shared }}" == "true" ]]; then
             items+=( '{"image":"example-nextjs","file":"packages/@grantjs/client/examples/nextjs/Dockerfile"}' )
           fi
 
@@ -96,7 +102,10 @@ jobs:
     name: Build, test, upload artifact
     runs-on: self-hosted
     needs: changes
-    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.release == 'true'
+    if: >-
+      needs.changes.outputs.code == 'true'
+      || needs.changes.outputs.release == 'true'
+      || inputs.force == true
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
