@@ -106,7 +106,7 @@ services:
     image: nginx:alpine
     container_name: grant-demo-api-lb
     configs:
-      - source: api_lb_conf
+      - source: api_lb_conf_v2
         target: /etc/nginx/templates/default.conf.template
     environment:
       API_PORT: ${API_PORT}
@@ -123,9 +123,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 20s
     deploy:
       replicas: 1
+      update_config:
+        order: stop-first
+        failure_action: rollback
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -152,6 +155,19 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/ || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      update_config:
+        order: stop-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
     restart: unless-stopped
     networks:
       - demo-network
@@ -175,6 +191,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    deploy:
+      update_config:
+        order: stop-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
     restart: unless-stopped
     networks:
       - demo-network
@@ -198,6 +221,13 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
+    deploy:
+      update_config:
+        order: stop-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
     restart: unless-stopped
     networks:
       - demo-network
@@ -208,7 +238,7 @@ volumes:
   demo_api_storage:
 
 configs:
-  api_lb_conf:
+  api_lb_conf_v2:
     file: ./deploy/api-lb.conf.template
 
 networks:
