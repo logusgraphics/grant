@@ -9,6 +9,7 @@ import {
   scopeSchema,
   tenantSchema,
 } from '@/rest/schemas/common.schemas';
+import { permissionSchema } from '@/rest/schemas/permissions.schemas';
 
 export const resourceSchema = z.object({
   id: z.string(),
@@ -22,7 +23,16 @@ export const resourceSchema = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const resourceWithRelationsSchema = resourceSchema;
+export const resourceWithRelationsSchema = resourceSchema.extend({
+  permissions: z
+    .array(
+      permissionSchema.extend({
+        resourceId: z.string().nullable().optional(),
+        condition: z.unknown().nullable().optional(),
+      })
+    )
+    .optional(),
+});
 
 export const getResourcesQuerySchema = listQuerySchema.omit({ relations: true }).extend({
   scopeId: scopeIdSchema,
@@ -97,9 +107,16 @@ export const createResourceRequestSchema = z.object({
     description: 'Primary tag ID for the resource',
     example: '123e4567-e89b-12d3-a456-426614174001',
   }),
+  createPermissions: z.boolean().optional().default(false).openapi({
+    description:
+      'When true, create one permission per action defined on the resource (project-scoped)',
+    example: false,
+  }),
 });
 
-export const createResourceResponseSchema = createSuccessResponseSchema(resourceSchema);
+export const createResourceResponseSchema = createSuccessResponseSchema(
+  resourceWithRelationsSchema
+);
 
 export const updateResourceRequestSchema = z.object({
   name: z

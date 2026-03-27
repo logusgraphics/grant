@@ -16,6 +16,7 @@ export type {
   ResolversParentTypes,
   ResolversTypes,
   ResolverTypeWrapper,
+  ResourceResolvers,
   RoleResolvers,
   TagResolvers,
   UserResolvers,

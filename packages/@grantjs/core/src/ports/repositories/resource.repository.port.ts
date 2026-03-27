@@ -25,7 +25,7 @@ export interface IResourceRepository {
   ): Promise<ResourcePage>;
 
   createResource(
-    params: Omit<CreateResourceInput, 'scope'>,
+    params: Omit<CreateResourceInput, 'scope' | 'createPermissions' | 'tagIds' | 'primaryTagId'>,
     transaction?: unknown
   ): Promise<Resource>;
 

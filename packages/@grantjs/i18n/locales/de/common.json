@@ -18,6 +18,9 @@
     "view": "Anzeigen",
     "list": "Liste"
   },
+  "permissions": {
+    "createFromResourceDescription": "Berechtigung für die Aktion „{{action}}“ bei {{resourceName}}."
+  },
   "roles": {
     "names": {
       "organizationOwner": "Organisations-Eigentümer",

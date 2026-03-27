@@ -32,6 +32,7 @@ export * from './project-user-api-keys.schema';
 export * from './project-users.schema';
 export * from './projects.schema';
 export * from './resource-tags.schema';
+export * from './resources.relations';
 export * from './resources.schema';
 export * from './role-groups.schema';
 export * from './role-tags.schema';

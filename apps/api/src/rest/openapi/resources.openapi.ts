@@ -143,6 +143,10 @@ The slug must be URL-friendly:
 ### Active Status
 - \`isActive\`: Whether the resource is active (default: \`true\`)
 - Inactive resources cannot be used in permission definitions
+
+### Auto-create permissions
+- \`createPermissions\`: When \`true\`, creates one project-scoped permission per action on the resource (default: \`false\`). Uses the same action list as the resource (or default actions if omitted).
+- When \`createPermissions\` is \`true\`, the response body includes a \`permissions\` array with the created permission records (same order as the resource \`actions\`).
     `.trim(),
     request: {
       body: {

@@ -1,10 +1,11 @@
 import { DEFAULT_RESOURCE_ACTIONS } from '@grantjs/constants';
 import type { IResourceRepository } from '@grantjs/core';
-import { ResourceModel, resources, tags } from '@grantjs/database';
+import { PermissionModel, permissions, ResourceModel, resources, tags } from '@grantjs/database';
 import {
   CreateResourceInput,
   MutationDeleteResourceArgs,
   MutationUpdateResourceArgs,
+  Permission,
   QueryResourcesArgs,
   Resource,
   ResourcePage,
@@ -31,6 +32,24 @@ export class ResourceRepository
       extract: (v: Array<ResourceTag>) =>
         v.map(({ tag, isPrimary }: ResourceTag) => ({ ...tag, isPrimary })),
     },
+    permissions: {
+      field: 'permissions',
+      table: permissions,
+      extract: (rows: PermissionModel[]) =>
+        rows.map(
+          (p): Permission => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            action: p.action,
+            resourceId: p.resourceId,
+            condition: p.condition as Permission['condition'],
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt,
+            deletedAt: p.deletedAt,
+          })
+        ),
+    },
   };
 
   public async getResources(
@@ -47,12 +66,14 @@ export class ResourceRepository
   }
 
   public async createResource(
-    params: Omit<CreateResourceInput, 'scope'>,
+    params: Omit<CreateResourceInput, 'scope' | 'createPermissions' | 'tagIds' | 'primaryTagId'>,
     transaction?: Transaction
   ): Promise<Resource> {
     return this.create(
       {
-        ...params,
+        name: params.name,
+        slug: params.slug,
+        description: params.description,
         actions: params.actions ?? [...DEFAULT_RESOURCE_ACTIONS],
         isActive: params.isActive ?? true,
       },

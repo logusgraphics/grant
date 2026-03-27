@@ -82,12 +82,8 @@ import {
 import { projectUsers, projectUsersRelations } from './project-users.schema';
 import { projects, projectsRelations } from './projects.schema';
 import { resourceTagAuditLogs, resourceTags, resourceTagsRelations } from './resource-tags.schema';
-import {
-  resourceAuditLogs,
-  resourceAuditLogsRelations,
-  resources,
-  resourcesRelations,
-} from './resources.schema';
+import { resourcesRelations } from './resources.relations';
+import { resourceAuditLogs, resourceAuditLogsRelations, resources } from './resources.schema';
 import { roleGroups, roleGroupsRelations } from './role-groups.schema';
 import { roleTags, roleTagsRelations } from './role-tags.schema';
 import { roles, rolesRelations } from './roles.schema';

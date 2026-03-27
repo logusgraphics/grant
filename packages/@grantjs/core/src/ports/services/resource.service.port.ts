@@ -32,7 +32,7 @@ export interface IResourceService {
   getResourceById(id: string, transaction?: unknown): Promise<Resource | null>;
 
   createResource(
-    params: Omit<CreateResourceInput, 'scope'>,
+    params: Omit<CreateResourceInput, 'scope' | 'createPermissions' | 'tagIds' | 'primaryTagId'>,
     transaction?: unknown
   ): Promise<Resource>;
 

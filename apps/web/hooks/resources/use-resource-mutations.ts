@@ -12,6 +12,8 @@ import {
 } from '@grantjs/schema';
 import { toast } from 'sonner';
 
+import { evictPermissionsCache } from '@/hooks/permissions/cache';
+
 import { evictResourcesCache } from './cache';
 
 export function useResourceMutations() {
@@ -19,6 +21,7 @@ export function useResourceMutations() {
 
   const update = (cache: ApolloCache) => {
     evictResourcesCache(cache);
+    evictPermissionsCache(cache);
   };
 
   const [createResource] = useMutation<{ createResource: Resource }>(CreateResourceDocument, {

@@ -17,6 +17,7 @@ export const createResourceSchema = z.object({
   description: z.string().optional(),
   actions: z.array(actionSlugSchema).optional(),
   isActive: z.boolean().optional(),
+  createPermissions: z.boolean().optional(),
   tagIds: z.array(z.string()).optional(),
   primaryTagId: z.string().optional(),
 });

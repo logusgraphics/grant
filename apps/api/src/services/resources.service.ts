@@ -78,7 +78,7 @@ export class ResourceService implements IResourceService {
   }
 
   public async createResource(
-    params: Omit<CreateResourceInput, 'scope'>,
+    params: Omit<CreateResourceInput, 'scope' | 'createPermissions' | 'tagIds' | 'primaryTagId'>,
     transaction?: Transaction
   ): Promise<Resource> {
     const context = 'ResourceService.createResource';

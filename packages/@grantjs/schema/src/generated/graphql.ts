@@ -548,6 +548,7 @@ export type CreateProjectInput = {
 
 export type CreateResourceInput = {
   actions?: InputMaybe<Array<Scalars['String']['input']>>;
+  createPermissions?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
@@ -2225,6 +2226,7 @@ export type Resource = Auditable & {
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
+  permissions?: Maybe<Array<Permission>>;
   slug: Scalars['String']['output'];
   tags: Array<Tag>;
   updatedAt: Scalars['Date']['output'];
@@ -4309,6 +4311,13 @@ export type CreateResourceMutation = {
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
+    permissions?: Array<{
+      __typename?: 'Permission';
+      id: string;
+      name: string;
+      action: string;
+      resourceId?: string | null;
+    }> | null;
   };
 };
 
@@ -9195,6 +9204,19 @@ export const CreateResourceDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'isActive' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'permissions' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'action' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'resourceId' } },
+                    ],
+                  },
+                },
               ],
             },
           },

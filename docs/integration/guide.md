@@ -68,49 +68,46 @@ const step2Body = computed(() => JSON.stringify({
 
 const step3Body = computed(() => JSON.stringify({
   name: 'Document',
-  slug: 'document',
-  actions: ['Create', 'Read', 'Update', 'Delete', 'Query'],
+  slug: 'document', 
+  actions: ['create', 'read', 'update', 'delete', 'query'],
+  createPermissions: true,
   scope: resourceScope(),
 }))
 
-function permBody(name, action) {
-  return computed(() => JSON.stringify({
-    name,
-    action,
-    resourceId: '{RESOURCE_ID}',
-    scope: resourceScope(),
-  }))
+/** Permission IDs from embedded `permissions` on the create-resource response (same order as `actions`). */
+const step3Captures = {
+  RESOURCE_ID: 'data.id',
+  PERM_CREATE: 'data.permissions.0.id',
+  PERM_READ: 'data.permissions.1.id',
+  PERM_UPDATE: 'data.permissions.2.id',
+  PERM_DELETE: 'data.permissions.3.id',
+  PERM_QUERY: 'data.permissions.4.id',
 }
-const perm4Create = permBody('Create Documents', 'create')
-const perm4Read   = permBody('Read Documents',   'read')
-const perm4Update = permBody('Update Documents', 'update')
-const perm4Delete = permBody('Delete Documents', 'delete')
-const perm4Query  = permBody('Query Documents',  'query')
 
-const step5Body = computed(() => JSON.stringify({
+const step4Body = computed(() => JSON.stringify({
   name: 'DocumentFullAccess',
   permissionIds: ['{PERM_CREATE}', '{PERM_READ}', '{PERM_UPDATE}', '{PERM_DELETE}', '{PERM_QUERY}'],
   scope: resourceScope(),
 }))
 
-const step6Body = computed(() => JSON.stringify({
+const step5Body = computed(() => JSON.stringify({
   name: 'DocumentEditor',
   groupIds: ['{GROUP_ID}'],
   scope: resourceScope(),
 }))
 
-const step7Body = computed(() => JSON.stringify({
+const step6Body = computed(() => JSON.stringify({
   name: 'Demo User',
   roleIds: ['{ROLE_ID}'],
   scope: resourceScope(),
 }))
 
-const step8Body = computed(() => JSON.stringify({
+const step7Body = computed(() => JSON.stringify({
   name: 'Demo User Key',
   scope: userScope(),
 }))
 
-const step9Body = computed(() => JSON.stringify({
+const step8Body = computed(() => JSON.stringify({
   clientId: '{CLIENT_ID}',
   clientSecret: '{CLIENT_SECRET}',
   scope: { tenant: 'projectUser', id: '{PROJECT_ID}:{PROJ_USER_ID}' },
@@ -136,7 +133,7 @@ function normalizeFrontendUrl (url) {
 }
 const frontendUrl = computed(() => normalizeFrontendUrl(state.appUrl || ''))
 
-const step10Body = computed(() => JSON.stringify({
+const step9Body = computed(() => JSON.stringify({
   name: 'Documents App',
   redirectUris: [exampleCallbackUrl.value],
   scopes: ['document:create', 'document:read', 'document:update', 'document:delete', 'document:query'],
@@ -161,7 +158,7 @@ function openAuthFlowInNewTab() {
 
 # Integration Guide
 
-This tutorial walks you from a running Grant instance to a fully configured RBAC setup: resources, permissions, groups, roles, a project user, an api-key, a JWT access token and an auth app. By the end you will have everything needed to integrate the [Server SDK](/integration/server-sdk) or [Client SDK](/integration/client-sdk) into your application.
+This tutorial walks you from a running Grant instance to a fully configured RBAC setup: project, resource (with permissions), group, role, project user, API key, JWT access token, and project app. By the end you will have everything needed to integrate the [Server SDK](/integration/server-sdk) or [Client SDK](/integration/client-sdk) into your application.
 
 ::: info Prerequisites
 
@@ -244,104 +241,80 @@ Create one scoped to the organization you just created:
 
 ## Step 3 — Create a Resource
 
-A resource declares what entity your application protects and which actions are available. Create a `Document` resource:
+A resource declares what entity your application protects and which actions are available. Create a `Document` resource with **`createPermissions: true`** so Grant creates one project-scoped permission per action (same as five separate `POST /api/permissions` calls). The response **includes** those permissions under `permissions` so you can capture their IDs for the next step.
 
 <ApiTryIt
   method="POST"
   path="/api/resources"
   :body="step3Body"
-  :captures="{ RESOURCE_ID: 'data.id' }"
+  :captures="step3Captures"
 />
 
-## Step 4 — Create Permissions
+## Step 4 — Create a Group
 
-Create one permission for each action on the resource. Run all five blocks below — each captures the permission ID needed in Step 5.
-
-**Create**
-
-<ApiTryIt method="POST" path="/api/permissions" :body="perm4Create" :captures="{ PERM_CREATE: 'data.id' }" />
-
-**Read**
-
-<ApiTryIt method="POST" path="/api/permissions" :body="perm4Read" :captures="{ PERM_READ: 'data.id' }" />
-
-**Update**
-
-<ApiTryIt method="POST" path="/api/permissions" :body="perm4Update" :captures="{ PERM_UPDATE: 'data.id' }" />
-
-**Delete**
-
-<ApiTryIt method="POST" path="/api/permissions" :body="perm4Delete" :captures="{ PERM_DELETE: 'data.id' }" />
-
-**Query**
-
-<ApiTryIt method="POST" path="/api/permissions" :body="perm4Query" :captures="{ PERM_QUERY: 'data.id' }" />
-
-## Step 5 — Create a Group
-
-A group bundles related permissions. Create a `DocumentFullAccess` group with all five permission IDs from Step 4:
+A group bundles related permissions. Create a `DocumentFullAccess` group with all five permission IDs from Step 3:
 
 <ApiTryIt
   method="POST"
   path="/api/groups"
-  :body="step5Body"
+  :body="step4Body"
   :captures="{ GROUP_ID: 'data.id' }"
 />
 
-## Step 6 — Create a Role with the Group
+## Step 5 — Create a Role with the Group
 
 Create a role and assign the group to it:
 
 <ApiTryIt
   method="POST"
   path="/api/roles"
-  :body="step6Body"
+  :body="step5Body"
   :captures="{ ROLE_ID: 'data.id' }"
 />
 
-## Step 7 — Create a Project User
+## Step 6 — Create a Project User
 
-Create a user inside the project with the role from Step 6. The role's groups carry the permissions, so the user inherits full Document access:
+Create a user inside the project with the role from Step 5. The role's groups carry the permissions, so the user inherits full Document access:
 
 <ApiTryIt
   method="POST"
   path="/api/users"
-  :body="step7Body"
+  :body="step6Body"
   :captures="{ PROJ_USER_ID: 'data.id' }"
 />
 
-## Step 8 — Create a User API Key
+## Step 7 — Create a User API Key
 
 Create an API key scoped to the project user. Unlike project-level keys, user keys resolve permissions from the user's roles — no `roleId` needed. The response includes the `clientSecret` — **store it now, it is shown only once**:
 
 <ApiTryIt
   method="POST"
   path="/api/api-keys"
-  :body="step8Body"
+  :body="step7Body"
   :captures="{ CLIENT_ID: 'data.clientId', CLIENT_SECRET: 'data.clientSecret' }"
 />
 
-## Step 9 — Exchange for a Token
+## Step 8 — Exchange for a Token
 
 Exchange the API key credentials for a JWT access token:
 
 <ApiTryIt
   method="POST"
   path="/api/auth/token"
-  :body="step9Body"
+  :body="step8Body"
   :captures="{ API_TOKEN: 'data.accessToken' }"
 />
 
 The response contains an `accessToken` (RS256 JWT) and `expiresIn` (seconds). The token carries the permissions from the user's roles. You can now use this token with the [Server SDK](/integration/server-sdk) or any HTTP client to authorize requests against your protected endpoints.
 
-## Step 10 — Create a Project App
+## Step 9 — Create a Project App
 
-A Project App is an OAuth client that lets users sign in or sign up through Grant and be redirected back to your application with a token. Create one with all Document scopes, email and GitHub providers, and the role from Step 6 as the sign-up/default role:
+A Project App is an OAuth client that lets users sign in or sign up through Grant and be redirected back to your application with a token. Create one with all Document scopes, email and GitHub providers, and the role from Step 5 as the sign-up/default role:
 
 <ApiTryIt
   method="POST"
   path="/api/project-apps"
-  :body="step10Body"
+  :body="step9Body"
   :captures="{ APP_CLIENT_ID: 'data.clientId' }"
 />
 

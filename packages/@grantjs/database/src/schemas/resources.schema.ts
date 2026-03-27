@@ -2,8 +2,6 @@ import { DEFAULT_RESOURCE_ACTIONS } from '@grantjs/constants';
 import { relations } from 'drizzle-orm';
 import { boolean, index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
-import { projectResources } from './project-resources.schema';
-import { resourceTags } from './resource-tags.schema';
 import { users } from './users.schema';
 
 export const resources = pgTable(
@@ -28,12 +26,6 @@ export const resources = pgTable(
     index('resources_is_active_idx').on(t.isActive),
   ]
 );
-
-export const resourcesRelations = relations(resources, ({ many }) => ({
-  auditLogs: many(resourceAuditLogs),
-  projects: many(projectResources),
-  tags: many(resourceTags),
-}));
 
 export const resourceAuditLogs = pgTable(
   'resource_audit_logs',

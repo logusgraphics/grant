@@ -9,10 +9,12 @@ import type {
   IResourceTagService,
   ITransactionalConnection,
 } from '@grantjs/core';
+import type { SupportedLocale } from '@grantjs/i18n';
 import {
   MutationCreateResourceArgs,
   MutationDeleteResourceArgs,
   MutationUpdateResourceArgs,
+  Permission,
   QueryResourcesArgs,
   Resource,
   ResourcePage,
@@ -20,6 +22,7 @@ import {
   Tenant,
 } from '@grantjs/schema';
 
+import { defaultLocale, getFixedT } from '@/i18n/config';
 import { IEntityCacheAdapter } from '@/lib/cache';
 import { BadRequestError, NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -106,10 +109,24 @@ export class ResourceHandler extends CacheHandler {
     );
   }
 
-  public async createResource(params: MutationCreateResourceArgs): Promise<Resource> {
+  public async createResource(
+    params: MutationCreateResourceArgs,
+    locale: SupportedLocale = defaultLocale
+  ): Promise<Resource> {
+    const t = getFixedT(locale);
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { input } = params;
-      const { name, slug, description, actions, isActive, scope, tagIds, primaryTagId } = input;
+      const {
+        name,
+        slug,
+        description,
+        actions,
+        isActive,
+        scope,
+        tagIds,
+        primaryTagId,
+        createPermissions,
+      } = input;
 
       const scopeResourceIds = await this.getScopedResourceIds(scope);
 
@@ -152,7 +169,45 @@ export class ResourceHandler extends CacheHandler {
         );
       }
 
+      const createdPermissions: Permission[] = [];
+
+      if (createPermissions === true) {
+        const projectId = this.extractProjectIdFromScope(scope);
+        const uniqueActions = Array.from(new Set(resource.actions));
+
+        for (const action of uniqueActions) {
+          const permissionName = `${resource.name}: ${action}`;
+          const permissionDescription = t('common.permissions.createFromResourceDescription', {
+            action,
+            resourceName: resource.name,
+          });
+
+          const permission = await this.permissions.createPermission(
+            {
+              name: permissionName,
+              description: permissionDescription,
+              resourceId,
+              action,
+              condition: undefined,
+            },
+            tx
+          );
+
+          createdPermissions.push(permission);
+
+          await this.projectPermissions.addProjectPermission(
+            { projectId, permissionId: permission.id },
+            tx
+          );
+          await this.addPermissionIdToScopeCache(scope, permission.id);
+        }
+      }
+
       await this.addResourceIdToScopeCache(scope, resourceId);
+
+      if (createdPermissions.length > 0) {
+        return { ...resource, permissions: createdPermissions };
+      }
 
       return resource;
     });

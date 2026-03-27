@@ -80,6 +80,12 @@ export function ResourceCreateDialog({
       type: 'switch',
       info: 'form.isActiveInfo',
     },
+    {
+      name: 'createPermissions',
+      label: 'form.createPermissions',
+      type: 'switch',
+      info: 'form.createPermissionsInfo',
+    },
   ];
 
   const defaultValues: DefaultValues<ResourceCreateFormValues> = {
@@ -88,6 +94,7 @@ export function ResourceCreateDialog({
     description: '',
     actions: [...DEFAULT_RESOURCE_ACTIONS],
     isActive: true,
+    createPermissions: false,
     tagIds: [],
     primaryTagId: '',
   };
@@ -121,6 +128,7 @@ export function ResourceCreateDialog({
       description: values.description,
       actions: values.actions,
       isActive: values.isActive,
+      createPermissions: values.createPermissions ?? false,
       tagIds: values.tagIds,
       primaryTagId: values.primaryTagId,
     } as CreateResourceInput);

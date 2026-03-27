@@ -1326,6 +1326,8 @@
       "actionsInfo": "These actions will become the available options for the permission entity. Define the actions that can be performed on this resource (e.g., read, write, delete, update).",
       "isActive": "Is Active",
       "isActiveInfo": "Use this to create draft resources or temporarily disable them. Inactive resources cannot be used in permissions.",
+      "createPermissions": "Create permissions for each action",
+      "createPermissionsInfo": "Creates one project-scoped permission per action on this resource. Useful for onboarding or migrating resources.",
       "tags": "Tags",
       "primaryTag": "Primary Tag",
       "tagsLoading": "Loading tags...",

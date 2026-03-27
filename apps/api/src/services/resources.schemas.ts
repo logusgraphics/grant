@@ -1,3 +1,4 @@
+import { permissionConditionSchema } from '@grantjs/core';
 import { ResourceSortableField } from '@grantjs/schema';
 import { z } from 'zod';
 
@@ -58,12 +59,22 @@ export const deleteResourceParamsSchema = deleteSchema.extend({
   id: idSchema,
 });
 
+/** Permission row embedded on Resource (no nested `resource` — avoids circular zod with permissionSchema). */
+export const resourcePermissionSchema = baseEntitySchema.extend({
+  name: nameSchema,
+  description: descriptionSchema.nullable(),
+  action: actionSchema,
+  resourceId: idSchema.nullable(),
+  condition: permissionConditionSchema.nullable().optional(),
+});
+
 export const resourceSchema = baseEntitySchema.extend({
   name: nameSchema,
   slug: slugSchema,
   description: descriptionSchema.nullable(),
   actions: z.array(actionSchema),
   isActive: z.boolean(),
+  permissions: z.array(resourcePermissionSchema).optional(),
 });
 
 export const resourcePageSchema = paginatedResponseSchema(resourceSchema).transform((data) => ({
