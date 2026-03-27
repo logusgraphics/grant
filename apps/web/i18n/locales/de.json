@@ -1326,6 +1326,8 @@
       "actionsInfo": "Diese Aktionen werden zu den verfügbaren Optionen für die Berechtigungsentität. Definieren Sie die Aktionen, die für diese Ressource ausgeführt werden können (z.B. lesen, schreiben, löschen, aktualisieren).",
       "isActive": "Ist aktiv",
       "isActiveInfo": "Verwenden Sie dies, um Entwurfsressourcen zu erstellen oder sie vorübergehend zu deaktivieren. Inaktive Ressourcen können nicht in Berechtigungen verwendet werden.",
+      "createPermissions": "Berechtigungen für jede Aktion erstellen",
+      "createPermissionsInfo": "Erstellt eine projektbezogene Berechtigung pro Aktion für diese Ressource. Nützlich für Onboarding oder Migration.",
       "tags": "Tags",
       "primaryTag": "Haupt-Tag",
       "tagsLoading": "Tags werden geladen...",

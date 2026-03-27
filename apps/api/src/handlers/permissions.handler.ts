@@ -81,6 +81,11 @@ export class PermissionHandler extends CacheHandler {
     return permissionsResult;
   }
 
+  /** Permissions linked by `resource_id` (e.g. Resource.permissions field resolver). */
+  public async getPermissionsByResourceId(resourceId: string): Promise<Permission[]> {
+    return this.permissions.getPermissionsByResourceId(resourceId);
+  }
+
   public async createPermission(params: MutationCreatePermissionArgs): Promise<Permission> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { input } = params;

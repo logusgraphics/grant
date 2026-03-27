@@ -549,6 +549,7 @@ export type CreateProjectInput = {
 
 export type CreateResourceInput = {
   actions?: InputMaybe<Array<Scalars['String']['input']>>;
+  createPermissions?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
@@ -2226,6 +2227,7 @@ export type Resource = Auditable & {
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
+  permissions?: Maybe<Array<Permission>>;
   slug: Scalars['String']['output'];
   tags: Array<Tag>;
   updatedAt: Scalars['Date']['output'];
@@ -5229,6 +5231,7 @@ export type ResourceResolvers<
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   isActive?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  permissions?: Resolver<Maybe<Array<ResolversTypes['Permission']>>, ParentType, ContextType>;
   slug?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tags?: Resolver<Array<ResolversTypes['Tag']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;

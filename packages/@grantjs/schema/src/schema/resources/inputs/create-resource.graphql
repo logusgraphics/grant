@@ -7,4 +7,5 @@ input CreateResourceInput {
   isActive: Boolean
   tagIds: [ID!]
   primaryTagId: ID
+  createPermissions: Boolean
 }

@@ -10,6 +10,8 @@ import {
   nameSchema,
   nonEmptyActionSchema,
   nonEmptyNameSchema,
+  nonEmptyStringMessage,
+  nonEmptyStringRefinement,
   paginatedResponseSchema,
   queryParamsSchema,
   sortOrderSchema,
@@ -35,9 +37,23 @@ export const getPermissionsParamsSchema = queryParamsSchema.extend({
 
 // permissionConditionSchema is imported from @grantjs/core
 
+/** Aligned with DB `permissions.name` (varchar 255). */
+const permissionCreateNameSchema = z
+  .string()
+  .min(1, 'errors.validation.nameRequired')
+  .max(255, 'errors.validation.nameTooLong')
+  .refine(nonEmptyStringRefinement, nonEmptyStringMessage);
+
+/** Aligned with DB `permissions.description` (varchar 1000). */
+const permissionCreateDescriptionSchema = z
+  .string()
+  .max(1000, 'errors.validation.descriptionTooLong')
+  .nullable()
+  .optional();
+
 export const createPermissionParamsSchema = z.object({
-  name: nonEmptyNameSchema,
-  description: descriptionSchema,
+  name: permissionCreateNameSchema,
+  description: permissionCreateDescriptionSchema,
   action: nonEmptyActionSchema,
   resourceId: idSchema.nullable().optional(),
   condition: permissionConditionSchema.nullable().optional(),

@@ -70,7 +70,10 @@ export function createResourcesRouter(context: RequestContext): Router {
         input: req.body,
       };
 
-      const resource: Resource = await context.handlers.resources.createResource(variables);
+      const resource: Resource = await context.handlers.resources.createResource(
+        variables,
+        context.locale
+      );
 
       sendSuccessResponse(res, resource, 201);
     }

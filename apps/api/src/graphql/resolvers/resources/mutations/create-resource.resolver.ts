@@ -7,6 +7,9 @@ export const createResourceResolver: MutationResolvers<GraphqlContext>['createRe
   { input },
   context
 ) => {
-  const createdResource = await context.handlers.resources.createResource({ input });
+  const createdResource = await context.handlers.resources.createResource(
+    { input },
+    context.locale
+  );
   return createdResource;
 };

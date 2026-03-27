@@ -6,6 +6,7 @@ type Resource implements Auditable {
   actions: [String!]!
   isActive: Boolean!
   tags: [Tag!]!
+  permissions: [Permission!]
   createdAt: Date!
   updatedAt: Date!
   deletedAt: Date

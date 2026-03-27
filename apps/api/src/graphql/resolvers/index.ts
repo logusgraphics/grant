@@ -9,6 +9,7 @@ import { resolvers as scalarResolvers } from '@/graphql/resolvers/scalars';
 import { groupResolver as Group } from './groups/fields';
 import { permissionResolver as Permission } from './permissions/fields';
 import { projectAppResolver as ProjectApp } from './project-apps/fields';
+import { resourceResolver as Resource } from './resources/fields';
 import { roleResolver as Role } from './roles/fields';
 import { userResolver as User } from './users/fields';
 
@@ -28,5 +29,6 @@ export const schema = makeExecutableSchema({
     Role,
     Permission,
     ProjectApp,
+    Resource,
   },
 });

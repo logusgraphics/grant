@@ -8,5 +8,11 @@ mutation CreateResource($input: CreateResourceInput!) {
     isActive
     createdAt
     updatedAt
+    permissions {
+      id
+      name
+      action
+      resourceId
+    }
   }
 }

@@ -18,6 +18,9 @@
     "view": "View",
     "list": "List"
   },
+  "permissions": {
+    "createFromResourceDescription": "Permission to perform \"{{action}}\" on {{resourceName}}."
+  },
   "roles": {
     "names": {
       "organizationOwner": "Organization Owner",
