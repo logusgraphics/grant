@@ -2,7 +2,7 @@
 
 Server SDK for Grant authorization platform. Provides middleware and guards for **Express**, **Fastify**, **NestJS**, and **Next.js** applications.
 
-**Documentation:** [Server SDK](https://github.com/logusgraphics/grant/blob/main/docs/integration/server-sdk.md) in the official docs.
+**Documentation:** [Server SDK](https://github.com/grant-js/grant/blob/main/docs/integration/server-sdk.md) in the official docs.
 
 ## Features
 

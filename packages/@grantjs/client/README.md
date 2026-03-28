@@ -2,7 +2,7 @@
 
 Browser SDK for Grant authorization platform. Provides a lightweight client for permission checks with React hooks and components for conditional UI rendering.
 
-**Documentation:** [Client SDK](https://github.com/logusgraphics/grant/blob/main/docs/integration/client-sdk.md) in the official docs.
+**Documentation:** [Client SDK](https://github.com/grant-js/grant/blob/main/docs/integration/client-sdk.md) in the official docs.
 
 ## Features
 
@@ -404,13 +404,13 @@ import { Tenant } from '@grantjs/schema';
 
 ## Contributing
 
-Contributions are welcome! Please see the [main repository](https://github.com/logusgraphics/grant) for contribution guidelines.
+Contributions are welcome! Please see the [main repository](https://github.com/grant-js/grant) for contribution guidelines.
 
 ## Support
 
-- **Documentation**: See the [main Grant documentation](https://github.com/logusgraphics/grant)
-- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/logusgraphics/grant/issues)
-- **Email**: ale@logus.graphics
+- **Documentation**: See the [main Grant documentation](https://github.com/grant-js/grant)
+- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/grant-js/grant/issues)
+- **Email**: support@grant.center
 
 ## License
 

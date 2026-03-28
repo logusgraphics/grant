@@ -9,7 +9,7 @@
   An open-source, multi-tenant RBAC platform with self-hosting capabilities.
 </p>
 
-[![CI](https://github.com/logusgraphics/grant/actions/workflows/ci.yml/badge.svg)](https://github.com/logusgraphics/grant/actions/workflows/ci.yml)
+[![CI](https://github.com/grant-js/grant/actions/workflows/ci.yml/badge.svg)](https://github.com/grant-js/grant/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <!-- compliance-badges:start -->
@@ -40,6 +40,18 @@ The Grant community can be found on GitHub. Our [Code of Conduct](./CODE_OF_COND
 ## Contributing
 
 Contributions are welcome. Before submitting a pull request, please read our [Contribution Guidelines](./CONTRIBUTING.md) so you have a smooth experience.
+
+## Contributors
+
+Thanks to everyone who contributes to Grant. Avatars reflect commit authors on [GitHub](https://github.com/grant-js/grant/graphs/contributors).
+
+<p align="center">
+  <a href="https://github.com/grant-js/grant/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=grant-js/grant" alt="Contributors to grant-js/grant" />
+  </a>
+</p>
+
+More context: [CONTRIBUTORS.md](./CONTRIBUTORS.md).
 
 ## Security
 

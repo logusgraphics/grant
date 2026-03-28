@@ -14,7 +14,7 @@ hero:
       link: /getting-started/quick-start
     - theme: alt
       text: View on GitHub
-      link: https://github.com/logusgraphics/grant
+      link: https://github.com/grant-js/grant
 
 features:
   - icon:
@@ -105,8 +105,8 @@ Get up and running with Grant in minutes:
 
 ## Community & Support
 
-- **GitHub** - [Source code and issues](https://github.com/logusgraphics/grant)
-- **Email** - [Support and inquiries](mailto:ale@logus.graphics)
+- **GitHub** - [Source code and issues](https://github.com/grant-js/grant)
+- **Email** - [Support and inquiries](mailto:support@grant.center)
 
 ---
 

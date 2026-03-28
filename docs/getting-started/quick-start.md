@@ -10,7 +10,7 @@ Get Grant running locally in under 10 minutes: clone, start infrastructure, run 
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/logusgraphics/grant.git
+git clone https://github.com/grant-js/grant.git
 cd grant
 ```
 

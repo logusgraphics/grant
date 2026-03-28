@@ -29,13 +29,13 @@
     "api-key"
   ],
   "author": {
-    "name": "Alejandro Heredia",
-    "email": "ale@logus.graphics",
-    "url": "https://logus.graphics"
+    "name": "Grant",
+    "email": "support@grant.center",
+    "url": "https://grant.center"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/logusgraphics/grant.git",
+    "url": "https://github.com/grant-js/grant.git",
     "directory": "packages/@grantjs/cli"
   },
   "license": "MIT",
@@ -63,10 +63,10 @@
     "@types/inquirer": "^9.0.7",
     "@types/node": "^25.5.0",
     "eslint": "^10.1.0",
-    "typescript": "^5",
-    "vite": "^8.0.1",
+    "typescript": "^6",
+    "vite": "^8.0.3",
     "vite-plugin-dts": "^4.3.0",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=18.0.0"
