@@ -48,7 +48,7 @@ Grant ships with 16 platform resources. These are seeded automatically and cover
 | **UserSession**              | `Read` `Query`                                                         |
 | **UserAuthenticationMethod** | `Read` `Query`                                                         |
 
-The canonical source is [`packages/@grantjs/constants/src/permissions/resources.ts`](https://github.com/logusgraphics/grant/blob/main/packages/%40grantjs/constants/src/permissions/resources.ts).
+The canonical source is [`packages/@grantjs/constants/src/permissions/resources.ts`](https://github.com/grant-js/grant/blob/main/packages/%40grantjs/constants/src/permissions/resources.ts).
 
 ## Available Actions
 

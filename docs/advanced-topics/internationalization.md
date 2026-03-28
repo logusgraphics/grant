@@ -798,4 +798,4 @@ Want to add a new language or improve translations?
 
 ---
 
-**Questions?** [File an issue](https://github.com/logusgraphics/grant/issues) or check the [Development Guide](/contributing/guide).
+**Questions?** [File an issue](https://github.com/grant-js/grant/issues) or check the [Development Guide](/contributing/guide).

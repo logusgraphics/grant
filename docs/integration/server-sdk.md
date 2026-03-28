@@ -43,7 +43,7 @@ pnpm start
 | `nextjs`  | Next.js   | `withGrant(client, { resource, action }, handler)` on API routes |
 | `nestjs`  | NestJS    | `@Grant(resource, action)` + `GrantGuard`, `GrantModule`         |
 
-See the [package examples README](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/server/examples) for prerequisites, routes, and curl commands.
+See the [package examples README](https://github.com/grant-js/grant/tree/main/packages/%40grantjs/server/examples) for prerequisites, routes, and curl commands.
 
 ## GrantClient
 
@@ -73,7 +73,7 @@ const grantClient = new GrantClient({
 });
 ```
 
-See the [package README](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/server) for full configuration (custom fetch, credentials).
+See the [package README](https://github.com/grant-js/grant/tree/main/packages/%40grantjs/server) for full configuration (custom fetch, credentials).
 
 ## Express
 
@@ -268,4 +268,4 @@ Set **`DEBUG_GRANT=1`** in your environment (e.g. in `.env`) to enable request/o
 
 - **Authorization API:** Permission checks are performed via the Grant REST API (e.g. `POST /api/auth/is-authorized`). See [REST API](/api-reference/rest-api).
 - **API keys:** For server-to-server or CLI, use [project-level or user-scoped API keys](/core-concepts/api-keys) and pass the exchanged JWT (e.g. in the `Authorization` header).
-- **Package README:** [@grantjs/server](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/server) – Full `GrantClient` config, TypeScript types, and comparison with `@grantjs/client`.
+- **Package README:** [@grantjs/server](https://github.com/grant-js/grant/tree/main/packages/%40grantjs/server) – Full `GrantClient` config, TypeScript types, and comparison with `@grantjs/client`.

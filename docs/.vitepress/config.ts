@@ -62,7 +62,7 @@ export default withMermaid({
       { text: 'Getting Started', link: '/getting-started/introduction' },
       { text: 'API Reference', link: '/api-reference/rest-api' },
       { text: 'Deployment', link: '/deployment/self-hosting' },
-      { text: 'GitHub', link: 'https://github.com/logusgraphics/grant' },
+      { text: 'GitHub', link: 'https://github.com/grant-js/grant' },
     ],
 
     // Sidebar
@@ -169,10 +169,7 @@ export default withMermaid({
     },
 
     // Social links
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/logusgraphics/grant' },
-      { icon: 'twitter', link: 'https://twitter.com/logusgraphics' },
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/grant-js/grant' }],
 
     // Footer
     footer: {
@@ -187,7 +184,7 @@ export default withMermaid({
 
     // Edit link
     editLink: {
-      pattern: 'https://github.com/logusgraphics/grant/edit/main/docs/:path',
+      pattern: 'https://github.com/grant-js/grant/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
 

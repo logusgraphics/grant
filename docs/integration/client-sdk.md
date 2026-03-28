@@ -174,10 +174,10 @@ import { Tenant } from '@grantjs/schema';
 
 Permission checks call `POST /api/auth/is-authorized` with the current token. The client uses `getAccessToken()` (and optionally `getRefreshToken()`) from config; on 401 it can attempt refresh and retry, then call `onTokenRefresh` or `onUnauthorized` as configured.
 
-See the [@grantjs/client README](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/client) for full `GrantClientConfig`, `GrantClient` methods, and more examples.
+See the [@grantjs/client README](https://github.com/grant-js/grant/tree/main/packages/%40grantjs/client) for full `GrantClientConfig`, `GrantClient` methods, and more examples.
 
 ## Documentation
 
-- **Package README:** [@grantjs/client](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/client) – Installation, React setup, useGrant, GrantGate, API reference.
+- **Package README:** [@grantjs/client](https://github.com/grant-js/grant/tree/main/packages/%40grantjs/client) – Installation, React setup, useGrant, GrantGate, API reference.
 - **REST API:** [REST API](/api-reference/rest-api) – Auth and `is-authorized` endpoint.
 - **RBAC:** [RBAC](/architecture/rbac) – Resources and actions used in permission checks.

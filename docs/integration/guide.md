@@ -341,7 +341,7 @@ Make sure the Grant **web app** is running at the URL set by <code>APP_URL</code
 - **Guard your endpoints** — integrate the [Server SDK](/integration/server-sdk) (`@grantjs/server`) to verify tokens and enforce permissions in Express, Fastify, Next.js, or NestJS
 - **Protect your frontend** — use the [Client SDK](/integration/client-sdk) (`@grantjs/client`) with `GrantGate`, `useGrant`, and [Project OAuth](/architecture/security#project-oauth) for user sign-in/sign-up flows
 - **Add conditions** — attach [Permission Conditions](/core-concepts/permission-conditions) and [resource resolvers](/integration/server-sdk#resource-resolvers) for fine-grained access control on update/delete
-- **Explore examples** — browse the [server examples](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/server/examples) and [client example](https://github.com/logusgraphics/grant/tree/main/packages/%40grantjs/client/examples) (Next.js with Project OAuth and Document permission checks)
+- **Explore examples** — browse the [server examples](https://github.com/grant-js/grant/tree/main/packages/%40grantjs/server/examples) and [client example](https://github.com/grant-js/grant/tree/main/packages/%40grantjs/client/examples) (Next.js with Project OAuth and Document permission checks)
 
 </div>
 

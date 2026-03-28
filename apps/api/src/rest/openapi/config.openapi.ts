@@ -104,7 +104,7 @@ export function generateOpenApiDocument() {
       description: 'REST API for the Grant - An open-source identity and access management system',
       contact: {
         name: 'Grant',
-        url: 'https://github.com/logusgraphics/grant',
+        url: 'https://github.com/grant-js/grant',
       },
       license: {
         name: 'MIT',
@@ -192,7 +192,7 @@ export function generateOpenApiDocument() {
     ],
     externalDocs: {
       description: 'Find more info on GitHub',
-      url: 'https://github.com/logusgraphics/grant',
+      url: 'https://github.com/grant-js/grant',
     },
   });
 

@@ -69,8 +69,8 @@ Ready to get started with Grant? Here are your next steps:
 
 ## Community & Support
 
-- **GitHub** - [Source code and issues](https://github.com/logusgraphics/grant)
-- **Email** - [Support and inquiries](mailto:ale@logus.graphics)
+- **GitHub** - [Source code and issues](https://github.com/grant-js/grant)
+- **Email** - [Support and inquiries](mailto:support@grant.center)
 
 ---
 

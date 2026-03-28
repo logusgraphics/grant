@@ -60,7 +60,7 @@ services:
       - demo-network
 
   api:
-    image: ${GRANT_API_IMAGE:-ghcr.io/logusgraphics/grant/grant-api:demo}
+    image: ${GRANT_API_IMAGE:-ghcr.io/grant-js/grant/grant-api:demo}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -114,7 +114,7 @@ services:
       - demo-network
 
   web:
-    image: ${GRANT_WEB_IMAGE:-ghcr.io/logusgraphics/grant/grant-web:demo}
+    image: ${GRANT_WEB_IMAGE:-ghcr.io/grant-js/grant/grant-web:demo}
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -139,7 +139,7 @@ services:
       - demo-network
 
   docs:
-    image: ${GRANT_DOCS_IMAGE:-ghcr.io/logusgraphics/grant/grant-docs:demo}
+    image: ${GRANT_DOCS_IMAGE:-ghcr.io/grant-js/grant/grant-docs:demo}
     build:
       context: .
       dockerfile: docs/Dockerfile
@@ -157,7 +157,7 @@ services:
       - demo-network
 
   example-nextjs:
-    image: ${GRANT_EXAMPLE_NEXTJS_IMAGE:-ghcr.io/logusgraphics/grant/example-nextjs:demo}
+    image: ${GRANT_EXAMPLE_NEXTJS_IMAGE:-ghcr.io/grant-js/grant/example-nextjs:demo}
     build:
       context: .
       dockerfile: packages/@grantjs/client/examples/nextjs/Dockerfile

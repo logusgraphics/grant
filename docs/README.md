@@ -212,4 +212,4 @@ jobs:
 
 ---
 
-**Questions?** Join our [Discord community](https://discord.gg/grant) or open an issue on [GitHub](https://github.com/logusgraphics/grant).
+**Questions?** Join our [Discord community](https://discord.gg/grant) or open an issue on [GitHub](https://github.com/grant-js/grant).

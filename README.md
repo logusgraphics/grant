@@ -9,7 +9,7 @@
   An open-source, multi-tenant RBAC platform with self-hosting capabilities.
 </p>
 
-[![CI](https://github.com/logusgraphics/grant/actions/workflows/ci.yml/badge.svg)](https://github.com/logusgraphics/grant/actions/workflows/ci.yml)
+[![CI](https://github.com/grant-js/grant/actions/workflows/ci.yml/badge.svg)](https://github.com/grant-js/grant/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <!-- compliance-badges:start -->
