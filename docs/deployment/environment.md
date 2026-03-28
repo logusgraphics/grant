@@ -64,7 +64,7 @@ DEMO_MODE_ENABLED=false
 DEMO_MODE_DB_REFRESH_SCHEDULE=0 0 */2 * *
 ```
 
-When enabled, the API may reset data on a schedule and the web UI shows a demo banner. For production, keep these off unless you intend a resettable sandbox (e.g. `demo.grant.center`).
+When enabled, the API may reset data on a schedule and the web UI shows a demo banner. For production, keep these off unless you intend a resettable sandbox (e.g. `demo.grantjs.org`).
 
 ## 5. System user ID
 

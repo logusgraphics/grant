@@ -410,8 +410,8 @@ Contributions are welcome! Please see the [main repository](https://github.com/g
 
 - **Documentation**: See the [main Grant documentation](https://github.com/grant-js/grant)
 - **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/grant-js/grant/issues)
-- **Product & account help**: [support@grant.center](mailto:support@grant.center)
-- **Security vulnerabilities**: Follow [SECURITY](https://github.com/grant-js/grant/blob/main/SECURITY.md) (reach **engineering@grant.center**)
+- **Product & account help**: [support@grantjs.org](mailto:support@grantjs.org)
+- **Security vulnerabilities**: Follow [SECURITY](https://github.com/grant-js/grant/blob/main/SECURITY.md) (reach **engineering@grantjs.org**)
 
 ## License
 

@@ -26,19 +26,19 @@
 
 Grant provides organization and project-level access control, self-hosting with Docker, and optional SDKs for Express, Fastify, NestJS, and Next.js.
 
-- Visit our [documentation site](https://docs.grant.center) for the full docs, guides, and API reference.
+- Visit our [documentation site](https://docs.grantjs.org) for the full docs, guides, and API reference.
 - For a quick local run: clone the repo, `pnpm install`, then `pnpm dev`.
 
 ## Documentation
 
-Full documentation—including self-hosting, configuration, REST and GraphQL API reference, and SDK integration—is available at [docs.grant.center](https://docs.grant.center).
+Full documentation—including self-hosting, configuration, REST and GraphQL API reference, and SDK integration—is available at [docs.grantjs.org](https://docs.grantjs.org).
 
 ## Community
 
 The Grant community can be found on GitHub. Our [Code of Conduct](./CODE_OF_CONDUCT.md) applies to all community channels and contributions.
 
-- **Support & general inquiries:** [support@grant.center](mailto:support@grant.center)
-- **Engineering, contributing, and security reporting:** see [CONTRIBUTING.md](./CONTRIBUTING.md) and [SECURITY.md](./SECURITY.md) (security reports go to **engineering@grant.center**).
+- **Support & general inquiries:** [support@grantjs.org](mailto:support@grantjs.org)
+- **Engineering, contributing, and security reporting:** see [CONTRIBUTING.md](./CONTRIBUTING.md) and [SECURITY.md](./SECURITY.md) (security reports go to **engineering@grantjs.org**).
 
 ## Contributing
 
@@ -63,4 +63,4 @@ If you believe you have found a security vulnerability in Grant, we encourage yo
 ## Demo
 
 Test the platform in a demo environment with short data retention period.
-[demo.grant.center](https://demo.grant.center)
+[demo.grantjs.org](https://demo.grantjs.org)

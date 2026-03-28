@@ -4,9 +4,9 @@ Thank you for your interest in contributing to Grant. This document gives a shor
 
 ## Contact (separation of concerns)
 
-- **Engineering & maintainer topics** (implementation questions, integrations, release process): [engineering@grant.center](mailto:engineering@grant.center)
-- **User support, accounts, and general product help** (not the right channel for patch review): [support@grant.center](mailto:support@grant.center)
-- **Security vulnerabilities**: follow [SECURITY.md](./SECURITY.md) — **engineering@grant.center**, not a public issue.
+- **Engineering & maintainer topics** (implementation questions, integrations, release process): [engineering@grantjs.org](mailto:engineering@grantjs.org)
+- **User support, accounts, and general product help** (not the right channel for patch review): [support@grantjs.org](mailto:support@grantjs.org)
+- **Security vulnerabilities**: follow [SECURITY.md](./SECURITY.md) — **engineering@grantjs.org**, not a public issue.
 
 ## How to contribute
 

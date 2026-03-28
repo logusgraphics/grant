@@ -103,11 +103,11 @@ For production, terminate TLS and route traffic through a reverse proxy or load 
 
 You can use nginx, Traefik, Caddy, or your cloud’s load balancer / ingress. Reuse the URLs you configured in `.env` to keep CORS and redirects consistent.
 
-For a single canonical APP_URL (e.g. `https://demo.grant.center`) that routes to api, web, docs, and the example app by path, see the sample `docs/deployment/nginx-gateway.conf.example` in the repo. Copy and adapt `server_name`, upstream ports, and SSL paths for your host; it is not required for deployment.
+For a single canonical APP_URL (e.g. `https://demo.grantjs.org`) that routes to api, web, docs, and the example app by path, see the sample `docs/deployment/nginx-gateway.conf.example` in the repo. Copy and adapt `server_name`, upstream ports, and SSL paths for your host; it is not required for deployment.
 
 ## 7. Demo stack: replicas and load balancer
 
-The `docker-compose.demo.yml` file is the production-style stack used to run `demo.grant.center`:
+The `docker-compose.demo.yml` file is the production-style stack used to run `demo.grantjs.org`:
 
 - `deploy.replicas: 2` for the API (Docker Compose v2 honors this natively)
 - A single nginx gateway container that handles path-based routing for all services and round-robins across API replicas via Docker's embedded DNS

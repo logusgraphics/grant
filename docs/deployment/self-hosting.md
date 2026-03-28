@@ -20,7 +20,7 @@ The recommended way to run the **Grant Platform** is with **Docker**: build or p
 All of these services are described in:
 
 - **`docker-compose.yml`** — default stack for a single host
-- **`docker-compose.demo.yml`** — production-style stack used for `demo.grant.center` (API replicas, nginx LB)
+- **`docker-compose.demo.yml`** — production-style stack used for `demo.grantjs.org` (API replicas, nginx LB)
 
 ## Configuration checklist
 

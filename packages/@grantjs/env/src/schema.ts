@@ -151,7 +151,7 @@ export const envSchema = z.object({
     .default('monokai'),
   SWAGGER_SHOW_EXTENSIONS: optionalBoolean(true),
   SWAGGER_SHOW_COMMON_EXTENSIONS: optionalBoolean(true),
-  OPENAPI_PRODUCTION_URL: optionalString('https://api.grant.center'),
+  OPENAPI_PRODUCTION_URL: optionalString('https://api.grantjs.org'),
 
   // I18n
   I18N_DEFAULT_LOCALE: z.enum(['en', 'de']).optional().default('en'),
