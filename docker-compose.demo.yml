@@ -1,5 +1,5 @@
 # =============================================================================
-# Grant Platform – Demo deployment (demo.grant.center)
+# Grant Platform – Demo deployment (demo.grantjs.org)
 # =============================================================================
 # Run with:
 #   docker compose -f docker-compose.demo.yml --env-file .env.demo up -d

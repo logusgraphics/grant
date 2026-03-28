@@ -5,8 +5,8 @@
   "type": "module",
   "author": {
     "name": "Ale Heredia",
-    "email": "ale@grant.center",
-    "url": "https://grant.center"
+    "email": "ale@grantjs.org",
+    "url": "https://grantjs.org"
   },
   "description": "Multi-tenant RBAC platform with monorepo architecture",
   "scripts": {

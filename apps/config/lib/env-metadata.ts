@@ -1139,7 +1139,7 @@ const META: EnvVarMeta[] = [
     category: 'optional',
     label: 'Production URL (OpenAPI doc)',
     description:
-      'Production server URL shown in OpenAPI document in dev (default: https://api.grant.center).',
+      'Production server URL shown in OpenAPI document in dev (default: https://api.grantjs.org).',
     envFiles: ['.env'],
     section: 'Swagger / OpenAPI',
   },

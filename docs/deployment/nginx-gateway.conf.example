@@ -23,7 +23,7 @@ upstream grant_docs {
 }
 
 server {
-    server_name demo.grant.center;
+    server_name demo.grantjs.org;
 
     client_max_body_size 100M;
 
@@ -189,20 +189,20 @@ server {
 
     listen 443 ssl;
     listen [::]:443 ssl;
-    ssl_certificate /etc/letsencrypt/live/demo.grant.center/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/demo.grant.center/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/demo.grantjs.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/demo.grantjs.org/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
 
 server {
-    if ($host = demo.grant.center) {
+    if ($host = demo.grantjs.org) {
         return 301 https://$host$request_uri;
     }
 
     listen 80;
     listen [::]:80;
-    server_name demo.grant.center;
+    server_name demo.grantjs.org;
     return 404;
 }

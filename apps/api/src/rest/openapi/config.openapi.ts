@@ -104,8 +104,8 @@ export function generateOpenApiDocument() {
       description: 'REST API for the Grant - An open-source identity and access management system',
       contact: {
         name: 'Ale Heredia',
-        url: 'https://grant.center',
-        email: 'support@grant.center',
+        url: 'https://grantjs.org',
+        email: 'support@grantjs.org',
       },
       license: {
         name: 'MIT',

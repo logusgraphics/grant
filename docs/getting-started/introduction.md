@@ -70,8 +70,8 @@ Ready to get started with Grant? Here are your next steps:
 ## Community & Support
 
 - **GitHub** - [Source code and issues](https://github.com/grant-js/grant)
-- **Support & inquiries** - [support@grant.center](mailto:support@grant.center)
-- **Engineering & security disclosure** - [engineering@grant.center](mailto:engineering@grant.center) (see the repo [SECURITY.md](https://github.com/grant-js/grant/blob/main/SECURITY.md); not for general product support)
+- **Support & inquiries** - [support@grantjs.org](mailto:support@grantjs.org)
+- **Engineering & security disclosure** - [engineering@grantjs.org](mailto:engineering@grantjs.org) (see the repo [SECURITY.md](https://github.com/grant-js/grant/blob/main/SECURITY.md); not for general product support)
 
 ---
 
