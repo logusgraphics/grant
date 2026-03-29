@@ -12,4 +12,7 @@ graphql/generated/**/*
 
 # misc
 .DS_Store
-*.pem 
+*.pem
+
+# Helm chart templates (Go template + YAML; Prettier YAML cannot parse)
+charts/**/templates/**/*.yaml

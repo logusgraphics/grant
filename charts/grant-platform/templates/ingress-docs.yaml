@@ -1,0 +1,34 @@
+{{- if and .Values.ingress.enabled .Values.docs.enabled }}
+{{- $host := .Values.ingress.host | default (include "grant.appHost" .) | trim | required "global.appUrl (or ingress.host) must be set for Ingress" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "grant.fullname" . }}-docs
+  labels:
+    {{- include "grant.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    {{- range $k, $v := .Values.ingress.extraAnnotations }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: /docs(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-docs
+                port:
+                  number: {{ .Values.docs.service.port }}
+{{- end }}

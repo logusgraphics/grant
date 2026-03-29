@@ -1,0 +1,18 @@
+{{- if .Values.docs.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "grant.fullname" . }}-docs
+  labels:
+    {{- include "grant.labels" . | nindent 4 }}
+    app.kubernetes.io/component: docs
+spec:
+  type: {{ .Values.docs.service.type }}
+  selector:
+    {{- include "grant.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: docs
+  ports:
+    - name: http
+      port: {{ .Values.docs.service.port }}
+      targetPort: http
+{{- end }}

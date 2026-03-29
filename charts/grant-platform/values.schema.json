@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["global"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": ["appUrl"],
+      "properties": {
+        "appUrl": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Canonical public https URL (e.g. https://grant.example.com)"
+        }
+      }
+    },
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": { "type": "boolean" },
+        "name": { "type": "string" },
+        "automountServiceAccountToken": { "type": "boolean" }
+      }
+    },
+    "api": { "type": "object" },
+    "web": { "type": "object" },
+    "docs": { "type": "object" },
+    "example": { "type": "object" },
+    "ingress": { "type": "object" },
+    "migrationJob": { "type": "object" },
+    "podDisruptionBudget": { "type": "object" },
+    "serviceMonitor": { "type": "object" },
+    "externalDatabase": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "host": { "type": "string" },
+        "port": { "type": "integer" }
+      }
+    },
+    "redis": {
+      "type": "object",
+      "properties": {
+        "host": { "type": "string" },
+        "port": { "type": "integer" },
+        "password": { "type": "string" },
+        "db": { "type": "integer" }
+      }
+    },
+    "config": { "type": "object" }
+  }
+}

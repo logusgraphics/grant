@@ -1,0 +1,26 @@
+{{- $_ := .Values.global.appUrl | required "global.appUrl is required (public https base URL)" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "grant.fullname" . }}-env
+  labels:
+    {{- include "grant.labels" . | nindent 4 }}
+data:
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  API_PORT: {{ .Values.config.apiPort | toString | quote }}
+  APP_URL: {{ .Values.global.appUrl | quote }}
+  DOCS_URL: {{ include "grant.docsUrl" . | quote }}
+  SECURITY_FRONTEND_URL: {{ .Values.global.appUrl | quote }}
+  OPENAPI_PRODUCTION_URL: {{ .Values.global.appUrl | quote }}
+  GITHUB_CALLBACK_URL: {{ printf "%s/api/auth/github/callback" (trimSuffix "/" .Values.global.appUrl) | quote }}
+  GITHUB_PROJECT_CALLBACK_URL: {{ printf "%s/api/auth/project/callback" (trimSuffix "/" .Values.global.appUrl) | quote }}
+  CACHE_STRATEGY: {{ .Values.config.cacheStrategy | quote }}
+  REDIS_HOST: {{ .Values.redis.host | quote }}
+  REDIS_PORT: {{ .Values.redis.port | default 6379 | toString | quote }}
+  REDIS_DB: {{ .Values.redis.db | default 0 | toString | quote }}
+  EMAIL_PROVIDER: {{ .Values.config.emailProvider | quote }}
+  STORAGE_PROVIDER: {{ .Values.config.storageProvider | quote }}
+  JOBS_PROVIDER: {{ .Values.config.jobsProvider | quote }}
+  DEMO_MODE_ENABLED: {{ .Values.config.demoModeEnabled | toString | quote }}
+  METRICS_ENABLED: {{ .Values.config.metricsEnabled | toString | quote }}
+  SYSTEM_USER_ID: {{ .Values.config.systemUserId | quote }}

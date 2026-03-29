@@ -1,0 +1,44 @@
+{{- if .Values.docs.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grant.fullname" . }}-docs
+  labels:
+    {{- include "grant.labels" . | nindent 4 }}
+    app.kubernetes.io/component: docs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "grant.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: docs
+  template:
+    metadata:
+      labels:
+        {{- include "grant.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: docs
+    spec:
+      serviceAccountName: {{ include "grant.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      containers:
+        - name: docs
+          image: "{{ .Values.docs.image.repository }}:{{ .Values.docs.image.tag }}"
+          imagePullPolicy: {{ .Values.docs.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.docs.service.port }}
+          {{- with .Values.docs.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.docs.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.docs.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.docs.resources | nindent 12 }}
+{{- end }}

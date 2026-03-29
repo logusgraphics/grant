@@ -32,6 +32,7 @@ jobs:
             code:
               - 'apps/**'
               - 'packages/**'
+              - 'charts/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -56,6 +57,14 @@ jobs:
         uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Helm lint (grant-platform chart)
+        run: helm lint charts/grant-platform
 
       - name: Setup Node project
         uses: ./.github/actions/setup-node-project
