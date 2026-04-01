@@ -11,6 +11,10 @@ global:
 nameOverride: ''
 fullnameOverride: ''
 
+# Optional: pull secrets for private container registries (applied to all workloads that pull images)
+# Example: [ { name: regcred } ]
+imagePullSecrets: []
+
 serviceAccount:
   create: true
   name: ''
@@ -135,6 +139,7 @@ web:
 # -----------------------------------------------------------------------------
 docs:
   enabled: true
+  replicaCount: 1
   image:
     repository: ghcr.io/grant-js/grant/grant-docs
     tag: demo

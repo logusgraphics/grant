@@ -16,6 +16,17 @@
     },
     "nameOverride": { "type": "string" },
     "fullnameOverride": { "type": "string" },
+    "imagePullSecrets": {
+      "type": "array",
+      "description": "Optional pull secrets for private registries (e.g. [{\"name\": \"regcred\"}])",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" }
+        }
+      }
+    },
     "serviceAccount": {
       "type": "object",
       "properties": {

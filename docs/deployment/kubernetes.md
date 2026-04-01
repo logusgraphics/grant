@@ -17,7 +17,7 @@ The chart deploys:
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | **API**                | Grant API (REST + GraphQL); `ClusterIP` Service, configurable replicas                                                          |
 | **Web**                | Next.js app; catch-all `/` behind Ingress                                                                                       |
-| **Docs**               | VitePress static site; served under `/docs` (separate Ingress with path rewrite)                                                |
+| **Docs**               | VitePress static site; served under `/docs` (separate Ingress with path rewrite); configurable replicas (`docs.replicaCount`)      |
 | **Example** (optional) | Next.js example app under `/example`                                                                                            |
 | **Bootstrap Job**      | Post-install/post-upgrade hook; runs `bootstrapDatabase()` (same as API startup; PostgreSQL advisory lock for safe concurrency) |
 
@@ -46,6 +46,8 @@ helm upgrade --install grant ./charts/grant-platform \
 ```
 
 Adjust `externalDatabase.*` and `redis.*` to match your Services (e.g. `my-postgres.default.svc.cluster.local`). The chart sets **`DB_URL`**, **`REDIS_HOST`**, **`REDIS_PASSWORD`**, and **`APP_URL`** (and derived OAuth URLs) via a ConfigMap and Secret. Full defaults and options are in **`charts/grant-platform/values.yaml`**; the chart README in-repo lists image tags, `migrationJob`, `ServiceMonitor`, and optional persistence.
+
+**Replica counts** are set per workload (`api.replicaCount`, `web.replicaCount`, `docs.replicaCount`, `example.replicaCount`). If you use a **private registry** (mirrored images), create a pull Secret in the release namespace and set **`imagePullSecrets`** in values so API, web, docs, example, and the bootstrap Job can pull images.
 
 ## Canonical `APP_URL`
 

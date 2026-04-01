@@ -17,6 +17,7 @@ spec:
         {{- include "grant.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: migration
     spec:
+      {{- include "grant.imagePullSecrets" . | nindent 6 }}
       restartPolicy: Never
       serviceAccountName: {{ include "grant.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}

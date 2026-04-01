@@ -71,3 +71,13 @@ Database URL for generated Secret (not used when api.existingSecretEnv is set)
 {{- define "grant.databaseUrl" -}}
 {{- .Values.externalDatabase.url }}
 {{- end }}
+
+{{/*
+imagePullSecrets for private registries (optional; empty list omits the field)
+*/}}
+{{- define "grant.imagePullSecrets" -}}
+{{- with .Values.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}
