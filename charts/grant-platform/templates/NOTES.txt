@@ -1,0 +1,21 @@
+Grant Platform has been installed.
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+1. Canonical URL (APP_URL): {{ .Values.global.appUrl }}
+   Ingress host: {{ .Values.ingress.host | default (include "grant.appHost" .) }}
+
+2. Ensure Postgres and Redis are reachable using your values:
+   - externalDatabase.url / host: {{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }}
+   - redis.host: {{ .Values.redis.host }}:{{ .Values.redis.port }}
+
+3. Production: set strong credentials and prefer api.existingSecretEnv with DB_URL, REDIS_PASSWORD,
+   and optional AUTH_MFA_SECRET_ENCRYPTION_KEY (stable across replicas).
+
+4. TLS: add cert-manager annotations under ingress.extraAnnotations (e.g. cluster-issuer) or set ingress.tls.
+
+5. Bootstrap Job (post-install/post-upgrade) runs database migrations; API startup also runs bootstrap
+   with a PostgreSQL advisory lock for safe concurrent replicas.
+
+6. Docs are exposed on a separate Ingress with path /docs(/|$)(.*) — requires ingress-nginx or compatible.

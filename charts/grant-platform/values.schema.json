@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["global"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": ["appUrl"],
+      "properties": {
+        "appUrl": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Canonical public https URL (e.g. https://grant.example.com)"
+        }
+      }
+    },
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "imagePullSecrets": {
+      "type": "array",
+      "description": "Optional pull secrets for private registries (e.g. [{\"name\": \"regcred\"}])",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": { "type": "boolean" },
+        "name": { "type": "string" },
+        "automountServiceAccountToken": { "type": "boolean" },
+        "annotations": { "type": "object" }
+      }
+    },
+    "api": { "type": "object" },
+    "web": { "type": "object" },
+    "docs": { "type": "object" },
+    "example": { "type": "object" },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "className": { "type": "string" },
+        "host": { "type": "string" },
+        "annotations": { "type": "object" },
+        "extraAnnotations": { "type": "object" },
+        "tls": { "type": "array" },
+        "docs": {
+          "type": "object",
+          "properties": {
+            "mode": { "type": "string", "enum": ["traefik", "nginx"] },
+            "nginx": { "type": "object" },
+            "traefik": { "type": "object" }
+          }
+        }
+      }
+    },
+    "externalSecret": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "refreshInterval": { "type": "string" },
+        "secretStoreRef": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "kind": { "type": "string" }
+          }
+        },
+        "remoteRef": {
+          "type": "object",
+          "properties": {
+            "key": { "type": "string" }
+          }
+        }
+      }
+    },
+    "migrationJob": { "type": "object" },
+    "podDisruptionBudget": { "type": "object" },
+    "serviceMonitor": { "type": "object" },
+    "externalDatabase": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "host": { "type": "string" },
+        "port": { "type": "integer" }
+      }
+    },
+    "redis": {
+      "type": "object",
+      "properties": {
+        "host": { "type": "string" },
+        "port": { "type": "integer" },
+        "password": { "type": "string" },
+        "db": { "type": "integer" }
+      }
+    },
+    "config": { "type": "object" }
+  }
+}

@@ -1,0 +1,106 @@
+{{- if .Values.ingress.enabled }}
+{{- $host := .Values.ingress.host | default (include "grant.appHost" .) | trim | required "global.appUrl (or ingress.host) must be set for Ingress" }}
+{{- $annBase := .Values.ingress.annotations | default dict }}
+{{- $annExtra := .Values.ingress.extraAnnotations | default dict }}
+{{- $annotations := merge $annBase $annExtra }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "grant.fullname" . }}-main
+  labels:
+    {{- include "grant.labels" . | nindent 4 }}
+  {{- with $annotations }}
+  annotations:
+    {{- range $k, $v := . }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          {{- if .Values.api.enabled }}
+          - path: /graphql
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          - path: /api-docs
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          - path: /.well-known
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          - path: /org
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          - path: /acc
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          - path: /storage
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.service.port }}
+          {{- end }}
+          {{- if .Values.example.enabled }}
+          - path: /example
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-example
+                port:
+                  number: {{ .Values.example.service.port }}
+          {{- end }}
+          {{- if .Values.web.enabled }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grant.fullname" . }}-web
+                port:
+                  number: {{ .Values.web.service.port }}
+          {{- end }}
+{{- end }}
