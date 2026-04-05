@@ -2,8 +2,8 @@
 layout: home
 
 hero:
-  name: 'Open Auth'
-  text: 'Identity & Access Platform'
+  name: 'Identity & Access Management'
+  text: 'Platform'
   tagline: 'Open-source, self-hosted, ready to deploy'
   actions:
     - theme: brand
