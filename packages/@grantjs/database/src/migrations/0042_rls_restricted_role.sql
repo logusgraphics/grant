@@ -1,5 +1,5 @@
 -- RLS: Create restricted role for tenant-scoped request isolation.
--- grant_user (table owner) bypasses RLS by default in PostgreSQL.
+-- The app login role (table owner) bypasses RLS by default in PostgreSQL.
 -- Scoped requests SET LOCAL ROLE to this restricted role inside a transaction,
 -- which makes RLS policies on pivot tables apply.
 -- System operations and background jobs never switch role, so they bypass RLS naturally.
@@ -19,5 +19,5 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE O
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO grant_app_restricted;
 --> statement-breakpoint
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO grant_app_restricted;
---> statement-breakpoint
-GRANT grant_app_restricted TO grant_user;
+-- Login role membership: not in SQL (no single default role name in all environments). After migrate, run
+-- `db:grant-rls-role` (chained from `db:migrate`) to GRANT this role to the user from DB_URL / POSTGRES_*.

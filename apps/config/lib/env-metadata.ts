@@ -71,6 +71,16 @@ const META: EnvVarMeta[] = [
     critical: true,
   },
   {
+    key: 'DB_GRANT_ROLE_URL',
+    category: 'database',
+    label: 'RLS role grant URL',
+    description:
+      'Optional URL for `db:grant-rls-role` only. Use when the app DB user cannot GRANT SECURITY_RLS_ROLE to itself (e.g. connect as postgres/superuser). Leave empty when migrations already run with sufficient privileges.',
+    envFiles: ['.env'],
+    section: 'PostgreSQL',
+    isPassword: false,
+  },
+  {
     key: 'APP_URL',
     category: 'main',
     label: 'App URL',

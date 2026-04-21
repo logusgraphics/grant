@@ -77,6 +77,27 @@ export function resolveDatabaseUrl(env: Env): string {
   return `postgresql://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${env.POSTGRES_HOST}:${env.POSTGRES_PORT}/${env.POSTGRES_DB}`;
 }
 
+/**
+ * PostgreSQL login role used by {@link resolveDatabaseUrl}. When `DB_URL` is set,
+ * the username is taken from the URL (decoded); otherwise {@link Env.POSTGRES_USER}.
+ */
+export function getDatabaseLoginUser(env: Env): string {
+  const raw = env.DB_URL?.trim();
+  if (raw) {
+    try {
+      const normalized = raw.replace(/^postgresql:/i, 'http:').replace(/^postgres:/i, 'http:');
+      const url = new URL(normalized);
+      const fromUrl = decodeURIComponent(url.username ?? '');
+      if (fromUrl.length > 0) {
+        return fromUrl;
+      }
+    } catch {
+      // Fall through to POSTGRES_USER (e.g. malformed URL — same as resolveDatabaseUrl callers must avoid)
+    }
+  }
+  return env.POSTGRES_USER;
+}
+
 export type { Env };
 export { envSchema };
 export { findWorkspaceRoot, loadEnv } from './load-env';
