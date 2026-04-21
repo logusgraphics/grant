@@ -739,9 +739,6 @@ export function validateConfig(): void {
     if (!REDIS_CONFIG.host) {
       errors.push('REDIS_HOST is required when CACHE_STRATEGY=redis');
     }
-    if (APP_CONFIG.isProduction && !REDIS_CONFIG.password) {
-      errors.push('REDIS_PASSWORD is recommended in production when using Redis');
-    }
   }
 
   // Validate frontend URL in production
