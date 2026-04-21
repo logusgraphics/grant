@@ -11,10 +11,10 @@ export function getOtpEmailSubject(params: SendOtpParams): string {
   return translateStatic('email.verification.subject', emailLocale);
 }
 
-export function getOtpEmailHtml(
+export async function getOtpEmailHtml(
   params: SendOtpParams,
   locale: SupportedLocale = defaultLocale
-): string {
+): Promise<string> {
   const { token, validUntil, locale: paramsLocale } = params;
   const emailLocale = (paramsLocale || locale) as SupportedLocale;
   const verificationUrl = `${config.security.frontendUrl}/${emailLocale}/verify-email?token=${encodeURIComponent(token)}`;
@@ -46,7 +46,7 @@ export function getOtpEmailHtml(
     ${createAlternativeLink(verificationUrl, emailLocale)}
   `;
 
-  return renderBaseEmailTemplate({
+  return await renderBaseEmailTemplate({
     locale: emailLocale,
     subject,
     children: content,

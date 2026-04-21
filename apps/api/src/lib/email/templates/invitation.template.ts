@@ -16,10 +16,10 @@ export function getInvitationEmailSubject(
   });
 }
 
-export function getInvitationEmailHtml(
+export async function getInvitationEmailHtml(
   params: SendInvitationParams,
   locale: SupportedLocale = defaultLocale
-): string {
+): Promise<string> {
   const {
     organizationName,
     inviterName,
@@ -73,7 +73,7 @@ export function getInvitationEmailHtml(
     ${createAlternativeLink(invitationUrl, emailLocale)}
   `;
 
-  return renderBaseEmailTemplate({
+  return await renderBaseEmailTemplate({
     locale: emailLocale,
     subject,
     children: content,

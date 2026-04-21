@@ -25,10 +25,10 @@ export function getProjectOAuthMagicLinkEmailSubject(
   return translateStatic(PROJECT_OAUTH_MAGIC_LINK_KEYS.subject, emailLocale, { appName });
 }
 
-export function getProjectOAuthMagicLinkEmailHtml(
+export async function getProjectOAuthMagicLinkEmailHtml(
   params: SendProjectOAuthMagicLinkParams,
   locale: SupportedLocale = defaultLocale
-): string {
+): Promise<string> {
   const { magicLinkUrl, appName, locale: paramsLocale } = params;
   const emailLocale = (paramsLocale || locale) as SupportedLocale;
   const subject = getProjectOAuthMagicLinkEmailSubject(params, emailLocale);
@@ -51,7 +51,7 @@ export function getProjectOAuthMagicLinkEmailHtml(
     ${createAlternativeLink(magicLinkUrl, emailLocale)}
   `;
 
-  return renderBaseEmailTemplate({
+  return await renderBaseEmailTemplate({
     locale: emailLocale,
     subject,
     children: content,
