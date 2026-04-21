@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:grant-rls-role": "tsx src/scripts/grant-rls-login-role.ts",
+    "db:migrate": "drizzle-kit migrate && tsx src/scripts/grant-rls-login-role.ts",
     "db:seed": "tsx src/scripts/seed.ts",
     "db:seed:permissions": "tsx src/scripts/seed-permissions.ts",
     "db:seed:system-user": "tsx src/scripts/seed-system-user.ts",

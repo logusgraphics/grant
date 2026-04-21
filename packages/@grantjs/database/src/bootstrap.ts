@@ -5,6 +5,7 @@ import { sql } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 
 import type { DbSchema } from './connection';
+import { ensureRlsRestrictedRoleMembership } from './grant-rls-login-role.lib';
 import { seedAll } from './scripts/seed-permissions';
 import { ensureSystemUserAndSigningKey } from './seed-core';
 
@@ -21,6 +22,7 @@ function resolveMigrationsFolder(): string {
  *
  * - Safe to run on every container start (idempotent via Drizzle migration history + idempotent seeding).
  * - Coordinated across replicas using PostgreSQL advisory lock.
+ * - After migrations, grants `SECURITY_RLS_ROLE` to the DB login user (same as CLI `db:grant-rls-role`).
  */
 export async function bootstrapDatabase(db: DbSchema, systemUserId: string): Promise<void> {
   // Ensure all replicas serialize migrations + core seed.
@@ -31,6 +33,9 @@ export async function bootstrapDatabase(db: DbSchema, systemUserId: string): Pro
 
     // Apply any pending migrations (migration history table prevents re-applying).
     await migrate(db, { migrationsFolder });
+
+    // Match CLI `db:migrate`: migration 0042+ does not GRANT the restricted role to a login user.
+    await ensureRlsRestrictedRoleMembership();
 
     // Ensure we never end up with a half-seeded core model.
     await db.transaction(async (tx) => {

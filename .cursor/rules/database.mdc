@@ -8,7 +8,7 @@ alwaysApply: false
 
 - Define **Drizzle schemas and relationships** here; repositories in `apps/api` use these schemas.
 - **Generate migrations** programmatically: `pnpm --filter @grantjs/database db:generate`. If nothing changed, no file is created or modified.
-- **Run migrations** after changes: `pnpm --filter @grantjs/database db:migrate`.
+- **Run migrations** after changes: `pnpm --filter @grantjs/database db:migrate` (chains `db:grant-rls-role` so `SECURITY_RLS_ROLE` is granted to the login user from `DB_URL` / `POSTGRES_*`).
 - **Seed** (standard roles, groups, permissions, system user, signing-key): `pnpm --filter @grantjs/database db:seed`.
 
 Do not add app-specific logic; keep this package as the single source of schema and migrations for the platform.

@@ -33,6 +33,12 @@ export const envSchema = z.object({
 
   // Database: DB_URL or POSTGRES_* for derivation
   DB_URL: optionalString(''),
+  /**
+   * Optional connection URL used only by `db:grant-rls-role` when the app login role cannot
+   * GRANT SECURITY_RLS_ROLE to itself (typical without superuser). When unset, uses DB_URL /
+   * POSTGRES_* — same rules as migrations.
+   */
+  DB_GRANT_ROLE_URL: optionalString(''),
   POSTGRES_HOST: optionalString('localhost'),
   POSTGRES_PORT: optionalNumber(5432),
   POSTGRES_USER: optionalString('grant_user'),

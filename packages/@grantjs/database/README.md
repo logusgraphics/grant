@@ -38,8 +38,13 @@ src/
 # Generate new migration
 pnpm db:generate
 
-# Run migrations
+# Run migrations (runs Drizzle migrations, then grants SECURITY_RLS_ROLE to the DB login user from DB_URL / POSTGRES_* — required for SET LOCAL ROLE / RLS)
 pnpm db:migrate
+
+# Grant RLS membership only (same env as migrate; normally unnecessary if you already ran db:migrate)
+pnpm db:grant-rls-role
+
+# If GRANT fails (app user cannot grant a role to itself), set DB_GRANT_ROLE_URL to a superuser URL for the grant step only.
 
 # Seed database
 pnpm db:seed
@@ -47,6 +52,8 @@ pnpm db:seed
 # Reset database
 pnpm db:reset
 ```
+
+If `drizzle-kit migrate` reports a **checksum mismatch** for `0042_rls_restricted_role` after upgrading (the migration file changed but the DB already applied an older revision), repair the recorded migration hash using Drizzle Kit’s documented workflow for your version, then continue. Role membership for RLS is applied by `db:grant-rls-role`, not by SQL in `0042`.
 
 ### In Code
 

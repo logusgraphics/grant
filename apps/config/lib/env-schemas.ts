@@ -169,6 +169,7 @@ export const emailTestParamsSchema = z.object({
 /** Map of env key -> schema. Empty string typically allowed for optional vars. */
 const schemas: Record<string, z.ZodType<string>> = {
   DB_URL: dbUrlSchema,
+  DB_GRANT_ROLE_URL: optionalString,
   APP_URL: urlSchema,
   SECURITY_FRONTEND_URL: urlSchema,
   NEXT_PUBLIC_API_URL: urlSchema,
