@@ -45,7 +45,7 @@ export class SesEmailAdapter implements IEmailService {
 
   async sendInvitation(params: SendInvitationParams): Promise<void> {
     const subject = this.templates.getInvitationEmailSubject(params);
-    const html = this.templates.getInvitationEmailHtml(params);
+    const html = await this.templates.getInvitationEmailHtml(params);
     const text = this.templates.getInvitationEmailText(params);
 
     try {
@@ -90,7 +90,7 @@ export class SesEmailAdapter implements IEmailService {
 
   async sendOtp(params: SendOtpParams): Promise<void> {
     const subject = this.templates.getOtpEmailSubject(params);
-    const html = this.templates.getOtpEmailHtml(params);
+    const html = await this.templates.getOtpEmailHtml(params);
     const text = this.templates.getOtpEmailText(params);
 
     try {
@@ -135,7 +135,7 @@ export class SesEmailAdapter implements IEmailService {
 
   async sendPasswordReset(params: SendPasswordResetParams): Promise<void> {
     const subject = this.templates.getPasswordResetEmailSubject(params);
-    const html = this.templates.getPasswordResetEmailHtml(params);
+    const html = await this.templates.getPasswordResetEmailHtml(params);
     const text = this.templates.getPasswordResetEmailText(params);
 
     try {
@@ -180,7 +180,7 @@ export class SesEmailAdapter implements IEmailService {
 
   async sendProjectOAuthMagicLink(params: SendProjectOAuthMagicLinkParams): Promise<void> {
     const subject = this.templates.getProjectOAuthMagicLinkEmailSubject(params);
-    const html = this.templates.getProjectOAuthMagicLinkEmailHtml(params);
+    const html = await this.templates.getProjectOAuthMagicLinkEmailHtml(params);
     const text = this.templates.getProjectOAuthMagicLinkEmailText(params);
 
     try {

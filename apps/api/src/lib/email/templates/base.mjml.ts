@@ -2,6 +2,7 @@ import { SupportedLocale } from '@grantjs/i18n';
 import mjml from 'mjml';
 
 import { config } from '@/config';
+import { ConfigurationError } from '@/lib/errors';
 import { translateStatic } from '@/i18n';
 
 export interface EmailTemplateParams {
@@ -17,7 +18,11 @@ export interface BaseEmailTemplateProps extends EmailTemplateParams {
   footerWarning?: string;
 }
 
-export function renderBaseEmailTemplate(props: BaseEmailTemplateProps): string {
+/**
+ * MJML 5+ returns a Promise from `mjml()`; v4 returns a plain result. Normalize with
+ * `Promise.resolve` so HTML is always resolved before sending to SES/Mailgun/etc.
+ */
+export async function renderBaseEmailTemplate(props: BaseEmailTemplateProps): Promise<string> {
   const {
     locale,
     primaryColor = '#2563eb',
@@ -118,7 +123,15 @@ export function renderBaseEmailTemplate(props: BaseEmailTemplateProps): string {
     </mjml>
   `;
 
-  const { html } = mjml(mjmlTemplate);
+  const raw = mjml(mjmlTemplate) as
+    | { html?: string }
+    | Promise<{ html?: string }>;
+  const { html } = await Promise.resolve(raw);
+  if (typeof html !== 'string' || html.length === 0) {
+    throw new ConfigurationError(
+      'MJML produced empty HTML (check mjml version: v5 requires awaiting the compiler output)'
+    );
+  }
   return html;
 }
 

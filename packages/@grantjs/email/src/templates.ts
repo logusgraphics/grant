@@ -11,15 +11,15 @@ import type {
  */
 export interface EmailTemplates {
   getInvitationEmailSubject(params: SendInvitationParams): string;
-  getInvitationEmailHtml(params: SendInvitationParams): string;
+  getInvitationEmailHtml(params: SendInvitationParams): Promise<string>;
   getInvitationEmailText(params: SendInvitationParams): string;
   getOtpEmailSubject(params: SendOtpParams): string;
-  getOtpEmailHtml(params: SendOtpParams): string;
+  getOtpEmailHtml(params: SendOtpParams): Promise<string>;
   getOtpEmailText(params: SendOtpParams): string;
   getPasswordResetEmailSubject(params: SendPasswordResetParams): string;
-  getPasswordResetEmailHtml(params: SendPasswordResetParams): string;
+  getPasswordResetEmailHtml(params: SendPasswordResetParams): Promise<string>;
   getPasswordResetEmailText(params: SendPasswordResetParams): string;
   getProjectOAuthMagicLinkEmailSubject(params: SendProjectOAuthMagicLinkParams): string;
-  getProjectOAuthMagicLinkEmailHtml(params: SendProjectOAuthMagicLinkParams): string;
+  getProjectOAuthMagicLinkEmailHtml(params: SendProjectOAuthMagicLinkParams): Promise<string>;
   getProjectOAuthMagicLinkEmailText(params: SendProjectOAuthMagicLinkParams): string;
 }

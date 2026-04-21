@@ -11,10 +11,10 @@ export function getPasswordResetEmailSubject(params: SendPasswordResetParams): s
   return translateStatic('email.passwordReset.subject', emailLocale);
 }
 
-export function getPasswordResetEmailHtml(
+export async function getPasswordResetEmailHtml(
   params: SendPasswordResetParams,
   locale: SupportedLocale = defaultLocale
-): string {
+): Promise<string> {
   const { token, validUntil, locale: paramsLocale } = params;
   const emailLocale = (paramsLocale || locale) as SupportedLocale;
   const resetUrl = `${config.security.frontendUrl}/${emailLocale}/reset-password?token=${encodeURIComponent(token)}`;
@@ -46,7 +46,7 @@ export function getPasswordResetEmailHtml(
     ${createAlternativeLink(resetUrl, emailLocale)}
   `;
 
-  return renderBaseEmailTemplate({
+  return await renderBaseEmailTemplate({
     locale: emailLocale,
     subject,
     children: content,
