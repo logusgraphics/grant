@@ -57,14 +57,14 @@
   },
   "dependencies": {
     "commander": "^14.0.3",
-    "inquirer": "^13.4.1"
+    "inquirer": "^13.4.2"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
     "@types/node": "^25.6.0",
-    "eslint": "^10.2.0",
+    "eslint": "^10.2.1",
     "typescript": "^6",
-    "vite": "^8.0.8",
+    "vite": "^8.0.9",
     "vite-plugin-dts": "^4.3.0",
     "vitest": "^4.1.4"
   },
