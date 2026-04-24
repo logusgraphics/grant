@@ -81,9 +81,16 @@ describe('project permissions sync REST', () => {
             externalKey: 'viewer',
             name: 'Viewer',
             permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+            metadata: { legacyRoleKey: 'viewer' },
           },
         ],
-        userAssignments: [],
+        userAssignments: [
+          {
+            userId: '30000000-0000-4000-8000-000000000099',
+            roleTemplateKeys: ['viewer'],
+            metadata: { legacyUserKey: 'u-1' },
+          },
+        ],
       });
 
     expect(res.status).toBe(200);
@@ -93,7 +100,18 @@ describe('project permissions sync REST', () => {
       id: projectId,
       input: {
         cdmVersion: 1,
-        roleTemplates: expect.any(Array),
+        roleTemplates: [
+          expect.objectContaining({
+            externalKey: 'viewer',
+            metadata: { legacyRoleKey: 'viewer' },
+          }),
+        ],
+        userAssignments: [
+          expect.objectContaining({
+            userId: '30000000-0000-4000-8000-000000000099',
+            metadata: { legacyUserKey: 'u-1' },
+          }),
+        ],
       },
     });
   });

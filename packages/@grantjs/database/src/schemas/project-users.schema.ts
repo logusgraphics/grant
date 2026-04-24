@@ -1,6 +1,7 @@
 import { relations, sql } from 'drizzle-orm';
 import {
   index,
+  jsonb,
   pgPolicy,
   pgTable,
   timestamp,
@@ -22,11 +23,13 @@ export const projectUsers = pgTable(
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
+    metadata: jsonb('metadata').default({}).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
+    index('project_users_metadata_idx').using('gin', table.metadata),
     uniqueIndex('project_users_project_id_user_id_unique')
       .on(table.projectId, table.userId)
       .where(sql`${table.deletedAt} IS NULL`),

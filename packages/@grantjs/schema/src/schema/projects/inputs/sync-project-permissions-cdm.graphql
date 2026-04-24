@@ -19,6 +19,11 @@ input RoleTemplateCdmInput {
   name: String!
   description: String
   permissionRefs: [PermissionRefCdmInput!]!
+  """
+  Importer-owned JSON merged into created role and group metadata under `cdmSource`.
+  Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
+  """
+  metadata: JSON
 }
 
 """
@@ -28,6 +33,11 @@ input UserAssignmentCdmInput {
   userId: ID!
   roleTemplateKeys: [String!]
   directPermissionRefs: [PermissionRefCdmInput!]
+  """
+  Importer-owned JSON merged into the project user's membership metadata under `cdmSource`.
+  Do not send a top-level `cdmImport` key; Grant reserves it for future use.
+  """
+  metadata: JSON
 }
 
 input SyncProjectPermissionsInput {

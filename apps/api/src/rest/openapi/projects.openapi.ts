@@ -202,6 +202,8 @@ Replace-import roles, groups, and user role assignments tagged for this project 
 Requires \`accountProject\` or \`organizationProject\` scope in the body.
 
 This operation is intended for migrating external permission models into Grant's \`User → Role → Group → Permission\` graph.
+
+Optional \`metadata\` on role templates and user assignments is stored under the \`cdmSource\` key on created roles, groups, and \`project_users\` rows (do not send a top-level \`cdmImport\` key in importer metadata).
     `.trim(),
     request: {
       params: projectParamsSchema,

@@ -7,6 +7,7 @@ import type {
 } from '@grantjs/core';
 import { AddProjectUserInput, ProjectUser, RemoveProjectUserInput } from '@grantjs/schema';
 
+import { mergeCdmImporterMetadata } from '@/constants/cdm-import.constants';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams } from '@/types';
@@ -15,6 +16,7 @@ import { createDynamicSingleSchema, validateInput, validateOutput } from './comm
 import {
   addProjectUserParamsSchema,
   getProjectUsersParamsSchema,
+  mergeProjectUserCdmMetadataParamsSchema,
   projectUserSchema,
   removeProjectUserParamsSchema,
 } from './project-users.schemas';
@@ -84,7 +86,7 @@ export class ProjectUserService implements IProjectUserService {
   ): Promise<ProjectUser> {
     const context = 'ProjectUserService.addProjectUser';
     const validatedParams = validateInput(addProjectUserParamsSchema, params, context);
-    const { projectId, userId } = validatedParams;
+    const { projectId, userId, metadata: metadataInput } = validatedParams;
 
     const hasUser = await this.projectHasUser(projectId, userId, transaction);
 
@@ -92,10 +94,16 @@ export class ProjectUserService implements IProjectUserService {
       throw new ConflictError('Project already has this user', 'ProjectUser', 'userId');
     }
 
+    const metadata =
+      metadataInput !== undefined
+        ? mergeCdmImporterMetadata({}, metadataInput as Record<string, unknown>)
+        : {};
+
     const projectUser = await this.projectUserRepository.addProjectUser(
       {
         projectId,
         userId,
+        metadata,
       },
       transaction
     );
@@ -104,15 +112,42 @@ export class ProjectUserService implements IProjectUserService {
       id: projectUser.id,
       projectId: projectUser.projectId,
       userId: projectUser.userId,
+      metadata: projectUser.metadata,
       createdAt: projectUser.createdAt,
       updatedAt: projectUser.updatedAt,
     };
 
-    const metadata = {
+    const auditMetadata = {
       context,
     };
 
-    await this.audit.logCreate(projectUser.id, newValues, metadata, transaction);
+    await this.audit.logCreate(projectUser.id, newValues, auditMetadata, transaction);
+
+    return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
+  }
+
+  public async mergeProjectUserCdmMetadata(
+    params: {
+      projectId: string;
+      userId: string;
+      importerMetadata: Record<string, unknown> | null | undefined;
+    },
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
+    const context = 'ProjectUserService.mergeProjectUserCdmMetadata';
+    const validatedParams = validateInput(mergeProjectUserCdmMetadataParamsSchema, params, context);
+
+    await this.projectExists(validatedParams.projectId, transaction);
+    await this.userExists(validatedParams.userId, transaction);
+
+    const projectUser = await this.projectUserRepository.mergeProjectUserCdmMetadata(
+      {
+        projectId: validatedParams.projectId,
+        userId: validatedParams.userId,
+        importerMetadata: validatedParams.importerMetadata ?? null,
+      },
+      transaction
+    );
 
     return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
   }

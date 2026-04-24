@@ -283,6 +283,7 @@ export type AddProjectUserApiKeyInput = {
 };
 
 export type AddProjectUserInput = {
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   projectId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
@@ -1691,6 +1692,7 @@ export type ProjectUser = Auditable & {
   createdAt: Scalars['Date']['output'];
   deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
+  metadata: Scalars['JSON']['output'];
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
   updatedAt: Scalars['Date']['output'];
@@ -2389,6 +2391,11 @@ export type RoleTagTagArgs = {
 export type RoleTemplateCdmInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   externalKey: Scalars['String']['input'];
+  /**
+   * Importer-owned JSON merged into created role and group metadata under `cdmSource`.
+   * Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
+   */
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   permissionRefs: Array<PermissionRefCdmInput>;
 };
@@ -2759,6 +2766,11 @@ export type User = Auditable & {
 /** User membership: roles from templates and/or direct permission grants. */
 export type UserAssignmentCdmInput = {
   directPermissionRefs?: InputMaybe<Array<PermissionRefCdmInput>>;
+  /**
+   * Importer-owned JSON merged into the project user's membership metadata under `cdmSource`.
+   * Do not send a top-level `cdmImport` key; Grant reserves it for future use.
+   */
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   roleTemplateKeys?: InputMaybe<Array<Scalars['String']['input']>>;
   userId: Scalars['ID']['input'];
 };
