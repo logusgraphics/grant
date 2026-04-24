@@ -2,6 +2,7 @@ type ProjectUser implements Auditable {
   id: ID!
   projectId: ID!
   userId: ID!
+  metadata: JSON!
   project(organizationId: ID!): Project
   user: User
   createdAt: Date!

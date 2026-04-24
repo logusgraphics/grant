@@ -119,14 +119,11 @@ export const updateProjectRequestSchema = z.object({
 });
 
 export const projectParamsSchema = z.object({
-  id: z
-    .string()
-    .uuid('errors.validation.invalidProjectId')
-    .openapi({
-      description: 'UUID of the project',
-      example: '123e4567-e89b-12d3-a456-426614174005',
-      param: { in: 'path', name: 'id' },
-    }),
+  id: z.uuid('errors.validation.invalidProjectId').openapi({
+    description: 'UUID of the project',
+    example: '123e4567-e89b-12d3-a456-426614174005',
+    param: { in: 'path', name: 'id' },
+  }),
 });
 
 export const updateProjectResponseSchema = createSuccessResponseSchema(projectSchema);
@@ -145,7 +142,7 @@ export const deleteProjectResponseSchema = createSuccessResponseSchema(projectSc
 const permissionRefCdmSchema = z.object({
   resourceSlug: z.string().min(1),
   action: z.string().min(1),
-  permissionId: z.string().uuid().optional(),
+  permissionId: z.uuid().optional(),
   condition: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
@@ -154,12 +151,14 @@ const roleTemplateCdmSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().nullable(),
   permissionRefs: z.array(permissionRefCdmSchema),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
 const userAssignmentCdmSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuid(),
   roleTemplateKeys: z.array(z.string()).optional(),
   directPermissionRefs: z.array(permissionRefCdmSchema).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
 /** Body for POST /api/projects/:id/permissions/sync (canonical data model import). */

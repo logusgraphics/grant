@@ -10,6 +10,13 @@ export const getProjectUsersParamsSchema = z.object({
 export const addProjectUserParamsSchema = z.object({
   projectId: idSchema,
   userId: idSchema,
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const mergeProjectUserCdmMetadataParamsSchema = z.object({
+  projectId: idSchema,
+  userId: idSchema,
+  importerMetadata: z.record(z.string(), z.unknown()).nullish(),
 });
 
 export const removeProjectUserParamsSchema = deleteSchema.extend({
@@ -21,6 +28,7 @@ export const projectUserSchema = z.object({
   id: idSchema,
   projectId: idSchema,
   userId: idSchema,
+  metadata: z.record(z.string(), z.unknown()),
   createdAt: z.date(),
   updatedAt: z.date(),
   deletedAt: z.date().nullable().optional(),

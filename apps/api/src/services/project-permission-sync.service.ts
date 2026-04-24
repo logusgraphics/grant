@@ -18,7 +18,7 @@ import {
   Tenant,
 } from '@grantjs/schema';
 
-import { buildCdmImportMetadata } from '@/constants/cdm-import.constants';
+import { buildCdmImportMetadata, mergeCdmImporterMetadata } from '@/constants/cdm-import.constants';
 import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import {
@@ -125,6 +125,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
         tmpl.description ?? null,
         'role',
         perms,
+        tmpl.metadata,
         tx
       );
       templateKeyToRoleId.set(tmpl.externalKey, roleId);
@@ -177,6 +178,17 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
         } else {
           throw err;
         }
+      }
+
+      if (ua.metadata != null) {
+        await this.projectUsers.mergeProjectUserCdmMetadata(
+          {
+            projectId,
+            userId: ua.userId,
+            importerMetadata: ua.metadata as Record<string, unknown>,
+          },
+          tx
+        );
       }
 
       for (const key of roleKeys) {
@@ -358,6 +370,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     description: string | null,
     kind: 'role' | 'directRole',
     perms: ResolvedCdmPermission[],
+    importerMetadata: unknown,
     tx: Transaction
   ): Promise<{
     roleId: string;
@@ -371,11 +384,15 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     };
   }> {
     const groupName = this.truncateName(`CDM: ${externalKey}`);
+    const groupMetadata = mergeCdmImporterMetadata(
+      buildCdmImportMetadata(projectId, 'group', externalKey),
+      importerMetadata
+    );
     const group = await this.groups.createGroup(
       {
         name: groupName,
         description: description ?? `Imported group for ${externalKey}`,
-        metadata: buildCdmImportMetadata(projectId, 'group', externalKey),
+        metadata: groupMetadata,
       },
       tx
     );
@@ -399,11 +416,15 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     }
 
     const roleName = this.truncateName(`CDM: ${name}`);
+    const roleMetadata = mergeCdmImporterMetadata(
+      buildCdmImportMetadata(projectId, kind, externalKey),
+      importerMetadata
+    );
     const role = await this.roles.createRole(
       {
         name: roleName,
         description: description ?? undefined,
-        metadata: buildCdmImportMetadata(projectId, kind, externalKey),
+        metadata: roleMetadata,
       },
       tx
     );
@@ -484,6 +505,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
       'Direct permission bundle from CDM',
       'directRole',
       perms,
+      undefined,
       tx
     );
     return { roleId: r.roleId, counts: r.counts };

@@ -83,6 +83,15 @@ export interface IProjectUserRepository {
 
   addProjectUser(params: AddProjectUserInput, transaction?: unknown): Promise<ProjectUser>;
 
+  mergeProjectUserCdmMetadata(
+    params: {
+      projectId: string;
+      userId: string;
+      importerMetadata: Record<string, unknown> | null | undefined;
+    },
+    transaction?: unknown
+  ): Promise<ProjectUser>;
+
   softDeleteProjectUser(
     params: RemoveProjectUserInput,
     transaction?: unknown
