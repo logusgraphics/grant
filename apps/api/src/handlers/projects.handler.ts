@@ -60,7 +60,12 @@ export class ProjectHandler extends CacheHandler {
     private readonly jobs: IJobAdapter | null,
     cache: IEntityCacheAdapter,
     scopeServices: ScopeServices,
-    private readonly db: ITransactionalConnection<Transaction>
+    private readonly db: ITransactionalConnection<Transaction>,
+    /**
+     * When provided (scoped RLS HTTP requests), runs side effects after the
+     * request transaction commits so background workers see persisted rows.
+     */
+    private readonly scheduleAfterCommit?: (fn: () => void | Promise<void>) => void
   ) {
     super(cache, scopeServices);
   }
@@ -182,10 +187,26 @@ export class ProjectHandler extends CacheHandler {
       enqueuedById: params.enqueuedById,
     });
 
-    await enqueueJob(PROJECT_PERMISSIONS_SYNC_JOB_ID, {
+    const enqueueData = {
       scope: params.scope,
       payload: { jobRecordId: job.id },
-    });
+    };
+
+    /**
+     * Must run after the HTTP transaction commits. Otherwise BullMQ can pick
+     * up the job before the INSERT is visible to other connections (worker →
+     * `ProjectPermissionsSyncJob not found`).
+     */
+    const runEnqueue = (): void => {
+      void enqueueJob(PROJECT_PERMISSIONS_SYNC_JOB_ID, enqueueData);
+    };
+
+    const defer =
+      this.scheduleAfterCommit ??
+      ((fn: () => void | Promise<void>) => {
+        void Promise.resolve(fn());
+      });
+    defer(runEnqueue);
 
     return job;
   }

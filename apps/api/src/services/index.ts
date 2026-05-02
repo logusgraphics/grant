@@ -28,6 +28,7 @@ import {
   projectAuditLogs,
   projectGroupAuditLogs,
   projectPermissionsAuditLogs,
+  projectPermissionSyncJobAuditLogs,
   projectResourceAuditLogs,
   projectRoleAuditLogs,
   projectTagAuditLogs,
@@ -430,7 +431,8 @@ export function createServices(
       servicesBase.userRoles
     ),
     projectPermissionsSyncJobs: new ProjectPermissionsSyncJobService(
-      repositories.projectPermissionSyncJobRepository
+      repositories.projectPermissionSyncJobRepository,
+      audit(projectPermissionSyncJobAuditLogs, 'projectPermissionSyncJobId', user, db)
     ),
   };
 }

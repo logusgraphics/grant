@@ -20,6 +20,15 @@ vi.mock('@/lib/jobs/tenant-job.validation', () => ({
   assertTenantActive: vi.fn().mockResolvedValue(undefined),
 }));
 
+/** Worker wraps DB calls with `setRlsContext`; real impl executes SQL on mocked txs — noop for tests. */
+vi.mock('@/lib/rls', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@/lib/rls')>();
+  return {
+    ...mod,
+    setRlsContext: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 vi.mock('@/lib/transaction-manager.lib', () => {
   return {
     DrizzleTransactionalConnection: class {
@@ -87,6 +96,9 @@ function buildExecData(
   };
 }
 
+/** Passed through `db.transaction` mocks so assertions match worker RLS wrappers. */
+const mockOuterTx = { __outerTx: true };
+
 function buildSyncResult(): SyncProjectPermissionsResult {
   return {
     projectId,
@@ -118,7 +130,9 @@ interface MockServices {
 
 function buildJobInstance(mocks: MockServices) {
   const appContext = {
-    db: {} as unknown,
+    db: {
+      transaction: vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => cb(mockOuterTx)),
+    },
     services: {
       projectPermissionsSyncJobs: {
         loadForExecution: mocks.loadForExecution,
@@ -176,14 +190,17 @@ describe('ProjectPermissionsSyncJob worker', () => {
     const outcome = await job.execute(ctx);
 
     expect(outcome.success).toBe(true);
-    expect(mocks.loadForExecution).toHaveBeenCalledWith({ jobId: jobRecordId });
-    expect(mocks.transitionToRunning).toHaveBeenCalledWith({ jobId: jobRecordId });
+    expect(mocks.loadForExecution).toHaveBeenCalledWith({ jobId: jobRecordId }, mockOuterTx);
+    expect(mocks.transitionToRunning).toHaveBeenCalledWith({ jobId: jobRecordId }, mockOuterTx);
     expect(mocks.syncProjectPermissions).toHaveBeenCalledTimes(1);
-    expect(mocks.markCompleted).toHaveBeenCalledWith({
-      jobId: jobRecordId,
-      result,
-      warnings: ['orphan permission ignored'],
-    });
+    expect(mocks.markCompleted).toHaveBeenCalledWith(
+      {
+        jobId: jobRecordId,
+        result,
+        warnings: ['orphan permission ignored'],
+      },
+      mockOuterTx
+    );
     expect(mocks.invalidateCachesForSyncResult).toHaveBeenCalledWith({
       scope: enqueueScope,
       userIds: [userId],
@@ -280,11 +297,14 @@ describe('ProjectPermissionsSyncJob worker', () => {
      */
     expect(mocks.exportProjectPermissions).toHaveBeenCalledTimes(1);
     expect(mocks.saveSnapshot).toHaveBeenCalledTimes(1);
-    expect(mocks.markFailed).toHaveBeenCalledWith({
-      jobId: jobRecordId,
-      errorMessage: 'sync exploded',
-      errorDetails: expect.objectContaining({ message: 'sync exploded' }),
-    });
+    expect(mocks.markFailed).toHaveBeenCalledWith(
+      {
+        jobId: jobRecordId,
+        errorMessage: 'sync exploded',
+        errorDetails: expect.objectContaining({ message: 'sync exploded' }),
+      },
+      mockOuterTx
+    );
   });
 
   it('marks the job failed, rethrows, and skips cache invalidation when sync errors', async () => {
@@ -305,11 +325,14 @@ describe('ProjectPermissionsSyncJob worker', () => {
     ).rejects.toThrow('replace failed');
 
     expect(mocks.transitionToRunning).toHaveBeenCalledOnce();
-    expect(mocks.markFailed).toHaveBeenCalledWith({
-      jobId: jobRecordId,
-      errorMessage: 'replace failed',
-      errorDetails: expect.objectContaining({ message: 'replace failed' }),
-    });
+    expect(mocks.markFailed).toHaveBeenCalledWith(
+      {
+        jobId: jobRecordId,
+        errorMessage: 'replace failed',
+        errorDetails: expect.objectContaining({ message: 'replace failed' }),
+      },
+      mockOuterTx
+    );
     expect(mocks.markCompleted).not.toHaveBeenCalled();
     expect(mocks.invalidateCachesForSyncResult).not.toHaveBeenCalled();
   });

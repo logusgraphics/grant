@@ -14,6 +14,7 @@ import {
   validateTenantJobContext,
 } from '@/lib/jobs';
 import { Job } from '@/lib/jobs/base/job';
+import { scopeToRlsContext, setRlsContext } from '@/lib/rls';
 import { DrizzleTransactionalConnection, type Transaction } from '@/lib/transaction-manager.lib';
 
 /**
@@ -27,6 +28,12 @@ import { DrizzleTransactionalConnection, type Transaction } from '@/lib/transact
  *   4. Run `syncProjectPermissions` inside a Drizzle transaction.
  *   5. On success: mark COMPLETED and invalidate scope/user caches.
  *   6. On failure: mark FAILED and rethrow so the queue applies retry/backoff policy.
+ *
+ * Every query touching `project_permission_sync_jobs` (and project-scoped sync data)
+ * runs inside a transaction after {@link setRlsContext} for the enqueue scope.
+ * Otherwise pooled connections without `app.current_project_id` set correctly can hit
+ * RLS on `project_permission_sync_jobs` and return no row (`ProjectPermissionsSyncJob not found`)
+ * even when the job exists.
  */
 export default class ProjectPermissionsSyncJob extends Job {
   readonly config: ScheduledJob = {
@@ -49,7 +56,9 @@ export default class ProjectPermissionsSyncJob extends Job {
       projectPermissionExport,
     } = this.appContext.services;
 
-    const execData = await jobService.loadForExecution({ jobId: jobRecordId });
+    const execData = await this.withEnqueueScopeRls(enqueueScope, (tx) =>
+      jobService.loadForExecution({ jobId: jobRecordId }, tx)
+    );
     this.assertScopesMatch(enqueueScope, execData.scope);
 
     if (
@@ -72,12 +81,16 @@ export default class ProjectPermissionsSyncJob extends Job {
       );
     }
 
-    await jobService.transitionToRunning({ jobId: jobRecordId });
+    await this.withEnqueueScopeRls(enqueueScope, (tx) =>
+      jobService.transitionToRunning({ jobId: jobRecordId }, tx)
+    );
 
     let result: SyncProjectPermissionsResult;
     try {
       const txConn = new DrizzleTransactionalConnection(this.appContext.db);
       result = await txConn.withTransaction(async (tx: Transaction) => {
+        await setRlsContext(tx, scopeToRlsContext(execData.scope));
+
         /**
          * Capture a pre-sync rollback snapshot inside the same transaction
          * as the import, BEFORE we call into the sync service (which begins
@@ -117,11 +130,16 @@ export default class ProjectPermissionsSyncJob extends Job {
       const message = error instanceof Error ? error.message : String(error);
       const details = this.serializeErrorDetails(error);
       try {
-        await jobService.markFailed({
-          jobId: jobRecordId,
-          errorMessage: message,
-          errorDetails: details,
-        });
+        await this.withEnqueueScopeRls(enqueueScope, (tx) =>
+          jobService.markFailed(
+            {
+              jobId: jobRecordId,
+              errorMessage: message,
+              errorDetails: details,
+            },
+            tx
+          )
+        );
       } catch (markErr) {
         this.logger.error({
           jobRecordId,
@@ -133,11 +151,16 @@ export default class ProjectPermissionsSyncJob extends Job {
     }
 
     const warnings = Array.isArray(result.warnings) ? result.warnings.filter(Boolean) : [];
-    await jobService.markCompleted({
-      jobId: jobRecordId,
-      result,
-      warnings,
-    });
+    await this.withEnqueueScopeRls(enqueueScope, (tx) =>
+      jobService.markCompleted(
+        {
+          jobId: jobRecordId,
+          result,
+          warnings,
+        },
+        tx
+      )
+    );
 
     const userIds = this.collectUserIds(execData);
     try {
@@ -164,6 +187,20 @@ export default class ProjectPermissionsSyncJob extends Job {
         warnings: warnings.length,
       },
     };
+  }
+
+  /**
+   * Apply the same RLS session variables as a scoped HTTP request for this job's tenant,
+   * so worker queries see project-scoped rows (see `project_permission_sync_jobs` policies).
+   */
+  private async withEnqueueScopeRls<T>(
+    scope: Scope,
+    fn: (tx: Transaction) => Promise<T>
+  ): Promise<T> {
+    return this.appContext.db.transaction(async (tx) => {
+      await setRlsContext(tx, scopeToRlsContext(scope));
+      return fn(tx);
+    });
   }
 
   private extractJobRecordId(payload: unknown): string {

@@ -1,4 +1,5 @@
 import type {
+  IAuditLogger,
   IProjectPermissionsSyncJobService,
   ProjectPermissionsSyncJobExecutionData,
 } from '@grantjs/core';
@@ -19,6 +20,32 @@ import { ProjectPermissionSyncJobRepository } from '@/repositories/project-permi
 
 const ALLOWED_SCOPES: readonly string[] = [Tenant.AccountProject, Tenant.OrganizationProject];
 
+/** Compact job fields for audit rows (varchar limits); never store full CDM payload. */
+function compactJobSummary(job: ProjectPermissionsSyncJob): Record<string, unknown> {
+  return {
+    status: job.status,
+    projectId: job.projectId,
+    cdmVersion: job.cdmVersion,
+    importId: job.importId,
+  };
+}
+
+function compactResultSummary(result: SyncProjectPermissionsResult): Record<string, unknown> {
+  return {
+    rolesCreated: result.rolesCreated,
+    groupsCreated: result.groupsCreated,
+    roleGroupsLinked: result.roleGroupsLinked,
+    groupPermissionsLinked: result.groupPermissionsLinked,
+    projectRolesLinked: result.projectRolesLinked,
+    projectGroupsLinked: result.projectGroupsLinked,
+    projectPermissionsLinked: result.projectPermissionsLinked,
+    projectResourcesLinked: result.projectResourcesLinked,
+    projectUsersEnsured: result.projectUsersEnsured,
+    userRolesAssigned: result.userRolesAssigned,
+    warningsCount: Array.isArray(result.warnings) ? result.warnings.length : 0,
+  };
+}
+
 /**
  * State-machine service for the asynchronous CDM permission sync job tracking
  * row. Owns persistence + lifecycle transitions only; the actual import is
@@ -30,7 +57,10 @@ const ALLOWED_SCOPES: readonly string[] = [Tenant.AccountProject, Tenant.Organiz
  *   (terminal: completed, failed, cancelled)
  */
 export class ProjectPermissionsSyncJobService implements IProjectPermissionsSyncJobService {
-  constructor(private readonly repo: ProjectPermissionSyncJobRepository) {}
+  constructor(
+    private readonly repo: ProjectPermissionSyncJobRepository,
+    private readonly audit: IAuditLogger
+  ) {}
 
   public async create(
     params: {
@@ -52,7 +82,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       throw new ValidationError('Unsupported cdmVersion; only 1 is allowed');
     }
 
-    return this.repo.insert(
+    const job = await this.repo.insert(
       {
         projectId: params.projectId,
         scopeTenant: params.scope.tenant,
@@ -64,6 +94,13 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       },
       transaction
     );
+    await this.audit.logCreate(
+      job.id,
+      compactJobSummary(job),
+      { projectId: params.projectId },
+      transaction
+    );
+    return job;
   }
 
   public async getById(
@@ -177,7 +214,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
         `Cannot transition job ${params.jobId} to RUNNING from status ${current.status}`
       );
     }
-    return this.repo.updateStatus(
+    const updated = await this.repo.updateStatus(
       {
         jobId: params.jobId,
         status: ProjectPermissionsSyncJobStatus.Running,
@@ -185,6 +222,14 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       },
       transaction
     );
+    await this.audit.logUpdate(
+      params.jobId,
+      compactJobSummary(current),
+      compactJobSummary(updated),
+      { transition: 'PENDING_TO_RUNNING' },
+      transaction
+    );
+    return updated;
   }
 
   public async markCompleted(
@@ -200,7 +245,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
         `Cannot mark job ${params.jobId} COMPLETED from status ${current.status}`
       );
     }
-    return this.repo.updateStatus(
+    const updated = await this.repo.updateStatus(
       {
         jobId: params.jobId,
         status: ProjectPermissionsSyncJobStatus.Completed,
@@ -210,6 +255,17 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       },
       transaction
     );
+    await this.audit.logUpdate(
+      params.jobId,
+      compactJobSummary(current),
+      {
+        ...compactJobSummary(updated),
+        ...compactResultSummary(params.result),
+      },
+      { transition: 'RUNNING_TO_COMPLETED' },
+      transaction
+    );
+    return updated;
   }
 
   public async markFailed(
@@ -228,7 +284,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
         `Cannot mark job ${params.jobId} FAILED from status ${current.status}`
       );
     }
-    return this.repo.updateStatus(
+    const updated = await this.repo.updateStatus(
       {
         jobId: params.jobId,
         status: ProjectPermissionsSyncJobStatus.Failed,
@@ -238,6 +294,20 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       },
       transaction
     );
+    await this.audit.logUpdate(
+      params.jobId,
+      compactJobSummary(current),
+      {
+        ...compactJobSummary(updated),
+        errorMessage:
+          params.errorMessage.length > 400
+            ? `${params.errorMessage.slice(0, 397)}...`
+            : params.errorMessage,
+      },
+      { transition: 'TO_FAILED' },
+      transaction
+    );
+    return updated;
   }
 
   public async saveSnapshot(
@@ -258,6 +328,16 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
         snapshot: params.snapshot,
         takenAt: params.takenAt,
         sizeBytes,
+      },
+      transaction
+    );
+    await this.audit.logAction(
+      {
+        entityId: params.jobId,
+        action: 'SNAPSHOT_CAPTURED',
+        oldValues: null,
+        newValues: { snapshotSizeBytes: sizeBytes },
+        metadata: { snapshotTakenAt: params.takenAt.toISOString() },
       },
       transaction
     );
@@ -296,7 +376,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
     }
     if (current.status === ProjectPermissionsSyncJobStatus.Pending) {
       // Hard cancel — the worker hasn't started yet, so we move to terminal.
-      return this.repo.updateStatus(
+      const updated = await this.repo.updateStatus(
         {
           jobId: params.jobId,
           status: ProjectPermissionsSyncJobStatus.Cancelled,
@@ -305,19 +385,39 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
         },
         transaction
       );
+      await this.audit.logUpdate(
+        params.jobId,
+        compactJobSummary(current),
+        compactJobSummary(updated),
+        { transition: 'PENDING_TO_CANCELLED' },
+        transaction
+      );
+      return updated;
     }
     if (current.status === ProjectPermissionsSyncJobStatus.Running) {
       // Soft cancel — record the intent; the worker checks `cancelRequested`
       // between phases and finalises the cancellation. The status stays
       // RUNNING until the worker exits cooperatively.
-      return this.repo.updateStatus(
+      const requestedAt = new Date();
+      const updated = await this.repo.updateStatus(
         {
           jobId: params.jobId,
           status: ProjectPermissionsSyncJobStatus.Running,
-          cancelRequested: new Date(),
+          cancelRequested: requestedAt,
         },
         transaction
       );
+      await this.audit.logAction(
+        {
+          entityId: params.jobId,
+          action: 'CANCEL_REQUESTED',
+          oldValues: compactJobSummary(current),
+          newValues: { cancelRequestedAt: requestedAt.toISOString() },
+          metadata: { note: 'running_job_soft_cancel' },
+        },
+        transaction
+      );
+      return updated;
     }
     throw new ConflictError(
       `Cannot cancel job ${params.jobId} in terminal status ${current.status}`

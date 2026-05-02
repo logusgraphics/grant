@@ -52,6 +52,7 @@ function createHandler(opts: {
     getById?: ReturnType<typeof vi.fn>;
     cancel?: ReturnType<typeof vi.fn>;
   };
+  scheduleAfterCommit?: (fn: () => void | Promise<void>) => void;
 }) {
   return new ProjectHandler(
     {} as never,
@@ -70,7 +71,8 @@ function createHandler(opts: {
     opts.jobsAdapter as never,
     {} as never,
     {} as never,
-    {} as never
+    {} as never,
+    opts.scheduleAfterCommit
   );
 }
 
@@ -84,6 +86,38 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     create = vi.fn();
     findActiveByImportId = vi.fn();
     enqueue = vi.fn().mockResolvedValue(undefined);
+  });
+
+  it('does not call enqueue until scheduleAfterCommit runs (matches post-commit BullMQ dispatch)', async () => {
+    const job = buildJob(null);
+    create.mockResolvedValue(job);
+
+    const deferred: Array<() => void | Promise<void>> = [];
+    const scheduleAfterCommit = (fn: () => void | Promise<void>) => {
+      deferred.push(fn);
+    };
+
+    const handler = createHandler({
+      jobsAdapter: { enqueue },
+      syncJobs: { create, findActiveByImportId },
+      scheduleAfterCommit,
+    });
+
+    await handler.startProjectPermissionsSync({
+      id: projectId,
+      scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
+      input: buildInput(),
+      enqueuedById: userId,
+    });
+
+    expect(enqueue).not.toHaveBeenCalled();
+    expect(deferred).toHaveLength(1);
+    await Promise.resolve(deferred[0]?.());
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledWith('project-permissions-sync', {
+      scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
+      payload: { jobRecordId: job.id },
+    });
   });
 
   it('creates a job record and enqueues exactly once when no importId is supplied', async () => {

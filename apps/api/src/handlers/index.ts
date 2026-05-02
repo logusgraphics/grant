@@ -25,11 +25,17 @@ import { UserHandler } from './users.handler';
 
 export type Handlers = ReturnType<typeof createHandlers>;
 
+export type CreateHandlersOptions = {
+  /** When set (scoped RLS requests), defer enqueue until after DB commit. */
+  scheduleAfterCommit?: (fn: () => void | Promise<void>) => void;
+};
+
 export function createHandlers(
   cache: IEntityCacheAdapter,
   services: Services,
   db: ITransactionalConnection<Transaction>,
-  grant: Grant
+  grant: Grant,
+  options?: CreateHandlersOptions
 ) {
   const userHandler = new UserHandler(
     services.userTags,
@@ -186,7 +192,8 @@ export function createHandlers(
       getJobAdapter(),
       cache,
       services,
-      db
+      db,
+      options?.scheduleAfterCommit
     ),
     projectApps: new ProjectAppsHandler(
       services.projectApps,
