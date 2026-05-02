@@ -3,24 +3,31 @@ import {
   CreateProjectMutationVariables,
   DeleteProjectMutationVariables,
   Project,
-  SyncProjectPermissionsResult,
+  ProjectPermissionsSyncJob,
+  ProjectPermissionsSyncJobSortableField,
+  ProjectPermissionsSyncJobStatus,
   UpdateProjectMutationVariables,
 } from '@grantjs/schema';
 import { ProjectSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
 import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
+import { AuthenticationError } from '@/lib/errors';
 import { validate } from '@/middleware/validation.middleware';
 import {
   createProjectRequestSchema,
   deleteProjectQuerySchema,
+  exportProjectPermissionsQuerySchema,
   getProjectsQuerySchema,
+  listProjectPermissionsSyncJobsQuerySchema,
   projectParamsSchema,
-  syncProjectPermissionsRequestSchema,
+  projectPermissionsSyncJobParamsSchema,
+  projectPermissionsSyncJobScopeQuerySchema,
+  startProjectPermissionsSyncRequestSchema,
   updateProjectRequestSchema,
 } from '@/rest/schemas';
 import { TypedRequest } from '@/rest/types';
-import { queryListCommons } from '@/rest/utils/list-query';
+import { buildSortInput, queryListCommons } from '@/rest/utils/list-query';
 import { sendSuccessResponse } from '@/rest/utils/response';
 import { RequestContext } from '@/types';
 
@@ -80,8 +87,8 @@ export function createProjectsRouter(context: RequestContext): Router {
   );
 
   router.post(
-    '/:id/permissions/sync',
-    validate({ params: projectParamsSchema, body: syncProjectPermissionsRequestSchema }),
+    '/:id/permissions/sync-jobs',
+    validate({ params: projectParamsSchema, body: startProjectPermissionsSyncRequestSchema }),
     requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
@@ -91,21 +98,231 @@ export function createProjectsRouter(context: RequestContext): Router {
     async (
       req: TypedRequest<{
         params: typeof projectParamsSchema;
-        body: typeof syncProjectPermissionsRequestSchema;
+        body: typeof startProjectPermissionsSyncRequestSchema;
       }>,
       res: Response
     ) => {
       const { id } = req.params;
       const { scope, cdmVersion, importId, roleTemplates, userAssignments } = req.body;
 
-      const result: SyncProjectPermissionsResult =
-        await context.handlers.projects.syncProjectPermissions({
+      const enqueuedById = context.user?.userId;
+      if (!enqueuedById) {
+        throw new AuthenticationError('Authenticated user required to start a sync job');
+      }
+
+      const job: ProjectPermissionsSyncJob =
+        await context.handlers.projects.startProjectPermissionsSync({
           id,
           scope,
           input: { cdmVersion, importId, roleTemplates, userAssignments },
+          enqueuedById,
         });
 
+      sendSuccessResponse(res, job, 202);
+    }
+  );
+
+  router.get(
+    '/:id/permissions/sync-jobs',
+    validate({
+      params: projectParamsSchema,
+      query: listProjectPermissionsSyncJobsQuerySchema,
+    }),
+    authorizeRestRoute({
+      resource: ResourceSlug.Project,
+      action: ResourceAction.Query,
+      resourceResolver: 'project',
+    }),
+    async (
+      req: TypedRequest<{
+        params: typeof projectParamsSchema;
+        query: typeof listProjectPermissionsSyncJobsQuerySchema;
+      }>,
+      res: Response
+    ) => {
+      const { id } = req.params;
+      const { scopeId, tenant, page, limit, search, sortField, sortOrder, status } = req.query;
+
+      const sort = buildSortInput<ProjectPermissionsSyncJobSortableField>(sortField, sortOrder);
+
+      const result = await context.handlers.projects.listProjectPermissionsSyncJobs({
+        id,
+        scope: { id: scopeId, tenant },
+        page,
+        limit,
+        search,
+        sort,
+        status: (status ?? null) as ProjectPermissionsSyncJobStatus | null,
+      });
+
       sendSuccessResponse(res, result);
+    }
+  );
+
+  router.get(
+    '/:id/permissions/sync-jobs/:jobId/payload',
+    validate({
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    }),
+    authorizeRestRoute({
+      resource: ResourceSlug.Project,
+      action: ResourceAction.Query,
+      resourceResolver: 'project',
+    }),
+    async (
+      req: TypedRequest<{
+        params: typeof projectPermissionsSyncJobParamsSchema;
+        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+      }>,
+      res: Response
+    ) => {
+      const { id, jobId } = req.params;
+      const { scopeId, tenant } = req.query;
+
+      const { payload, importId } =
+        await context.handlers.projects.getProjectPermissionsSyncJobPayload({
+          id,
+          jobId,
+          scope: { id: scopeId, tenant },
+        });
+
+      const filename = `cdm-${importId ?? jobId}.json`;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.status(200).send(JSON.stringify(payload));
+    }
+  );
+
+  router.get(
+    '/:id/permissions/sync-jobs/:jobId/snapshot',
+    validate({
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    }),
+    authorizeRestRoute({
+      resource: ResourceSlug.Project,
+      action: ResourceAction.Query,
+      resourceResolver: 'project',
+    }),
+    async (
+      req: TypedRequest<{
+        params: typeof projectPermissionsSyncJobParamsSchema;
+        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+      }>,
+      res: Response
+    ) => {
+      const { id, jobId } = req.params;
+      const { scopeId, tenant } = req.query;
+
+      const { snapshot } = await context.handlers.projects.getProjectPermissionsSyncJobSnapshot({
+        id,
+        jobId,
+        scope: { id: scopeId, tenant },
+      });
+
+      const filename = `cdm-snapshot-${jobId}.json`;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.status(200).send(JSON.stringify(snapshot));
+    }
+  );
+
+  router.get(
+    '/:id/permissions/export',
+    validate({
+      params: projectParamsSchema,
+      query: exportProjectPermissionsQuerySchema,
+    }),
+    authorizeRestRoute({
+      resource: ResourceSlug.Project,
+      action: ResourceAction.Query,
+      resourceResolver: 'project',
+    }),
+    async (
+      req: TypedRequest<{
+        params: typeof projectParamsSchema;
+        query: typeof exportProjectPermissionsQuerySchema;
+      }>,
+      res: Response
+    ) => {
+      const { id } = req.params;
+      const { scopeId, tenant, cdmVersion } = req.query;
+
+      const snapshot = await context.handlers.projects.exportProjectPermissions({
+        id,
+        scope: { id: scopeId, tenant },
+        cdmVersion: cdmVersion ?? null,
+      });
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `cdm-export-${id}-${timestamp}.json`;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.status(200).send(JSON.stringify(snapshot));
+    }
+  );
+
+  router.get(
+    '/:id/permissions/sync-jobs/:jobId',
+    validate({
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    }),
+    authorizeRestRoute({
+      resource: ResourceSlug.Project,
+      action: ResourceAction.Query,
+      resourceResolver: 'project',
+    }),
+    async (
+      req: TypedRequest<{
+        params: typeof projectPermissionsSyncJobParamsSchema;
+        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+      }>,
+      res: Response
+    ) => {
+      const { id, jobId } = req.params;
+      const { scopeId, tenant } = req.query;
+
+      const job = await context.handlers.projects.getProjectPermissionsSyncJob({
+        id,
+        jobId,
+        scope: { id: scopeId, tenant },
+      });
+
+      sendSuccessResponse(res, job);
+    }
+  );
+
+  router.delete(
+    '/:id/permissions/sync-jobs/:jobId',
+    validate({
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
+    authorizeRestRoute({
+      resource: ResourceSlug.Project,
+      action: ResourceAction.Update,
+      resourceResolver: 'project',
+    }),
+    async (
+      req: TypedRequest<{
+        params: typeof projectPermissionsSyncJobParamsSchema;
+        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+      }>,
+      res: Response
+    ) => {
+      const { id, jobId } = req.params;
+      const { scopeId, tenant } = req.query;
+
+      const job = await context.handlers.projects.cancelProjectPermissionsSync({
+        id,
+        jobId,
+        scope: { id: scopeId, tenant },
+      });
+
+      sendSuccessResponse(res, job);
     }
   );
 

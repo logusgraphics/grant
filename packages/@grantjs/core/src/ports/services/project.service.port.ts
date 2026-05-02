@@ -18,6 +18,10 @@ import type {
   ProjectGroup,
   ProjectPage,
   ProjectPermission,
+  ProjectPermissionsSyncJob,
+  ProjectPermissionsSyncJobPage,
+  ProjectPermissionsSyncJobSortInput,
+  ProjectPermissionsSyncJobStatus,
   ProjectResource,
   ProjectRole,
   ProjectTag,
@@ -243,4 +247,172 @@ export interface IProjectPermissionSyncService {
     },
     transaction: unknown
   ): Promise<SyncProjectPermissionsResult>;
+
+  /**
+   * Post-commit cache invalidation for a successful sync. Invalidates
+   * scope-keyed caches (permissions/roles/groups/users/resources) and the
+   * authorization cache for every user touched by the import.
+   * Called by both the request-thread handler (legacy) and the async worker.
+   */
+  invalidateCachesForSyncResult(params: { scope: Scope; userIds: string[] }): Promise<void>;
+}
+
+// ---------------------------------------------------------------------------
+// IProjectPermissionExportService
+// ---------------------------------------------------------------------------
+
+/**
+ * Inverse of {@link IProjectPermissionSyncService}: snapshot the project's
+ * current permission/role/group/user-assignment state and package it as a
+ * replay-ready `SyncProjectPermissionsInput` (the CDM canonical artifact).
+ *
+ * Used both by the standalone export endpoint (clone-a-project, manual
+ * backups) and by the sync worker to capture a pre-import rollback snapshot
+ * inside the import transaction.
+ */
+export interface IProjectPermissionExportService {
+  exportProjectPermissions(
+    params: { projectId: string; scope: Scope; cdmVersion: number },
+    transaction?: unknown
+  ): Promise<SyncProjectPermissionsInput>;
+}
+
+// ---------------------------------------------------------------------------
+// IProjectPermissionsSyncJobService
+// ---------------------------------------------------------------------------
+
+/**
+ * Worker-internal view of a sync job, including the request payload + scope
+ * preserved at enqueue time. Returned only by `loadForExecution` so the
+ * payload + scope never leak through the public `getById` (GraphQL) path.
+ */
+export interface ProjectPermissionsSyncJobExecutionData {
+  job: ProjectPermissionsSyncJob;
+  payload: SyncProjectPermissionsInput;
+  scope: Scope;
+  /** Whether `cancel()` has been invoked while the job was RUNNING. */
+  cancelRequested: boolean;
+}
+
+/**
+ * State-machine service for the async CDM sync job-tracking row.
+ * Owns persistence + transitions only; never performs the import itself.
+ * The actual import is delegated to {@link IProjectPermissionSyncService}.
+ */
+export interface IProjectPermissionsSyncJobService {
+  create(
+    params: {
+      projectId: string;
+      scope: Scope;
+      cdmVersion: number;
+      importId: string | null;
+      payload: SyncProjectPermissionsInput;
+      enqueuedById: string;
+    },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJob>;
+
+  getById(
+    params: { projectId: string; jobId: string },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJob>;
+
+  /**
+   * Paginated list of jobs scoped to a single project. Returns the
+   * standard `ProjectPermissionsSyncJobPage` shape: items + totalCount +
+   * hasNextPage. Used by the GraphQL list query, the REST list route, and
+   * the web job-history viewer.
+   */
+  list(
+    params: {
+      projectId: string;
+      scope: Scope;
+      page?: number | null;
+      limit?: number | null;
+      search?: string | null;
+      sort?: ProjectPermissionsSyncJobSortInput | null;
+      status?: ProjectPermissionsSyncJobStatus | null;
+    },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJobPage>;
+
+  /**
+   * Read the persisted CDM payload that triggered this job. Used by the
+   * REST download endpoint to stream the original JSON file. Throws
+   * `NotFoundError` when the job does not exist or when its `projectId`
+   * does not match the supplied one.
+   */
+  getPayload(
+    params: { projectId: string; jobId: string },
+    transaction?: unknown
+  ): Promise<{
+    payload: SyncProjectPermissionsInput;
+    importId: string | null;
+    cdmVersion: number;
+  }>;
+
+  /**
+   * Worker-only: load the job together with the request payload and the
+   * scope captured at enqueue time. Never expose this through GraphQL/REST
+   * — payload may contain large CDM bodies and scope is reconstructed from
+   * persisted columns rather than the public response shape.
+   */
+  loadForExecution(
+    params: { jobId: string },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJobExecutionData>;
+
+  /** Idempotency: returns an active job for (projectId, importId) when importId is set. */
+  findActiveByImportId(
+    params: { projectId: string; importId: string },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJob | null>;
+
+  transitionToRunning(
+    params: { jobId: string },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJob>;
+
+  markCompleted(
+    params: { jobId: string; result: SyncProjectPermissionsResult; warnings: string[] },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJob>;
+
+  markFailed(
+    params: { jobId: string; errorMessage: string; errorDetails?: Record<string, unknown> | null },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJob>;
+
+  cancel(
+    params: { projectId: string; jobId: string },
+    transaction?: unknown
+  ): Promise<ProjectPermissionsSyncJob>;
+
+  /**
+   * Persist a rollback snapshot for a job. Captured by the worker inside the
+   * import transaction (just before applying the new CDM), so the snapshot
+   * commits if and only if the import commits.
+   *
+   * `sizeBytes` is computed by the service from `JSON.stringify(snapshot)`;
+   * callers do not pre-serialise.
+   */
+  saveSnapshot(
+    params: { jobId: string; snapshot: SyncProjectPermissionsInput; takenAt: Date },
+    transaction?: unknown
+  ): Promise<void>;
+
+  /**
+   * Read a previously-captured rollback snapshot for the given job. Returns
+   * `null` when no snapshot was persisted (e.g. the import failed before the
+   * worker reached the snapshot step, or this is a legacy row predating the
+   * snapshot column).
+   */
+  getSnapshot(
+    params: { projectId: string; jobId: string },
+    transaction?: unknown
+  ): Promise<{
+    snapshot: SyncProjectPermissionsInput;
+    takenAt: Date;
+    sizeBytes: number;
+  } | null>;
 }

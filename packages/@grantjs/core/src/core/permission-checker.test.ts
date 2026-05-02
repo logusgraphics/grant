@@ -387,11 +387,8 @@ describe('PermissionChecker', () => {
         context: { resource: null },
       });
 
-      // Should return condition not met for the first permission
-      // But since there's a permission without condition, it should grant
-      // Actually, the logic checks conditional permissions first, then falls back
-      expect(result.authorized).toBe(false);
-      expect(result.reason).toBe(AuthorizationReason.PermissionFoundConditionNotMet);
+      expect(result.authorized).toBe(true);
+      expect(result.reason).toBe(AuthorizationReason.PermissionGrantedNoCondition);
     });
   });
 

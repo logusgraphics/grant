@@ -190,7 +190,8 @@
       "settings": "Settings",
       "backToOrganization": "Back to Organization",
       "signingKeys": "Signing Keys",
-      "projectApps": "Apps"
+      "projectApps": "Apps",
+      "permissionSyncJobs": "Import/Export"
     }
   },
   "theme": {
@@ -3182,6 +3183,183 @@
     "notifications": {
       "rotateSuccess": "Signing key rotated",
       "rotateError": "Failed to rotate signing key"
+    }
+  },
+  "permissionSyncJobs": {
+    "title": "Permission Sync",
+    "view": {
+      "cards": "Cards",
+      "table": "Table"
+    },
+    "search": {
+      "placeholder": "Search by import id"
+    },
+    "sort": {
+      "label": "Sort",
+      "enqueuedAt": "Enqueued",
+      "startedAt": "Started",
+      "completedAt": "Completed",
+      "status": "Status",
+      "importId": "Import ID"
+    },
+    "filter": {
+      "status": "Status"
+    },
+    "limit": {
+      "label": "Per page"
+    },
+    "toolbar": {
+      "start": "Import",
+      "export": "Export"
+    },
+    "status": {
+      "all": "All",
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "table": {
+      "status": "Status",
+      "importId": "Import ID",
+      "noImportId": "(no import id)",
+      "cdmVersion": "CDM",
+      "enqueuedAt": "Enqueued",
+      "startedAt": "Started",
+      "completedAt": "Completed",
+      "jobId": "Job ID"
+    },
+    "audit": {
+      "cancelled": "Cancelled"
+    },
+    "empty": {
+      "title": "No import jobs yet",
+      "description": "Import a CDM JSON file to translate an external auth domain into this project's permission schema."
+    },
+    "noResults": {
+      "title": "No matching jobs",
+      "description": "Try clearing filters or searching for a different import id."
+    },
+    "actions": {
+      "view": "View details",
+      "downloadPayload": "Download payload",
+      "cancel": "Cancel job"
+    },
+    "startDialog": {
+      "title": "Start permission sync",
+      "description": "Drop a CDM JSON file or click to browse. The original payload is stored so you can review and download it later.",
+      "dropzone": {
+        "active": "Drop the JSON file here",
+        "idle": "Drag and drop a JSON file, or click to browse",
+        "hint": "Only .json files up to 25 MB are supported",
+        "browse": "Choose a file"
+      },
+      "errors": {
+        "invalidType": "Only .json files are accepted.",
+        "fileTooLarge": "File is too large. Maximum size is {maxSize} MB.",
+        "invalidJson": "The file is not valid JSON.",
+        "invalidShape": "The JSON does not look like a CDM payload (missing cdmVersion, roleTemplates, or userAssignments).",
+        "readFailed": "Failed to read the file."
+      },
+      "summary": {
+        "cdmVersion": "CDM version",
+        "roleTemplates": "Role templates",
+        "userAssignments": "User assignments"
+      },
+      "clear": "Remove file",
+      "cancel": "Cancel",
+      "submit": "Start sync",
+      "submitting": "Enqueueing…",
+      "checkingPermission": "Checking permission…",
+      "permissionDeniedTitle": "You can't start a sync",
+      "permissionDeniedDescription": "You need permission to update this project to import CDM and enqueue a sync job.",
+      "emailVerificationTitle": "Verify your email",
+      "emailVerificationDescription": "Verify your email address before starting a permission sync."
+    },
+    "viewDialog": {
+      "title": "Sync job",
+      "description": "Inspect this job's lifecycle, results, and original payload.",
+      "descriptionWithImport": "Import {importId}",
+      "tabs": {
+        "status": "Status",
+        "result": "Result",
+        "payload": "Payload",
+        "snapshot": "Rollback snapshot"
+      },
+      "polling": "Updating…",
+      "loading": "Loading job details…",
+      "close": "Close",
+      "fields": {
+        "jobId": "Job ID",
+        "importId": "Import ID",
+        "cdmVersion": "CDM version",
+        "enqueuedAt": "Enqueued",
+        "startedAt": "Started",
+        "completedAt": "Completed",
+        "cancelledAt": "Cancelled",
+        "notSet": "—",
+        "errorMessage": "Error",
+        "warnings": "{count, plural, =1 {# warning} other {# warnings}}"
+      },
+      "result": {
+        "notAvailable": "Results are available once the job has completed.",
+        "rolesCreated": "Roles created",
+        "groupsCreated": "Groups created",
+        "roleGroupsLinked": {
+          "left": "Roles",
+          "right": "groups"
+        },
+        "groupPermissionsLinked": {
+          "left": "Groups",
+          "right": "permissions"
+        },
+        "projectRolesLinked": {
+          "left": "Project",
+          "right": "roles"
+        },
+        "projectGroupsLinked": {
+          "left": "Project",
+          "right": "groups"
+        },
+        "projectPermissionsLinked": {
+          "left": "Project",
+          "right": "permissions"
+        },
+        "projectResourcesLinked": {
+          "left": "Project",
+          "right": "resources"
+        },
+        "projectUsersEnsured": "Project users ensured",
+        "userRolesAssigned": "User roles assigned"
+      },
+      "payload": {
+        "loading": "Loading payload…",
+        "notAvailable": "Payload could not be loaded.",
+        "reload": "Reload",
+        "download": "Download JSON"
+      },
+      "snapshot": {
+        "summary": "This snapshot was captured automatically before the sync ran, inside the same transaction as the import. Replay it as a CDM payload to roll the project back to the state it had before this job.",
+        "takenAt": "Captured {time}, just before this sync ran.",
+        "loading": "Loading snapshot…",
+        "notAvailable": "No rollback snapshot is available for this job.",
+        "reload": "Reload",
+        "download": "Download snapshot"
+      }
+    },
+    "cancelDialog": {
+      "title": "Cancel sync job",
+      "description": "Cancel job {importId}? Pending jobs are removed from the queue. Running jobs are stopped on a best-effort basis at the next safe checkpoint.",
+      "cancel": "Keep job",
+      "confirm": "Cancel job",
+      "confirming": "Cancelling…"
+    },
+    "notifications": {
+      "startSuccess": "Sync job enqueued",
+      "startError": "Failed to start sync",
+      "cancelSuccess": "Sync job cancelled",
+      "cancelError": "Failed to cancel sync"
     }
   }
 }

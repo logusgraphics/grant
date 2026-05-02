@@ -42,6 +42,14 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
   };
   const userRoles = { addUserRole: vi.fn(), removeUserRole: vi.fn(), getUserRoles: vi.fn() };
 
+  const cache = {
+    permissions: { delete: vi.fn(), keys: vi.fn().mockResolvedValue([]) },
+    roles: { delete: vi.fn() },
+    groups: { delete: vi.fn() },
+    users: { delete: vi.fn() },
+    resources: { delete: vi.fn() },
+  };
+
   function createService() {
     return new ProjectPermissionSyncService(
       syncRepo as never,
@@ -54,7 +62,8 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
       projectPermissions as never,
       projectResources as never,
       projectUsers as never,
-      userRoles as never
+      userRoles as never,
+      cache as never
     );
   }
 

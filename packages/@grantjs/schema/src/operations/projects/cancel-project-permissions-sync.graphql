@@ -1,0 +1,15 @@
+mutation CancelProjectPermissionsSync($id: ID!, $scope: Scope!, $jobId: ID!) {
+  cancelProjectPermissionsSync(id: $id, scope: $scope, jobId: $jobId) {
+    id
+    projectId
+    status
+    cdmVersion
+    importId
+    warnings
+    errorMessage
+    enqueuedAt
+    startedAt
+    completedAt
+    cancelledAt
+  }
+}

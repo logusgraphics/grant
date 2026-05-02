@@ -26,7 +26,9 @@ import { PermissionRepository } from './permissions.repository';
 import { ProjectAppTagRepository } from './project-app-tags.repository';
 import { ProjectAppRepository } from './project-apps.repository';
 import { ProjectGroupRepository } from './project-groups.repository';
+import { ProjectPermissionExportRepository } from './project-permission-export.repository';
 import { ProjectPermissionSyncRepository } from './project-permission-sync.repository';
+import { ProjectPermissionSyncJobRepository } from './project-permission-sync-job.repository';
 import { ProjectPermissionRepository } from './project-permissions.repository';
 import { ProjectResourceRepository } from './project-resources.repository';
 import { ProjectRoleRepository } from './project-roles.repository';
@@ -77,6 +79,8 @@ export function createRepositories(db: DbSchema) {
     permissionTagRepository: new PermissionTagRepository(db),
     permissionRepository: new PermissionRepository(db),
     projectPermissionSyncRepository: new ProjectPermissionSyncRepository(db),
+    projectPermissionExportRepository: new ProjectPermissionExportRepository(db),
+    projectPermissionSyncJobRepository: new ProjectPermissionSyncJobRepository(db),
     projectAppRepository: new ProjectAppRepository(db),
     projectAppTagRepository: new ProjectAppTagRepository(db),
     projectGroupRepository: new ProjectGroupRepository(db),

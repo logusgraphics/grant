@@ -142,6 +142,20 @@ export class PermissionChecker {
       return this.permissionNotFound();
     }
 
+    const hasNoEffectiveCondition = (p: Permission) => {
+      if (p.condition == null) return true;
+      if (typeof p.condition === 'object' && !Array.isArray(p.condition)) {
+        return Object.keys(p.condition as object).length === 0;
+      }
+      return false;
+    };
+
+    /** If any grant is unconditional, it wins over conditional grants for the same action. */
+    const unconditional = permissions.find((p) => hasNoEffectiveCondition(p));
+    if (unconditional) {
+      return this.permissionGrantedResult(unconditional);
+    }
+
     // Filter out permissions with no condition (null, undefined, or empty object {})
     const conditionalPermissions = permissions.filter((p) => {
       if (!p.condition) return false;

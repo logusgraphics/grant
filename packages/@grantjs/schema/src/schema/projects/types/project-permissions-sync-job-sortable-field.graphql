@@ -1,0 +1,7 @@
+enum ProjectPermissionsSyncJobSortableField {
+  enqueuedAt
+  startedAt
+  completedAt
+  status
+  importId
+}

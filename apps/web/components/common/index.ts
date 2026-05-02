@@ -26,6 +26,7 @@ export * from './full-page-loader';
 export * from './github-oauth-button';
 export * from './info-panel';
 export * from './json-editor';
+export * from './json-file-dropzone';
 export * from './limit';
 export * from './logo';
 export * from './pagination';

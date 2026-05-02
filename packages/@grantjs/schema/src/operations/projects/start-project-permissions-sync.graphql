@@ -1,0 +1,19 @@
+mutation StartProjectPermissionsSync(
+  $id: ID!
+  $scope: Scope!
+  $input: SyncProjectPermissionsInput!
+) {
+  startProjectPermissionsSync(id: $id, scope: $scope, input: $input) {
+    id
+    projectId
+    status
+    cdmVersion
+    importId
+    warnings
+    errorMessage
+    enqueuedAt
+    startedAt
+    completedAt
+    cancelledAt
+  }
+}

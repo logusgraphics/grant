@@ -2,19 +2,26 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 
 import {
   authenticationErrorResponseSchema,
+  cdmJsonArtifactSchema,
   createProjectRequestSchema,
   createProjectResponseSchema,
   deleteProjectQuerySchema,
   deleteProjectResponseSchema,
   errorResponseSchema,
+  exportProjectPermissionsQuerySchema,
   getProjectsQuerySchema,
   getProjectsResponseSchema,
+  listProjectPermissionsSyncJobsQuerySchema,
+  listProjectPermissionsSyncJobsResponseSchema,
   notFoundErrorResponseSchema,
   projectParamsSchema,
+  projectPermissionsSyncJobParamsSchema,
+  projectPermissionsSyncJobResponseSchema,
+  projectPermissionsSyncJobSchema,
+  projectPermissionsSyncJobScopeQuerySchema,
   projectSchema,
   projectWithRelationsSchema,
-  syncProjectPermissionsRequestSchema,
-  syncProjectPermissionsResponseSchema,
+  startProjectPermissionsSyncRequestSchema,
   updateProjectRequestSchema,
   updateProjectResponseSchema,
   validationErrorResponseSchema,
@@ -28,8 +35,24 @@ export function registerProjectsOpenApi(registry: OpenAPIRegistry) {
   registry.register('GetProjectsResponse', getProjectsResponseSchema);
   registry.register('GetProjectResponse', createSuccessResponseSchema(projectWithRelationsSchema));
   registry.register('ProjectParams', projectParamsSchema);
-  registry.register('SyncProjectPermissionsRequest', syncProjectPermissionsRequestSchema);
-  registry.register('SyncProjectPermissionsResponse', syncProjectPermissionsResponseSchema);
+  registry.register('StartProjectPermissionsSyncRequest', startProjectPermissionsSyncRequestSchema);
+  registry.register('ProjectPermissionsSyncJob', projectPermissionsSyncJobSchema);
+  registry.register('ProjectPermissionsSyncJobResponse', projectPermissionsSyncJobResponseSchema);
+  registry.register(
+    'ListProjectPermissionsSyncJobsQuery',
+    listProjectPermissionsSyncJobsQuerySchema
+  );
+  registry.register(
+    'ListProjectPermissionsSyncJobsResponse',
+    listProjectPermissionsSyncJobsResponseSchema
+  );
+  registry.register('ExportProjectPermissionsQuery', exportProjectPermissionsQuerySchema);
+  registry.register('ProjectPermissionsSyncJobParams', projectPermissionsSyncJobParamsSchema);
+  registry.register(
+    'ProjectPermissionsSyncJobScopeQuery',
+    projectPermissionsSyncJobScopeQuerySchema
+  );
+  registry.register('CdmJsonArtifact', cdmJsonArtifactSchema);
 
   /**
    * GET /api/projects
@@ -91,6 +114,14 @@ Projects are scoped to a parent tenant context. You must provide:
       },
       401: {
         description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
         content: {
           'application/json': {
             schema: authenticationErrorResponseSchema,
@@ -178,6 +209,14 @@ Projects are ideal for:
           },
         },
       },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
       500: {
         description: 'Internal server error',
         content: {
@@ -190,37 +229,52 @@ Projects are ideal for:
   });
 
   /**
-   * POST /api/projects/:id/permissions/sync
+   * POST /api/projects/:id/permissions/sync-jobs
    */
   registry.registerPath({
     method: 'post',
-    path: '/api/projects/{id}/permissions/sync',
+    path: '/api/projects/{id}/permissions/sync-jobs',
     tags: ['Projects'],
-    summary: 'Sync project RBAC from canonical data model (CDM)',
+    summary: 'Start an asynchronous CDM permission sync job',
     description: `
-Replace-import roles, groups, and user role assignments tagged for this project from a versioned CDM payload.
-Requires \`accountProject\` or \`organizationProject\` scope in the body.
+Enqueue an asynchronous CDM permission sync job for the project. The endpoint returns
+immediately with the created job descriptor in \`PENDING\` status; the actual import runs
+in the background. Poll \`GET /api/projects/{id}/permissions/sync-jobs/{jobId}\` for status.
 
-This operation is intended for migrating external permission models into Grant's \`User → Role → Group → Permission\` graph.
+Requires a verified email and the same MFA policy as other mutating project routes, when
+enforced. The body must include an \`accountProject\` or \`organizationProject\` scope.
 
-Optional \`metadata\` on role templates and user assignments is stored under the \`cdmSource\` key on created roles, groups, and \`project_users\` rows (do not send a top-level \`cdmImport\` key in importer metadata).
+This operation is intended for migrating external permission models into Grant's
+\`User → Role → Group → Permission\` graph.
+
+### Idempotency
+
+Pass \`importId\` in the body for idempotent retries: if an active job (\`PENDING\`,
+\`RUNNING\`, or \`COMPLETED\`) already exists for the same \`(project, importId)\`, the
+existing job is returned instead of creating a new one.
+
+### Metadata
+
+Optional \`metadata\` on role templates and user assignments is stored under the
+\`cdmSource\` key on created roles, groups, and \`project_users\` rows (do not send a
+top-level \`cdmImport\` key in importer metadata).
     `.trim(),
     request: {
       params: projectParamsSchema,
       body: {
         content: {
           'application/json': {
-            schema: syncProjectPermissionsRequestSchema,
+            schema: startProjectPermissionsSyncRequestSchema,
           },
         },
       },
     },
     responses: {
-      200: {
-        description: 'Sync completed',
+      202: {
+        description: 'Sync job enqueued',
         content: {
           'application/json': {
-            schema: syncProjectPermissionsResponseSchema,
+            schema: projectPermissionsSyncJobResponseSchema,
           },
         },
       },
@@ -240,11 +294,476 @@ Optional \`metadata\` on role templates and user assignments is stored under the
           },
         },
       },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
       404: {
-        description: 'Project or permission not found',
+        description: 'Project not found',
         content: {
           'application/json': {
             schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description:
+          'Internal server error (may include misconfiguration such as jobs adapter disabled)',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/projects/:id/permissions/sync-jobs
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/projects/{id}/permissions/sync-jobs',
+    tags: ['Projects'],
+    summary: 'List project permissions sync jobs',
+    description: `
+List asynchronous CDM permission sync jobs for a project. Supports pagination, status filtering,
+search by \`importId\`, and sorting by \`enqueuedAt\`, \`startedAt\`, \`completedAt\`, \`status\`,
+or \`importId\`.
+
+Each job row includes snapshot metadata (\`hasSnapshot\`, \`snapshotTakenAt\`, \`snapshotSizeBytes\`).
+
+Use this endpoint to render a job history view; use \`GET .../sync-jobs/{jobId}\` to poll a single
+job's lifecycle.
+    `.trim(),
+    request: {
+      params: projectParamsSchema,
+      query: listProjectPermissionsSyncJobsQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Paginated list of sync jobs',
+        content: {
+          'application/json': {
+            schema: listProjectPermissionsSyncJobsResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request parameters',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Project not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/projects/:id/permissions/sync-jobs/:jobId/payload
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}/payload',
+    tags: ['Projects'],
+    summary: 'Download the original CDM JSON payload for a sync job',
+    description: `
+Download the original \`SyncProjectPermissionsInput\` JSON body that was submitted when the
+sync job was enqueued. The response uses \`Content-Type: application/json\` and a
+\`Content-Disposition: attachment\` header so browsers prompt for a save.
+    `.trim(),
+    request: {
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Original CDM payload as a downloadable JSON file',
+        content: {
+          'application/json': {
+            schema: cdmJsonArtifactSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request parameters',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Project or sync job not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/projects/:id/permissions/sync-jobs/:jobId/snapshot
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}/snapshot',
+    tags: ['Projects'],
+    summary: 'Download the rollback snapshot captured before a sync job ran',
+    description: `
+Download the pre-sync rollback snapshot captured by the worker inside the import
+transaction, just before the project's permissions were modified. The snapshot has
+the same shape as \`SyncProjectPermissionsInput\`, so it can be replayed via
+\`POST .../sync-jobs\` to roll the project back to the state it had right before the
+selected job ran.
+
+Returns 404 when the job has no snapshot (e.g. it failed before the worker reached
+the snapshot step, or it was enqueued before this feature shipped).
+
+The response uses \`Content-Type: application/json\` and a \`Content-Disposition:
+attachment\` header so browsers prompt for a save.
+    `.trim(),
+    request: {
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Pre-sync snapshot as a downloadable JSON file',
+        content: {
+          'application/json': {
+            schema: cdmJsonArtifactSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request parameters',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Project, sync job, or snapshot not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/projects/:id/permissions/export
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/projects/{id}/permissions/export',
+    tags: ['Projects'],
+    summary: 'Export the project as a CDM JSON artifact',
+    description: `
+Snapshot the project's current permission/role/group/user-assignment state and
+download it as a CDM JSON artifact. The body is shaped like
+\`SyncProjectPermissionsInput\` so it can be replayed against this project (to
+reset it to the exported state) or against a different project (to clone its
+permission model).
+
+Pass \`cdmVersion\` to pin the artifact format; the only currently supported value
+is \`1\` (the default when omitted).
+
+The response uses \`Content-Type: application/json\` and a \`Content-Disposition:
+attachment\` header so browsers prompt for a save.
+    `.trim(),
+    request: {
+      params: projectParamsSchema,
+      query: exportProjectPermissionsQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Project CDM export as a downloadable JSON file',
+        content: {
+          'application/json': {
+            schema: cdmJsonArtifactSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request parameters',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Project not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * GET /api/projects/:id/permissions/sync-jobs/:jobId
+   */
+  registry.registerPath({
+    method: 'get',
+    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}',
+    tags: ['Projects'],
+    summary: 'Get the status of a project permissions sync job',
+    description: `
+Read the current state of an asynchronous CDM permission sync job. Use this endpoint
+to poll the lifecycle of a job started via \`POST .../sync-jobs\`.
+
+Snapshot metadata (\`hasSnapshot\`, \`snapshotTakenAt\`, \`snapshotSizeBytes\`) indicates whether
+\`GET .../sync-jobs/{jobId}/snapshot\` will return a pre-sync rollback artifact.
+
+Statuses:
+- \`PENDING\`  — enqueued, not started yet
+- \`RUNNING\`  — worker has picked up the job
+- \`COMPLETED\` — successful import (\`result\` populated)
+- \`FAILED\`    — import errored (\`errorMessage\` populated)
+- \`CANCELLED\` — cancelled before or during execution
+    `.trim(),
+    request: {
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Sync job status retrieved',
+        content: {
+          'application/json': {
+            schema: projectPermissionsSyncJobResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request parameters',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Project or sync job not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
+   * DELETE /api/projects/:id/permissions/sync-jobs/:jobId
+   */
+  registry.registerPath({
+    method: 'delete',
+    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}',
+    tags: ['Projects'],
+    summary: 'Cancel a project permissions sync job',
+    description: `
+Cancel a pending or running project permissions sync job. Requires the same verified-email /
+MFA gate as \`POST .../sync-jobs\`.
+
+- If the job is \`PENDING\`, cancellation is immediate — the worker will not run.
+- If the job is \`RUNNING\`, cancellation is recorded and the worker stops at the next
+  checkpoint between phases (best-effort).
+- Terminal statuses (\`COMPLETED\`, \`FAILED\`, \`CANCELLED\`) cannot be cancelled.
+    `.trim(),
+    request: {
+      params: projectPermissionsSyncJobParamsSchema,
+      query: projectPermissionsSyncJobScopeQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Sync job cancelled (or cancellation requested)',
+        content: {
+          'application/json': {
+            schema: projectPermissionsSyncJobResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request parameters',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Project or sync job not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      409: {
+        description: 'Job is in a terminal state and cannot be cancelled',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
           },
         },
       },
@@ -311,6 +830,14 @@ All fields are optional - only provide the fields you want to update.
       },
       401: {
         description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
         content: {
           'application/json': {
             schema: authenticationErrorResponseSchema,
@@ -385,6 +912,14 @@ You must provide the parent scope context:
       },
       401: {
         description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
         content: {
           'application/json': {
             schema: authenticationErrorResponseSchema,

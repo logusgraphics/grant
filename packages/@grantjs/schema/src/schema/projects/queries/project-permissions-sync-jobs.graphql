@@ -1,0 +1,17 @@
+extend type Query {
+  """
+  List project permissions sync jobs for a project, with optional pagination,
+  search (matches importId), status filter, and sort. Use this to populate the
+  job history view. Use `projectPermissionsSyncJob` to read a single job's
+  current state for polling.
+  """
+  projectPermissionsSyncJobs(
+    id: ID!
+    scope: Scope!
+    page: Int
+    limit: Int
+    search: String
+    sort: ProjectPermissionsSyncJobSortInput
+    status: ProjectPermissionsSyncJobStatus
+  ): ProjectPermissionsSyncJobPage!
+}

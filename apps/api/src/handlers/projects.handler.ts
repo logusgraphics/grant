@@ -1,10 +1,13 @@
 import type {
   IAccountProjectService,
   IAccountProjectTagService,
+  IJobAdapter,
   IOrganizationProjectService,
   IOrganizationProjectTagService,
   IProjectGroupService,
+  IProjectPermissionExportService,
   IProjectPermissionService,
+  IProjectPermissionsSyncJobService,
   IProjectPermissionSyncService,
   IProjectRoleService,
   IProjectService,
@@ -13,23 +16,31 @@ import type {
   ITransactionalConnection,
 } from '@grantjs/core';
 import {
+  MutationCancelProjectPermissionsSyncArgs,
   MutationCreateProjectArgs,
   MutationDeleteProjectArgs,
-  MutationSyncProjectPermissionsArgs,
+  MutationStartProjectPermissionsSyncArgs,
   MutationUpdateProjectArgs,
   Project,
   ProjectPage,
+  ProjectPermissionsSyncJob,
+  ProjectPermissionsSyncJobPage,
+  QueryProjectPermissionsSyncJobArgs,
+  QueryProjectPermissionsSyncJobsArgs,
   QueryProjectsArgs,
-  SyncProjectPermissionsResult,
+  SyncProjectPermissionsInput,
   Tenant,
 } from '@grantjs/schema';
 
 import { IEntityCacheAdapter } from '@/lib/cache';
-import { BadRequestError } from '@/lib/errors';
+import { BadRequestError, ConfigurationError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
+
+/** Job id for the async project permissions sync worker (registered in apps/api/src/jobs). */
+const PROJECT_PERMISSIONS_SYNC_JOB_ID = 'project-permissions-sync';
 
 export class ProjectHandler extends CacheHandler {
   constructor(
@@ -44,6 +55,9 @@ export class ProjectHandler extends CacheHandler {
     private readonly projectRoles: IProjectRoleService,
     private readonly projectUsers: IProjectUserService,
     private readonly projectPermissionSync: IProjectPermissionSyncService,
+    private readonly projectPermissionExport: IProjectPermissionExportService,
+    private readonly projectPermissionsSyncJobs: IProjectPermissionsSyncJobService,
+    private readonly jobs: IJobAdapter | null,
     cache: IEntityCacheAdapter,
     scopeServices: ScopeServices,
     private readonly db: ITransactionalConnection<Transaction>
@@ -121,28 +135,220 @@ export class ProjectHandler extends CacheHandler {
     return projectsResult;
   }
 
-  public async syncProjectPermissions(
-    params: MutationSyncProjectPermissionsArgs
-  ): Promise<SyncProjectPermissionsResult> {
-    return await this.db.withTransaction(async (tx: Transaction) => {
-      const result = await this.projectPermissionSync.syncProjectPermissions(
-        {
-          projectId: params.id,
-          scope: params.scope,
-          input: params.input,
-        },
-        tx
+  /**
+   * Enqueue an asynchronous CDM permission sync job. Performs the same fast
+   * pre-flight validation as the legacy synchronous endpoint (so callers see
+   * malformed input immediately instead of after the worker picks up the job),
+   * checks for an in-flight job with the same `importId` (idempotency), then
+   * persists the job tracking row and dispatches a one-off job.
+   */
+  public async startProjectPermissionsSync(
+    params: MutationStartProjectPermissionsSyncArgs & { enqueuedById: string }
+  ): Promise<ProjectPermissionsSyncJob> {
+    const jobs = this.jobs;
+    if (!jobs || !jobs.enqueue) {
+      throw new ConfigurationError(
+        'Project permissions sync is unavailable: job adapter is not configured. Set JOBS_ENABLED=true.'
       );
-      await this.invalidatePermissionsCacheForScope(params.scope);
-      await this.invalidateRolesCacheForScope(params.scope);
-      await this.invalidateGroupsCacheForScope(params.scope);
-      await this.invalidateUsersCacheForScope(params.scope);
-      await this.invalidateResourcesCacheForScope(params.scope);
-      for (const ua of params.input.userAssignments) {
-        await this.invalidateAuthorizationCacheForUser(ua.userId);
+    }
+    const enqueueJob = jobs.enqueue.bind(jobs);
+
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    this.validateSyncInput(params.input);
+
+    const importId = params.input.importId ?? null;
+    if (importId !== null) {
+      const inflight = await this.projectPermissionsSyncJobs.findActiveByImportId({
+        projectId: params.id,
+        importId,
+      });
+      if (inflight) {
+        return inflight;
       }
-      return result;
+    }
+
+    const job = await this.projectPermissionsSyncJobs.create({
+      projectId: params.id,
+      scope: params.scope,
+      cdmVersion: params.input.cdmVersion,
+      importId,
+      payload: params.input,
+      enqueuedById: params.enqueuedById,
     });
+
+    await enqueueJob(PROJECT_PERMISSIONS_SYNC_JOB_ID, {
+      scope: params.scope,
+      payload: { jobRecordId: job.id },
+    });
+
+    return job;
+  }
+
+  public async getProjectPermissionsSyncJob(
+    params: QueryProjectPermissionsSyncJobArgs
+  ): Promise<ProjectPermissionsSyncJob> {
+    this.assertProjectScope(params.scope);
+    return this.projectPermissionsSyncJobs.getById({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+  }
+
+  public async listProjectPermissionsSyncJobs(
+    params: QueryProjectPermissionsSyncJobsArgs
+  ): Promise<ProjectPermissionsSyncJobPage> {
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    return this.projectPermissionsSyncJobs.list({
+      projectId: params.id,
+      scope: params.scope,
+      page: params.page,
+      limit: params.limit,
+      search: params.search,
+      sort: params.sort,
+      status: params.status,
+    });
+  }
+
+  /**
+   * Returns the original CDM JSON body that was submitted when the job was
+   * enqueued. Used by the REST download endpoint. The payload is read from
+   * the persisted JSONB column on the job row; no file storage is involved.
+   */
+  public async getProjectPermissionsSyncJobPayload(
+    params: QueryProjectPermissionsSyncJobArgs
+  ): Promise<{
+    payload: SyncProjectPermissionsInput;
+    importId: string | null;
+    cdmVersion: number;
+  }> {
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    return this.projectPermissionsSyncJobs.getPayload({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+  }
+
+  public async cancelProjectPermissionsSync(
+    params: MutationCancelProjectPermissionsSyncArgs
+  ): Promise<ProjectPermissionsSyncJob> {
+    this.assertProjectScope(params.scope);
+    return this.projectPermissionsSyncJobs.cancel({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+  }
+
+  /**
+   * Snapshot the project's current permission/role/group/user-assignment
+   * state and return it as a replay-ready `SyncProjectPermissionsInput` body.
+   * The REST layer streams the response with a `Content-Disposition`
+   * attachment header so browsers prompt for a save.
+   */
+  public async exportProjectPermissions(params: {
+    id: string;
+    scope: { tenant: Tenant; id: string };
+    cdmVersion?: number | null;
+  }): Promise<SyncProjectPermissionsInput> {
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    const cdmVersion = params.cdmVersion ?? 1;
+    return this.projectPermissionExport.exportProjectPermissions({
+      projectId: params.id,
+      scope: params.scope,
+      cdmVersion,
+    });
+  }
+
+  /**
+   * Read the pre-sync rollback snapshot captured by the worker for a given
+   * sync job. Throws `NotFoundError` when the job has no snapshot (e.g. it
+   * failed before the worker reached the snapshot step, or it is a legacy
+   * row enqueued before this column existed).
+   */
+  public async getProjectPermissionsSyncJobSnapshot(
+    params: QueryProjectPermissionsSyncJobArgs
+  ): Promise<{
+    snapshot: SyncProjectPermissionsInput;
+    takenAt: Date;
+    sizeBytes: number;
+  }> {
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    const result = await this.projectPermissionsSyncJobs.getSnapshot({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+    if (!result) {
+      throw new NotFoundError('ProjectPermissionsSyncJobSnapshot', params.jobId);
+    }
+    return result;
+  }
+
+  private assertProjectScope(scope: { tenant: Tenant; id: string }): void {
+    if (scope.tenant !== Tenant.AccountProject && scope.tenant !== Tenant.OrganizationProject) {
+      throw new ValidationError(
+        'project permissions sync requires accountProject or organizationProject scope'
+      );
+    }
+  }
+
+  private projectIdFromScope(scope: { id: string }): string {
+    return scope.id.split(':')[1] ?? '';
+  }
+
+  private validateSyncInput(input: MutationStartProjectPermissionsSyncArgs['input']): void {
+    if (input.cdmVersion !== 1) {
+      throw new ValidationError('Unsupported cdmVersion; only 1 is allowed');
+    }
+
+    const userIdsSeen = new Set<string>();
+    for (const ua of input.userAssignments) {
+      if (userIdsSeen.has(ua.userId)) {
+        throw new ValidationError(`Duplicate userId in userAssignments: ${ua.userId}`);
+      }
+      userIdsSeen.add(ua.userId);
+    }
+
+    const externalKeys = new Set<string>();
+    for (const t of input.roleTemplates) {
+      if (externalKeys.has(t.externalKey)) {
+        throw new ValidationError(`Duplicate role template externalKey: ${t.externalKey}`);
+      }
+      externalKeys.add(t.externalKey);
+      if (t.permissionRefs.length === 0) {
+        throw new ValidationError(
+          `roleTemplates[${t.externalKey}] must include at least one permissionRef`
+        );
+      }
+    }
   }
 
   public async createProject(params: MutationCreateProjectArgs): Promise<Project> {

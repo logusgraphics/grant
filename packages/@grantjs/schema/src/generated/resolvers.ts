@@ -837,6 +837,13 @@ export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
   acceptInvitation: AcceptInvitationResult;
+  /**
+   * Cancel a pending or running project permissions sync job. Cancellation is
+   * immediate when the job is still PENDING; if the job is already RUNNING, the
+   * cancellation is recorded and the worker stops at the next checkpoint
+   * (best-effort).
+   */
+  cancelProjectPermissionsSync: ProjectPermissionsSyncJob;
   changeMyPassword: ChangeMyPasswordResult;
   createApiKey: CreateApiKeyResult;
   createGroup: Group;
@@ -891,11 +898,17 @@ export type Mutation = {
   setMyPrimaryMfaDevice: MfaDevice;
   setupMfa: MfaSetupResponse;
   /**
-   * Replace-import project RBAC from a canonical data model (CDM): roles, groups,
+   * Enqueue an asynchronous CDM permission sync job for the given project.
+   * Replace-imports project RBAC from a canonical data model: roles, groups,
    * project pivots, and user role assignments tagged for this project.
    * Requires Project:update in the given project scope.
+   *
+   * Returns immediately with a job descriptor in the PENDING status; the actual
+   * import runs in the background. Poll `projectPermissionsSyncJob` for status.
+   * Pass `input.importId` for idempotency: if an active job already exists for
+   * the same (project, importId), that job is returned instead of creating a new one.
    */
-  syncProjectPermissions: SyncProjectPermissionsResult;
+  startProjectPermissionsSync: ProjectPermissionsSyncJob;
   updateGroup: Group;
   updateMyUser: User;
   updateOrganization: Organization;
@@ -918,6 +931,12 @@ export type Mutation = {
 
 export type MutationAcceptInvitationArgs = {
   input: AcceptInvitationInput;
+};
+
+export type MutationCancelProjectPermissionsSyncArgs = {
+  id: Scalars['ID']['input'];
+  jobId: Scalars['ID']['input'];
+  scope: Scope;
 };
 
 export type MutationChangeMyPasswordArgs = {
@@ -1101,7 +1120,7 @@ export type MutationSetMyPrimaryMfaDeviceArgs = {
   input: SetMyPrimaryMfaDeviceInput;
 };
 
-export type MutationSyncProjectPermissionsArgs = {
+export type MutationStartProjectPermissionsSyncArgs = {
   id: Scalars['ID']['input'];
   input: SyncProjectPermissionsInput;
   scope: Scope;
@@ -1626,6 +1645,74 @@ export type ProjectPermissionProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
+/**
+ * A row in `project_permission_sync_jobs` representing one queued or completed
+ * CDM permission sync. The actual import runs in the background via the jobs
+ * adapter; clients enqueue a job and poll this resource for status.
+ */
+export type ProjectPermissionsSyncJob = {
+  __typename?: 'ProjectPermissionsSyncJob';
+  cancelledAt?: Maybe<Scalars['Date']['output']>;
+  cdmVersion: Scalars['Int']['output'];
+  completedAt?: Maybe<Scalars['Date']['output']>;
+  enqueuedAt: Scalars['Date']['output'];
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /**
+   * True when the worker captured a pre-sync rollback snapshot of the project's
+   * CDM state inside the import transaction. The snapshot itself is downloaded
+   * via the REST endpoint, mirroring the original-payload pattern.
+   */
+  hasSnapshot: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  importId?: Maybe<Scalars['String']['output']>;
+  projectId: Scalars['ID']['output'];
+  /** Counts and warnings populated when the job reaches COMPLETED. */
+  result?: Maybe<SyncProjectPermissionsResult>;
+  /**
+   * Serialised byte length of the snapshot JSON; useful for list-page rendering
+   * without round-tripping the full JSONB column.
+   */
+  snapshotSizeBytes?: Maybe<Scalars['Int']['output']>;
+  snapshotTakenAt?: Maybe<Scalars['Date']['output']>;
+  startedAt?: Maybe<Scalars['Date']['output']>;
+  status: ProjectPermissionsSyncJobStatus;
+  /**
+   * Warnings produced during execution (also surfaced inside `result.warnings`
+   * on completion; exposed at the top level for incremental visibility).
+   */
+  warnings: Array<Scalars['String']['output']>;
+};
+
+/** Paginated list of project permission sync jobs. */
+export type ProjectPermissionsSyncJobPage = PaginatedResults & {
+  __typename?: 'ProjectPermissionsSyncJobPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  jobs: Array<ProjectPermissionsSyncJob>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type ProjectPermissionsSyncJobSortInput = {
+  field: ProjectPermissionsSyncJobSortableField;
+  order: SortOrder;
+};
+
+export enum ProjectPermissionsSyncJobSortableField {
+  CompletedAt = 'completedAt',
+  EnqueuedAt = 'enqueuedAt',
+  ImportId = 'importId',
+  StartedAt = 'startedAt',
+  Status = 'status',
+}
+
+/** Lifecycle status of an asynchronous project permissions sync job. */
+export enum ProjectPermissionsSyncJobStatus {
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+  Running = 'RUNNING',
+}
+
 export type ProjectResource = Auditable & {
   __typename?: 'ProjectResource';
   createdAt: Scalars['Date']['output'];
@@ -1738,6 +1825,18 @@ export type Query = {
   permissions: PermissionPage;
   /** List OAuth apps for the given project scope. Allowed scopes: accountProject, organizationProject. */
   projectApps: ProjectAppPage;
+  /**
+   * Read the current state of a project permissions sync job. Use this to poll
+   * the lifecycle of a job started via `startProjectPermissionsSync`.
+   */
+  projectPermissionsSyncJob: ProjectPermissionsSyncJob;
+  /**
+   * List project permissions sync jobs for a project, with optional pagination,
+   * search (matches importId), status filter, and sort. Use this to populate the
+   * job history view. Use `projectPermissionsSyncJob` to read a single job's
+   * current state for polling.
+   */
+  projectPermissionsSyncJobs: ProjectPermissionsSyncJobPage;
   projects: ProjectPage;
   resources: ResourcePage;
   roles: RolePage;
@@ -1827,6 +1926,22 @@ export type QueryProjectAppsArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<ProjectAppSortInput>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type QueryProjectPermissionsSyncJobArgs = {
+  id: Scalars['ID']['input'];
+  jobId: Scalars['ID']['input'];
+  scope: Scope;
+};
+
+export type QueryProjectPermissionsSyncJobsArgs = {
+  id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  scope: Scope;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ProjectPermissionsSyncJobSortInput>;
+  status?: InputMaybe<ProjectPermissionsSyncJobStatus>;
 };
 
 export type QueryProjectsArgs = {
@@ -3109,6 +3224,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
     | PermissionPage
     | ProjectAppPage
     | ProjectPage
+    | ProjectPermissionsSyncJobPage
     | ResourcePage
     | RolePage
     | TagPage
@@ -3277,6 +3393,11 @@ export type ResolversTypes = ResolversObject<{
   ProjectMembershipExportData: ResolverTypeWrapper<ProjectMembershipExportData>;
   ProjectPage: ResolverTypeWrapper<ProjectPage>;
   ProjectPermission: ResolverTypeWrapper<ProjectPermission>;
+  ProjectPermissionsSyncJob: ResolverTypeWrapper<ProjectPermissionsSyncJob>;
+  ProjectPermissionsSyncJobPage: ResolverTypeWrapper<ProjectPermissionsSyncJobPage>;
+  ProjectPermissionsSyncJobSortInput: ProjectPermissionsSyncJobSortInput;
+  ProjectPermissionsSyncJobSortableField: ProjectPermissionsSyncJobSortableField;
+  ProjectPermissionsSyncJobStatus: ProjectPermissionsSyncJobStatus;
   ProjectResource: ResolverTypeWrapper<ProjectResource>;
   ProjectRole: ResolverTypeWrapper<ProjectRole>;
   ProjectSearchableField: ProjectSearchableField;
@@ -3581,6 +3702,9 @@ export type ResolversParentTypes = ResolversObject<{
   ProjectMembershipExportData: ProjectMembershipExportData;
   ProjectPage: ProjectPage;
   ProjectPermission: ProjectPermission;
+  ProjectPermissionsSyncJob: ProjectPermissionsSyncJob;
+  ProjectPermissionsSyncJobPage: ProjectPermissionsSyncJobPage;
+  ProjectPermissionsSyncJobSortInput: ProjectPermissionsSyncJobSortInput;
   ProjectResource: ProjectResource;
   ProjectRole: ProjectRole;
   ProjectSortInput: ProjectSortInput;
@@ -4242,6 +4366,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationAcceptInvitationArgs, 'input'>
   >;
+  cancelProjectPermissionsSync?: Resolver<
+    ResolversTypes['ProjectPermissionsSyncJob'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCancelProjectPermissionsSyncArgs, 'id' | 'jobId' | 'scope'>
+  >;
   changeMyPassword?: Resolver<
     ResolversTypes['ChangeMyPasswordResult'],
     ParentType,
@@ -4503,11 +4633,11 @@ export type MutationResolvers<
     RequireFields<MutationSetMyPrimaryMfaDeviceArgs, 'input'>
   >;
   setupMfa?: Resolver<ResolversTypes['MfaSetupResponse'], ParentType, ContextType>;
-  syncProjectPermissions?: Resolver<
-    ResolversTypes['SyncProjectPermissionsResult'],
+  startProjectPermissionsSync?: Resolver<
+    ResolversTypes['ProjectPermissionsSyncJob'],
     ParentType,
     ContextType,
-    RequireFields<MutationSyncProjectPermissionsArgs, 'id' | 'input' | 'scope'>
+    RequireFields<MutationStartProjectPermissionsSyncArgs, 'id' | 'input' | 'scope'>
   >;
   updateGroup?: Resolver<
     ResolversTypes['Group'],
@@ -4865,6 +4995,7 @@ export type PaginatedResultsResolvers<
     | 'PermissionPage'
     | 'ProjectAppPage'
     | 'ProjectPage'
+    | 'ProjectPermissionsSyncJobPage'
     | 'ResourcePage'
     | 'RolePage'
     | 'TagPage'
@@ -5061,6 +5192,39 @@ export type ProjectPermissionResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type ProjectPermissionsSyncJobResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ProjectPermissionsSyncJob'] =
+    ResolversParentTypes['ProjectPermissionsSyncJob'],
+> = ResolversObject<{
+  cancelledAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  cdmVersion?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  completedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  enqueuedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  errorMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  hasSnapshot?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  importId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  projectId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  result?: Resolver<Maybe<ResolversTypes['SyncProjectPermissionsResult']>, ParentType, ContextType>;
+  snapshotSizeBytes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  snapshotTakenAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  startedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['ProjectPermissionsSyncJobStatus'], ParentType, ContextType>;
+  warnings?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+}>;
+
+export type ProjectPermissionsSyncJobPageResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['ProjectPermissionsSyncJobPage'] =
+    ResolversParentTypes['ProjectPermissionsSyncJobPage'],
+> = ResolversObject<{
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  jobs?: Resolver<Array<ResolversTypes['ProjectPermissionsSyncJob']>, ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type ProjectResourceResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['ProjectResource'] =
@@ -5234,6 +5398,18 @@ export type QueryResolvers<
     ParentType,
     ContextType,
     RequireFields<QueryProjectAppsArgs, 'scope'>
+  >;
+  projectPermissionsSyncJob?: Resolver<
+    ResolversTypes['ProjectPermissionsSyncJob'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryProjectPermissionsSyncJobArgs, 'id' | 'jobId' | 'scope'>
+  >;
+  projectPermissionsSyncJobs?: Resolver<
+    ResolversTypes['ProjectPermissionsSyncJobPage'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryProjectPermissionsSyncJobsArgs, 'id' | 'scope'>
   >;
   projects?: Resolver<
     ResolversTypes['ProjectPage'],
@@ -5791,6 +5967,8 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   ProjectMembershipExportData?: ProjectMembershipExportDataResolvers<ContextType>;
   ProjectPage?: ProjectPageResolvers<ContextType>;
   ProjectPermission?: ProjectPermissionResolvers<ContextType>;
+  ProjectPermissionsSyncJob?: ProjectPermissionsSyncJobResolvers<ContextType>;
+  ProjectPermissionsSyncJobPage?: ProjectPermissionsSyncJobPageResolvers<ContextType>;
   ProjectResource?: ProjectResourceResolvers<ContextType>;
   ProjectRole?: ProjectRoleResolvers<ContextType>;
   ProjectTag?: ProjectTagResolvers<ContextType>;

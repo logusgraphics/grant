@@ -101,6 +101,10 @@ export default withMermaid({
               link: '/core-concepts/organization-invitations',
             },
             { text: 'Tags & Relationships', link: '/core-concepts/tags-relationships' },
+            {
+              text: 'CDM import & export',
+              link: '/core-concepts/cdm-import-export',
+            },
           ],
         },
         {

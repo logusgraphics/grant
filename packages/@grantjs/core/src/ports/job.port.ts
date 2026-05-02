@@ -2,8 +2,13 @@ import type { Scope } from '@grantjs/schema';
 
 export interface ScheduledJob {
   id: string;
-  schedule: string; // Cron pattern
+  schedule: string; // Cron pattern (ignored when enqueueOnly is true)
   enabled: boolean;
+  /**
+   * When true, register the handler so `enqueue()` can dispatch one-off jobs,
+   * but skip cron/recurring scheduling. Use for jobs that only ever run on demand.
+   */
+  enqueueOnly?: boolean;
 }
 
 export interface JobExecutionContext {

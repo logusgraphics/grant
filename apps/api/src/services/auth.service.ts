@@ -19,7 +19,7 @@ export class AuthService implements IAuthService {
     const context = 'AuthService.isAuthorized';
     const validatedInput = validateInput(isAuthorizedInputSchema, input, context);
 
-    const { permission, context: authContext } = validatedInput;
+    const { permission, context: authContext, scope: scopeOverride } = validatedInput;
 
     this.logger.debug({
       msg: 'Evaluating authorization',
@@ -32,7 +32,11 @@ export class AuthService implements IAuthService {
     });
 
     const startTime = Date.now();
-    const result = await this.grant.isAuthorized(permission, authContext || {});
+    const result = await this.grant.isAuthorized(
+      permission,
+      authContext || {},
+      scopeOverride ?? undefined
+    );
     const duration = Date.now() - startTime;
 
     const logData = {

@@ -84,8 +84,10 @@ import { PermissionService } from './permissions.service';
 import { ProjectAppTagService } from './project-app-tags.service';
 import { ProjectAppService } from './project-apps.service';
 import { ProjectGroupService } from './project-groups.service';
+import { ProjectPermissionExportService } from './project-permission-export.service';
 import { ProjectPermissionSyncService } from './project-permission-sync.service';
 import { ProjectPermissionService } from './project-permissions.service';
+import { ProjectPermissionsSyncJobService } from './project-permissions-sync-job.service';
 import { ProjectResourceService } from './project-resources.service';
 import { ProjectRoleService } from './project-roles.service';
 import { ProjectTagService } from './project-tags.service';
@@ -409,7 +411,26 @@ export function createServices(
       servicesBase.projectPermissions,
       servicesBase.projectResources,
       servicesBase.projectUsers,
+      servicesBase.userRoles,
+      cache,
+      repositories.projectPermissionExportRepository
+    ),
+    projectPermissionExport: new ProjectPermissionExportService(
+      repositories.projectPermissionSyncRepository,
+      repositories.projectPermissionExportRepository,
+      servicesBase.roles,
+      servicesBase.groups,
+      servicesBase.roleGroups,
+      servicesBase.groupPermissions,
+      servicesBase.projectRoles,
+      servicesBase.projectGroups,
+      servicesBase.projectPermissions,
+      servicesBase.projectResources,
+      servicesBase.projectUsers,
       servicesBase.userRoles
+    ),
+    projectPermissionsSyncJobs: new ProjectPermissionsSyncJobService(
+      repositories.projectPermissionSyncJobRepository
     ),
   };
 }

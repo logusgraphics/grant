@@ -190,7 +190,8 @@
       "settings": "Einstellungen",
       "backToOrganization": "Zurück zur Organisation",
       "signingKeys": "Signierungsschlüssel",
-      "projectApps": "Apps"
+      "projectApps": "Apps",
+      "permissionSyncJobs": "Import/Export"
     }
   },
   "theme": {
@@ -3181,6 +3182,183 @@
     "notifications": {
       "rotateSuccess": "Signaturschlüssel rotiert",
       "rotateError": "Fehler beim Rotieren des Signaturschlüssels"
+    }
+  },
+  "permissionSyncJobs": {
+    "title": "Berechtigungs-Sync",
+    "view": {
+      "cards": "Karten",
+      "table": "Tabelle"
+    },
+    "search": {
+      "placeholder": "Suche nach Import-ID"
+    },
+    "sort": {
+      "label": "Sortieren",
+      "enqueuedAt": "Eingereiht",
+      "startedAt": "Gestartet",
+      "completedAt": "Abgeschlossen",
+      "status": "Status",
+      "importId": "Import-ID"
+    },
+    "filter": {
+      "status": "Status"
+    },
+    "limit": {
+      "label": "Pro Seite"
+    },
+    "toolbar": {
+      "start": "Import",
+      "export": "Export"
+    },
+    "status": {
+      "all": "Alle",
+      "pending": "Ausstehend",
+      "running": "Läuft",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen"
+    },
+    "table": {
+      "status": "Status",
+      "importId": "Import-ID",
+      "noImportId": "(keine Import-ID)",
+      "cdmVersion": "CDM",
+      "enqueuedAt": "Eingereiht",
+      "startedAt": "Gestartet",
+      "completedAt": "Abgeschlossen",
+      "jobId": "Job-ID"
+    },
+    "audit": {
+      "cancelled": "Abgebrochen"
+    },
+    "empty": {
+      "title": "Noch keine Import-Jobs",
+      "description": "Importiere eine CDM-JSON-Datei, um eine externe Auth-Domäne in das Berechtigungsschema dieses Projekts zu übersetzen."
+    },
+    "noResults": {
+      "title": "Keine passenden Jobs",
+      "description": "Filter zurücksetzen oder nach einer anderen Import-ID suchen."
+    },
+    "actions": {
+      "view": "Details anzeigen",
+      "downloadPayload": "Payload herunterladen",
+      "cancel": "Job abbrechen"
+    },
+    "startDialog": {
+      "title": "Berechtigungs-Sync starten",
+      "description": "Lege eine CDM-JSON-Datei ab oder klicke zum Auswählen. Die Originaldatei wird gespeichert, damit du sie später ansehen und herunterladen kannst.",
+      "dropzone": {
+        "active": "Lege die JSON-Datei hier ab",
+        "idle": "JSON-Datei ablegen oder klicken, um zu durchsuchen",
+        "hint": "Nur .json-Dateien bis 25 MB werden unterstützt",
+        "browse": "Datei auswählen"
+      },
+      "errors": {
+        "invalidType": "Nur .json-Dateien werden akzeptiert.",
+        "fileTooLarge": "Datei ist zu groß. Maximale Größe ist {maxSize} MB.",
+        "invalidJson": "Die Datei ist kein gültiges JSON.",
+        "invalidShape": "Das JSON sieht nicht wie ein CDM-Payload aus (cdmVersion, roleTemplates oder userAssignments fehlen).",
+        "readFailed": "Fehler beim Lesen der Datei."
+      },
+      "summary": {
+        "cdmVersion": "CDM-Version",
+        "roleTemplates": "Rollenvorlagen",
+        "userAssignments": "Benutzerzuweisungen"
+      },
+      "clear": "Datei entfernen",
+      "cancel": "Abbrechen",
+      "submit": "Sync starten",
+      "submitting": "Wird eingereiht…",
+      "checkingPermission": "Berechtigung wird geprüft…",
+      "permissionDeniedTitle": "Sync kann nicht gestartet werden",
+      "permissionDeniedDescription": "Zum Importieren von CDM und Einreihen eines Sync-Jobs brauchst du die Berechtigung, dieses Projekt zu aktualisieren.",
+      "emailVerificationTitle": "E-Mail bestätigen",
+      "emailVerificationDescription": "Bestätige deine E-Mail-Adresse, bevor du einen Berechtigungs-Sync startest."
+    },
+    "viewDialog": {
+      "title": "Sync-Job",
+      "description": "Inspiziere den Lebenszyklus, das Ergebnis und die Originaldaten dieses Jobs.",
+      "descriptionWithImport": "Import {importId}",
+      "tabs": {
+        "status": "Status",
+        "result": "Ergebnis",
+        "payload": "Payload",
+        "snapshot": "Rollback-Snapshot"
+      },
+      "polling": "Aktualisiere…",
+      "loading": "Lade Job-Details…",
+      "close": "Schließen",
+      "fields": {
+        "jobId": "Job-ID",
+        "importId": "Import-ID",
+        "cdmVersion": "CDM-Version",
+        "enqueuedAt": "Eingereiht",
+        "startedAt": "Gestartet",
+        "completedAt": "Abgeschlossen",
+        "cancelledAt": "Abgebrochen",
+        "notSet": "—",
+        "errorMessage": "Fehler",
+        "warnings": "{count, plural, =1 {# Warnung} other {# Warnungen}}"
+      },
+      "result": {
+        "notAvailable": "Ergebnisse sind verfügbar, sobald der Job abgeschlossen ist.",
+        "rolesCreated": "Rollen erstellt",
+        "groupsCreated": "Gruppen erstellt",
+        "roleGroupsLinked": {
+          "left": "Rollen",
+          "right": "Gruppen"
+        },
+        "groupPermissionsLinked": {
+          "left": "Gruppen",
+          "right": "Berechtigungen"
+        },
+        "projectRolesLinked": {
+          "left": "Projekt",
+          "right": "Rollen"
+        },
+        "projectGroupsLinked": {
+          "left": "Projekt",
+          "right": "Gruppen"
+        },
+        "projectPermissionsLinked": {
+          "left": "Projekt",
+          "right": "Berechtigungen"
+        },
+        "projectResourcesLinked": {
+          "left": "Projekt",
+          "right": "Ressourcen"
+        },
+        "projectUsersEnsured": "Projektnutzer sichergestellt",
+        "userRolesAssigned": "Nutzerrollen zugewiesen"
+      },
+      "payload": {
+        "loading": "Lade Payload…",
+        "notAvailable": "Payload konnte nicht geladen werden.",
+        "reload": "Neu laden",
+        "download": "JSON herunterladen"
+      },
+      "snapshot": {
+        "summary": "Dieser Snapshot wurde automatisch vor dem Sync in derselben Transaktion wie der Import erstellt. Er kann als CDM-Payload erneut abgespielt werden, um das Projekt auf den Stand vor diesem Job zurückzusetzen.",
+        "takenAt": "Aufgenommen am {time}, kurz bevor dieser Sync ausgeführt wurde.",
+        "loading": "Lade Snapshot…",
+        "notAvailable": "Für diesen Job ist kein Rollback-Snapshot verfügbar.",
+        "reload": "Neu laden",
+        "download": "Snapshot herunterladen"
+      }
+    },
+    "cancelDialog": {
+      "title": "Sync-Job abbrechen",
+      "description": "Job {importId} abbrechen? Ausstehende Jobs werden aus der Warteschlange entfernt. Laufende Jobs werden beim nächsten sicheren Punkt nach bestem Bemühen gestoppt.",
+      "cancel": "Job behalten",
+      "confirm": "Job abbrechen",
+      "confirming": "Wird abgebrochen…"
+    },
+    "notifications": {
+      "startSuccess": "Sync-Job eingereiht",
+      "startError": "Sync konnte nicht gestartet werden",
+      "cancelSuccess": "Sync-Job abgebrochen",
+      "cancelError": "Sync-Job konnte nicht abgebrochen werden"
     }
   }
 }

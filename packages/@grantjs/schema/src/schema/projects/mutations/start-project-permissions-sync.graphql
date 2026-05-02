@@ -1,0 +1,18 @@
+extend type Mutation {
+  """
+  Enqueue an asynchronous CDM permission sync job for the given project.
+  Replace-imports project RBAC from a canonical data model: roles, groups,
+  project pivots, and user role assignments tagged for this project.
+  Requires Project:update in the given project scope.
+
+  Returns immediately with a job descriptor in the PENDING status; the actual
+  import runs in the background. Poll `projectPermissionsSyncJob` for status.
+  Pass `input.importId` for idempotency: if an active job already exists for
+  the same (project, importId), that job is returned instead of creating a new one.
+  """
+  startProjectPermissionsSync(
+    id: ID!
+    scope: Scope!
+    input: SyncProjectPermissionsInput!
+  ): ProjectPermissionsSyncJob!
+}

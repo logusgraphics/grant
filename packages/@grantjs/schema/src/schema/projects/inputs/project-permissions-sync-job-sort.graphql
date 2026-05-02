@@ -1,0 +1,4 @@
+input ProjectPermissionsSyncJobSortInput {
+  field: ProjectPermissionsSyncJobSortableField!
+  order: SortOrder!
+}

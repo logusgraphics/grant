@@ -64,6 +64,12 @@ import {
   projectAppsRelations,
 } from './project-apps.schema';
 import { projectGroups, projectGroupsRelations } from './project-groups.schema';
+import {
+  projectPermissionSyncJobAuditLogs,
+  projectPermissionSyncJobAuditLogsRelations,
+  projectPermissionSyncJobs,
+  projectPermissionSyncJobsRelations,
+} from './project-permission-sync-jobs.schema';
 import { projectPermissions, projectPermissionsRelations } from './project-permissions.schema';
 import {
   projectResourceAuditLogs,
@@ -150,6 +156,8 @@ export const schema = {
   resourceTags,
   resourceTagAuditLogs,
   projectPermissions,
+  projectPermissionSyncJobs,
+  projectPermissionSyncJobAuditLogs,
   projectResources,
   projectResourceAuditLogs,
   projectRoles,
@@ -202,6 +210,8 @@ export const schema = {
   resourceAuditLogsRelations,
   resourceTagsRelations,
   projectPermissionsRelations,
+  projectPermissionSyncJobsRelations,
+  projectPermissionSyncJobAuditLogsRelations,
   projectResourcesRelations,
   projectResourceAuditLogsRelations,
   projectRolesRelations,

@@ -1,0 +1,9 @@
+extend type Mutation {
+  """
+  Cancel a pending or running project permissions sync job. Cancellation is
+  immediate when the job is still PENDING; if the job is already RUNNING, the
+  cancellation is recorded and the worker stops at the next checkpoint
+  (best-effort).
+  """
+  cancelProjectPermissionsSync(id: ID!, scope: Scope!, jobId: ID!): ProjectPermissionsSyncJob!
+}

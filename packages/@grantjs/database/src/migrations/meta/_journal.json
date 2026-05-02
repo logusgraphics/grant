@@ -414,6 +414,20 @@
       "when": 1776697298938,
       "tag": "0058_spooky_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1777719854023,
+      "tag": "0059_wooden_amazoness",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1777742424432,
+      "tag": "0060_clear_magma",
+      "breakpoints": true
     }
   ]
 }

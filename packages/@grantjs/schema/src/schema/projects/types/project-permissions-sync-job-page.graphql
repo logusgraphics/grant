@@ -1,0 +1,8 @@
+"""
+Paginated list of project permission sync jobs.
+"""
+type ProjectPermissionsSyncJobPage implements PaginatedResults {
+  jobs: [ProjectPermissionsSyncJob!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}

@@ -1,6 +1,7 @@
 import type { Grant, ITransactionalConnection } from '@grantjs/core';
 
 import { IEntityCacheAdapter } from '@/lib/cache';
+import { getJobAdapter } from '@/lib/jobs';
 import type { Transaction } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 
@@ -180,6 +181,9 @@ export function createHandlers(
       services.projectRoles,
       services.projectUsers,
       services.projectPermissionSync,
+      services.projectPermissionExport,
+      services.projectPermissionsSyncJobs,
+      getJobAdapter(),
       cache,
       services,
       db

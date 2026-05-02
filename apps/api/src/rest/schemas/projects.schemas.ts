@@ -1,12 +1,23 @@
-import { ProjectSortableField, SortOrder } from '@grantjs/schema';
+import {
+  ProjectPermissionsSyncJobSortableField,
+  ProjectSortableField,
+  SortOrder,
+} from '@grantjs/schema';
 
 import { z } from '@/lib/zod-openapi.lib';
 import {
   createSuccessResponseSchema,
+  jsonSchema,
   listQuerySchema,
   scopeSchema,
   tenantSchema,
 } from '@/rest/schemas/common.schemas';
+
+/** OpenAPI-friendly wrapper for downloadable CDM JSON (payload, snapshot, export). */
+export const cdmJsonArtifactSchema = jsonSchema.openapi({
+  description:
+    'CDM JSON document with the same logical shape as SyncProjectPermissionsInput (roleTemplates, userAssignments, etc.).',
+});
 
 export const projectSchema = z.object({
   id: z.string(),
@@ -161,8 +172,16 @@ const userAssignmentCdmSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
-/** Body for POST /api/projects/:id/permissions/sync (canonical data model import). */
-export const syncProjectPermissionsRequestSchema = z.object({
+/**
+ * Body for POST /api/projects/:id/permissions/sync-jobs.
+ *
+ * Enqueues an asynchronous canonical-data-model permission sync. The request
+ * returns immediately with a job descriptor; clients poll the job resource
+ * for status. Pass `importId` to make the request idempotent — if an active
+ * job already exists for the same `(project, importId)` it is returned instead
+ * of creating a new one.
+ */
+export const startProjectPermissionsSyncRequestSchema = z.object({
   scope: scopeSchema,
   cdmVersion: z.number().int(),
   importId: z.string().optional(),
@@ -170,7 +189,48 @@ export const syncProjectPermissionsRequestSchema = z.object({
   userAssignments: z.array(userAssignmentCdmSchema),
 });
 
-export const syncProjectPermissionsResultSchema = z.object({
+export const projectPermissionsSyncJobParamsSchema = z.object({
+  id: z.uuid('errors.validation.invalidProjectId').openapi({
+    description: 'UUID of the project',
+    example: '123e4567-e89b-12d3-a456-426614174005',
+    param: { in: 'path', name: 'id' },
+  }),
+  jobId: z.uuid('errors.validation.invalidJobId').openapi({
+    description: 'UUID of the project permissions sync job',
+    example: '123e4567-e89b-12d3-a456-426614174099',
+    param: { in: 'path', name: 'jobId' },
+  }),
+});
+
+export const projectPermissionsSyncJobScopeQuerySchema = z.object({
+  /**
+   * Permission sync only operates against `accountProject` or `organizationProject`
+   * scopes whose id is a composite `${parentId}:${projectId}` — so we accept any
+   * non-empty string here and let the handler enforce the precise format.
+   */
+  scopeId: z.string().min(1, 'errors.validation.invalidScopeId'),
+  tenant: tenantSchema,
+});
+
+/**
+ * Query for `GET /:id/permissions/export`. Reuses the same scope shape as the
+ * sync-job endpoints; `cdmVersion` defaults to 1 — the only supported version
+ * — so existing callers can omit it.
+ */
+export const exportProjectPermissionsQuerySchema = z.object({
+  scopeId: z.string().min(1, 'errors.validation.invalidScopeId'),
+  tenant: tenantSchema,
+  cdmVersion: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => {
+      if (val === undefined || val === '') return undefined;
+      return typeof val === 'string' ? parseInt(val, 10) : val;
+    })
+    .pipe(z.number().int().min(1).optional()),
+});
+
+const syncProjectPermissionsResultSchema = z.object({
   projectId: z.string(),
   importId: z.string().nullable(),
   rolesCreated: z.number(),
@@ -186,6 +246,72 @@ export const syncProjectPermissionsResultSchema = z.object({
   warnings: z.array(z.string()),
 });
 
-export const syncProjectPermissionsResponseSchema = createSuccessResponseSchema(
-  syncProjectPermissionsResultSchema
+export const projectPermissionsSyncJobStatusEnum = z.enum([
+  'PENDING',
+  'RUNNING',
+  'COMPLETED',
+  'FAILED',
+  'CANCELLED',
+]);
+
+export const projectPermissionsSyncJobSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  status: projectPermissionsSyncJobStatusEnum,
+  cdmVersion: z.number().int(),
+  importId: z.string().nullable(),
+  result: syncProjectPermissionsResultSchema.nullable(),
+  warnings: z.array(z.string()),
+  errorMessage: z.string().nullable(),
+  enqueuedAt: z.string(),
+  startedAt: z.string().nullable(),
+  completedAt: z.string().nullable(),
+  cancelledAt: z.string().nullable(),
+  hasSnapshot: z.boolean().openapi({
+    description:
+      'Whether a pre-sync rollback snapshot was captured before this job modified the project.',
+  }),
+  snapshotTakenAt: z.string().nullable().openapi({
+    description: 'ISO timestamp when the snapshot was captured, if any.',
+  }),
+  snapshotSizeBytes: z.number().int().nullable().openapi({
+    description: 'Serialized snapshot size in bytes, if a snapshot exists.',
+  }),
+});
+
+export const projectPermissionsSyncJobResponseSchema = createSuccessResponseSchema(
+  projectPermissionsSyncJobSchema
+);
+
+/**
+ * Query for listing project permissions sync jobs.
+ * Reuses the standard pagination/search shape and adds a status filter and the
+ * scope query params shared with the single-job endpoint.
+ */
+export const listProjectPermissionsSyncJobsQuerySchema = listQuerySchema
+  .omit({ relations: true, ids: true })
+  .extend({
+    scopeId: z.string().min(1, 'errors.validation.invalidScopeId'),
+    tenant: tenantSchema,
+    sortField: z
+      .enum(
+        Object.values(ProjectPermissionsSyncJobSortableField) as [
+          ProjectPermissionsSyncJobSortableField,
+          ...ProjectPermissionsSyncJobSortableField[],
+        ]
+      )
+      .optional(),
+    sortOrder: z.nativeEnum(SortOrder).optional(),
+    status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).optional().openapi({
+      description: 'Filter by lifecycle status',
+      example: 'PENDING',
+    }),
+  });
+
+export const listProjectPermissionsSyncJobsResponseSchema = createSuccessResponseSchema(
+  z.object({
+    jobs: z.array(projectPermissionsSyncJobSchema),
+    totalCount: z.number(),
+    hasNextPage: z.boolean(),
+  })
 );

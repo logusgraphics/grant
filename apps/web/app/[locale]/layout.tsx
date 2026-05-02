@@ -57,9 +57,12 @@ export default function LocaleLayout({ children }: LocaleLayoutProps) {
             ? await import('@grantjs/i18n/locales/de.json')
             : await import('@grantjs/i18n/locales/en.json');
         const sharedMessages = sharedModule.default as Record<string, unknown>;
-        const webOnlyModule = await import(`@/i18n/locales/${locale}.json`).catch(
-          () => import('@/i18n/locales/en.json')
-        );
+        // Use explicit locale imports (not `import(\`.../${locale}.json\`)`) so the bundler
+        // always embeds the full JSON; template dynamic imports can omit keys at runtime (Turbopack).
+        const webOnlyModule =
+          locale === 'de'
+            ? await import('@/i18n/locales/de.json')
+            : await import('@/i18n/locales/en.json');
         const webOnly = webOnlyModule.default as Record<string, unknown>;
         setMessages(mergeMessages(sharedMessages, webOnly) as AbstractIntlMessages);
       } catch {

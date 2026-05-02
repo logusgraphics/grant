@@ -42,7 +42,9 @@ export type {
 export type { IPermissionService, IPermissionTagService } from './services/permission.service.port';
 export type {
   IProjectGroupService,
+  IProjectPermissionExportService,
   IProjectPermissionService,
+  IProjectPermissionsSyncJobService,
   IProjectPermissionSyncService,
   IProjectResourceService,
   IProjectRoleService,

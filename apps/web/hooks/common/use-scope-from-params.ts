@@ -1,52 +1,71 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { Scope, Tenant } from '@grantjs/schema';
 
+/** Normalize Next dynamic segment (string | string[] | undefined) to a single string. */
+function segment(value: string | string[] | undefined): string | undefined {
+  if (value == null) return undefined;
+  return Array.isArray(value) ? value[0] : value;
+}
+
+/**
+ * Derives the API `Scope` from the current route params. The returned object
+ * is **referentially stable** while route params are unchanged so Apollo
+ * `variables` do not change every render (which would re-fire queries).
+ */
 export function useScopeFromParams(): Scope | null {
   const params = useParams();
 
-  if (params.accountId && params.projectId && params.userId) {
-    return {
-      tenant: Tenant.AccountProjectUser,
-      id: `${params.accountId}:${params.projectId}:${params.userId}` as string,
-    };
-  }
+  const accountId = segment(params.accountId as string | string[] | undefined);
+  const organizationId = segment(params.organizationId as string | string[] | undefined);
+  const projectId = segment(params.projectId as string | string[] | undefined);
+  const userId = segment(params.userId as string | string[] | undefined);
 
-  if (params.organizationId && params.projectId && params.userId) {
-    return {
-      tenant: Tenant.OrganizationProjectUser,
-      id: `${params.organizationId}:${params.projectId}:${params.userId}` as string,
-    };
-  }
+  return useMemo(() => {
+    if (accountId && projectId && userId) {
+      return {
+        tenant: Tenant.AccountProjectUser,
+        id: `${accountId}:${projectId}:${userId}`,
+      };
+    }
 
-  if (params.projectId && params.organizationId) {
-    return {
-      tenant: Tenant.OrganizationProject,
-      id: `${params.organizationId}:${params.projectId}` as string,
-    };
-  }
+    if (organizationId && projectId && userId) {
+      return {
+        tenant: Tenant.OrganizationProjectUser,
+        id: `${organizationId}:${projectId}:${userId}`,
+      };
+    }
 
-  if (params.projectId && params.accountId) {
-    return {
-      tenant: Tenant.AccountProject,
-      id: `${params.accountId}:${params.projectId}` as string,
-    };
-  }
+    if (projectId && organizationId) {
+      return {
+        tenant: Tenant.OrganizationProject,
+        id: `${organizationId}:${projectId}`,
+      };
+    }
 
-  if (params.organizationId) {
-    return {
-      tenant: Tenant.Organization,
-      id: params.organizationId as string,
-    };
-  }
+    if (projectId && accountId) {
+      return {
+        tenant: Tenant.AccountProject,
+        id: `${accountId}:${projectId}`,
+      };
+    }
 
-  if (params.accountId) {
-    return {
-      tenant: Tenant.Account,
-      id: params.accountId as string,
-    };
-  }
+    if (organizationId) {
+      return {
+        tenant: Tenant.Organization,
+        id: organizationId,
+      };
+    }
 
-  return null;
+    if (accountId) {
+      return {
+        tenant: Tenant.Account,
+        id: accountId,
+      };
+    }
+
+    return null;
+  }, [accountId, organizationId, projectId, userId]);
 }
