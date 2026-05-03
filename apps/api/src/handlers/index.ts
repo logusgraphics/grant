@@ -43,6 +43,7 @@ export function createHandlers(
     services.organizationUsers,
     services.projectUsers,
     services.userRoles,
+    services.userAuthenticationMethods,
     services.fileStorage,
     cache,
     services,

@@ -24,6 +24,10 @@ export const projectUsers = pgTable(
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
     metadata: jsonb('metadata').default({}).notNull(),
+    /** Project-visible display name override; null means use global users.name */
+    displayName: varchar('display_name', { length: 255 }),
+    /** Project-visible picture URL override; null means use global users.picture_url */
+    pictureUrl: varchar('picture_url', { length: 500 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),

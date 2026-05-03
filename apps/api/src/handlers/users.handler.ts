@@ -3,6 +3,7 @@ import type {
   IOrganizationUserService,
   IProjectUserService,
   ITransactionalConnection,
+  IUserAuthenticationMethodService,
   IUserRoleService,
   IUserService,
   IUserTagService,
@@ -16,18 +17,32 @@ import {
   Scope,
   Tag,
   Tenant,
+  UpdateUserInput,
   UploadUserPictureInput,
   User,
   UserPage,
 } from '@grantjs/schema';
 
 import { IEntityCacheAdapter } from '@/lib/cache';
-import { BadRequestError, NotFoundError } from '@/lib/errors';
+import {
+  isParentProjectScopeForPivotWrites,
+  isProjectScopedUserMetadataTenant,
+  isUnsupportedProjectUserMutationLeafTenant,
+  mergeEffectiveUserMetadataForProject,
+  mergeEffectiveUserProfileForProject,
+  toMetadataRecord,
+} from '@/lib/effective-project-user-metadata.lib';
+import { AuthorizationError, BadRequestError, NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
+import { assertProjectPivotMetadataMutationAllowed } from '@/lib/project-pivot-metadata-auth.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
+
+export type UpdateUserHandlerParams = MutationUpdateUserArgs & { actorUserId: string };
+
+export type UploadUserPictureHandlerParams = UploadUserPictureInput & { actorUserId: string };
 
 export class UserHandler extends CacheHandler {
   protected readonly logger = createLogger('UserHandler');
@@ -38,12 +53,27 @@ export class UserHandler extends CacheHandler {
     private readonly organizationUsers: IOrganizationUserService,
     private readonly projectUsers: IProjectUserService,
     private readonly userRoles: IUserRoleService,
+    private readonly userAuthenticationMethods: IUserAuthenticationMethodService,
     private readonly fileStorage: IFileStorageServicePort,
     cache: IEntityCacheAdapter,
     scopeServices: ScopeServices,
     private readonly db: ITransactionalConnection<Transaction>
   ) {
     super(cache, scopeServices);
+  }
+
+  /**
+   * Users with authentication methods manage their own global/pivot identity.
+   * Admin-managed users (no auth methods) may be edited by admins with permission.
+   */
+  private assertSelfManagedIdentityMutationAllowed(
+    actorUserId: string,
+    targetUserId: string,
+    targetHasAuthenticationMethods: boolean
+  ): void {
+    if (targetHasAuthenticationMethods && actorUserId !== targetUserId) {
+      throw new AuthorizationError('Cannot modify another user identity for self-managed users');
+    }
   }
 
   public async getUsers(params: QueryUsersArgs & SelectedFields<User>): Promise<UserPage> {
@@ -79,16 +109,71 @@ export class UserHandler extends CacheHandler {
       requestedFields,
     });
 
+    const fieldList = requestedFields as Array<keyof User> | undefined;
+    const wantsMetadata = !fieldList?.length || fieldList.includes('metadata' as keyof User);
+    const wantsName = !fieldList?.length || fieldList.includes('name' as keyof User);
+    const wantsPicture = !fieldList?.length || fieldList.includes('pictureUrl' as keyof User);
+
+    if (
+      isProjectScopedUserMetadataTenant(scope.tenant) &&
+      (wantsMetadata || wantsName || wantsPicture)
+    ) {
+      const projectId = this.extractProjectIdFromScope(scope);
+      const pivots = await this.projectUsers.getProjectUsers({ projectId });
+      const pivotByUserId = new Map(pivots.map((pu) => [pu.userId, pu]));
+      usersResult.users = usersResult.users.map((u) => {
+        const pu = pivotByUserId.get(u.id);
+        const next: User = { ...u };
+        if (wantsMetadata) {
+          next.metadata = mergeEffectiveUserMetadataForProject(
+            toMetadataRecord(u.metadata),
+            toMetadataRecord(pu?.metadata)
+          );
+        }
+        if (wantsName || wantsPicture) {
+          const merged = mergeEffectiveUserProfileForProject(
+            u.name,
+            u.pictureUrl,
+            pu?.displayName,
+            pu?.pictureUrl
+          );
+          if (wantsName) {
+            next.name = merged.name;
+          }
+          if (wantsPicture) {
+            next.pictureUrl = merged.pictureUrl ?? null;
+          }
+        }
+        return next;
+      });
+    }
+
     return usersResult;
   }
 
   public async createUser(params: MutationCreateUserArgs): Promise<User> {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { input } = params;
-      const { name, scope, tagIds, roleIds, primaryTagId } = input;
+      const { name, scope, tagIds, roleIds, primaryTagId, metadata: inputMetadata } = input;
 
-      const user = await this.users.createUser({ name }, tx);
+      const metadataRecord =
+        inputMetadata != null && typeof inputMetadata === 'object' && !Array.isArray(inputMetadata)
+          ? (inputMetadata as Record<string, unknown>)
+          : undefined;
+
+      const user =
+        scope.tenant === Tenant.Organization
+          ? await this.users.createUser(
+              {
+                name,
+                ...(metadataRecord !== undefined ? { metadata: metadataRecord } : {}),
+              },
+              tx
+            )
+          : await this.users.createUser({ name }, tx);
       const { id: userId } = user;
+
+      let invalidatePivotAuth = false;
       switch (scope.tenant) {
         case Tenant.Organization: {
           const roleId = roleIds?.[0];
@@ -104,7 +189,17 @@ export class UserHandler extends CacheHandler {
         case Tenant.OrganizationProject:
         case Tenant.AccountProject: {
           const projectId = this.extractProjectIdFromScope(scope);
-          await this.projectUsers.addProjectUser({ projectId, userId }, tx);
+          await this.projectUsers.addProjectUser(
+            {
+              projectId,
+              userId,
+              ...(metadataRecord !== undefined ? { metadata: metadataRecord } : {}),
+            },
+            tx
+          );
+          if (metadataRecord !== undefined) {
+            invalidatePivotAuth = true;
+          }
           break;
         }
       }
@@ -126,14 +221,72 @@ export class UserHandler extends CacheHandler {
 
       this.addUserIdToScopeCache(scope, userId);
 
+      if (invalidatePivotAuth) {
+        await this.invalidateAuthorizationResultsForUser(userId);
+      }
+
       return user;
     });
   }
 
-  public async updateUser(params: MutationUpdateUserArgs): Promise<User> {
-    return await this.db.withTransaction(async (tx: Transaction) => {
-      const { id: userId, input } = params;
-      const { roleIds, tagIds, primaryTagId, scope } = input;
+  public async updateUser(params: UpdateUserHandlerParams): Promise<User> {
+    const { id: userId, input, actorUserId } = params;
+    const { roleIds, tagIds, primaryTagId, scope, metadata, name, pictureUrl } = input;
+
+    await this.db.withTransaction(async (tx: Transaction) => {
+      const authMethods = await this.userAuthenticationMethods.getUserAuthenticationMethods(
+        { userId },
+        tx
+      );
+      const targetHasAuthenticationMethods = authMethods.length > 0;
+
+      const touchesLeafRestrictedFields =
+        metadata !== undefined || name !== undefined || pictureUrl !== undefined;
+
+      const leafUnsupported = isUnsupportedProjectUserMutationLeafTenant(scope.tenant);
+      if (leafUnsupported && touchesLeafRestrictedFields) {
+        throw new BadRequestError(
+          'User profile and metadata updates require an OrganizationProject or AccountProject scope'
+        );
+      }
+
+      const isParentProject = isParentProjectScopeForPivotWrites(scope.tenant);
+
+      const isProjectPivotMeta =
+        isParentProject &&
+        metadata !== undefined &&
+        metadata !== null &&
+        typeof metadata === 'object' &&
+        !Array.isArray(metadata);
+
+      const updatingPivotProfile =
+        isParentProject && (name !== undefined || pictureUrl !== undefined);
+
+      const touchesProfileIdentity = name !== undefined || pictureUrl !== undefined;
+      if (touchesProfileIdentity) {
+        this.assertSelfManagedIdentityMutationAllowed(
+          actorUserId,
+          userId,
+          targetHasAuthenticationMethods
+        );
+      }
+
+      if (isProjectPivotMeta) {
+        assertProjectPivotMetadataMutationAllowed(
+          actorUserId,
+          userId,
+          targetHasAuthenticationMethods
+        );
+      }
+
+      if (metadata !== undefined && !isProjectPivotMeta) {
+        this.assertSelfManagedIdentityMutationAllowed(
+          actorUserId,
+          userId,
+          targetHasAuthenticationMethods
+        );
+      }
+
       let currentTagIds: string[] = [];
       let currentRoleIds: string[] = [];
       if (Array.isArray(tagIds)) {
@@ -142,7 +295,60 @@ export class UserHandler extends CacheHandler {
       if (Array.isArray(roleIds)) {
         currentRoleIds = await this.getUserRoleIdsInScope(userId, scope);
       }
-      const updatedUser = await this.users.updateUser(userId, input, tx);
+
+      let shouldInvalidateAuth = false;
+
+      if (isProjectPivotMeta) {
+        const projectId = this.extractProjectIdFromScope(scope);
+        await this.projectUsers.updateProjectUserMetadata(
+          {
+            projectId,
+            userId,
+            metadata: metadata as Record<string, unknown>,
+          },
+          tx
+        );
+        shouldInvalidateAuth = true;
+      }
+
+      if (updatingPivotProfile) {
+        const projectId = this.extractProjectIdFromScope(scope);
+        await this.projectUsers.updateProjectUserProfile(
+          {
+            projectId,
+            userId,
+            ...(name !== undefined ? { displayName: name } : {}),
+            ...(pictureUrl !== undefined ? { pictureUrl } : {}),
+          },
+          tx
+        );
+        shouldInvalidateAuth = true;
+      }
+
+      const usersRowPatch: Omit<UpdateUserInput, 'scope'> = {};
+      if (!isProjectPivotMeta && metadata !== undefined) {
+        usersRowPatch.metadata = metadata;
+      }
+      if (!isParentProject) {
+        if (name !== undefined) {
+          usersRowPatch.name = name;
+        }
+        if (pictureUrl !== undefined) {
+          usersRowPatch.pictureUrl = pictureUrl;
+        }
+      }
+      if (roleIds !== undefined) {
+        usersRowPatch.roleIds = roleIds;
+      }
+      if (tagIds !== undefined) {
+        usersRowPatch.tagIds = tagIds;
+      }
+      if (primaryTagId !== undefined) {
+        usersRowPatch.primaryTagId = primaryTagId;
+      }
+
+      await this.users.updateUser(userId, usersRowPatch, tx);
+
       if (Array.isArray(tagIds)) {
         const newTagIds = tagIds.filter((tagId) => !currentTagIds.includes(tagId));
         const removedTagIds = currentTagIds.filter((tagId) => !tagIds.includes(tagId));
@@ -175,8 +381,24 @@ export class UserHandler extends CacheHandler {
           await this.invalidateProjectUserRoleCache(userId);
         }
       }
-      return updatedUser;
+
+      if (shouldInvalidateAuth) {
+        await this.invalidateAuthorizationResultsForUser(userId);
+      }
     });
+
+    const merged = await this.getUsers({
+      ids: [userId],
+      limit: 1,
+      scope,
+      page: 1,
+      search: null,
+    });
+    const user = merged.users[0];
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+    return user;
   }
 
   public async deleteUser(params: MutationDeleteUserArgs & DeleteParams): Promise<User> {
@@ -199,7 +421,12 @@ export class UserHandler extends CacheHandler {
             ...scopedRoleIds.map((roleId) => this.userRoles.removeUserRole({ userId, roleId }, tx)),
           ]);
           await this.removeUserIdFromScopeCache(scope, userId);
-          return await this.users.deleteUser(params, tx);
+          const page = await this.users.getUsers({ ids: [userId], limit: 1 });
+          const removedFromOrg = page.users?.[0];
+          if (!removedFromOrg) {
+            throw new NotFoundError('User');
+          }
+          return removedFromOrg;
         }
         case Tenant.OrganizationProject:
         case Tenant.AccountProject: {
@@ -297,9 +524,25 @@ export class UserHandler extends CacheHandler {
   }
 
   public async uploadUserPicture(
-    params: UploadUserPictureInput
+    params: UploadUserPictureHandlerParams
   ): Promise<{ url: string; path: string }> {
-    const { userId, file, contentType, filename } = params;
+    const { userId, file, contentType, filename, scope, actorUserId } = params;
+
+    if (isUnsupportedProjectUserMutationLeafTenant(scope.tenant)) {
+      throw new BadRequestError(
+        'Picture upload requires an OrganizationProject or AccountProject scope'
+      );
+    }
+
+    const authMethods = await this.userAuthenticationMethods.getUserAuthenticationMethods({
+      userId,
+    });
+    const targetHasAuthenticationMethods = authMethods.length > 0;
+    this.assertSelfManagedIdentityMutationAllowed(
+      actorUserId,
+      userId,
+      targetHasAuthenticationMethods
+    );
 
     const fileBuffer = this.fileStorage.validateAndDecodeUpload({
       file,
@@ -318,7 +561,16 @@ export class UserHandler extends CacheHandler {
         public: true,
       });
 
-      await this.users.updateUser(userId, { pictureUrl: result.url }, tx);
+      if (isParentProjectScopeForPivotWrites(scope.tenant)) {
+        const projectId = this.extractProjectIdFromScope(scope);
+        await this.projectUsers.updateProjectUserProfile(
+          { projectId, userId, pictureUrl: result.url },
+          tx
+        );
+        await this.invalidateAuthorizationResultsForUser(userId);
+      } else {
+        await this.users.updateUser(userId, { pictureUrl: result.url }, tx);
+      }
 
       return {
         url: result.url,

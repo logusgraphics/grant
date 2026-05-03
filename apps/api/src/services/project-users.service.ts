@@ -8,6 +8,10 @@ import type {
 import { AddProjectUserInput, ProjectUser, RemoveProjectUserInput } from '@grantjs/schema';
 
 import { mergeCdmImporterMetadata } from '@/constants/cdm-import.constants';
+import {
+  mergeProjectUserMetadataApplyUpdate,
+  toMetadataRecord,
+} from '@/lib/effective-project-user-metadata.lib';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams } from '@/types';
@@ -19,6 +23,8 @@ import {
   mergeProjectUserCdmMetadataParamsSchema,
   projectUserSchema,
   removeProjectUserParamsSchema,
+  updateProjectUserMetadataParamsSchema,
+  updateProjectUserProfileParamsSchema,
 } from './project-users.schemas';
 
 export class ProjectUserService implements IProjectUserService {
@@ -148,6 +154,126 @@ export class ProjectUserService implements IProjectUserService {
       },
       transaction
     );
+
+    return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
+  }
+
+  public async updateProjectUserMetadata(
+    params: {
+      projectId: string;
+      userId: string;
+      metadata: Record<string, unknown>;
+    },
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
+    const context = 'ProjectUserService.updateProjectUserMetadata';
+    const validatedParams = validateInput(updateProjectUserMetadataParamsSchema, params, context);
+
+    await this.projectExists(validatedParams.projectId, transaction);
+    await this.userExists(validatedParams.userId, transaction);
+
+    const existingRows = await this.projectUserRepository.getProjectUsers(
+      {
+        projectId: validatedParams.projectId,
+        userId: validatedParams.userId,
+      },
+      transaction
+    );
+    if (existingRows.length === 0) {
+      throw new NotFoundError('ProjectUser');
+    }
+
+    const previous = existingRows[0];
+    const currentMd = toMetadataRecord(previous.metadata);
+    const mergedMd = mergeProjectUserMetadataApplyUpdate(currentMd, validatedParams.metadata);
+
+    const projectUser = await this.projectUserRepository.updateProjectUserMetadata(
+      {
+        projectId: validatedParams.projectId,
+        userId: validatedParams.userId,
+        metadata: mergedMd,
+      },
+      transaction
+    );
+
+    const oldValues = {
+      id: previous.id,
+      projectId: previous.projectId,
+      userId: previous.userId,
+      metadata: previous.metadata,
+      createdAt: previous.createdAt,
+      updatedAt: previous.updatedAt,
+    };
+
+    const newValues = {
+      id: projectUser.id,
+      projectId: projectUser.projectId,
+      userId: projectUser.userId,
+      metadata: projectUser.metadata,
+      createdAt: projectUser.createdAt,
+      updatedAt: projectUser.updatedAt,
+    };
+
+    await this.audit.logUpdate(projectUser.id, oldValues, newValues, { context }, transaction);
+
+    return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
+  }
+
+  public async updateProjectUserProfile(
+    params: {
+      projectId: string;
+      userId: string;
+      displayName?: string | null;
+      pictureUrl?: string | null;
+    },
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
+    const context = 'ProjectUserService.updateProjectUserProfile';
+    const validatedParams = validateInput(updateProjectUserProfileParamsSchema, params, context);
+
+    await this.projectExists(validatedParams.projectId, transaction);
+    await this.userExists(validatedParams.userId, transaction);
+
+    const existingRows = await this.projectUserRepository.getProjectUsers(
+      {
+        projectId: validatedParams.projectId,
+        userId: validatedParams.userId,
+      },
+      transaction
+    );
+    if (existingRows.length === 0) {
+      throw new NotFoundError('ProjectUser');
+    }
+
+    const previous = existingRows[0];
+    const projectUser = await this.projectUserRepository.updateProjectUserProfile(
+      validatedParams,
+      transaction
+    );
+
+    const oldValues = {
+      id: previous.id,
+      projectId: previous.projectId,
+      userId: previous.userId,
+      metadata: previous.metadata,
+      displayName: previous.displayName,
+      pictureUrl: previous.pictureUrl,
+      createdAt: previous.createdAt,
+      updatedAt: previous.updatedAt,
+    };
+
+    const newValues = {
+      id: projectUser.id,
+      projectId: projectUser.projectId,
+      userId: projectUser.userId,
+      metadata: projectUser.metadata,
+      displayName: projectUser.displayName,
+      pictureUrl: projectUser.pictureUrl,
+      createdAt: projectUser.createdAt,
+      updatedAt: projectUser.updatedAt,
+    };
+
+    await this.audit.logUpdate(projectUser.id, oldValues, newValues, { context }, transaction);
 
     return validateOutput(createDynamicSingleSchema(projectUserSchema), projectUser, context);
   }

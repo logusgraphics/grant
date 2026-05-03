@@ -1778,8 +1778,10 @@ export type ProjectUser = Auditable & {
   __typename?: 'ProjectUser';
   createdAt: Scalars['Date']['output'];
   deletedAt?: Maybe<Scalars['Date']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   metadata: Scalars['JSON']['output'];
+  pictureUrl?: Maybe<Scalars['String']['output']>;
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
   updatedAt: Scalars['Date']['output'];

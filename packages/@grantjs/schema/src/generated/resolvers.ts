@@ -1779,8 +1779,10 @@ export type ProjectUser = Auditable & {
   __typename?: 'ProjectUser';
   createdAt: Scalars['Date']['output'];
   deletedAt?: Maybe<Scalars['Date']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   metadata: Scalars['JSON']['output'];
+  pictureUrl?: Maybe<Scalars['String']['output']>;
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
   updatedAt: Scalars['Date']['output'];
@@ -5288,8 +5290,10 @@ export type ProjectUserResolvers<
 > = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  displayName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metadata?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
+  pictureUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   project?: Resolver<
     Maybe<ResolversTypes['Project']>,
     ParentType,

@@ -33,7 +33,12 @@ export class ProjectUserRepository
       md != null && typeof md === 'object' && !Array.isArray(md)
         ? (md as Record<string, unknown>)
         : {};
-    return { ...dbProjectUser, metadata } as ProjectUser;
+    return {
+      ...dbProjectUser,
+      metadata,
+      displayName: dbProjectUser.displayName ?? undefined,
+      pictureUrl: dbProjectUser.pictureUrl ?? undefined,
+    } as ProjectUser;
   }
 
   public async getProjectUsers(
@@ -83,6 +88,40 @@ export class ProjectUserRepository
       { metadata: merged, updatedAt: new Date() },
       transaction
     );
+  }
+
+  public async updateProjectUserMetadata(
+    params: {
+      projectId: string;
+      userId: string;
+      metadata: Record<string, unknown>;
+    },
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
+    return this.update(
+      { projectId: params.projectId, userId: params.userId },
+      { metadata: params.metadata, updatedAt: new Date() },
+      transaction
+    );
+  }
+
+  public async updateProjectUserProfile(
+    params: {
+      projectId: string;
+      userId: string;
+      displayName?: string | null;
+      pictureUrl?: string | null;
+    },
+    transaction?: Transaction
+  ): Promise<ProjectUser> {
+    const update: Partial<ProjectUserModel> = { updatedAt: new Date() };
+    if (params.displayName !== undefined) {
+      update.displayName = params.displayName;
+    }
+    if (params.pictureUrl !== undefined) {
+      update.pictureUrl = params.pictureUrl;
+    }
+    return this.update({ projectId: params.projectId, userId: params.userId }, update, transaction);
   }
 
   public async softDeleteProjectUser(

@@ -764,6 +764,7 @@
       "showMetadata": "Show metadata",
       "primaryTag": "Primary Tag",
       "metadataInfo": "Optional metadata for the user. This can be used to match in permission conditions.",
+      "metadataProjectContext": "In a project, this JSON is stored on the project membership and merged with the user's global profile for permission checks here. Same keys on the membership override global keys.",
       "metadataDocsLink": "Full syntax reference",
       "validation": {
         "rolesRequired": "User must have at least one role"

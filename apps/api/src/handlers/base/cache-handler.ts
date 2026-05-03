@@ -748,6 +748,19 @@ export class CacheHandler implements IScopedIdProvider {
     await this.cache.permissions.delete(cacheKey);
   }
 
+  /**
+   * Clears cached authorization results for a user (prefix match). Call when
+   * inputs that affect permission condition evaluation change (e.g. project
+   * membership metadata).
+   */
+  protected async invalidateAuthorizationResultsForUser(userId: string): Promise<void> {
+    const pattern = `${AUTH_RESULT_CACHE_KEY_PREFIX}${userId}:*`;
+    const keys = await this.cache.permissions.keys(pattern);
+    for (const key of keys) {
+      await this.cache.permissions.delete(key);
+    }
+  }
+
   async invalidateResourcesCacheForScope(scope: Scope): Promise<void> {
     const cacheKey = this.createCacheKey(scope);
     await this.cache.resources.delete(cacheKey);

@@ -88,6 +88,25 @@ export interface IProjectUserService {
     transaction?: unknown
   ): Promise<ProjectUser>;
 
+  updateProjectUserMetadata(
+    params: {
+      projectId: string;
+      userId: string;
+      metadata: Record<string, unknown>;
+    },
+    transaction?: unknown
+  ): Promise<ProjectUser>;
+
+  updateProjectUserProfile(
+    params: {
+      projectId: string;
+      userId: string;
+      displayName?: string | null;
+      pictureUrl?: string | null;
+    },
+    transaction?: unknown
+  ): Promise<ProjectUser>;
+
   removeProjectUser(
     params: RemoveProjectUserInput & DeleteParams,
     transaction?: unknown

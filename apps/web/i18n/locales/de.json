@@ -764,6 +764,7 @@
       "showMetadata": "Metadaten anzeigen",
       "primaryTag": "Haupt-Tag",
       "metadataInfo": "Optionale Metadaten für den Benutzer. Dies kann verwendet werden, um in Berechtigungsbedingungen zu übereinstimmen.",
+      "metadataProjectContext": "Im Projekt wird dieses JSON in der Projektmitgliedschaft gespeichert und mit dem globalen Profil für Berechtigungsprüfungen zusammengeführt. Gleiche Schlüssel auf der Mitgliedschaft überschreiben globale Schlüssel.",
       "metadataDocsLink": "Vollständige Syntaxreferenz",
       "validation": {
         "rolesRequired": "Benutzer muss mindestens eine Rolle haben"
