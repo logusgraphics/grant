@@ -3212,6 +3212,20 @@
       "start": "Import",
       "export": "Export"
     },
+    "exportDialog": {
+      "title": "CDM exportieren",
+      "description": "Wähle, welche Teile des Berechtigungsmodells enthalten sein sollen. Nicht ausgewählte Abschnitte erscheinen im heruntergeladenen JSON als leere Arrays.",
+      "sections": {
+        "roleTemplates": "Rollenvorlagen (Rollen, Gruppen und Berechtigungsverknüpfungen)",
+        "userAssignments": "Benutzerzuweisungen (Projektmitglieder und Rollenverknüpfungen)",
+        "projectUserApiKeys": "Benutzer-API-Schlüssel (nur Identität; keine Geheimnisse)",
+        "keysNeedUsers": "Benötigt Benutzerzuweisungen — API-Schlüssel gehören zu Mitgliedern im Export."
+      },
+      "helperReimport": "Beim Import von Benutzerzuweisungen ohne Rollenvorlagen musst du diese Datei ggf. mit einem anderen Export zusammenführen, der Vorlagen enthält.",
+      "cancel": "Abbrechen",
+      "export": "JSON herunterladen",
+      "exporting": "Export läuft…"
+    },
     "status": {
       "all": "Alle",
       "pending": "Ausstehend",
@@ -3259,13 +3273,15 @@
         "invalidType": "Nur .json-Dateien werden akzeptiert.",
         "fileTooLarge": "Datei ist zu groß. Maximale Größe ist {maxSize} MB.",
         "invalidJson": "Die Datei ist kein gültiges JSON.",
-        "invalidShape": "Das JSON sieht nicht wie ein CDM-Payload aus (cdmVersion, roleTemplates oder userAssignments fehlen).",
+        "invalidShape": "Das JSON sieht nicht wie ein CDM-Payload aus (ungültige oder fehlende cdmVersion, roleTemplates oder userAssignments; projectUserApiKeys muss ein Array sein, falls gesetzt).",
         "readFailed": "Fehler beim Lesen der Datei."
       },
       "summary": {
         "cdmVersion": "CDM-Version",
         "roleTemplates": "Rollenvorlagen",
-        "userAssignments": "Benutzerzuweisungen"
+        "userAssignments": "Benutzerzuweisungen",
+        "projectUserApiKeys": "Benutzer-API-Schlüssel",
+        "byokNote": "Jeder aufgeführte Benutzer-API-Schlüssel muss im JSON clientSecret enthalten (nur Import). Export und Rollback-Snapshots enthalten niemals Geheimnisse."
       },
       "clear": "Datei entfernen",
       "cancel": "Abbrechen",
@@ -3331,7 +3347,8 @@
           "right": "Ressourcen"
         },
         "projectUsersEnsured": "Projektnutzer sichergestellt",
-        "userRolesAssigned": "Nutzerrollen zugewiesen"
+        "userRolesAssigned": "Nutzerrollen zugewiesen",
+        "projectUserApiKeysCreated": "Benutzer-API-Schlüssel erstellt"
       },
       "payload": {
         "loading": "Lade Payload…",

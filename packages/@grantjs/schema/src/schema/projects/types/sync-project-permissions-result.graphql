@@ -14,5 +14,9 @@ type SyncProjectPermissionsResult {
   projectResourcesLinked: Int!
   projectUsersEnsured: Int!
   userRolesAssigned: Int!
+  """
+  Number of project-user API key pivots created during this sync (each with a new or supplied api_keys row).
+  """
+  projectUserApiKeysCreated: Int!
   warnings: [String!]!
 }

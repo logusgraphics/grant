@@ -2,6 +2,7 @@ import type {
   CdmApplyContext,
   CdmPermissionRefSpec,
   CdmProducedRefs,
+  IApiKeyService,
   ICdmEntityHandler,
   IGroupPermissionService,
   IGroupService,
@@ -10,6 +11,7 @@ import type {
   IProjectPermissionSyncService,
   IProjectResourceService,
   IProjectRoleService,
+  IProjectUserApiKeyService,
   IProjectUserService,
   IRoleGroupService,
   IRoleService,
@@ -69,6 +71,8 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     projectResources: IProjectResourceService,
     projectUsers: IProjectUserService,
     userRoles: IUserRoleService,
+    apiKeys: IApiKeyService,
+    projectUserApiKeys: IProjectUserApiKeyService,
     cache: IEntityCacheAdapter,
     /**
      * Read-side repo used by handlers' `export(...)` to enumerate prior
@@ -105,6 +109,8 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
         projectResources,
         projectUsers,
         userRoles,
+        apiKeys,
+        projectUserApiKeys,
       });
   }
 
@@ -182,6 +188,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
       projectResourcesLinked: 0,
       projectUsersEnsured: 0,
       userRolesAssigned: 0,
+      projectUserApiKeysCreated: 0,
       warnings: [],
     };
 
@@ -193,6 +200,10 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
       await handler.teardown({ projectId, scope, tx });
     }
 
+    const assignmentUserIds = new Set(
+      (input.userAssignments ?? []).map((ua) => ua.userId).filter(Boolean)
+    );
+
     const applyCtx: CdmApplyContext = {
       projectId,
       scope,
@@ -200,6 +211,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
       lookupResolvedRef: (ref) => this.lookupRef(ref, resolvedByKey),
       result,
       produced,
+      assignmentUserIds,
     };
 
     for (const handler of this.handlers) {

@@ -10,8 +10,8 @@ import { Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useScopeFromParams } from '@/hooks/common';
-import { useExportProjectPermissions } from '@/hooks/projects';
 import { cn } from '@/lib/utils';
+import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 type ExportTriggerLayout = 'empty' | 'toolbar';
 
@@ -28,9 +28,8 @@ export interface PermissionSyncJobExportTriggerProps {
  * permission check resolves to `false`. While the grant check is in-flight
  * the button is rendered disabled with a spinner so layout does not jump.
  *
- * On click, the underlying hook hits `GET /api/projects/:id/permissions/export`
- * and triggers a browser save of the resulting JSON; no separate dialog is
- * needed because the export has no user-supplied input.
+ * On click, opens the export dialog so the operator can choose CDM sections
+ * before downloading JSON from `GET /api/projects/:id/permissions/export`.
  */
 export function PermissionSyncJobExportTrigger({
   layout = 'empty',
@@ -39,6 +38,7 @@ export function PermissionSyncJobExportTrigger({
   const scope = useScopeFromParams();
   const params = useParams();
   const projectId = params.projectId as string | undefined;
+  const setExportDialogOpen = usePermissionSyncJobsStore((s) => s.setExportDialogOpen);
 
   const projectGrantContext = useMemo(
     () =>
@@ -52,13 +52,8 @@ export function PermissionSyncJobExportTrigger({
     returnLoading: true,
   }) as UseGrantResult;
 
-  const { exportProject, loading: exporting } = useExportProjectPermissions({
-    id: projectId ?? '',
-    scope,
-  });
-
   const onClick = () => {
-    void exportProject();
+    setExportDialogOpen(true);
   };
 
   if (isLoading) {
@@ -102,7 +97,6 @@ export function PermissionSyncJobExportTrigger({
             type="button"
             variant="outline"
             onClick={onClick}
-            disabled={exporting}
             className={cn(
               'w-full sm:w-auto',
               'min-[640px]:max-[1199px]:size-9 min-[640px]:max-[1199px]:min-w-9 min-[640px]:max-[1199px]:max-w-9 min-[640px]:max-[1199px]:p-2',
@@ -110,11 +104,7 @@ export function PermissionSyncJobExportTrigger({
             )}
             aria-label={t('toolbar.export')}
           >
-            {exporting ? (
-              <Loader2 className="size-4 shrink-0 animate-spin" />
-            ) : (
-              <Upload className="size-4 shrink-0" />
-            )}
+            <Upload className="size-4 shrink-0" />
             <span className="inline min-[640px]:max-[1199px]:hidden min-[1200px]:inline">
               {t('toolbar.export')}
             </span>
@@ -128,18 +118,8 @@ export function PermissionSyncJobExportTrigger({
   }
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onClick}
-      disabled={exporting}
-      className="gap-2"
-    >
-      {exporting ? (
-        <Loader2 className="size-4 shrink-0 animate-spin" />
-      ) : (
-        <Upload className="size-4 shrink-0" />
-      )}
+    <Button type="button" variant="outline" onClick={onClick} className="gap-2">
+      <Upload className="size-4 shrink-0" />
       {t('toolbar.export')}
     </Button>
   );

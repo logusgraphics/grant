@@ -42,6 +42,7 @@ import type {
   UpdateProjectTagInput,
 } from '@grantjs/schema';
 
+import type { CdmExportSection } from '../../cdm-export-sections';
 import type { SelectedFields } from '../repositories/common';
 import type { DeleteParams } from './user.service.port';
 
@@ -242,7 +243,12 @@ export interface IProjectUserApiKeyService {
   ): Promise<ProjectUserApiKey[]>;
 
   addProjectUserApiKey(
-    params: { projectId: string; userId: string; apiKeyId: string },
+    params: {
+      projectId: string;
+      userId: string;
+      apiKeyId: string;
+      metadata?: Record<string, unknown> | null;
+    },
     transaction?: unknown
   ): Promise<ProjectUserApiKey>;
 
@@ -291,7 +297,16 @@ export interface IProjectPermissionSyncService {
  */
 export interface IProjectPermissionExportService {
   exportProjectPermissions(
-    params: { projectId: string; scope: Scope; cdmVersion: number },
+    params: {
+      projectId: string;
+      scope: Scope;
+      cdmVersion: number;
+      /**
+       * When set and non-empty, only these CDM slices are exported; others are
+       * empty arrays. Omit or pass empty for a full snapshot (sync worker).
+       */
+      sections?: readonly CdmExportSection[];
+    },
     transaction?: unknown
   ): Promise<SyncProjectPermissionsInput>;
 }

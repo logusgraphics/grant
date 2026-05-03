@@ -4,6 +4,7 @@ import {
   buildCdmImportMetadata,
   CDM_IMPORT_METADATA_KEY,
   CDM_SOURCE_METADATA_KEY,
+  extractProjectUserMetadataForCdmExport,
   mergeCdmImporterMetadata,
 } from '@/constants/cdm-import.constants';
 import { ValidationError } from '@/lib/errors';
@@ -60,5 +61,40 @@ describe('mergeCdmImporterMetadata', () => {
 
   it('rejects non-object importer payload', () => {
     expect(() => mergeCdmImporterMetadata({}, [])).toThrow(ValidationError);
+  });
+});
+
+describe('extractProjectUserMetadataForCdmExport', () => {
+  it('returns null when metadata is empty', () => {
+    expect(extractProjectUserMetadataForCdmExport({})).toBeNull();
+  });
+
+  it('exports flat keys from cdmSource (minus nested cdmImport)', () => {
+    const md = mergeCdmImporterMetadata(buildCdmImportMetadata('p1', 'role'), {
+      legacyId: '99',
+    });
+    expect(extractProjectUserMetadataForCdmExport(md)).toEqual({ legacyId: '99' });
+  });
+
+  it('includes top-level metadata keys outside cdmSource (e.g. API updates)', () => {
+    const md = {
+      ...buildCdmImportMetadata('p1', 'role'),
+      customFromApi: 'visible',
+    };
+    expect(extractProjectUserMetadataForCdmExport(md)).toEqual({ customFromApi: 'visible' });
+  });
+
+  it('merges cdmSource keys with top-level; top-level wins on collision', () => {
+    const md = {
+      ...buildCdmImportMetadata('p1', 'role'),
+      [CDM_SOURCE_METADATA_KEY]: { sameKey: 'fromSource', onlySource: 1 },
+      sameKey: 'fromTop',
+      onlyTop: 2,
+    };
+    expect(extractProjectUserMetadataForCdmExport(md)).toEqual({
+      sameKey: 'fromTop',
+      onlySource: 1,
+      onlyTop: 2,
+    });
   });
 });

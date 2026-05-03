@@ -3213,6 +3213,20 @@
       "start": "Import",
       "export": "Export"
     },
+    "exportDialog": {
+      "title": "Export CDM",
+      "description": "Choose which parts of the permission model to include. Unchecked sections appear as empty arrays in the downloaded JSON.",
+      "sections": {
+        "roleTemplates": "Role templates (roles, groups, and permission links)",
+        "userAssignments": "User assignments (project members and role links)",
+        "projectUserApiKeys": "Per-user API keys (identity only; no secrets)",
+        "keysNeedUsers": "Requires user assignments — API keys belong to members in the export."
+      },
+      "helperReimport": "Importing user assignments without role templates may require merging this file with another export that includes templates.",
+      "cancel": "Cancel",
+      "export": "Download JSON",
+      "exporting": "Exporting…"
+    },
     "status": {
       "all": "All",
       "pending": "Pending",
@@ -3260,13 +3274,15 @@
         "invalidType": "Only .json files are accepted.",
         "fileTooLarge": "File is too large. Maximum size is {maxSize} MB.",
         "invalidJson": "The file is not valid JSON.",
-        "invalidShape": "The JSON does not look like a CDM payload (missing cdmVersion, roleTemplates, or userAssignments).",
+        "invalidShape": "The JSON does not look like a CDM payload (missing or invalid cdmVersion, roleTemplates, or userAssignments; projectUserApiKeys must be an array when present).",
         "readFailed": "Failed to read the file."
       },
       "summary": {
         "cdmVersion": "CDM version",
         "roleTemplates": "Role templates",
-        "userAssignments": "User assignments"
+        "userAssignments": "User assignments",
+        "projectUserApiKeys": "User API keys",
+        "byokNote": "Each listed user API key must include clientSecret in the JSON (import only). Export and rollback snapshots never contain secrets."
       },
       "clear": "Remove file",
       "cancel": "Cancel",
@@ -3332,7 +3348,8 @@
           "right": "resources"
         },
         "projectUsersEnsured": "Project users ensured",
-        "userRolesAssigned": "User roles assigned"
+        "userRolesAssigned": "User roles assigned",
+        "projectUserApiKeysCreated": "User API keys created"
       },
       "payload": {
         "loading": "Loading payload…",

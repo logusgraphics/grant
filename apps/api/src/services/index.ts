@@ -413,6 +413,8 @@ export function createServices(
       servicesBase.projectResources,
       servicesBase.projectUsers,
       servicesBase.userRoles,
+      servicesBase.apiKeys,
+      servicesBase.projectUserApiKeys,
       cache,
       repositories.projectPermissionExportRepository
     ),
@@ -428,7 +430,9 @@ export function createServices(
       servicesBase.projectPermissions,
       servicesBase.projectResources,
       servicesBase.projectUsers,
-      servicesBase.userRoles
+      servicesBase.userRoles,
+      servicesBase.apiKeys,
+      servicesBase.projectUserApiKeys
     ),
     projectPermissionsSyncJobs: new ProjectPermissionsSyncJobService(
       repositories.projectPermissionSyncJobRepository,

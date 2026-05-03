@@ -42,6 +42,7 @@ function compactResultSummary(result: SyncProjectPermissionsResult): Record<stri
     projectResourcesLinked: result.projectResourcesLinked,
     projectUsersEnsured: result.projectUsersEnsured,
     userRolesAssigned: result.userRolesAssigned,
+    projectUserApiKeysCreated: result.projectUserApiKeysCreated,
     warningsCount: Array.isArray(result.warnings) ? result.warnings.length : 0,
   };
 }

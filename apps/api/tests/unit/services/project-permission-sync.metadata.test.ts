@@ -12,6 +12,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
   const syncRepo = {
     listCdmRoleIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmGroupIdsForProject: vi.fn().mockResolvedValue([]),
+    listCdmProjectUserApiKeyIdsForProject: vi.fn().mockResolvedValue([]),
     resolvePermission: vi.fn().mockResolvedValue({ id: 'perm-1', resourceId: 'res-1' }),
   };
   const roles = { createRole: vi.fn(), deleteRole: vi.fn() };
@@ -41,6 +42,11 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     mergeProjectUserCdmMetadata: vi.fn(),
   };
   const userRoles = { addUserRole: vi.fn(), removeUserRole: vi.fn(), getUserRoles: vi.fn() };
+  const apiKeys = {
+    deleteApiKey: vi.fn(),
+    createApiKeyForCdmImport: vi.fn(),
+  };
+  const projectUserApiKeys = { addProjectUserApiKey: vi.fn() };
 
   const cache = {
     permissions: { delete: vi.fn(), keys: vi.fn().mockResolvedValue([]) },
@@ -63,6 +69,8 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
       projectResources as never,
       projectUsers as never,
       userRoles as never,
+      apiKeys as never,
+      projectUserApiKeys as never,
       cache as never
     );
   }

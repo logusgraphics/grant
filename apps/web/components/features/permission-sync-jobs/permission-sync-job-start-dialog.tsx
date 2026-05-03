@@ -44,6 +44,9 @@ function isParsedPayload(value: unknown): value is SyncProjectPermissionsInput {
   if (typeof candidate.cdmVersion !== 'number') return false;
   if (!Array.isArray(candidate.roleTemplates)) return false;
   if (!Array.isArray(candidate.userAssignments)) return false;
+  if (candidate.projectUserApiKeys !== undefined && !Array.isArray(candidate.projectUserApiKeys)) {
+    return false;
+  }
   return true;
 }
 
@@ -161,6 +164,7 @@ export function PermissionSyncJobStartDialog() {
     return {
       roleTemplates: parsed.payload.roleTemplates?.length ?? 0,
       userAssignments: parsed.payload.userAssignments?.length ?? 0,
+      projectUserApiKeys: parsed.payload.projectUserApiKeys?.length ?? 0,
       cdmVersion: parsed.payload.cdmVersion,
     };
   }, [parsed]);
@@ -252,19 +256,30 @@ export function PermissionSyncJobStartDialog() {
             </div>
 
             {stats && (
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="rounded-md bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">{t('summary.cdmVersion')}</p>
-                  <p className="text-lg font-semibold">v{stats.cdmVersion}</p>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
+                  <div className="rounded-md bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">{t('summary.cdmVersion')}</p>
+                    <p className="text-lg font-semibold">v{stats.cdmVersion}</p>
+                  </div>
+                  <div className="rounded-md bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">{t('summary.roleTemplates')}</p>
+                    <p className="text-lg font-semibold">{stats.roleTemplates}</p>
+                  </div>
+                  <div className="rounded-md bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">{t('summary.userAssignments')}</p>
+                    <p className="text-lg font-semibold">{stats.userAssignments}</p>
+                  </div>
+                  <div className="rounded-md bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">
+                      {t('summary.projectUserApiKeys')}
+                    </p>
+                    <p className="text-lg font-semibold">{stats.projectUserApiKeys}</p>
+                  </div>
                 </div>
-                <div className="rounded-md bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">{t('summary.roleTemplates')}</p>
-                  <p className="text-lg font-semibold">{stats.roleTemplates}</p>
-                </div>
-                <div className="rounded-md bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">{t('summary.userAssignments')}</p>
-                  <p className="text-lg font-semibold">{stats.userAssignments}</p>
-                </div>
+                {stats.projectUserApiKeys > 0 ? (
+                  <p className="text-xs text-muted-foreground">{t('summary.byokNote')}</p>
+                ) : null}
               </div>
             )}
           </div>

@@ -29,6 +29,7 @@ interface PermissionSyncJobsState {
 
   // Dialog state
   isStartDialogOpen: boolean;
+  isExportDialogOpen: boolean;
   jobToView: ProjectPermissionsSyncJob | null;
   jobToCancel: ProjectPermissionsSyncJob | null;
 
@@ -45,6 +46,7 @@ interface PermissionSyncJobsState {
   setRefetch: (refetch: (() => void) | null) => void;
 
   setStartDialogOpen: (open: boolean) => void;
+  setExportDialogOpen: (open: boolean) => void;
   setJobToView: (job: ProjectPermissionsSyncJob | null) => void;
   setJobToCancel: (job: ProjectPermissionsSyncJob | null) => void;
 
@@ -68,6 +70,7 @@ const initialState = {
   loading: false,
   refetch: null as (() => void) | null,
   isStartDialogOpen: false,
+  isExportDialogOpen: false,
   jobToView: null as ProjectPermissionsSyncJob | null,
   jobToCancel: null as ProjectPermissionsSyncJob | null,
 };
@@ -89,6 +92,7 @@ export const usePermissionSyncJobsStore = create<PermissionSyncJobsState>()(
       setRefetch: (refetch) => set({ refetch }),
 
       setStartDialogOpen: (isStartDialogOpen) => set({ isStartDialogOpen }),
+      setExportDialogOpen: (isExportDialogOpen) => set({ isExportDialogOpen }),
       setJobToView: (jobToView) => set({ jobToView }),
       setJobToCancel: (jobToCancel) => set({ jobToCancel }),
 

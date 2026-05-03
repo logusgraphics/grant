@@ -3,6 +3,7 @@ export * from './permission-sync-job-audit';
 export * from './permission-sync-job-cancel-dialog';
 export * from './permission-sync-job-card-skeleton';
 export * from './permission-sync-job-cards';
+export * from './permission-sync-job-export-dialog';
 export * from './permission-sync-job-export-trigger';
 export * from './permission-sync-job-limit';
 export * from './permission-sync-job-pagination';

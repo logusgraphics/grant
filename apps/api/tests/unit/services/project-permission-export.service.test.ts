@@ -47,6 +47,8 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
     {} as never,
     {} as never,
     {} as never,
+    {} as never,
+    {} as never,
     handlers
   );
 }
@@ -85,6 +87,7 @@ describe('ProjectPermissionExportService', () => {
     expect(out.userAssignments).toEqual([
       expect.objectContaining({ userId: 'u-1', roleTemplateKeys: ['role-1'] }),
     ]);
+    expect(out.projectUserApiKeys).toEqual([]);
 
     expect(roleTemplate.export).toHaveBeenCalledWith(expect.objectContaining({ projectId, scope }));
     expect(userAssignment.export).toHaveBeenCalledWith(
@@ -131,5 +134,42 @@ describe('ProjectPermissionExportService', () => {
     await expect(svc.exportProjectPermissions({ projectId, scope, cdmVersion: 2 })).rejects.toThrow(
       /Unsupported cdmVersion/
     );
+  });
+
+  it('when sections is set, only those handlers run export', async () => {
+    const roleTemplate = stubHandler('roleTemplates', [{ externalKey: 'r1' }]);
+    const userAssignment = stubHandler('userAssignments', [{ userId: 'u-1' }]);
+    const keys = stubHandler('projectUserApiKeys', [{ userId: 'u-1', clientId: 'c1' }]);
+
+    const svc = buildService([roleTemplate, userAssignment, keys]);
+    const out = await svc.exportProjectPermissions({
+      projectId,
+      scope,
+      cdmVersion: 1,
+      sections: ['roleTemplates'],
+    });
+
+    expect(out.roleTemplates).toEqual([{ externalKey: 'r1' }]);
+    expect(out.userAssignments).toEqual([]);
+    expect(out.projectUserApiKeys).toEqual([]);
+    expect(roleTemplate.export).toHaveBeenCalledTimes(1);
+    expect(userAssignment.export).not.toHaveBeenCalled();
+    expect(keys.export).not.toHaveBeenCalled();
+  });
+
+  it('empty sections array exports all handlers', async () => {
+    const roleTemplate = stubHandler('roleTemplates', []);
+    const userAssignment = stubHandler('userAssignments', []);
+    const keys = stubHandler('projectUserApiKeys', []);
+    const svc = buildService([roleTemplate, userAssignment, keys]);
+    await svc.exportProjectPermissions({
+      projectId,
+      scope,
+      cdmVersion: 1,
+      sections: [],
+    });
+    expect(roleTemplate.export).toHaveBeenCalled();
+    expect(userAssignment.export).toHaveBeenCalled();
+    expect(keys.export).toHaveBeenCalled();
   });
 });

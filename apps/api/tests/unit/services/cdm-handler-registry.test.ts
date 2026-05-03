@@ -71,6 +71,7 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
   const syncRepo = {
     listCdmRoleIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmGroupIdsForProject: vi.fn().mockResolvedValue([]),
+    listCdmProjectUserApiKeyIdsForProject: vi.fn().mockResolvedValue([]),
     resolvePermission: vi.fn().mockResolvedValue({ id: 'perm-1', resourceId: 'res-1' }),
   };
   const cache = {
@@ -82,6 +83,8 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
   };
   return new ProjectPermissionSyncService(
     syncRepo as never,
+    {} as never,
+    {} as never,
     {} as never,
     {} as never,
     {} as never,

@@ -43,6 +43,29 @@ const STATUS_GQL_TO_DB: Record<ProjectPermissionsSyncJobStatus, string> = {
 
 const ACTIVE_DB_STATUSES = ['pending', 'running', 'completed'];
 
+function normalizeSyncJobResult(raw: unknown): SyncProjectPermissionsResult | null {
+  if (raw == null || typeof raw !== 'object') {
+    return null;
+  }
+  const r = raw as Record<string, unknown>;
+  return {
+    projectId: String(r.projectId ?? ''),
+    importId: (r.importId as string | null | undefined) ?? null,
+    rolesCreated: Number(r.rolesCreated ?? 0),
+    groupsCreated: Number(r.groupsCreated ?? 0),
+    roleGroupsLinked: Number(r.roleGroupsLinked ?? 0),
+    groupPermissionsLinked: Number(r.groupPermissionsLinked ?? 0),
+    projectRolesLinked: Number(r.projectRolesLinked ?? 0),
+    projectGroupsLinked: Number(r.projectGroupsLinked ?? 0),
+    projectPermissionsLinked: Number(r.projectPermissionsLinked ?? 0),
+    projectResourcesLinked: Number(r.projectResourcesLinked ?? 0),
+    projectUsersEnsured: Number(r.projectUsersEnsured ?? 0),
+    userRolesAssigned: Number(r.userRolesAssigned ?? 0),
+    projectUserApiKeysCreated: Number(r.projectUserApiKeysCreated ?? 0),
+    warnings: Array.isArray(r.warnings) ? (r.warnings as string[]) : [],
+  };
+}
+
 function toEntity(row: ProjectPermissionSyncJobModel): ProjectPermissionsSyncJob {
   const status = STATUS_DB_TO_GQL[row.status] ?? ProjectPermissionsSyncJobStatus.Pending;
   return {
@@ -51,7 +74,7 @@ function toEntity(row: ProjectPermissionSyncJobModel): ProjectPermissionsSyncJob
     status,
     cdmVersion: row.cdmVersion,
     importId: row.importId ?? null,
-    result: (row.result as SyncProjectPermissionsResult | null) ?? null,
+    result: normalizeSyncJobResult(row.result),
     warnings: Array.isArray(row.warnings) ? (row.warnings as string[]) : [],
     errorMessage: row.errorMessage ?? null,
     enqueuedAt: row.createdAt,

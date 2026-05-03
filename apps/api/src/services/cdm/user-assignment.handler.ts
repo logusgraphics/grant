@@ -9,7 +9,7 @@ import type {
 } from '@grantjs/core';
 import { SyncProjectPermissionsInput, UserAssignmentCdmInput } from '@grantjs/schema';
 
-import { CDM_IMPORT_METADATA_KEY, CDM_SOURCE_METADATA_KEY } from '@/constants/cdm-import.constants';
+import { extractProjectUserMetadataForCdmExport } from '@/constants/cdm-import.constants';
 import { ConflictError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
@@ -192,8 +192,9 @@ export class UserAssignmentHandler implements ICdmEntityHandler<
    * - Users with zero project-scoped role assignments are skipped, since
    *   the import contract requires at least one of `roleTemplateKeys` or
    *   `directPermissionRefs` to be non-empty.
-   * - `metadata` carries the project-user's `cdmSource` payload, dropping the
-   *   reserved `cdmImport` envelope.
+   * - `metadata` carries importer-visible membership JSON: keys under
+   *   `cdmSource` plus any other top-level keys on `project_users.metadata`
+   *   (e.g. API updates), excluding Grant's `cdmImport` envelope.
    */
   public async export(ctx: CdmExportContext): Promise<readonly UserAssignmentCdmInput[]> {
     const tx = ctx.tx as Transaction | undefined;
@@ -204,24 +205,7 @@ export class UserAssignmentHandler implements ICdmEntityHandler<
         userId: u.userId,
         roleTemplateKeys: u.roleIds,
         directPermissionRefs: [],
-        metadata: extractCdmSourceMetadata(u.metadata),
+        metadata: extractProjectUserMetadataForCdmExport(u.metadata),
       }));
   }
-}
-
-/**
- * Extract the importer-owned `cdmSource` payload, dropping Grant's reserved
- * `cdmImport` envelope so the round-tripped export can be re-imported via
- * `mergeCdmImporterMetadata` without the reserved-key violation check firing.
- */
-function extractCdmSourceMetadata(
-  metadata: Record<string, unknown>
-): Record<string, unknown> | null {
-  const source = metadata[CDM_SOURCE_METADATA_KEY];
-  if (source == null || typeof source !== 'object' || Array.isArray(source)) {
-    return null;
-  }
-  const out = { ...(source as Record<string, unknown>) };
-  delete out[CDM_IMPORT_METADATA_KEY];
-  return Object.keys(out).length > 0 ? out : null;
 }

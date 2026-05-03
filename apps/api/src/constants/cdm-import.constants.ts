@@ -8,7 +8,7 @@ export const CDM_SOURCE_METADATA_KEY = 'cdmSource' as const;
 
 export type CdmImportMetadata = {
   projectId: string;
-  kind: 'role' | 'group' | 'directRole';
+  kind: 'role' | 'group' | 'directRole' | 'projectUserApiKey';
   externalKey?: string;
 };
 
@@ -51,4 +51,37 @@ export function mergeCdmImporterMetadata(
       : {};
   out[CDM_SOURCE_METADATA_KEY] = { ...prevObj, ...importer };
   return out;
+}
+
+/**
+ * Builds the flat `userAssignments[].metadata` object for CDM export from
+ * persisted `project_users.metadata`.
+ *
+ * - Includes every key stored under `cdmSource` (importer history from CDM
+ *   import), minus any nested `cdmImport` key.
+ * - Includes any other top-level keys (e.g. from `updateProjectUserMetadata`)
+ *   so API-written metadata is not dropped. Top-level keys win on collision
+ *   with `cdmSource` keys.
+ * - Omits `cdmImport` and the `cdmSource` container so re-import via
+ *   {@link mergeCdmImporterMetadata} round-trips.
+ */
+export function extractProjectUserMetadataForCdmExport(
+  metadata: Record<string, unknown>
+): Record<string, unknown> | null {
+  const out: Record<string, unknown> = {};
+
+  const source = metadata[CDM_SOURCE_METADATA_KEY];
+  if (source != null && typeof source === 'object' && !Array.isArray(source)) {
+    for (const [k, v] of Object.entries(source as Record<string, unknown>)) {
+      if (k === CDM_IMPORT_METADATA_KEY) continue;
+      out[k] = v;
+    }
+  }
+
+  for (const [k, v] of Object.entries(metadata)) {
+    if (k === CDM_IMPORT_METADATA_KEY || k === CDM_SOURCE_METADATA_KEY) continue;
+    out[k] = v;
+  }
+
+  return Object.keys(out).length > 0 ? out : null;
 }

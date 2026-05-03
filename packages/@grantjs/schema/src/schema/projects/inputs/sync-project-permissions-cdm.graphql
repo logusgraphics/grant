@@ -40,6 +40,34 @@ input UserAssignmentCdmInput {
   metadata: JSON
 }
 
+"""
+Project user API key (acts as a specific member). Export omits `clientSecret`; import requires it (BYOK).
+Project (role-based) API keys are not part of CDM.
+"""
+input ProjectUserApiKeyCdmInput {
+  """
+  Stable key within this CDM document for teardown correlation; recommended when exporting.
+  """
+  externalKey: String
+  userId: ID!
+  """
+  Public client id from a prior export; omit on import to generate a new id with the supplied secret.
+  """
+  clientId: String
+  """
+  Plaintext secret — required on import for each key; never returned on export.
+  """
+  clientSecret: String
+  name: String
+  description: String
+  expiresAt: Date
+  """
+  Importer-owned JSON merged into pivot metadata under `cdmSource`.
+  Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
+  """
+  metadata: JSON
+}
+
 input SyncProjectPermissionsInput {
   """
   CDM schema version; only 1 is supported initially.
@@ -51,4 +79,8 @@ input SyncProjectPermissionsInput {
   importId: String
   roleTemplates: [RoleTemplateCdmInput!]!
   userAssignments: [UserAssignmentCdmInput!]!
+  """
+  Optional per-user API keys for this project. Omitted or empty means no change beyond handler teardown rules for prior CDM keys.
+  """
+  projectUserApiKeys: [ProjectUserApiKeyCdmInput!]
 }

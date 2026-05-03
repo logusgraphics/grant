@@ -258,6 +258,12 @@ existing job is returned instead of creating a new one.
 Optional \`metadata\` on role templates and user assignments is stored under the
 \`cdmSource\` key on created roles, groups, and \`project_users\` rows (do not send a
 top-level \`cdmImport\` key in importer metadata).
+
+### Project user API keys (\`projectUserApiKeys\`)
+
+Optional array of per-member API keys. **Import:** each object must include a plaintext
+\`clientSecret\` (BYOK, minimum length 32); the worker never logs it. **Export and
+rollback snapshots** never include secrets — re-supply secrets when re-importing.
     `.trim(),
     request: {
       params: projectParamsSchema,
@@ -559,6 +565,16 @@ permission model).
 
 Pass \`cdmVersion\` to pin the artifact format; the only currently supported value
 is \`1\` (the default when omitted).
+
+### Partial export (\`sections\`)
+
+Omit \`sections\` or leave it empty for a **full** CDM snapshot (same shape as the
+async sync worker's rollback snapshot). To export only parts of the model, pass
+\`sections\` as repeated query params and/or a comma-separated list. Allowed
+values: \`roleTemplates\`, \`userAssignments\`, \`projectUserApiKeys\`. Requesting
+\`projectUserApiKeys\` without \`userAssignments\` returns \`400\`. Omitted slices
+appear as empty arrays in the JSON; partial files may need to be merged or
+re-imported together with other artifacts.
 
 The response uses \`Content-Type: application/json\` and a \`Content-Disposition:
 attachment\` header so browsers prompt for a save.

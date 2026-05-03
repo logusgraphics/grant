@@ -38,6 +38,7 @@ export const addProjectUserApiKeyParamsSchema = z.object({
   projectId: idSchema,
   userId: idSchema,
   apiKeyId: idSchema,
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const removeProjectUserApiKeyParamsSchema = deleteSchema.extend({

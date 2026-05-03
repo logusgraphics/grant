@@ -67,6 +67,11 @@ export interface CdmApplyContext {
   result: SyncProjectPermissionsResult;
   /** Cross-handler shared state. */
   produced: CdmProducedRefs;
+  /**
+   * `userId`s listed on this import's `userAssignments` (for handlers that must
+   * only attach entities to users declared in the same payload).
+   */
+  assignmentUserIds: ReadonlySet<string>;
 }
 
 export interface CdmExportContext {

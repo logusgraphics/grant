@@ -279,6 +279,8 @@ export type AddProjectTagInput = {
 
 export type AddProjectUserApiKeyInput = {
   apiKeyId: Scalars['ID']['input'];
+  /** Optional pivot metadata (e.g. CDM `cdmImport` / `cdmSource`); omit for normal API creates. */
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   projectId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
@@ -1808,6 +1810,28 @@ export type ProjectUserApiKey = Auditable & {
   userId: Scalars['ID']['output'];
 };
 
+/**
+ * Project user API key (acts as a specific member). Export omits `clientSecret`; import requires it (BYOK).
+ * Project (role-based) API keys are not part of CDM.
+ */
+export type ProjectUserApiKeyCdmInput = {
+  /** Public client id from a prior export; omit on import to generate a new id with the supplied secret. */
+  clientId?: InputMaybe<Scalars['String']['input']>;
+  /** Plaintext secret — required on import for each key; never returned on export. */
+  clientSecret?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  expiresAt?: InputMaybe<Scalars['Date']['input']>;
+  /** Stable key within this CDM document for teardown correlation; recommended when exporting. */
+  externalKey?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Importer-owned JSON merged into pivot metadata under `cdmSource`.
+   * Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
+   */
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  userId: Scalars['ID']['input'];
+};
+
 export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
@@ -2573,6 +2597,8 @@ export type SyncProjectPermissionsInput = {
   cdmVersion: Scalars['Int']['input'];
   /** Optional idempotency / audit correlation id. */
   importId?: InputMaybe<Scalars['String']['input']>;
+  /** Optional per-user API keys for this project. Omitted or empty means no change beyond handler teardown rules for prior CDM keys. */
+  projectUserApiKeys?: InputMaybe<Array<ProjectUserApiKeyCdmInput>>;
   roleTemplates: Array<RoleTemplateCdmInput>;
   userAssignments: Array<UserAssignmentCdmInput>;
 };
@@ -2588,6 +2614,8 @@ export type SyncProjectPermissionsResult = {
   projectPermissionsLinked: Scalars['Int']['output'];
   projectResourcesLinked: Scalars['Int']['output'];
   projectRolesLinked: Scalars['Int']['output'];
+  /** Number of project-user API key pivots created during this sync (each with a new or supplied api_keys row). */
+  projectUserApiKeysCreated: Scalars['Int']['output'];
   projectUsersEnsured: Scalars['Int']['output'];
   roleGroupsLinked: Scalars['Int']['output'];
   rolesCreated: Scalars['Int']['output'];
@@ -3408,6 +3436,7 @@ export type ResolversTypes = ResolversObject<{
   ProjectTag: ResolverTypeWrapper<ProjectTag>;
   ProjectUser: ResolverTypeWrapper<ProjectUser>;
   ProjectUserApiKey: ResolverTypeWrapper<ProjectUserApiKey>;
+  ProjectUserApiKeyCdmInput: ProjectUserApiKeyCdmInput;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   QueryAccountProjectApiKeysInput: QueryAccountProjectApiKeysInput;
   QueryAccountProjectInput: QueryAccountProjectInput;
@@ -3713,6 +3742,7 @@ export type ResolversParentTypes = ResolversObject<{
   ProjectTag: ProjectTag;
   ProjectUser: ProjectUser;
   ProjectUserApiKey: ProjectUserApiKey;
+  ProjectUserApiKeyCdmInput: ProjectUserApiKeyCdmInput;
   Query: Record<PropertyKey, never>;
   QueryAccountProjectApiKeysInput: QueryAccountProjectApiKeysInput;
   QueryAccountProjectInput: QueryAccountProjectInput;
@@ -5679,6 +5709,7 @@ export type SyncProjectPermissionsResultResolvers<
   projectPermissionsLinked?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   projectResourcesLinked?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   projectRolesLinked?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  projectUserApiKeysCreated?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   projectUsersEnsured?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   roleGroupsLinked?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   rolesCreated?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;

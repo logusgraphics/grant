@@ -265,6 +265,7 @@ export function PermissionSyncJobViewDialog() {
                   ['projectResourcesLinked', result.projectResourcesLinked],
                   ['projectUsersEnsured', result.projectUsersEnsured],
                   ['userRolesAssigned', result.userRolesAssigned],
+                  ['projectUserApiKeysCreated', result.projectUserApiKeysCreated],
                 ].map(([key, value]) => (
                   <div key={key as string} className="rounded-md border p-3">
                     <p className="text-xs text-muted-foreground">
@@ -347,7 +348,7 @@ export function PermissionSyncJobViewDialog() {
           )}
         </div>
 
-        <DialogFooter className="flex flex-row flex-wrap items-center justify-end gap-2">
+        <DialogFooter className="flex-row flex-wrap items-center justify-end">
           {tab === 'payload' && currentJob && (
             <>
               <Button

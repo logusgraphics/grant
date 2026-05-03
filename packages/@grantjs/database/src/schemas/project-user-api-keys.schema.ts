@@ -1,6 +1,7 @@
 import { relations, sql } from 'drizzle-orm';
 import {
   index,
+  jsonb,
   pgPolicy,
   pgTable,
   timestamp,
@@ -26,6 +27,8 @@ export const projectUserApiKeys = pgTable(
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
+    /** CDM import markers (`cdmImport`) and importer payload (`cdmSource`); optional for legacy rows. */
+    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),

@@ -1,4 +1,5 @@
 import type {
+  CdmExportSection,
   IAccountProjectService,
   IAccountProjectTagService,
   IJobAdapter,
@@ -32,6 +33,7 @@ import {
   Tenant,
 } from '@grantjs/schema';
 
+import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
 import { IEntityCacheAdapter } from '@/lib/cache';
 import { BadRequestError, ConfigurationError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -287,6 +289,8 @@ export class ProjectHandler extends CacheHandler {
     id: string;
     scope: { tenant: Tenant; id: string };
     cdmVersion?: number | null;
+    /** Raw query values; validated when non-empty (may still be a comma-separated string). */
+    sections?: readonly string[] | string;
   }): Promise<SyncProjectPermissionsInput> {
     this.assertProjectScope(params.scope);
     const scopeProjectId = this.projectIdFromScope(params.scope);
@@ -296,10 +300,15 @@ export class ProjectHandler extends CacheHandler {
       );
     }
     const cdmVersion = params.cdmVersion ?? 1;
+    let sections: readonly CdmExportSection[] | undefined;
+    if (params.sections != null && params.sections.length > 0) {
+      sections = assertValidCdmExportSections(params.sections);
+    }
     return this.projectPermissionExport.exportProjectPermissions({
       projectId: params.id,
       scope: params.scope,
       cdmVersion,
+      sections,
     });
   }
 
@@ -603,7 +612,6 @@ export class ProjectHandler extends CacheHandler {
           this.projectGroups.removeProjectGroup({ projectId, groupId }, tx)
         ),
         ...roleIds.map((roleId) => this.projectRoles.removeProjectRole({ projectId, roleId }, tx)),
-        ...userIds.map((userId) => this.projectUsers.removeProjectUser({ projectId, userId }, tx)),
         ...userRolesForProjectRoles
           .flat()
           .map((ur) =>
@@ -613,6 +621,11 @@ export class ProjectHandler extends CacheHandler {
             )
           ),
       ]);
+
+      const uniqueUserIds = [...new Set(userIds)];
+      for (const userId of uniqueUserIds) {
+        await this.projectUsers.removeProjectUser({ projectId, userId }, tx);
+      }
 
       this.removeProjectIdFromScopeCache(scope, projectId);
 

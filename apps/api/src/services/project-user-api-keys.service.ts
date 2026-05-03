@@ -83,19 +83,21 @@ export class ProjectUserApiKeyService implements IProjectUserApiKeyService {
       projectId: string;
       userId: string;
       apiKeyId: string;
+      metadata?: Record<string, unknown> | null;
     },
     transaction?: Transaction
   ): Promise<ProjectUserApiKey> {
     const context = 'ProjectUserApiKeyService.addProjectUserApiKey';
     const validatedParams = validateInput(addProjectUserApiKeyParamsSchema, params, context);
 
-    const { projectId, userId, apiKeyId } = validatedParams;
+    const { projectId, userId, apiKeyId, metadata: pivotMetadata } = validatedParams;
 
     const pivot = await this.projectUserApiKeyRepository.addProjectUserApiKey(
       {
         apiKeyId,
         projectId,
         userId,
+        ...(pivotMetadata != null ? { metadata: pivotMetadata } : {}),
       },
       transaction
     );
@@ -109,11 +111,11 @@ export class ProjectUserApiKeyService implements IProjectUserApiKeyService {
       updatedAt: pivot.updatedAt,
     };
 
-    const metadata = {
+    const auditMetadata = {
       context,
     };
 
-    await this.audit.logCreate(pivot.id, newValues, metadata, transaction);
+    await this.audit.logCreate(pivot.id, newValues, auditMetadata, transaction);
 
     return pivot;
   }

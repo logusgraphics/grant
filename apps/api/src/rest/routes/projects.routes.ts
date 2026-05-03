@@ -9,7 +9,7 @@ import {
   UpdateProjectMutationVariables,
 } from '@grantjs/schema';
 import { ProjectSortInput } from '@grantjs/schema';
-import { Response, Router } from 'express';
+import { NextFunction, Response, Router } from 'express';
 
 import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { AuthenticationError } from '@/lib/errors';
@@ -244,22 +244,28 @@ export function createProjectsRouter(context: RequestContext): Router {
         params: typeof projectParamsSchema;
         query: typeof exportProjectPermissionsQuerySchema;
       }>,
-      res: Response
+      res: Response,
+      next: NextFunction
     ) => {
-      const { id } = req.params;
-      const { scopeId, tenant, cdmVersion } = req.query;
+      try {
+        const { id } = req.params;
+        const { scopeId, tenant, cdmVersion, sections } = req.query;
 
-      const snapshot = await context.handlers.projects.exportProjectPermissions({
-        id,
-        scope: { id: scopeId, tenant },
-        cdmVersion: cdmVersion ?? null,
-      });
+        const snapshot = await context.handlers.projects.exportProjectPermissions({
+          id,
+          scope: { id: scopeId, tenant },
+          cdmVersion: cdmVersion ?? null,
+          sections,
+        });
 
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `cdm-export-${id}-${timestamp}.json`;
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.status(200).send(JSON.stringify(snapshot));
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `cdm-export-${id}-${timestamp}.json`;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.status(200).send(JSON.stringify(snapshot));
+      } catch (err) {
+        next(err);
+      }
     }
   );
 

@@ -37,7 +37,8 @@ export const projectUsers = pgTable(
     uniqueIndex('project_users_project_id_user_id_unique')
       .on(table.projectId, table.userId)
       .where(sql`${table.deletedAt} IS NULL`),
-    uniqueIndex('project_users_deleted_at_idx').on(table.deletedAt),
+    /** Non-unique: many rows can share the same soft-delete timestamp (e.g. parallel deletes). */
+    index('project_users_deleted_at_idx').on(table.deletedAt),
     pgPolicy('tenant_isolation_policy', {
       as: 'restrictive',
       for: 'select',

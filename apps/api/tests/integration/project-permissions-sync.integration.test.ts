@@ -10,6 +10,8 @@ import express from 'express';
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
+import { errorHandler } from '@/middleware/error.middleware';
 import { createProjectsRouter } from '@/rest/routes/projects.routes';
 import type { RequestContext } from '@/types';
 
@@ -109,11 +111,25 @@ describe('project permissions sync REST (async jobs)', () => {
       takenAt: new Date('2026-05-02T10:05:00.000Z'),
       sizeBytes: 1234,
     });
-    exportProjectPermissions = vi.fn().mockResolvedValue({
-      cdmVersion: 1,
-      roleTemplates: [],
-      userAssignments: [],
-    });
+    /** Mirrors {@link ProjectsHandler.exportProjectPermissions} section validation so REST tests exercise real rules (mock replaces the full handler). */
+    exportProjectPermissions = vi.fn(
+      async (args: {
+        id: string;
+        scope: { tenant: string; id: string };
+        cdmVersion?: number | null;
+        sections?: readonly string[] | string;
+      }) => {
+        const raw = args.sections;
+        if (raw != null && (typeof raw === 'string' ? raw.trim().length > 0 : raw.length > 0)) {
+          assertValidCdmExportSections(raw);
+        }
+        return {
+          cdmVersion: 1,
+          roleTemplates: [],
+          userAssignments: [],
+        };
+      }
+    );
     cancelProjectPermissionsSync = vi.fn().mockResolvedValue(buildJobResponse('CANCELLED'));
 
     const context = {
@@ -134,6 +150,7 @@ describe('project permissions sync REST (async jobs)', () => {
     app = express();
     app.use(express.json());
     app.use('/api/projects', createProjectsRouter(context));
+    app.use(errorHandler);
   });
 
   it('POST /sync-jobs returns 202 with the persisted job and forwards enqueuedById from auth context', async () => {
@@ -333,6 +350,7 @@ describe('project permissions sync REST (async jobs)', () => {
       id: projectId,
       scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
       cdmVersion: null,
+      sections: undefined,
     });
   });
 
@@ -359,5 +377,44 @@ describe('project permissions sync REST (async jobs)', () => {
      * coerces and the route accepts the value, so assert numerically.
      */
     expect(Number(args.cdmVersion)).toBe(1);
+  });
+
+  it('GET /permissions/export passes sections to the handler when provided', async () => {
+    const res = await request(app)
+      .get(`/api/projects/${projectId}/permissions/export`)
+      .query({
+        scopeId: `${accountId}:${projectId}`,
+        tenant: 'accountProject',
+        sections: ['roleTemplates', 'userAssignments'],
+      });
+
+    expect(res.status).toBe(200);
+    expect(exportProjectPermissions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: projectId,
+        sections: ['roleTemplates', 'userAssignments'],
+      })
+    );
+  });
+
+  it('GET /permissions/export returns 400 when projectUserApiKeys requested without userAssignments', async () => {
+    const res = await request(app)
+      .get(`/api/projects/${projectId}/permissions/export`)
+      .query({
+        scopeId: `${accountId}:${projectId}`,
+        tenant: 'accountProject',
+        /** Repeat `sections=` so both tokens are present (comma-only string can collapse in query parsing). */
+        sections: ['roleTemplates', 'projectUserApiKeys'],
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('BAD_USER_INPUT');
+    /** Handler runs and fails inside section validation — vi.fn still records the invocation. */
+    expect(exportProjectPermissions).toHaveBeenCalledTimes(1);
+    expect(exportProjectPermissions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sections: ['roleTemplates', 'projectUserApiKeys'],
+      })
+    );
   });
 });

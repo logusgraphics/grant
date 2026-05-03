@@ -15,7 +15,7 @@ Follow existing patterns for:
 - **Toolbars**: refresh, search, sort, limit, view switcher, action button.
 - **Viewers**: card and table views.
 - **Pagination**.
-- **Dialogs**: create, edit, confirm.
+- **Dialogs**: create, edit, confirm — follow the composition notes at the top of `apps/web/components/ui/dialog.tsx` (header → body → footer; outline cancel first in DOM, then primary; do not use `sm:gap-0` on footers). Destructive confirms use `components/ui/alert-dialog.tsx` (`AlertDialogCancel` before `AlertDialogAction`). Prefer `DialogFooter` / `AlertDialogFooter` over ad hoc `flex justify-between` rows for actions.
 - **Skeletons** for loading states.
 
 Some modules differ but stay consistent (e.g. `components/features/settings`, `components/features/user`).

@@ -1,3 +1,16 @@
+/**
+ * Radix dialog primitives for `apps/web`.
+ *
+ * **Standard composition** (content dialogs — create/edit/settings):
+ * `DialogContent` → `DialogHeader` (`DialogTitle`, optional `DialogDescription`) → main body
+ * (`div` with `space-y-4` or form) → `DialogFooter` (outline cancel first, primary second in DOM).
+ * Do not override `DialogFooter` spacing with `sm:gap-0` (breaks horizontal gap). Toolbars with many
+ * actions may use `DialogFooter` with `className="flex-row flex-wrap justify-end gap-2"` so buttons
+ * stay on one row where space allows.
+ *
+ * **Confirm / destructive flows** use `@/components/ui/alert-dialog`: `AlertDialogContent` →
+ * `AlertDialogHeader` → `AlertDialogFooter` with `AlertDialogCancel` then `AlertDialogAction`.
+ */
 'use client';
 
 import * as React from 'react';

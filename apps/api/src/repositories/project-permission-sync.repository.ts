@@ -1,4 +1,12 @@
-import { DbSchema, groups, permissions, resources, roles, userRoles } from '@grantjs/database';
+import {
+  DbSchema,
+  groups,
+  permissions,
+  projectUserApiKeys,
+  resources,
+  roles,
+  userRoles,
+} from '@grantjs/database';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -131,6 +139,28 @@ export class ProjectPermissionSyncRepository {
       );
     }
     return JSON.stringify(stored ?? null) === JSON.stringify(requested);
+  }
+
+  /**
+   * API key ids managed by CDM project-user-api-key handler for this project (pivot has `cdmImport`).
+   */
+  public async listCdmProjectUserApiKeyIdsForProject(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<string[]> {
+    const db = transaction ?? this.db;
+    const rows = await db
+      .select({ apiKeyId: projectUserApiKeys.apiKeyId })
+      .from(projectUserApiKeys)
+      .where(
+        and(
+          eq(projectUserApiKeys.projectId, projectId),
+          isNull(projectUserApiKeys.deletedAt),
+          sql`${projectUserApiKeys.metadata}->'cdmImport'->>'projectId' = ${projectId}`,
+          sql`${projectUserApiKeys.metadata}->'cdmImport'->>'kind' = 'projectUserApiKey'`
+        )
+      );
+    return rows.map((r) => r.apiKeyId);
   }
 
   public listActiveUserRolesForRoleIds(

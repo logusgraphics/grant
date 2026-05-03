@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import {
   PermissionSyncJobCancelDialog,
+  PermissionSyncJobExportDialog,
   PermissionSyncJobPagination,
   PermissionSyncJobStartDialog,
   PermissionSyncJobToolbar,
@@ -28,6 +29,7 @@ export default function PersonalProjectPermissionSyncJobsPage() {
       <>
         <PermissionSyncJobViewer />
         <PermissionSyncJobStartDialog />
+        <PermissionSyncJobExportDialog />
         <PermissionSyncJobViewDialog />
         <PermissionSyncJobCancelDialog />
       </>

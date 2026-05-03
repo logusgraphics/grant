@@ -1,5 +1,7 @@
 import type {
   CdmExportContext,
+  CdmExportSection,
+  IApiKeyService,
   ICdmEntityHandler,
   IGroupPermissionService,
   IGroupService,
@@ -8,11 +10,13 @@ import type {
   IProjectPermissionService,
   IProjectResourceService,
   IProjectRoleService,
+  IProjectUserApiKeyService,
   IProjectUserService,
   IRoleGroupService,
   IRoleService,
   IUserRoleService,
 } from '@grantjs/core';
+import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
 import { Scope, SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
 
 import { ValidationError } from '@/lib/errors';
@@ -53,6 +57,8 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
     projectResources: IProjectResourceService,
     projectUsers: IProjectUserService,
     userRoles: IUserRoleService,
+    apiKeys: IApiKeyService,
+    projectUserApiKeys: IProjectUserApiKeyService,
     handlers?: ReadonlyArray<ICdmEntityHandler>
   ) {
     this.handlers =
@@ -70,11 +76,18 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
         projectResources,
         projectUsers,
         userRoles,
+        apiKeys,
+        projectUserApiKeys,
       });
   }
 
   public async exportProjectPermissions(
-    params: { projectId: string; scope: Scope; cdmVersion: number },
+    params: {
+      projectId: string;
+      scope: Scope;
+      cdmVersion: number;
+      sections?: readonly CdmExportSection[];
+    },
     transaction?: unknown
   ): Promise<SyncProjectPermissionsInput> {
     this.assertProjectScope(params.scope);
@@ -101,9 +114,19 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       importId: null,
       roleTemplates: [],
       userAssignments: [],
+      projectUserApiKeys: [],
     };
 
+    const includeAll = params.sections == null || params.sections.length === 0;
+    const include = includeAll
+      ? new Set<string>(CDM_EXPORT_SECTIONS)
+      : new Set<string>(params.sections);
+
     for (const handler of this.handlers) {
+      const inputKey = handler.inputKey as string;
+      if (!include.has(inputKey)) {
+        continue;
+      }
       const slice = await handler.export(exportCtx);
       // Each handler writes to the field on the canonical input shape it
       // owns. Casting here is the registry's escape hatch for typing the

@@ -1,4 +1,5 @@
 import type {
+  IApiKeyService,
   ICdmEntityHandler,
   IGroupPermissionService,
   IGroupService,
@@ -6,6 +7,7 @@ import type {
   IProjectPermissionService,
   IProjectResourceService,
   IProjectRoleService,
+  IProjectUserApiKeyService,
   IProjectUserService,
   IRoleGroupService,
   IRoleService,
@@ -16,6 +18,7 @@ import type { ProjectPermissionExportRepository } from '@/repositories/project-p
 import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
 
 import { CdmEntityBuilder } from './cdm-entity-builder';
+import { ProjectUserApiKeyCdmHandler } from './project-user-api-key.handler';
 import { RoleTemplateHandler } from './role-template.handler';
 import { UserAssignmentHandler } from './user-assignment.handler';
 
@@ -46,6 +49,8 @@ export interface CdmHandlerRegistryDeps {
   projectResources: IProjectResourceService;
   projectUsers: IProjectUserService;
   userRoles: IUserRoleService;
+  apiKeys: IApiKeyService;
+  projectUserApiKeys: IProjectUserApiKeyService;
 }
 
 /**
@@ -78,6 +83,12 @@ export function createDefaultCdmHandlers(
   const handlers: ICdmEntityHandler[] = [
     new RoleTemplateHandler(deps.syncRepo, deps.exportRepo, builder),
     new UserAssignmentHandler(deps.exportRepo, builder, deps.projectUsers, deps.userRoles),
+    new ProjectUserApiKeyCdmHandler(
+      deps.syncRepo,
+      deps.exportRepo,
+      deps.apiKeys,
+      deps.projectUserApiKeys
+    ),
   ];
 
   handlers.sort((a, b) => a.order - b.order);

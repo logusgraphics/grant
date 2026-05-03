@@ -2,4 +2,8 @@ input AddProjectUserApiKeyInput {
   projectId: ID!
   userId: ID!
   apiKeyId: ID!
+  """
+  Optional pivot metadata (e.g. CDM `cdmImport` / `cdmSource`); omit for normal API creates.
+  """
+  metadata: JSON
 }

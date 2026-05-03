@@ -1,9 +1,11 @@
 import {
+  apiKeys,
   DbSchema,
   groupPermissions,
   groups,
   permissions,
   projectRoles,
+  projectUserApiKeys,
   projectUsers,
   resources,
   roleGroups,
@@ -41,6 +43,16 @@ export interface ProjectUserWithRoleIds {
   userId: string;
   roleIds: string[];
   metadata: Record<string, unknown>;
+}
+
+/** Join row for CDM export of `project_user_api_keys` + `api_keys` (no secrets). */
+export interface ProjectUserApiKeyCdmExportRow {
+  userId: string;
+  pivotMetadata: Record<string, unknown>;
+  clientId: string;
+  name: string | null;
+  description: string | null;
+  expiresAt: Date | null;
 }
 
 /**
@@ -212,6 +224,51 @@ export class ProjectPermissionExportRepository {
       userId: u.userId,
       roleIds: Array.from(rolesByUser.get(u.userId) ?? []).sort(),
       metadata: (u.metadata as Record<string, unknown>) ?? {},
+    }));
+  }
+
+  /**
+   * All active project-user API keys for the project (for CDM export). Includes
+   * keys not created by CDM (no `cdmImport`); the handler decides emission shape.
+   */
+  public async getProjectUserApiKeysForCdmExport(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<ProjectUserApiKeyCdmExportRow[]> {
+    const dbInstance = transaction ?? this.db;
+
+    const rows = await dbInstance
+      .select({
+        userId: projectUserApiKeys.userId,
+        pivotMetadata: projectUserApiKeys.metadata,
+        clientId: apiKeys.clientId,
+        name: apiKeys.name,
+        description: apiKeys.description,
+        expiresAt: apiKeys.expiresAt,
+      })
+      .from(projectUserApiKeys)
+      .innerJoin(apiKeys, eq(apiKeys.id, projectUserApiKeys.apiKeyId))
+      .where(
+        and(
+          eq(projectUserApiKeys.projectId, projectId),
+          isNull(projectUserApiKeys.deletedAt),
+          isNull(apiKeys.deletedAt),
+          eq(apiKeys.isRevoked, false)
+        )
+      );
+
+    return rows.map((r) => ({
+      userId: r.userId,
+      pivotMetadata:
+        r.pivotMetadata != null &&
+        typeof r.pivotMetadata === 'object' &&
+        !Array.isArray(r.pivotMetadata)
+          ? (r.pivotMetadata as Record<string, unknown>)
+          : {},
+      clientId: r.clientId,
+      name: r.name,
+      description: r.description,
+      expiresAt: r.expiresAt,
     }));
   }
 }

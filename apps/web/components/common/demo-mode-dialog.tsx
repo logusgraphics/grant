@@ -117,7 +117,7 @@ function DemoModeDialogContent() {
           ))}
         </div>
       </div>
-      <DialogFooter className="sm:justify-end">
+      <DialogFooter>
         <DialogClose asChild>
           <Button>{t('understandButton')}</Button>
         </DialogClose>

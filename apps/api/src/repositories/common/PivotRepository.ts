@@ -1,5 +1,5 @@
 import { DbSchema } from '@grantjs/database';
-import { and, eq, inArray, isNotNull, isNull, SQLWrapper } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql, SQLWrapper } from 'drizzle-orm';
 
 import { NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
@@ -175,11 +175,13 @@ export abstract class PivotRepository<
       const unique = this.whereUnique(params);
       const notSoftDeleted = and(unique, isNull(this.table.deletedAt));
 
+      // Use DB clock so parallel soft-deletes in one transaction do not all bind the same
+      // JavaScript Date (violates mistaken UNIQUE indexes on deleted_at, e.g. project_users).
       const result = await db
         .update(this.table)
         .set({
-          deletedAt: new Date(),
-          updatedAt: new Date(),
+          deletedAt: sql`clock_timestamp()`,
+          updatedAt: sql`clock_timestamp()`,
         })
         .where(notSoftDeleted)
         .returning();

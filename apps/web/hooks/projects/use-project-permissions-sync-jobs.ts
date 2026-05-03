@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApolloClient, NetworkStatus } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
+import type { CdmExportSection } from '@grantjs/core';
+import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
 import {
   ProjectPermissionsSyncJob,
   ProjectPermissionsSyncJobPage,
@@ -344,9 +346,27 @@ interface UseExportProjectPermissionsParams {
 interface UseExportProjectPermissionsResult {
   loading: boolean;
   error: Error | null;
-  /** Snapshot the project's current state and trigger a browser save of the resulting CDM JSON. */
-  exportProject: () => Promise<SyncProjectPermissionsInput | null>;
+  /**
+   * Snapshot the project's current state and trigger a browser save of the resulting CDM JSON.
+   * Pass `undefined` or all sections for a full export (same as sync rollback snapshot).
+   */
+  exportProject: (
+    sections?: readonly CdmExportSection[] | string
+  ) => Promise<SyncProjectPermissionsInput | null>;
   reset: () => void;
+}
+
+/** `for...of` on a string iterates code units — never append query params that way. */
+function coerceExportSectionsParam(
+  sections?: readonly CdmExportSection[] | string | null
+): readonly CdmExportSection[] | undefined {
+  if (sections == null) return undefined;
+  if (typeof sections === 'string') {
+    const trimmed = sections.trim();
+    if (trimmed === '') return undefined;
+    return [trimmed as CdmExportSection];
+  }
+  return sections;
 }
 
 /**
@@ -365,57 +385,73 @@ export function useExportProjectPermissions(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const exportProject = useCallback(async (): Promise<SyncProjectPermissionsInput | null> => {
-    if (!id || !scope || !scope.id || !scope.tenant) return null;
-    setLoading(true);
-    setError(null);
-    try {
-      const apiBase = getApiBaseUrl();
-      const search = new URLSearchParams({ scopeId: scope.id, tenant: scope.tenant });
-      if (cdmVersion != null) {
-        search.set('cdmVersion', String(cdmVersion));
-      }
-      const url = `${apiBase}/api/projects/${id}/permissions/export?${search.toString()}`;
-      const accessToken = useAuthStore.getState().accessToken;
-      const res = await fetch(url, {
-        credentials: 'include',
-        headers: {
-          accept: 'application/json',
-          ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
-        },
-      });
-      if (!res.ok) {
-        let bodyText = '';
-        try {
-          bodyText = await res.text();
-        } catch {
-          bodyText = res.statusText;
+  const exportProject = useCallback(
+    async (
+      sections?: readonly CdmExportSection[] | string
+    ): Promise<SyncProjectPermissionsInput | null> => {
+      if (!id || !scope || !scope.id || !scope.tenant) return null;
+      setLoading(true);
+      setError(null);
+      try {
+        const apiBase = getApiBaseUrl();
+        const search = new URLSearchParams({ scopeId: scope.id, tenant: scope.tenant });
+        if (cdmVersion != null) {
+          search.set('cdmVersion', String(cdmVersion));
         }
-        throw new Error(bodyText || `Failed to export project (${res.status})`);
+        const normalized = coerceExportSectionsParam(sections);
+        const isFullExport =
+          normalized == null ||
+          normalized.length === 0 ||
+          (normalized.length === CDM_EXPORT_SECTIONS.length &&
+            CDM_EXPORT_SECTIONS.every((s) => normalized.includes(s)));
+        if (!isFullExport && normalized != null) {
+          for (const s of normalized) {
+            search.append('sections', s);
+          }
+        }
+        const url = `${apiBase}/api/projects/${id}/permissions/export?${search.toString()}`;
+        const accessToken = useAuthStore.getState().accessToken;
+        const res = await fetch(url, {
+          credentials: 'include',
+          headers: {
+            accept: 'application/json',
+            ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+          },
+        });
+        if (!res.ok) {
+          let bodyText = '';
+          try {
+            bodyText = await res.text();
+          } catch {
+            bodyText = res.statusText;
+          }
+          throw new Error(bodyText || `Failed to export project (${res.status})`);
+        }
+        const data = (await res.json()) as SyncProjectPermissionsInput;
+        if (typeof window !== 'undefined') {
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const objectUrl = URL.createObjectURL(blob);
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const filename = `cdm-export-${id}-${timestamp}.json`;
+          const link = document.createElement('a');
+          link.href = objectUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(objectUrl);
+        }
+        return data;
+      } catch (err) {
+        const wrapped = err instanceof Error ? err : new Error(String(err));
+        setError(wrapped);
+        return null;
+      } finally {
+        setLoading(false);
       }
-      const data = (await res.json()) as SyncProjectPermissionsInput;
-      if (typeof window !== 'undefined') {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const objectUrl = URL.createObjectURL(blob);
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `cdm-export-${id}-${timestamp}.json`;
-        const link = document.createElement('a');
-        link.href = objectUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(objectUrl);
-      }
-      return data;
-    } catch (err) {
-      const wrapped = err instanceof Error ? err : new Error(String(err));
-      setError(wrapped);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [id, scope, cdmVersion]);
+    },
+    [id, scope, cdmVersion]
+  );
 
   const reset = useCallback(() => {
     setError(null);

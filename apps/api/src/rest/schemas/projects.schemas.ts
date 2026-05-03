@@ -1,3 +1,4 @@
+import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
 import {
   ProjectPermissionsSyncJobSortableField,
   ProjectSortableField,
@@ -16,7 +17,7 @@ import {
 /** OpenAPI-friendly wrapper for downloadable CDM JSON (payload, snapshot, export). */
 export const cdmJsonArtifactSchema = jsonSchema.openapi({
   description:
-    'CDM JSON document with the same logical shape as SyncProjectPermissionsInput (roleTemplates, userAssignments, etc.).',
+    'CDM JSON document with the same logical shape as SyncProjectPermissionsInput (roleTemplates, userAssignments, optional projectUserApiKeys, etc.).',
 });
 
 export const projectSchema = z.object({
@@ -172,6 +173,21 @@ const userAssignmentCdmSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
+const projectUserApiKeyCdmSchema = z.object({
+  externalKey: z.string().min(1).optional().nullable(),
+  userId: z.uuid(),
+  clientId: z.string().min(1).max(255).optional().nullable(),
+  /**
+   * Plaintext secret for BYOK import (min 32 chars). Omitted keys are rejected at sync time
+   * when this array is non-empty; never present on export payloads.
+   */
+  clientSecret: z.string().min(32, 'errors.validation.clientSecretMin32').optional(),
+  name: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  expiresAt: z.string().optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+});
+
 /**
  * Body for POST /api/projects/:id/permissions/sync-jobs.
  *
@@ -187,6 +203,10 @@ export const startProjectPermissionsSyncRequestSchema = z.object({
   importId: z.string().optional(),
   roleTemplates: z.array(roleTemplateCdmSchema),
   userAssignments: z.array(userAssignmentCdmSchema),
+  projectUserApiKeys: z.array(projectUserApiKeyCdmSchema).optional().openapi({
+    description:
+      'Optional per-user API keys for this project. Each entry requires `clientSecret` (BYOK) when importing; export and rollback snapshots omit secrets.',
+  }),
 });
 
 export const projectPermissionsSyncJobParamsSchema = z.object({
@@ -212,6 +232,23 @@ export const projectPermissionsSyncJobScopeQuerySchema = z.object({
   tenant: tenantSchema,
 });
 
+const CDM_EXPORT_SECTION_IDS = new Set<string>(CDM_EXPORT_SECTIONS);
+
+/**
+ * When a client mistakenly iterates a section name string for `append('sections', …)`,
+ * the query becomes repeated single-character values. Collapse those back into one
+ * token when they spell a known CDM section id.
+ */
+function normalizeCdmExportSectionsQueryInput(val: unknown): unknown {
+  if (val === undefined || val === '') return val;
+  if (!Array.isArray(val)) return val;
+  const strings = val.filter((x): x is string => typeof x === 'string');
+  if (strings.length < 2) return val;
+  if (!strings.every((s) => s.length === 1)) return val;
+  const merged = strings.join('');
+  return CDM_EXPORT_SECTION_IDS.has(merged) ? merged : val;
+}
+
 /**
  * Query for `GET /:id/permissions/export`. Reuses the same scope shape as the
  * sync-job endpoints; `cdmVersion` defaults to 1 — the only supported version
@@ -228,6 +265,31 @@ export const exportProjectPermissionsQuerySchema = z.object({
       return typeof val === 'string' ? parseInt(val, 10) : val;
     })
     .pipe(z.number().int().min(1).optional()),
+  /**
+   * CDM slices to include. Repeat `sections=` or use a comma-separated value.
+   * Omit or leave empty for a full export (same as sync rollback snapshot).
+   * `projectUserApiKeys` requires `userAssignments` in the same request.
+   */
+  sections: z
+    .preprocess(
+      normalizeCdmExportSectionsQueryInput,
+      z.union([z.string(), z.array(z.string())]).optional()
+    )
+    .transform((val) => {
+      if (val === undefined || val === '') return undefined;
+      if (typeof val === 'string') {
+        return val
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      return val.map((s) => s.trim()).filter(Boolean);
+    })
+    .openapi({
+      description:
+        'CDM slices to include (repeat `sections` query param or comma-separated). Omit or empty = full export.',
+      example: 'roleTemplates,userAssignments',
+    }),
 });
 
 const syncProjectPermissionsResultSchema = z.object({
@@ -243,6 +305,7 @@ const syncProjectPermissionsResultSchema = z.object({
   projectResourcesLinked: z.number(),
   projectUsersEnsured: z.number(),
   userRolesAssigned: z.number(),
+  projectUserApiKeysCreated: z.number(),
   warnings: z.array(z.string()),
 });
 
