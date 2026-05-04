@@ -3,15 +3,20 @@ import type {
   ICdmEntityHandler,
   IGroupPermissionService,
   IGroupService,
+  IGroupTagService,
   IProjectGroupService,
   IProjectPermissionService,
   IProjectResourceService,
   IProjectRoleService,
+  IProjectTagService,
   IProjectUserApiKeyService,
   IProjectUserService,
   IRoleGroupService,
   IRoleService,
+  IRoleTagService,
+  ITagService,
   IUserRoleService,
+  IUserTagService,
 } from '@grantjs/core';
 
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
@@ -20,6 +25,7 @@ import type { ProjectPermissionSyncRepository } from '@/repositories/project-per
 import { CdmEntityBuilder } from './cdm-entity-builder';
 import { ProjectUserApiKeyCdmHandler } from './project-user-api-key.handler';
 import { RoleTemplateHandler } from './role-template.handler';
+import { TagHandler } from './tag.handler';
 import { UserAssignmentHandler } from './user-assignment.handler';
 
 export { CdmEntityBuilder } from './cdm-entity-builder';
@@ -29,6 +35,7 @@ export {
   resolveSinglePermissionRef,
 } from './permission-ref.helper';
 export { RoleTemplateHandler } from './role-template.handler';
+export { TagHandler } from './tag.handler';
 export { UserAssignmentHandler } from './user-assignment.handler';
 
 /**
@@ -51,6 +58,11 @@ export interface CdmHandlerRegistryDeps {
   userRoles: IUserRoleService;
   apiKeys: IApiKeyService;
   projectUserApiKeys: IProjectUserApiKeyService;
+  tags: ITagService;
+  projectTags: IProjectTagService;
+  roleTags: IRoleTagService;
+  groupTags: IGroupTagService;
+  userTags: IUserTagService;
 }
 
 /**
@@ -81,8 +93,15 @@ export function createDefaultCdmHandlers(
   );
 
   const handlers: ICdmEntityHandler[] = [
-    new RoleTemplateHandler(deps.syncRepo, deps.exportRepo, builder),
-    new UserAssignmentHandler(deps.exportRepo, builder, deps.projectUsers, deps.userRoles),
+    new TagHandler(deps.syncRepo, deps.exportRepo, deps.tags, deps.projectTags),
+    new RoleTemplateHandler(deps.syncRepo, deps.exportRepo, builder, deps.roleTags, deps.groupTags),
+    new UserAssignmentHandler(
+      deps.exportRepo,
+      builder,
+      deps.projectUsers,
+      deps.userRoles,
+      deps.userTags
+    ),
     new ProjectUserApiKeyCdmHandler(
       deps.syncRepo,
       deps.exportRepo,

@@ -114,6 +114,11 @@ function buildSyncResult(): SyncProjectPermissionsResult {
     projectUsersEnsured: 1,
     userRolesAssigned: 1,
     projectUserApiKeysCreated: 0,
+    tagsCreated: 0,
+    projectTagsLinked: 0,
+    roleTagsLinked: 0,
+    groupTagsLinked: 0,
+    userTagsLinked: 0,
     warnings: ['orphan permission ignored'],
   };
 }

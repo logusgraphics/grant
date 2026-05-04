@@ -3,6 +3,7 @@
  * include or omit. IDs match {@link ICdmEntityHandler.inputKey} for v1 handlers.
  */
 export const CDM_EXPORT_SECTIONS = [
+  'tags',
   'roleTemplates',
   'userAssignments',
   'projectUserApiKeys',

@@ -62,6 +62,53 @@ Attaching and detaching tags from entities is handled through entity-specific mu
 
 Tag colors are defined in `@grantjs/constants` and must be **perceptually distinct**. We use the **CIEDE2000 (ΔE00)** metric in LAB space, comparing each color at **Tailwind shade 500**. Every pair of palette colors must have ΔE00 ≥ `MIN_PALETTE_DELTA_E` (see `packages/@grantjs/constants/src/colors.ts`). This avoids ambiguous choices (e.g. multiple near-identical grays). The palette check is enforced in CI via `pnpm --filter @grantjs/constants run check:palette`. When adding or changing tag colors, ensure the script passes.
 
+## CDM lifecycle for tags
+
+Project permission CDM (canonical data model) sync supports tags as a first-class section. When a CDM artifact is imported into a project (`POST /api/projects/:id/permissions/sync-jobs`) or exported from one (`GET /api/projects/:id/permissions/export?sections=tags,…`), the platform round-trips:
+
+- the `tags` section — project-visible tag definitions plus `project_tags` membership rows,
+- `tagKeys` / `groupTagKeys` on each `roleTemplates[i]` — `role_tags` and `group_tags` associations for the role's auto-created CDM group,
+- `tagKeys` on each `userAssignments[i]` — global `user_tags` rows for the assigned user.
+
+### CDM identity envelope
+
+Tag rows created by CDM sync carry a reserved `metadata.cdmImport` envelope:
+
+```json
+{
+  "cdmImport": {
+    "projectId": "<importing project>",
+    "kind": "tag",
+    "externalKey": "<TagCdmInput.externalKey>"
+  },
+  "cdmSource": { "...": "importer-supplied JSON" }
+}
+```
+
+Only rows with this envelope are torn down on re-import. User-created tags (created via `createTag` GraphQL mutation or the UI) never carry `cdmImport` and are therefore never touched by CDM sync, including its replace-import sweep.
+
+### Project membership creation
+
+The CDM `tags` section creates membership in the importing project via `project_tags`. A tag entry that you import into project `A` is not automatically visible in project `B`; the CDM artifact is the unit of project membership. Re-importing the same artifact into a second project would create a second CDM-marked tag row (parallel to how role templates work today).
+
+### Cross-project effect of `user_tags`
+
+`user_tags` rows are global — Grant attaches them to the user, not the project. Re-importing an artifact whose `userAssignments[i].tagKeys` references a tag created in this project will:
+
+- create the global `user_tags` row, and
+- make that tag visible on the user across **every** project the user belongs to.
+
+This is the same behaviour as direct user mutations through the API; CDM sync does not gate it. The export dialog and OpenAPI description both warn about this trade-off, but the contract is explicit: opt in by including the `tags` and `userAssignments` sections together.
+
+### Teardown semantics
+
+`TagHandler.teardown` runs at order 5, before `RoleTemplateHandler` (10) and `UserAssignmentHandler` (20), and:
+
+1. lists every tag whose `metadata.cdmImport.projectId` matches the importing project;
+2. soft-deletes those tag rows **and** their pivot rows in `project_tags`, `role_tags`, `group_tags`, and `user_tags` in a single batch (soft-delete cascades do not fire on the FK side, so the pivots must be removed explicitly).
+
+Plain user-created tags are never affected, even if they share a name or color with a CDM-imported tag.
+
 ---
 
 **Related:**
@@ -69,3 +116,4 @@ Tag colors are defined in `@grantjs/constants` and must be **perceptually distin
 - [Resources](/core-concepts/resources) — Taggable resource entities
 - [Data Model](/architecture/data-model) — Entity relationships and pivot tables
 - [RBAC System](/architecture/rbac) — Permission evaluation for tag operations
+- [CDM permission sync](/core-concepts/cdm-import-export) — Full CDM import/export contract

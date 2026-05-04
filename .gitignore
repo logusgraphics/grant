@@ -65,3 +65,11 @@ apps/api/storage/
 .cursor/mcp.json
 # Cursor IDE — local planning drafts (not versioned; see docs/architecture/security.md for MFA)
 .cursor/plans/
+
+# Local vitest debug / capture output (do not commit)
+apps/api/vit-err.txt
+apps/api/vit-out.txt
+apps/api/vitest-capture-out.txt
+apps/api/vitest-exit-code.txt
+apps/api/vitest-final.exit
+.vitest-exit.txt

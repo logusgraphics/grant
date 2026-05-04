@@ -13,6 +13,8 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     listCdmRoleIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmGroupIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmProjectUserApiKeyIdsForProject: vi.fn().mockResolvedValue([]),
+    listCdmTagIdsForProject: vi.fn().mockResolvedValue([]),
+    bulkSoftDeleteCdmTags: vi.fn().mockResolvedValue(undefined),
     resolvePermission: vi.fn().mockResolvedValue({ id: 'perm-1', resourceId: 'res-1' }),
   };
   const roles = { createRole: vi.fn(), deleteRole: vi.fn() };
@@ -56,6 +58,12 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     resources: { delete: vi.fn() },
   };
 
+  const tags = { createTag: vi.fn() };
+  const projectTags = { addProjectTag: vi.fn() };
+  const roleTags = { addRoleTag: vi.fn() };
+  const groupTags = { addGroupTag: vi.fn() };
+  const userTags = { addUserTag: vi.fn() };
+
   function createService() {
     return new ProjectPermissionSyncService(
       syncRepo as never,
@@ -71,7 +79,12 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
       userRoles as never,
       apiKeys as never,
       projectUserApiKeys as never,
-      cache as never
+      cache as never,
+      tags as never,
+      projectTags as never,
+      roleTags as never,
+      groupTags as never,
+      userTags as never
     );
   }
 

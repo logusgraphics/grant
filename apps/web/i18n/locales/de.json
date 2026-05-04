@@ -3216,6 +3216,7 @@
       "title": "CDM exportieren",
       "description": "Wähle, welche Teile des Berechtigungsmodells enthalten sein sollen. Nicht ausgewählte Abschnitte erscheinen im heruntergeladenen JSON als leere Arrays.",
       "sections": {
+        "tags": "Tags (Projekt-Tags und Rollen-/Gruppen-/Benutzer-Tag-Zuordnungen)",
         "roleTemplates": "Rollenvorlagen (Rollen, Gruppen und Berechtigungsverknüpfungen)",
         "userAssignments": "Benutzerzuweisungen (Projektmitglieder und Rollenverknüpfungen)",
         "projectUserApiKeys": "Benutzer-API-Schlüssel (nur Identität; keine Geheimnisse)",

@@ -23,8 +23,15 @@ describe('assertValidCdmExportSections', () => {
     ).toEqual(['userAssignments', 'projectUserApiKeys', 'roleTemplates']);
   });
 
+  it('accepts tags as a section', () => {
+    expect(assertValidCdmExportSections(['tags', 'roleTemplates'])).toEqual([
+      'tags',
+      'roleTemplates',
+    ]);
+  });
+
   it('rejects unknown section', () => {
-    expect(() => assertValidCdmExportSections(['roleTemplates', 'tags'])).toThrow(
+    expect(() => assertValidCdmExportSections(['roleTemplates', 'definitelyNotASection'])).toThrow(
       /Invalid CDM export section/
     );
   });

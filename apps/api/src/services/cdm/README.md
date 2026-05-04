@@ -45,7 +45,10 @@ Walk-through for adding e.g. `apiKeys`:
 '<handlerKind>'` marker.
    - `apply(ctx, input)` — write the new state. Mutate `ctx.result` counters
      and publish anything later handlers need into `ctx.produced` (e.g. the
-     `roleTemplate` handler publishes external-key → role id).
+     `roleTemplate` handler publishes external-key → role id; the `tag`
+     handler publishes external-key → tag id, consumed by both
+     `roleTemplate` and `userAssignment` to wire `role_tags` / `group_tags` /
+     `user_tags`).
    - `export(ctx)` — round-trip support: read the project's current state and
      return it shaped like your `inputKey`. Reuse joins from the export repo
      (`ProjectPermissionExportRepository`) where possible.
@@ -79,6 +82,29 @@ The `cdmImport` block is reserved for the registry; it is what `teardown`
 queries to find prior rows. Importer-supplied metadata goes under
 `metadata.cdmSource` and is merged via `mergeCdmImporterMetadata` so callers
 cannot accidentally overwrite the reserved block.
+
+For entities tied to projects only through pivot tables (e.g. tags, where
+`project_tags` is the membership row), `teardown` must also soft-delete the
+pivot rows that reference the row being removed — soft-delete cascades do not
+fire on the FK side. See `TagHandler.teardown` and
+`ProjectPermissionSyncRepository.bulkSoftDeleteCdmTags` for the canonical
+pattern.
+
+## Cross-handler refs (`produced`)
+
+`CdmProducedRefs` is the registry's shared scratchpad: earlier handlers
+publish ids that later handlers consume. The current invariants are:
+
+| Producer (order)          | Consumes                                     | Field             |
+| ------------------------- | -------------------------------------------- | ----------------- |
+| `tag` (5)                 | —                                            | `tagIds`          |
+| `roleTemplate` (10)       | `tagIds`                                     | `roleTemplateIds` |
+| `userAssignment` (20)     | `roleTemplateIds`, `tagIds`                  | —                 |
+| `projectUserApiKey` (300) | `assignmentUserIds` (set, not in `produced`) | —                 |
+
+When you add a new producer, extend `CdmProducedRefs` in
+`@grantjs/core/src/ports/services/cdm-entity-handler.port.ts` with a
+namespaced `Map<externalKey, id>` field and document the consumers above.
 
 ## BYOK (bring your own key) policy for secret-bearing entities
 

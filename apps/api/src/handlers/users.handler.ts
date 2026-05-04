@@ -472,6 +472,18 @@ export class UserHandler extends CacheHandler {
   }
 
   /**
+   * Returns the raw user_tags pivot rows for a user.
+   * Used by User.tags resolver, which then intersects with scoped tag IDs to
+   * avoid leaking tags from other projects/scopes (User.tags is project-scoped).
+   */
+  public async getUserTagPivots(params: {
+    userId: string;
+  }): Promise<Array<{ tagId: string; isPrimary: boolean }>> {
+    const pivots = await this.userTags.getUserTags({ userId: params.userId });
+    return pivots.map((p) => ({ tagId: p.tagId, isPrimary: p.isPrimary }));
+  }
+
+  /**
    * Returns role IDs that the user has in the given scope (project or organization).
    * Used by User.roles field resolver to avoid leaking global roles.
    */

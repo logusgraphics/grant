@@ -362,6 +362,18 @@ export class ResourceHandler extends CacheHandler {
     });
   }
 
+  /**
+   * Returns the raw resource_tags pivot rows for a resource.
+   * Used by Resource.tags resolver, which then intersects with scoped tag IDs
+   * to avoid leaking tags from other projects/scopes.
+   */
+  public async getResourceTagPivots(params: {
+    resourceId: string;
+  }): Promise<Array<{ tagId: string; isPrimary: boolean }>> {
+    const pivots = await this.resourceTags.getResourceTags({ resourceId: params.resourceId });
+    return pivots.map((p) => ({ tagId: p.tagId, isPrimary: p.isPrimary }));
+  }
+
   public async getResourceTags(
     params: { resourceId: string } & SelectedFields<Resource>
   ): Promise<Array<Tag>> {

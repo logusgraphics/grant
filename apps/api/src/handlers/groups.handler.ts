@@ -237,6 +237,18 @@ export class GroupHandler extends CacheHandler {
     return [];
   }
 
+  /**
+   * Returns the raw group_tags pivot rows for a group.
+   * Used by Group.tags resolver, which then intersects with scoped tag IDs to
+   * avoid leaking tags from other projects/scopes.
+   */
+  public async getGroupTagPivots(params: {
+    groupId: string;
+  }): Promise<Array<{ tagId: string; isPrimary: boolean }>> {
+    const pivots = await this.groupTags.getGroupTags({ groupId: params.groupId });
+    return pivots.map((p) => ({ tagId: p.tagId, isPrimary: p.isPrimary }));
+  }
+
   public async getGroupPermissions(
     params: { groupId: string } & SelectedFields<Group>
   ): Promise<Array<Permission>> {

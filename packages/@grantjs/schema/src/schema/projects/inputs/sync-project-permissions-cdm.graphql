@@ -12,6 +12,30 @@ input PermissionRefCdmInput {
 }
 
 """
+Project tag definition. Resolved via `project_tags` membership on export and recreated as
+a CDM-marked tag row + `project_tags` membership on import. Cross-handler reference: other
+CDM entities (role templates, user assignments) reference tags by `externalKey`.
+"""
+input TagCdmInput {
+  """
+  Stable key within this CDM document; recommended = original tag.id at export time.
+  Other CDM entities reference tags by this key (`tagKeys`, `groupTagKeys`).
+  """
+  externalKey: String!
+  name: String!
+  color: String!
+  """
+  Marks this tag as primary in `project_tags` for the importing project.
+  """
+  isPrimary: Boolean
+  """
+  Importer-owned JSON merged into created tag metadata under `cdmSource`.
+  Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
+  """
+  metadata: JSON
+}
+
+"""
 Logical role from the source system with effective permission set.
 """
 input RoleTemplateCdmInput {
@@ -24,6 +48,16 @@ input RoleTemplateCdmInput {
   Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
   """
   metadata: JSON
+  """
+  External keys of CDM tags to attach to the created role via `role_tags`.
+  Each key must appear in the `tags` section of the same import.
+  """
+  tagKeys: [String!]
+  """
+  External keys of CDM tags to attach to the role's auto-created CDM group via `group_tags`.
+  Each key must appear in the `tags` section of the same import.
+  """
+  groupTagKeys: [String!]
 }
 
 """
@@ -38,6 +72,12 @@ input UserAssignmentCdmInput {
   Do not send a top-level `cdmImport` key; Grant reserves it for future use.
   """
   metadata: JSON
+  """
+  External keys of CDM tags to attach to the global user via `user_tags`.
+  NOTE: `user_tags` are global rows (cross-project effect). Each key must appear in the
+  `tags` section of the same import.
+  """
+  tagKeys: [String!]
 }
 
 """
@@ -83,4 +123,11 @@ input SyncProjectPermissionsInput {
   Optional per-user API keys for this project. Omitted or empty means no change beyond handler teardown rules for prior CDM keys.
   """
   projectUserApiKeys: [ProjectUserApiKeyCdmInput!]
+  """
+  Optional project tags. When provided, CDM tag rows + `project_tags` membership
+  are recreated for the project, and other CDM entities (role templates, user
+  assignments) can reference tag external keys for `role_tags`, `group_tags`,
+  and `user_tags`.
+  """
+  tags: [TagCdmInput!]
 }

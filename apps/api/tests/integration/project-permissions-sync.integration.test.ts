@@ -199,6 +199,81 @@ describe('project permissions sync REST (async jobs)', () => {
     });
   });
 
+  it('POST /sync-jobs forwards `tags`, `projectUserApiKeys`, and tagKeys/groupTagKeys end-to-end (round-trip with full body)', async () => {
+    const tagId = '60000000-0000-4000-8000-000000000aaa';
+    const res = await request(app)
+      .post(`/api/projects/${projectId}/permissions/sync-jobs`)
+      .send({
+        scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
+        cdmVersion: 1,
+        importId: 'imp-tags-1',
+        tags: [{ externalKey: tagId, name: 'Alpha', color: '#fff', isPrimary: true }],
+        roleTemplates: [
+          {
+            externalKey: 'viewer',
+            name: 'Viewer',
+            permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+            tagKeys: [tagId],
+            groupTagKeys: [tagId],
+          },
+        ],
+        userAssignments: [
+          {
+            userId,
+            roleTemplateKeys: ['viewer'],
+            tagKeys: [tagId],
+          },
+        ],
+        projectUserApiKeys: [
+          {
+            userId,
+            externalKey: 'k1',
+            clientSecret: 'x'.repeat(32),
+            name: 'Bot',
+          },
+        ],
+      });
+
+    expect(res.status).toBe(202);
+    expect(startProjectPermissionsSync).toHaveBeenCalledTimes(1);
+    expect(startProjectPermissionsSync.mock.calls[0][0]).toMatchObject({
+      id: projectId,
+      enqueuedById: userId,
+      input: {
+        cdmVersion: 1,
+        importId: 'imp-tags-1',
+        tags: [expect.objectContaining({ externalKey: tagId, name: 'Alpha', isPrimary: true })],
+        roleTemplates: [
+          expect.objectContaining({
+            externalKey: 'viewer',
+            tagKeys: [tagId],
+            groupTagKeys: [tagId],
+          }),
+        ],
+        userAssignments: [expect.objectContaining({ userId, tagKeys: [tagId] })],
+        projectUserApiKeys: [expect.objectContaining({ userId, externalKey: 'k1', name: 'Bot' })],
+      },
+    });
+  });
+
+  it('GET /permissions/export accepts `tags` as an exportable section', async () => {
+    const res = await request(app)
+      .get(`/api/projects/${projectId}/permissions/export`)
+      .query({
+        scopeId: `${accountId}:${projectId}`,
+        tenant: 'accountProject',
+        sections: ['tags', 'roleTemplates'],
+      });
+
+    expect(res.status).toBe(200);
+    expect(exportProjectPermissions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: projectId,
+        sections: ['tags', 'roleTemplates'],
+      })
+    );
+  });
+
   it('POST /sync-jobs returns 400 when body is invalid', async () => {
     const res = await request(app).post(`/api/projects/${projectId}/permissions/sync-jobs`).send({
       cdmVersion: 1,

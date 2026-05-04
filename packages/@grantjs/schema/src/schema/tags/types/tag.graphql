@@ -3,6 +3,7 @@ type Tag implements Auditable {
   name: String!
   color: String!
   isPrimary: Boolean
+  metadata: JSON!
   createdAt: Date!
   updatedAt: Date!
   deletedAt: Date

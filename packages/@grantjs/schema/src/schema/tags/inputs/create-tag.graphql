@@ -1,5 +1,6 @@
 input CreateTagInput {
   name: String!
   color: String!
+  metadata: JSON
   scope: Scope!
 }

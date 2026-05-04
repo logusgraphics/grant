@@ -49,6 +49,11 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
     {} as never,
     {} as never,
     {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
     handlers
   );
 }
@@ -171,5 +176,53 @@ describe('ProjectPermissionExportService', () => {
     expect(roleTemplate.export).toHaveBeenCalled();
     expect(userAssignment.export).toHaveBeenCalled();
     expect(keys.export).toHaveBeenCalled();
+  });
+
+  it('round-trip: handlers produce a CDM artifact whose `tags` and tagKeys/groupTagKeys/userTags fields can feed sync back without manual transformation', async () => {
+    const tagId = '60000000-0000-4000-8000-000000000aaa';
+    const roleId = '70000000-0000-4000-8000-000000000777';
+    const userId = '30000000-0000-4000-8000-000000000099';
+
+    const tag = stubHandler('tags', [
+      {
+        externalKey: tagId,
+        name: 'Alpha',
+        color: '#fff',
+        isPrimary: true,
+      },
+    ]);
+    const roleTemplate = stubHandler('roleTemplates', [
+      {
+        externalKey: roleId,
+        name: 'Existing role',
+        description: null,
+        permissionRefs: [{ resourceSlug: 'Tag', action: 'Query', permissionId: 'p-1' }],
+        metadata: null,
+        tagKeys: [tagId],
+        groupTagKeys: [tagId],
+      },
+    ]);
+    const userAssignment = stubHandler('userAssignments', [
+      {
+        userId,
+        roleTemplateKeys: [roleId],
+        directPermissionRefs: [],
+        metadata: null,
+        tagKeys: [tagId],
+      },
+    ]);
+
+    const svc = buildService([tag, roleTemplate, userAssignment]);
+    const out = await svc.exportProjectPermissions({ projectId, scope, cdmVersion: 1 });
+
+    expect(out.tags).toEqual([expect.objectContaining({ externalKey: tagId, name: 'Alpha' })]);
+    expect(out.roleTemplates).toEqual([
+      expect.objectContaining({
+        externalKey: roleId,
+        tagKeys: [tagId],
+        groupTagKeys: [tagId],
+      }),
+    ]);
+    expect(out.userAssignments).toEqual([expect.objectContaining({ userId, tagKeys: [tagId] })]);
   });
 });

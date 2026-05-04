@@ -6,6 +6,7 @@ import type {
   ICdmEntityHandler,
   IProjectUserService,
   IUserRoleService,
+  IUserTagService,
 } from '@grantjs/core';
 import { SyncProjectPermissionsInput, UserAssignmentCdmInput } from '@grantjs/schema';
 
@@ -41,7 +42,8 @@ export class UserAssignmentHandler implements ICdmEntityHandler<
     private readonly exportRepo: ProjectPermissionExportRepository,
     private readonly builder: CdmEntityBuilder,
     private readonly projectUsers: IProjectUserService,
-    private readonly userRoles: IUserRoleService
+    private readonly userRoles: IUserRoleService,
+    private readonly userTags: IUserTagService
   ) {}
 
   public validateInput(input: readonly UserAssignmentCdmInput[]): void {
@@ -51,6 +53,17 @@ export class UserAssignmentHandler implements ICdmEntityHandler<
         throw new ValidationError(`Duplicate userId in userAssignments: ${ua.userId}`);
       }
       userIdsSeen.add(ua.userId);
+      if (ua.tagKeys != null) {
+        const seen = new Set<string>();
+        for (const k of ua.tagKeys) {
+          if (seen.has(k)) {
+            throw new ValidationError(
+              `userAssignments[${ua.userId}].tagKeys: duplicate value '${k}'`
+            );
+          }
+          seen.add(k);
+        }
+      }
     }
   }
 
@@ -173,6 +186,17 @@ export class UserAssignmentHandler implements ICdmEntityHandler<
           ctx.result.userRolesAssigned += 1;
         }
       }
+
+      for (const tagKey of ua.tagKeys ?? []) {
+        const tagId = ctx.produced.tagIds.get(tagKey);
+        if (!tagId) {
+          throw new ValidationError(
+            `userAssignments[${ua.userId}]: unknown tagKey '${tagKey}'; must appear in the tags section`
+          );
+        }
+        await this.userTags.addUserTag({ userId: ua.userId, tagId, isPrimary: false }, tx);
+        ctx.result.userTagsLinked += 1;
+      }
     }
   }
 
@@ -199,13 +223,27 @@ export class UserAssignmentHandler implements ICdmEntityHandler<
   public async export(ctx: CdmExportContext): Promise<readonly UserAssignmentCdmInput[]> {
     const tx = ctx.tx as Transaction | undefined;
     const rows = await this.exportRepo.getProjectUsersWithRoleIds(ctx.projectId, tx);
-    return rows
-      .filter((u) => u.roleIds.length > 0)
-      .map((u) => ({
+    const visible = rows.filter((u) => u.roleIds.length > 0);
+    if (visible.length === 0) return [];
+
+    const userIds = visible.map((u) => u.userId);
+    const userTagAssoc = await this.exportRepo.getUserTagsByUserIds(userIds, tx);
+    const tagKeysByUserId = new Map<string, string[]>();
+    for (const a of userTagAssoc) {
+      const arr = tagKeysByUserId.get(a.ownerId) ?? [];
+      arr.push(a.tagId);
+      tagKeysByUserId.set(a.ownerId, arr);
+    }
+
+    return visible.map((u) => {
+      const tagKeys = (tagKeysByUserId.get(u.userId) ?? []).slice().sort();
+      return {
         userId: u.userId,
         roleTemplateKeys: u.roleIds,
         directPermissionRefs: [],
         metadata: extractProjectUserMetadataForCdmExport(u.metadata),
-      }));
+        tagKeys: tagKeys.length > 0 ? tagKeys : undefined,
+      };
+    });
   }
 }

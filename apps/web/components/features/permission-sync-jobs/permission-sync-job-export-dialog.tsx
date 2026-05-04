@@ -24,6 +24,7 @@ import { useExportProjectPermissions } from '@/hooks/projects';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 function buildSections(params: {
+  tags: boolean;
   roleTemplates: boolean;
   userAssignments: boolean;
   projectUserApiKeys: boolean;
@@ -32,6 +33,7 @@ function buildSections(params: {
   if (params.roleTemplates) selected.push('roleTemplates');
   if (params.userAssignments) selected.push('userAssignments');
   if (params.projectUserApiKeys) selected.push('projectUserApiKeys');
+  if (params.tags) selected.push('tags');
   if (
     selected.length === CDM_EXPORT_SECTIONS.length &&
     CDM_EXPORT_SECTIONS.every((s) => selected.includes(s))
@@ -50,6 +52,7 @@ export function PermissionSyncJobExportDialog() {
   const open = usePermissionSyncJobsStore((s) => s.isExportDialogOpen);
   const setOpen = usePermissionSyncJobsStore((s) => s.setExportDialogOpen);
 
+  const [tags, setTags] = useState(true);
   const [roleTemplates, setRoleTemplates] = useState(true);
   const [userAssignments, setUserAssignments] = useState(true);
   const [projectUserApiKeys, setProjectUserApiKeys] = useState(true);
@@ -61,6 +64,7 @@ export function PermissionSyncJobExportDialog() {
 
   useEffect(() => {
     if (open) {
+      setTags(true);
       setRoleTemplates(true);
       setUserAssignments(true);
       setProjectUserApiKeys(true);
@@ -86,12 +90,12 @@ export function PermissionSyncJobExportDialog() {
 
   const handleExport = useCallback(async () => {
     if (!projectId) return;
-    const sections = buildSections({ roleTemplates, userAssignments, projectUserApiKeys });
+    const sections = buildSections({ tags, roleTemplates, userAssignments, projectUserApiKeys });
     const result = await exportProject(sections);
     if (result != null) {
       setOpen(false);
     }
-  }, [exportProject, projectId, projectUserApiKeys, roleTemplates, setOpen, userAssignments]);
+  }, [exportProject, projectId, projectUserApiKeys, roleTemplates, setOpen, tags, userAssignments]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -146,6 +150,19 @@ export function PermissionSyncJobExportDialog() {
             </div>
           </div>
 
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="cdm-export-tags"
+              checked={tags}
+              onCheckedChange={(v) => setTags(v === true)}
+            />
+            <div className="grid gap-1">
+              <Label htmlFor="cdm-export-tags" className="font-normal cursor-pointer">
+                {t('sections.tags')}
+              </Label>
+            </div>
+          </div>
+
           {showReimportWithoutRolesWarning ? (
             <Alert variant="warning" className="rounded-lg border-warning bg-warning/10">
               <AlertCircle aria-hidden />
@@ -168,7 +185,9 @@ export function PermissionSyncJobExportDialog() {
             type="button"
             onClick={() => void handleExport()}
             disabled={
-              loading || !projectId || (!roleTemplates && !userAssignments && !projectUserApiKeys)
+              loading ||
+              !projectId ||
+              (!tags && !roleTemplates && !userAssignments && !projectUserApiKeys)
             }
           >
             {loading ? (

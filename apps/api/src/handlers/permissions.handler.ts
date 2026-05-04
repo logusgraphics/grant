@@ -221,6 +221,20 @@ export class PermissionHandler extends CacheHandler {
     });
   }
 
+  /**
+   * Returns the raw permission_tags pivot rows for a permission.
+   * Used by Permission.tags resolver, which then intersects with scoped tag
+   * IDs to avoid leaking tags from other projects/scopes.
+   */
+  public async getPermissionTagPivots(params: {
+    permissionId: string;
+  }): Promise<Array<{ tagId: string; isPrimary: boolean }>> {
+    const pivots = await this.permissionTags.getPermissionTags({
+      permissionId: params.permissionId,
+    });
+    return pivots.map((p) => ({ tagId: p.tagId, isPrimary: p.isPrimary }));
+  }
+
   public async getPermissionTags(
     params: { permissionId: string } & SelectedFields<Permission>
   ): Promise<Array<Tag>> {

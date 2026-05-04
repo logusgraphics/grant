@@ -164,12 +164,23 @@ const roleTemplateCdmSchema = z.object({
   description: z.string().optional().nullable(),
   permissionRefs: z.array(permissionRefCdmSchema),
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+  tagKeys: z.array(z.string().min(1)).optional(),
+  groupTagKeys: z.array(z.string().min(1)).optional(),
 });
 
 const userAssignmentCdmSchema = z.object({
   userId: z.uuid(),
   roleTemplateKeys: z.array(z.string()).optional(),
   directPermissionRefs: z.array(permissionRefCdmSchema).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+  tagKeys: z.array(z.string().min(1)).optional(),
+});
+
+const tagCdmSchema = z.object({
+  externalKey: z.string().min(1),
+  name: z.string().min(1).max(255),
+  color: z.string().min(1).max(50),
+  isPrimary: z.boolean().optional(),
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
@@ -206,6 +217,10 @@ export const startProjectPermissionsSyncRequestSchema = z.object({
   projectUserApiKeys: z.array(projectUserApiKeyCdmSchema).optional().openapi({
     description:
       'Optional per-user API keys for this project. Each entry requires `clientSecret` (BYOK) when importing; export and rollback snapshots omit secrets.',
+  }),
+  tags: z.array(tagCdmSchema).optional().openapi({
+    description:
+      'Optional CDM tags for this project. When present, recreates `tags` rows + `project_tags` membership; role templates and user assignments may then reference these tags via `tagKeys` / `groupTagKeys`. Note: `user_tags` are global rows (cross-project effect).',
   }),
 });
 
@@ -306,6 +321,11 @@ const syncProjectPermissionsResultSchema = z.object({
   projectUsersEnsured: z.number(),
   userRolesAssigned: z.number(),
   projectUserApiKeysCreated: z.number(),
+  tagsCreated: z.number(),
+  projectTagsLinked: z.number(),
+  roleTagsLinked: z.number(),
+  groupTagsLinked: z.number(),
+  userTagsLinked: z.number(),
   warnings: z.array(z.string()),
 });
 

@@ -1,11 +1,16 @@
 import {
   DbSchema,
   groups,
+  groupTags,
   permissions,
+  projectTags,
   projectUserApiKeys,
   resources,
   roles,
+  roleTags,
+  tags,
   userRoles,
+  userTags,
 } from '@grantjs/database';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
@@ -175,5 +180,77 @@ export class ProjectPermissionSyncRepository {
       .select({ userId: userRoles.userId, roleId: userRoles.roleId })
       .from(userRoles)
       .where(and(inArray(userRoles.roleId, roleIds), isNull(userRoles.deletedAt)));
+  }
+
+  /**
+   * Tag ids managed by the CDM tag handler for this project. Identified via
+   * `tags.metadata.cdmImport.projectId` + `kind = 'tag'` so we only delete CDM
+   * tags belonging to this project (never user-created ones).
+   */
+  public async listCdmTagIdsForProject(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<string[]> {
+    const db = transaction ?? this.db;
+    const rows = await db
+      .select({ id: tags.id })
+      .from(tags)
+      .where(
+        and(
+          isNull(tags.deletedAt),
+          sql`${tags.metadata}->'cdmImport'->>'projectId' = ${projectId}`,
+          sql`${tags.metadata}->'cdmImport'->>'kind' = 'tag'`
+        )
+      );
+    return rows.map((r) => r.id);
+  }
+
+  /**
+   * Soft-delete CDM-marked tag rows together with their pivot memberships.
+   * The pivots are soft-deleted (rather than relying on FK cascade, which only
+   * fires on hard delete) so subsequent reads immediately reflect the teardown.
+   *
+   * Touches: `project_tags` (this project only), `role_tags`, `group_tags`,
+   * `user_tags` referencing the given tag ids, and the `tags` rows themselves.
+   */
+  public async bulkSoftDeleteCdmTags(
+    tagIds: string[],
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<void> {
+    if (tagIds.length === 0) return;
+    const db = transaction ?? this.db;
+    const now = new Date();
+
+    await db
+      .update(projectTags)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(projectTags.projectId, projectId),
+          inArray(projectTags.tagId, tagIds),
+          isNull(projectTags.deletedAt)
+        )
+      );
+
+    await db
+      .update(roleTags)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(inArray(roleTags.tagId, tagIds), isNull(roleTags.deletedAt)));
+
+    await db
+      .update(groupTags)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(inArray(groupTags.tagId, tagIds), isNull(groupTags.deletedAt)));
+
+    await db
+      .update(userTags)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(inArray(userTags.tagId, tagIds), isNull(userTags.deletedAt)));
+
+    await db
+      .update(tags)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(inArray(tags.id, tagIds), isNull(tags.deletedAt)));
   }
 }

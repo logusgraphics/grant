@@ -2,4 +2,5 @@ input UpdateTagInput {
   scope: Scope!
   name: String
   color: String
+  metadata: JSON
 }

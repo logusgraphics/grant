@@ -573,6 +573,7 @@ export type CreateRoleInput = {
 
 export type CreateTagInput = {
   color: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   scope: Scope;
 };
@@ -2533,12 +2534,22 @@ export type RoleTemplateCdmInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   externalKey: Scalars['String']['input'];
   /**
+   * External keys of CDM tags to attach to the role's auto-created CDM group via `group_tags`.
+   * Each key must appear in the `tags` section of the same import.
+   */
+  groupTagKeys?: InputMaybe<Array<Scalars['String']['input']>>;
+  /**
    * Importer-owned JSON merged into created role and group metadata under `cdmSource`.
    * Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
    */
   metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   permissionRefs: Array<PermissionRefCdmInput>;
+  /**
+   * External keys of CDM tags to attach to the created role via `role_tags`.
+   * Each key must appear in the `tags` section of the same import.
+   */
+  tagKeys?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type Scope = {
@@ -2599,12 +2610,21 @@ export type SyncProjectPermissionsInput = {
   /** Optional per-user API keys for this project. Omitted or empty means no change beyond handler teardown rules for prior CDM keys. */
   projectUserApiKeys?: InputMaybe<Array<ProjectUserApiKeyCdmInput>>;
   roleTemplates: Array<RoleTemplateCdmInput>;
+  /**
+   * Optional project tags. When provided, CDM tag rows + `project_tags` membership
+   * are recreated for the project, and other CDM entities (role templates, user
+   * assignments) can reference tag external keys for `role_tags`, `group_tags`,
+   * and `user_tags`.
+   */
+  tags?: InputMaybe<Array<TagCdmInput>>;
   userAssignments: Array<UserAssignmentCdmInput>;
 };
 
 export type SyncProjectPermissionsResult = {
   __typename?: 'SyncProjectPermissionsResult';
   groupPermissionsLinked: Scalars['Int']['output'];
+  /** Number of `group_tags` pivot rows created during this sync (sum across all role templates). */
+  groupTagsLinked: Scalars['Int']['output'];
   groupsCreated: Scalars['Int']['output'];
   importId?: Maybe<Scalars['String']['output']>;
   projectGroupsLinked: Scalars['Int']['output'];
@@ -2613,12 +2633,20 @@ export type SyncProjectPermissionsResult = {
   projectPermissionsLinked: Scalars['Int']['output'];
   projectResourcesLinked: Scalars['Int']['output'];
   projectRolesLinked: Scalars['Int']['output'];
+  /** Number of `project_tags` memberships created during this sync (one per imported tag). */
+  projectTagsLinked: Scalars['Int']['output'];
   /** Number of project-user API key pivots created during this sync (each with a new or supplied api_keys row). */
   projectUserApiKeysCreated: Scalars['Int']['output'];
   projectUsersEnsured: Scalars['Int']['output'];
   roleGroupsLinked: Scalars['Int']['output'];
+  /** Number of `role_tags` pivot rows created during this sync (sum across all role templates). */
+  roleTagsLinked: Scalars['Int']['output'];
   rolesCreated: Scalars['Int']['output'];
+  /** Number of CDM tag rows created during this sync (one per `tags[]` entry in the import). */
+  tagsCreated: Scalars['Int']['output'];
   userRolesAssigned: Scalars['Int']['output'];
+  /** Number of `user_tags` pivot rows created during this sync (sum across all user assignments). */
+  userTagsLinked: Scalars['Int']['output'];
   warnings: Array<Scalars['String']['output']>;
 };
 
@@ -2629,8 +2657,31 @@ export type Tag = Auditable & {
   deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   isPrimary?: Maybe<Scalars['Boolean']['output']>;
+  metadata: Scalars['JSON']['output'];
   name: Scalars['String']['output'];
   updatedAt: Scalars['Date']['output'];
+};
+
+/**
+ * Project tag definition. Resolved via `project_tags` membership on export and recreated as
+ * a CDM-marked tag row + `project_tags` membership on import. Cross-handler reference: other
+ * CDM entities (role templates, user assignments) reference tags by `externalKey`.
+ */
+export type TagCdmInput = {
+  color: Scalars['String']['input'];
+  /**
+   * Stable key within this CDM document; recommended = original tag.id at export time.
+   * Other CDM entities reference tags by this key (`tagKeys`, `groupTagKeys`).
+   */
+  externalKey: Scalars['String']['input'];
+  /** Marks this tag as primary in `project_tags` for the importing project. */
+  isPrimary?: InputMaybe<Scalars['Boolean']['input']>;
+  /**
+   * Importer-owned JSON merged into created tag metadata under `cdmSource`.
+   * Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
+   */
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type TagPage = PaginatedResults & {
@@ -2838,6 +2889,7 @@ export type UpdateRoleTagInput = {
 
 export type UpdateTagInput = {
   color?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   scope: Scope;
 };
@@ -2917,6 +2969,12 @@ export type UserAssignmentCdmInput = {
    */
   metadata?: InputMaybe<Scalars['JSON']['input']>;
   roleTemplateKeys?: InputMaybe<Array<Scalars['String']['input']>>;
+  /**
+   * External keys of CDM tags to attach to the global user via `user_tags`.
+   * NOTE: `user_tags` are global rows (cross-project effect). Each key must appear in the
+   * `tags` section of the same import.
+   */
+  tagKeys?: InputMaybe<Array<Scalars['String']['input']>>;
   userId: Scalars['ID']['input'];
 };
 

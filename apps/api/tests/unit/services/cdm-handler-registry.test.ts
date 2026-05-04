@@ -72,6 +72,8 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
     listCdmRoleIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmGroupIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmProjectUserApiKeyIdsForProject: vi.fn().mockResolvedValue([]),
+    listCdmTagIdsForProject: vi.fn().mockResolvedValue([]),
+    bulkSoftDeleteCdmTags: vi.fn().mockResolvedValue(undefined),
     resolvePermission: vi.fn().mockResolvedValue({ id: 'perm-1', resourceId: 'res-1' }),
   };
   const cache = {
@@ -96,6 +98,11 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
     {} as never,
     {} as never,
     cache as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
     undefined,
     handlers
   );
@@ -205,5 +212,38 @@ describe('ICdmEntityHandler registry contract', () => {
     await svc.syncProjectPermissions({ projectId, scope, input: baseInput }, {});
 
     expect(observedFromLater).toBe('role-1');
+  });
+
+  it('produced.tagIds flows from an earlier tag handler to later role/user handlers', async () => {
+    const log: EventLog = { events: [] };
+
+    /**
+     * Tags handler runs first (order 5), publishes a tag id; role-template
+     * (order 10) and user-assignment (order 20) both read it. Pins the
+     * cross-handler shared-state contract that tag-aware handlers depend on.
+     */
+    let observedByRole: string | undefined;
+    let observedByUser: string | undefined;
+    const tag = createRecordingHandler('tag', 'tags', 5, log, {
+      apply: (ctx) => {
+        ctx.produced.tagIds.set('t1', 'tag-1');
+      },
+    });
+    const roleTemplate = createRecordingHandler('roleTemplate', 'roleTemplates', 10, log, {
+      apply: (ctx) => {
+        observedByRole = ctx.produced.tagIds.get('t1');
+      },
+    });
+    const userAssignment = createRecordingHandler('userAssignment', 'userAssignments', 20, log, {
+      apply: (ctx) => {
+        observedByUser = ctx.produced.tagIds.get('t1');
+      },
+    });
+
+    const svc = buildService([tag, roleTemplate, userAssignment]);
+    await svc.syncProjectPermissions({ projectId, scope, input: baseInput }, {});
+
+    expect(observedByRole).toBe('tag-1');
+    expect(observedByUser).toBe('tag-1');
   });
 });

@@ -16,11 +16,13 @@ import {
 export const createTagSchema = z.object({
   name: nonEmptyNameSchema,
   color: colorSchema,
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const updateTagSchema = z.object({
   name: nonEmptyNameSchema.optional(),
   color: colorSchema,
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const tagQuerySchema = sortableParamsSchema.extend({
@@ -42,11 +44,13 @@ export const tagSortInputSchema = z.object({
 export const createTagInputSchema = z.object({
   name: nonEmptyNameSchema,
   color: colorSchema,
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const updateTagInputSchema = z.object({
   name: nonEmptyNameSchema.nullable().optional(),
   color: colorSchema.nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const updateTagArgsSchema = z.object({
@@ -65,6 +69,7 @@ export const queryTagsArgsSchema = queryParamsSchema.extend({
 export const tagSchema = baseEntitySchema.extend({
   name: nameSchema,
   color: colorSchema,
+  metadata: z.record(z.string(), z.unknown()),
 });
 
 export const tagPageSchema = paginatedResponseSchema(tagSchema).transform((data) => ({

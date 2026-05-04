@@ -4,6 +4,8 @@ import type {
   CdmPermissionRefSpec,
   CdmTeardownContext,
   ICdmEntityHandler,
+  IGroupTagService,
+  IRoleTagService,
 } from '@grantjs/core';
 import { RoleTemplateCdmInput, SyncProjectPermissionsInput } from '@grantjs/schema';
 
@@ -40,7 +42,9 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
   constructor(
     private readonly syncRepo: ProjectPermissionSyncRepository,
     private readonly exportRepo: ProjectPermissionExportRepository,
-    private readonly builder: CdmEntityBuilder
+    private readonly builder: CdmEntityBuilder,
+    private readonly roleTags: IRoleTagService,
+    private readonly groupTags: IGroupTagService
   ) {}
 
   public validateInput(input: readonly RoleTemplateCdmInput[]): void {
@@ -55,6 +59,8 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
           `roleTemplates[${t.externalKey}] must include at least one permissionRef`
         );
       }
+      assertUniqueStringArray(t.tagKeys, `roleTemplates[${t.externalKey}].tagKeys`);
+      assertUniqueStringArray(t.groupTagKeys, `roleTemplates[${t.externalKey}].groupTagKeys`);
     }
   }
 
@@ -106,7 +112,7 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
           condition: (r.condition as Record<string, unknown> | null | undefined) ?? null,
         })
       );
-      const { roleId, counts } = await this.builder.createRoleWithGroup(
+      const { roleId, groupId, counts } = await this.builder.createRoleWithGroup(
         ctx.projectId,
         ctx.scope,
         tmpl.externalKey,
@@ -126,6 +132,27 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
       ctx.result.projectGroupsLinked += counts.projectGroups;
       ctx.result.projectPermissionsLinked += counts.projectPermissions;
       ctx.result.projectResourcesLinked += counts.projectResources;
+
+      for (const tagKey of tmpl.tagKeys ?? []) {
+        const tagId = ctx.produced.tagIds.get(tagKey);
+        if (!tagId) {
+          throw new ValidationError(
+            `roleTemplates[${tmpl.externalKey}]: unknown tagKey '${tagKey}'; must appear in the tags section`
+          );
+        }
+        await this.roleTags.addRoleTag({ roleId, tagId, isPrimary: false }, tx);
+        ctx.result.roleTagsLinked += 1;
+      }
+      for (const tagKey of tmpl.groupTagKeys ?? []) {
+        const tagId = ctx.produced.tagIds.get(tagKey);
+        if (!tagId) {
+          throw new ValidationError(
+            `roleTemplates[${tmpl.externalKey}]: unknown groupTagKey '${tagKey}'; must appear in the tags section`
+          );
+        }
+        await this.groupTags.addGroupTag({ groupId, tagId, isPrimary: false }, tx);
+        ctx.result.groupTagsLinked += 1;
+      }
     }
   }
 
@@ -148,18 +175,48 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
   public async export(ctx: CdmExportContext): Promise<readonly RoleTemplateCdmInput[]> {
     const tx = ctx.tx as Transaction | undefined;
     const rows = await this.exportRepo.getProjectRolesWithPermissions(ctx.projectId, tx);
-    return rows.map((r) => ({
-      externalKey: r.roleId,
-      name: stripCdmRolePrefix(r.name),
-      description: r.description,
-      permissionRefs: r.permissions.map((p) => ({
-        resourceSlug: p.resourceSlug,
-        action: p.action,
-        permissionId: p.permissionId,
-        condition: p.condition,
-      })),
-      metadata: extractCdmSourceMetadata(r.metadata),
-    }));
+    if (rows.length === 0) return [];
+
+    const roleIds = rows.map((r) => r.roleId);
+    const [roleTagAssoc, groupIdByRoleId] = await Promise.all([
+      this.exportRepo.getRoleTagsByRoleIds(roleIds, tx),
+      this.exportRepo.getCdmGroupIdsForRoleIds(roleIds, tx),
+    ]);
+    const groupIds = Array.from(new Set(Array.from(groupIdByRoleId.values())));
+    const groupTagAssoc = await this.exportRepo.getGroupTagsByGroupIds(groupIds, tx);
+
+    const tagKeysByRoleId = new Map<string, string[]>();
+    for (const a of roleTagAssoc) {
+      const arr = tagKeysByRoleId.get(a.ownerId) ?? [];
+      arr.push(a.tagId);
+      tagKeysByRoleId.set(a.ownerId, arr);
+    }
+    const tagKeysByGroupId = new Map<string, string[]>();
+    for (const a of groupTagAssoc) {
+      const arr = tagKeysByGroupId.get(a.ownerId) ?? [];
+      arr.push(a.tagId);
+      tagKeysByGroupId.set(a.ownerId, arr);
+    }
+
+    return rows.map((r) => {
+      const groupId = groupIdByRoleId.get(r.roleId);
+      const tagKeys = (tagKeysByRoleId.get(r.roleId) ?? []).slice().sort();
+      const groupTagKeys = groupId ? (tagKeysByGroupId.get(groupId) ?? []).slice().sort() : [];
+      return {
+        externalKey: r.roleId,
+        name: stripCdmRolePrefix(r.name),
+        description: r.description,
+        permissionRefs: r.permissions.map((p) => ({
+          resourceSlug: p.resourceSlug,
+          action: p.action,
+          permissionId: p.permissionId,
+          condition: p.condition,
+        })),
+        metadata: extractCdmSourceMetadata(r.metadata),
+        tagKeys: tagKeys.length > 0 ? tagKeys : undefined,
+        groupTagKeys: groupTagKeys.length > 0 ? groupTagKeys : undefined,
+      };
+    });
   }
 
   private lookupRef(ctx: CdmApplyContext, ref: CdmPermissionRefSpec): ResolvedCdmPermission {
@@ -183,6 +240,24 @@ function stripCdmRolePrefix(name: string): string {
  * Returns `null` when the source has no importer metadata, matching the
  * optional shape of `RoleTemplateCdmInput.metadata`.
  */
+/**
+ * Throws when `values` contains duplicates. Used to surface duplicate `tagKeys`
+ * / `groupTagKeys` early during input validation.
+ */
+function assertUniqueStringArray(
+  values: readonly string[] | null | undefined,
+  label: string
+): void {
+  if (values == null) return;
+  const seen = new Set<string>();
+  for (const v of values) {
+    if (seen.has(v)) {
+      throw new ValidationError(`${label}: duplicate value '${v}'`);
+    }
+    seen.add(v);
+  }
+}
+
 function extractCdmSourceMetadata(
   metadata: Record<string, unknown>
 ): Record<string, unknown> | null {

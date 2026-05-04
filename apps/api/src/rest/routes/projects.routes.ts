@@ -6,6 +6,7 @@ import {
   ProjectPermissionsSyncJob,
   ProjectPermissionsSyncJobSortableField,
   ProjectPermissionsSyncJobStatus,
+  SyncProjectPermissionsInput,
   UpdateProjectMutationVariables,
 } from '@grantjs/schema';
 import { ProjectSortInput } from '@grantjs/schema';
@@ -103,18 +104,25 @@ export function createProjectsRouter(context: RequestContext): Router {
       res: Response
     ) => {
       const { id } = req.params;
-      const { scope, cdmVersion, importId, roleTemplates, userAssignments } = req.body;
+      const { scope, ...input } = req.body;
 
       const enqueuedById = context.user?.userId;
       if (!enqueuedById) {
         throw new AuthenticationError('Authenticated user required to start a sync job');
       }
 
+      /**
+       * `input` is the Zod-validated CDM body minus `scope`. We forward every
+       * remaining field (incl. `tags`, `projectUserApiKeys`) to the handler.
+       * Zod parses `Date` fields (e.g. `projectUserApiKeys[].expiresAt`) as
+       * strings; the handler/service layer normalises them to `Date` again,
+       * so the cast through `unknown` is a contract gap, not a runtime bug.
+       */
       const job: ProjectPermissionsSyncJob =
         await context.handlers.projects.startProjectPermissionsSync({
           id,
           scope,
-          input: { cdmVersion, importId, roleTemplates, userAssignments },
+          input: input as unknown as SyncProjectPermissionsInput,
           enqueuedById,
         });
 

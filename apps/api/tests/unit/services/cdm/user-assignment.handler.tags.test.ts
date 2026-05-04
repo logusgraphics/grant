@@ -1,0 +1,189 @@
+/**
+ * Focused unit tests for the tag-wiring slice of the UserAssignmentHandler.
+ *
+ * Asserts that:
+ *   - apply() resolves `tagKeys` against `produced.tagIds` and writes user_tags,
+ *     bumping the userTagsLinked counter.
+ *   - apply() throws `ValidationError` for an unknown tagKey.
+ *   - export() projects user_tags back to the CDM input shape.
+ */
+import type { CdmApplyContext, CdmExportContext } from '@grantjs/core';
+import { Scope, SyncProjectPermissionsResult, Tenant } from '@grantjs/schema';
+import { describe, expect, it, vi } from 'vitest';
+
+import { UserAssignmentHandler } from '@/services/cdm/user-assignment.handler';
+
+const projectId = '10000000-0000-4000-8000-000000000011';
+const accountId = '20000000-0000-4000-8000-000000000020';
+const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` };
+const userId = '30000000-0000-4000-8000-000000000099';
+
+function baseResult(): SyncProjectPermissionsResult {
+  return {
+    projectId,
+    importId: null,
+    rolesCreated: 0,
+    groupsCreated: 0,
+    roleGroupsLinked: 0,
+    groupPermissionsLinked: 0,
+    projectRolesLinked: 0,
+    projectGroupsLinked: 0,
+    projectPermissionsLinked: 0,
+    projectResourcesLinked: 0,
+    projectUsersEnsured: 0,
+    userRolesAssigned: 0,
+    projectUserApiKeysCreated: 0,
+    tagsCreated: 0,
+    projectTagsLinked: 0,
+    roleTagsLinked: 0,
+    groupTagsLinked: 0,
+    userTagsLinked: 0,
+    warnings: [],
+  };
+}
+
+function buildHandler(deps?: {
+  exportRepo?: {
+    getProjectUsersWithRoleIds: ReturnType<typeof vi.fn>;
+    getUserTagsByUserIds: ReturnType<typeof vi.fn>;
+  };
+  projectUsers?: {
+    addProjectUser: ReturnType<typeof vi.fn>;
+    mergeProjectUserCdmMetadata: ReturnType<typeof vi.fn>;
+  };
+  userRoles?: { addUserRole: ReturnType<typeof vi.fn> };
+  userTags?: { addUserTag: ReturnType<typeof vi.fn> };
+}) {
+  const exportRepo = deps?.exportRepo ?? {
+    getProjectUsersWithRoleIds: vi.fn().mockResolvedValue([]),
+    getUserTagsByUserIds: vi.fn().mockResolvedValue([]),
+  };
+  const projectUsers = deps?.projectUsers ?? {
+    addProjectUser: vi.fn().mockResolvedValue(undefined),
+    mergeProjectUserCdmMetadata: vi.fn().mockResolvedValue(undefined),
+  };
+  const userRoles = deps?.userRoles ?? { addUserRole: vi.fn().mockResolvedValue(undefined) };
+  const userTags = deps?.userTags ?? { addUserTag: vi.fn().mockResolvedValue(undefined) };
+  const builder = { createRoleWithGroup: vi.fn() };
+  return {
+    handler: new UserAssignmentHandler(
+      exportRepo as never,
+      builder as never,
+      projectUsers as never,
+      userRoles as never,
+      userTags as never
+    ),
+    exportRepo,
+    projectUsers,
+    userRoles,
+    userTags,
+  };
+}
+
+describe('UserAssignmentHandler — tag wiring', () => {
+  it('validateInput rejects duplicate tagKeys for the same user', () => {
+    const { handler } = buildHandler();
+    expect(() => handler.validateInput([{ userId, tagKeys: ['t', 't'] }])).toThrow(
+      /tagKeys: duplicate value 't'/
+    );
+  });
+
+  it('apply attaches user_tags from produced.tagIds and bumps userTagsLinked', async () => {
+    const { handler, userTags } = buildHandler();
+    const result = baseResult();
+    const tagIds = new Map<string, string>([
+      ['t1', '60000000-0000-4000-8000-000000000aaa'],
+      ['t2', '60000000-0000-4000-8000-000000000bbb'],
+    ]);
+    const ctx: CdmApplyContext = {
+      projectId,
+      scope,
+      tx: { __tx: true },
+      lookupResolvedRef: () => ({ id: 'p', resourceId: 'r' }),
+      result,
+      produced: {
+        roleTemplateIds: new Map([['viewer', 'role-1']]),
+        tagIds,
+      },
+      assignmentUserIds: new Set([userId]),
+    };
+
+    await handler.apply(ctx, [{ userId, roleTemplateKeys: ['viewer'], tagKeys: ['t1', 't2'] }]);
+
+    expect(userTags.addUserTag).toHaveBeenCalledTimes(2);
+    expect(userTags.addUserTag).toHaveBeenNthCalledWith(
+      1,
+      { userId, tagId: tagIds.get('t1'), isPrimary: false },
+      ctx.tx
+    );
+    expect(userTags.addUserTag).toHaveBeenNthCalledWith(
+      2,
+      { userId, tagId: tagIds.get('t2'), isPrimary: false },
+      ctx.tx
+    );
+    expect(result.userTagsLinked).toBe(2);
+  });
+
+  it('apply throws ValidationError for unknown tagKey', async () => {
+    const { handler } = buildHandler();
+    const ctx: CdmApplyContext = {
+      projectId,
+      scope,
+      tx: { __tx: true },
+      lookupResolvedRef: () => ({ id: 'p', resourceId: 'r' }),
+      result: baseResult(),
+      produced: {
+        roleTemplateIds: new Map([['viewer', 'role-1']]),
+        tagIds: new Map(),
+      },
+      assignmentUserIds: new Set([userId]),
+    };
+
+    await expect(
+      handler.apply(ctx, [{ userId, roleTemplateKeys: ['viewer'], tagKeys: ['nope'] }])
+    ).rejects.toThrow(/unknown tagKey 'nope'/);
+  });
+
+  it('export projects user_tags back to UserAssignmentCdmInput.tagKeys (sorted)', async () => {
+    const tagA = '60000000-0000-4000-8000-000000000aaa';
+    const tagB = '60000000-0000-4000-8000-000000000bbb';
+    const { handler } = buildHandler({
+      exportRepo: {
+        getProjectUsersWithRoleIds: vi
+          .fn()
+          .mockResolvedValue([{ userId, roleIds: ['role-1'], metadata: {} }]),
+        getUserTagsByUserIds: vi.fn().mockResolvedValue([
+          { ownerId: userId, tagId: tagB },
+          { ownerId: userId, tagId: tagA },
+        ]),
+      },
+    });
+
+    const ctx: CdmExportContext = { projectId, scope };
+    const out = await handler.export(ctx);
+
+    expect(out).toHaveLength(1);
+    expect(out[0]).toEqual(
+      expect.objectContaining({
+        userId,
+        roleTemplateKeys: ['role-1'],
+        tagKeys: [tagA, tagB],
+      })
+    );
+  });
+
+  it('export omits tagKeys when user has no user_tags', async () => {
+    const { handler } = buildHandler({
+      exportRepo: {
+        getProjectUsersWithRoleIds: vi
+          .fn()
+          .mockResolvedValue([{ userId, roleIds: ['role-1'], metadata: {} }]),
+        getUserTagsByUserIds: vi.fn().mockResolvedValue([]),
+      },
+    });
+
+    const out = await handler.export({ projectId, scope });
+
+    expect(out[0].tagKeys).toBeUndefined();
+  });
+});

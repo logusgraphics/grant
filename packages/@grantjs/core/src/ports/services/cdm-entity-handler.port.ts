@@ -47,6 +47,13 @@ export interface CdmProducedRefs {
    * user-assignment handler to map `roleTemplateKeys` to role ids.
    */
   roleTemplateIds: Map<string, string>;
+  /**
+   * External-key → created tag id.
+   * Populated by the tag handler during `apply`, consumed by:
+   * - role-template handler to map `tagKeys` and `groupTagKeys` to `role_tags` / `group_tags`,
+   * - user-assignment handler to map `tagKeys` to global `user_tags`.
+   */
+  tagIds: Map<string, string>;
 }
 
 export interface CdmTeardownContext {

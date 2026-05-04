@@ -13,12 +13,16 @@ The dashboard surfaces this as **Import/Export** under each project (cards/table
 
 Imports and exports use **`SyncProjectPermissionsInput`** (GraphQL / codegen name): a versioned object with at least:
 
-| Field             | Purpose                                                 |
-| ----------------- | ------------------------------------------------------- |
-| `cdmVersion`      | Schema version (currently `1` for the shipped handlers) |
-| `roleTemplates`   | Role templates with permission refs and metadata        |
-| `userAssignments` | Users mapped to templates / direct permission refs      |
-| `importId`        | Optional logical id; generated when omitted on enqueue  |
+| Field                | Purpose                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| `cdmVersion`         | Schema version (currently `1` for the shipped handlers)                                          |
+| `roleTemplates`      | Role templates with permission refs and metadata; carry optional `tagKeys` / `groupTagKeys`      |
+| `userAssignments`    | Users mapped to templates / direct permission refs; carry optional `tagKeys` (global, see below) |
+| `tags`               | Optional project tag definitions and `project_tags` membership                                   |
+| `projectUserApiKeys` | Optional per-user API key identities (BYOK secrets, no plaintext on export)                      |
+| `importId`           | Optional logical id; generated when omitted on enqueue                                           |
+
+The `tags` section is opt-in: omit it to leave existing tag rows untouched. When included, `tagKeys` / `groupTagKeys` on roles and `tagKeys` on users are wired through `produced.tagIds` and must reference an entry in the same artifact's `tags` array. **`user_tags` are global** — re-importing them affects every project the user belongs to. See [Tags & Relationships → CDM lifecycle](/core-concepts/tags-relationships#cdm-lifecycle-for-tags) for the full contract.
 
 The worker applies **replace-import** semantics for CDM-managed rows: existing CDM-sourced entities for that project are torn down, then the payload is applied in handler order. See [RBAC System](/architecture/rbac) for how roles, groups, and permissions relate.
 

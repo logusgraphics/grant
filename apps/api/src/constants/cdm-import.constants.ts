@@ -8,7 +8,7 @@ export const CDM_SOURCE_METADATA_KEY = 'cdmSource' as const;
 
 export type CdmImportMetadata = {
   projectId: string;
-  kind: 'role' | 'group' | 'directRole' | 'projectUserApiKey';
+  kind: 'role' | 'group' | 'directRole' | 'projectUserApiKey' | 'tag';
   externalKey?: string;
 };
 

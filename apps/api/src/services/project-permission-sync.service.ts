@@ -6,16 +6,21 @@ import type {
   ICdmEntityHandler,
   IGroupPermissionService,
   IGroupService,
+  IGroupTagService,
   IProjectGroupService,
   IProjectPermissionService,
   IProjectPermissionSyncService,
   IProjectResourceService,
   IProjectRoleService,
+  IProjectTagService,
   IProjectUserApiKeyService,
   IProjectUserService,
   IRoleGroupService,
   IRoleService,
+  IRoleTagService,
+  ITagService,
   IUserRoleService,
+  IUserTagService,
 } from '@grantjs/core';
 import {
   Scope,
@@ -74,6 +79,11 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     apiKeys: IApiKeyService,
     projectUserApiKeys: IProjectUserApiKeyService,
     cache: IEntityCacheAdapter,
+    tags: ITagService,
+    projectTags: IProjectTagService,
+    roleTags: IRoleTagService,
+    groupTags: IGroupTagService,
+    userTags: IUserTagService,
     /**
      * Read-side repo used by handlers' `export(...)` to enumerate prior
      * project state. Optional because the sync flow itself only needs the
@@ -111,6 +121,11 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
         userRoles,
         apiKeys,
         projectUserApiKeys,
+        tags,
+        projectTags,
+        roleTags,
+        groupTags,
+        userTags,
       });
   }
 
@@ -189,11 +204,17 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
       projectUsersEnsured: 0,
       userRolesAssigned: 0,
       projectUserApiKeysCreated: 0,
+      tagsCreated: 0,
+      projectTagsLinked: 0,
+      roleTagsLinked: 0,
+      groupTagsLinked: 0,
+      userTagsLinked: 0,
       warnings: [],
     };
 
     const produced: CdmProducedRefs = {
       roleTemplateIds: new Map<string, string>(),
+      tagIds: new Map<string, string>(),
     };
 
     for (const handler of this.handlers) {

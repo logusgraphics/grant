@@ -73,9 +73,12 @@ export class TagService implements ITagService {
     const context = 'TagService.createTag';
     const validatedParams = validateInput(createTagInputSchema, params, context);
 
-    const { name, color } = validatedParams;
+    const { name, color, metadata: paramsMetadata } = validatedParams;
 
-    const tag = await this.tagRepository.createTag({ name, color }, transaction);
+    const tag = await this.tagRepository.createTag(
+      { name, color, metadata: paramsMetadata ?? undefined },
+      transaction
+    );
 
     const newValues = {
       id: tag.id,
@@ -85,11 +88,11 @@ export class TagService implements ITagService {
       updatedAt: tag.updatedAt,
     };
 
-    const metadata = {
+    const auditMetadata = {
       context,
     };
 
-    await this.audit.logCreate(tag.id, newValues, metadata, transaction);
+    await this.audit.logCreate(tag.id, newValues, auditMetadata, transaction);
 
     return validateOutput(createDynamicSingleSchema(tagSchema), tag, context);
   }

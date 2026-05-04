@@ -27,6 +27,11 @@ function baseResult(): SyncProjectPermissionsResult {
     projectUsersEnsured: 0,
     userRolesAssigned: 0,
     projectUserApiKeysCreated: 0,
+    tagsCreated: 0,
+    projectTagsLinked: 0,
+    roleTagsLinked: 0,
+    groupTagsLinked: 0,
+    userTagsLinked: 0,
     warnings: [],
   };
 }
@@ -141,7 +146,7 @@ describe('ProjectUserApiKeyCdmHandler', () => {
       tx: {},
       lookupResolvedRef: () => ({}),
       result: baseResult(),
-      produced: { roleTemplateIds: new Map() },
+      produced: { roleTemplateIds: new Map(), tagIds: new Map() },
       assignmentUserIds: new Set<string>(),
     };
 
@@ -174,7 +179,7 @@ describe('ProjectUserApiKeyCdmHandler', () => {
       tx: { __tx: true },
       lookupResolvedRef: () => ({}),
       result,
-      produced: { roleTemplateIds: new Map() },
+      produced: { roleTemplateIds: new Map(), tagIds: new Map() },
       assignmentUserIds: new Set([userId]),
     };
 

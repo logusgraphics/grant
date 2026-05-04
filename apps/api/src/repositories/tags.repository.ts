@@ -47,6 +47,7 @@ export class TagRepository extends EntityRepository<TagModel, Tag> implements IT
     const baseParams: BaseCreateArgs = {
       name: params.name,
       color: params.color,
+      metadata: params.metadata ?? {},
     };
 
     return this.create(baseParams, transaction);

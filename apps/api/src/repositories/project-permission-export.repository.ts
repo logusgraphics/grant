@@ -3,14 +3,19 @@ import {
   DbSchema,
   groupPermissions,
   groups,
+  groupTags,
   permissions,
   projectRoles,
+  projectTags,
   projectUserApiKeys,
   projectUsers,
   resources,
   roleGroups,
   roles,
+  roleTags,
+  tags,
   userRoles,
+  userTags,
 } from '@grantjs/database';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 
@@ -53,6 +58,21 @@ export interface ProjectUserApiKeyCdmExportRow {
   name: string | null;
   description: string | null;
   expiresAt: Date | null;
+}
+
+/** One project tag definition projected for CDM export. */
+export interface ProjectTagDefinitionRow {
+  tagId: string;
+  name: string;
+  color: string;
+  isPrimary: boolean;
+  metadata: Record<string, unknown>;
+}
+
+/** Pivot row for tag association exports (`role_tags`, `group_tags`, `user_tags`). */
+export interface TagAssociationRow {
+  ownerId: string;
+  tagId: string;
 }
 
 /**
@@ -270,5 +290,106 @@ export class ProjectPermissionExportRepository {
       description: r.description,
       expiresAt: r.expiresAt,
     }));
+  }
+
+  /**
+   * All tags visible to the project (via `project_tags` membership) projected
+   * to a CDM-friendly shape. `isPrimary` is taken from the pivot.
+   */
+  public async getProjectTagDefinitions(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<ProjectTagDefinitionRow[]> {
+    const dbInstance = transaction ?? this.db;
+
+    const rows = await dbInstance
+      .select({
+        tagId: tags.id,
+        name: tags.name,
+        color: tags.color,
+        isPrimary: projectTags.isPrimary,
+        metadata: tags.metadata,
+      })
+      .from(projectTags)
+      .innerJoin(tags, eq(tags.id, projectTags.tagId))
+      .where(
+        and(
+          eq(projectTags.projectId, projectId),
+          isNull(projectTags.deletedAt),
+          isNull(tags.deletedAt)
+        )
+      );
+
+    return rows.map((r) => ({
+      tagId: r.tagId,
+      name: r.name,
+      color: r.color,
+      isPrimary: r.isPrimary,
+      metadata: (r.metadata as Record<string, unknown>) ?? {},
+    }));
+  }
+
+  /** `role_tags` rows for the given role ids. Empty input returns `[]`. */
+  public async getRoleTagsByRoleIds(
+    roleIds: readonly string[],
+    transaction?: Transaction
+  ): Promise<TagAssociationRow[]> {
+    if (roleIds.length === 0) return [];
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({ ownerId: roleTags.roleId, tagId: roleTags.tagId })
+      .from(roleTags)
+      .where(and(inArray(roleTags.roleId, roleIds as string[]), isNull(roleTags.deletedAt)));
+    return rows;
+  }
+
+  /** `group_tags` rows for the given group ids. Empty input returns `[]`. */
+  public async getGroupTagsByGroupIds(
+    groupIds: readonly string[],
+    transaction?: Transaction
+  ): Promise<TagAssociationRow[]> {
+    if (groupIds.length === 0) return [];
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({ ownerId: groupTags.groupId, tagId: groupTags.tagId })
+      .from(groupTags)
+      .where(and(inArray(groupTags.groupId, groupIds as string[]), isNull(groupTags.deletedAt)));
+    return rows;
+  }
+
+  /** `user_tags` rows for the given user ids. Empty input returns `[]`. */
+  public async getUserTagsByUserIds(
+    userIds: readonly string[],
+    transaction?: Transaction
+  ): Promise<TagAssociationRow[]> {
+    if (userIds.length === 0) return [];
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({ ownerId: userTags.userId, tagId: userTags.tagId })
+      .from(userTags)
+      .where(and(inArray(userTags.userId, userIds as string[]), isNull(userTags.deletedAt)));
+    return rows;
+  }
+
+  /**
+   * Resolve the auto-created CDM group id for each role id (via `role_groups`).
+   * The role-template handler creates exactly one group per role; we return
+   * the first active link for each role. Used to project `groupTagKeys`.
+   */
+  public async getCdmGroupIdsForRoleIds(
+    roleIds: readonly string[],
+    transaction?: Transaction
+  ): Promise<Map<string, string>> {
+    if (roleIds.length === 0) return new Map();
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({ roleId: roleGroups.roleId, groupId: roleGroups.groupId })
+      .from(roleGroups)
+      .where(and(inArray(roleGroups.roleId, roleIds as string[]), isNull(roleGroups.deletedAt)));
+    const out = new Map<string, string>();
+    for (const r of rows) {
+      if (!out.has(r.roleId)) out.set(r.roleId, r.groupId);
+    }
+    return out;
   }
 }

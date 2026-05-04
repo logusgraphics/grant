@@ -5,16 +5,21 @@ import type {
   ICdmEntityHandler,
   IGroupPermissionService,
   IGroupService,
+  IGroupTagService,
   IProjectGroupService,
   IProjectPermissionExportService,
   IProjectPermissionService,
   IProjectResourceService,
   IProjectRoleService,
+  IProjectTagService,
   IProjectUserApiKeyService,
   IProjectUserService,
   IRoleGroupService,
   IRoleService,
+  IRoleTagService,
+  ITagService,
   IUserRoleService,
+  IUserTagService,
 } from '@grantjs/core';
 import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
 import { Scope, SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
@@ -59,6 +64,11 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
     userRoles: IUserRoleService,
     apiKeys: IApiKeyService,
     projectUserApiKeys: IProjectUserApiKeyService,
+    tags: ITagService,
+    projectTags: IProjectTagService,
+    roleTags: IRoleTagService,
+    groupTags: IGroupTagService,
+    userTags: IUserTagService,
     handlers?: ReadonlyArray<ICdmEntityHandler>
   ) {
     this.handlers =
@@ -78,6 +88,11 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
         userRoles,
         apiKeys,
         projectUserApiKeys,
+        tags,
+        projectTags,
+        roleTags,
+        groupTags,
+        userTags,
       });
   }
 
@@ -115,6 +130,7 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       roleTemplates: [],
       userAssignments: [],
       projectUserApiKeys: [],
+      tags: [],
     };
 
     const includeAll = params.sections == null || params.sections.length === 0;

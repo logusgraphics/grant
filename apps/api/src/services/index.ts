@@ -416,6 +416,11 @@ export function createServices(
       servicesBase.apiKeys,
       servicesBase.projectUserApiKeys,
       cache,
+      servicesBase.tags,
+      servicesBase.projectTags,
+      servicesBase.roleTags,
+      servicesBase.groupTags,
+      servicesBase.userTags,
       repositories.projectPermissionExportRepository
     ),
     projectPermissionExport: new ProjectPermissionExportService(
@@ -432,7 +437,12 @@ export function createServices(
       servicesBase.projectUsers,
       servicesBase.userRoles,
       servicesBase.apiKeys,
-      servicesBase.projectUserApiKeys
+      servicesBase.projectUserApiKeys,
+      servicesBase.tags,
+      servicesBase.projectTags,
+      servicesBase.roleTags,
+      servicesBase.groupTags,
+      servicesBase.userTags
     ),
     projectPermissionsSyncJobs: new ProjectPermissionsSyncJobService(
       repositories.projectPermissionSyncJobRepository,

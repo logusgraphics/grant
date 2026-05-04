@@ -3217,6 +3217,7 @@
       "title": "Export CDM",
       "description": "Choose which parts of the permission model to include. Unchecked sections appear as empty arrays in the downloaded JSON.",
       "sections": {
+        "tags": "Tags (project tags and role/group/user tag associations)",
         "roleTemplates": "Role templates (roles, groups, and permission links)",
         "userAssignments": "User assignments (project members and role links)",
         "projectUserApiKeys": "Per-user API keys (identity only; no secrets)",
