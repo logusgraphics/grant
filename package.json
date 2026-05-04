@@ -67,7 +67,7 @@
     "badge-maker": "^5.0.2",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -76,9 +76,9 @@
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "tsx": "^4.21.0",
-    "turbo": "^2.9.6",
+    "turbo": "^2.9.8",
     "typescript": "^6",
-    "typescript-eslint": "^8.59.0",
+    "typescript-eslint": "^8.59.1",
     "vitepress": "^1.6.4"
   },
   "engines": {
