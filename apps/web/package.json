@@ -87,7 +87,7 @@
     "eslint-config-next": "16.2.4",
     "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^29.1.1",
-    "postcss": "^8.5.13",
+    "postcss": "^8.5.14",
     "tailwindcss": "^4.2.4",
     "typescript": "^6",
     "typescript-eslint": "^8.59.1",
