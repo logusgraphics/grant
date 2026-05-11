@@ -22,7 +22,7 @@
     "cytoscape-cose-bilkent": "^4.1.0",
     "dayjs": "^1.11.18",
     "debug": "^4.4.0",
-    "mermaid": "11.14.0",
+    "mermaid": "11.15.0",
     "typescript": "^6.0.3",
     "unplugin-icons": "^23.0.1",
     "unplugin-vue-components": "^32.0.0",
