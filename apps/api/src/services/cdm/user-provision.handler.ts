@@ -1,0 +1,128 @@
+import type {
+  CdmApplyContext,
+  CdmExportContext,
+  CdmPermissionRefSpec,
+  CdmTeardownContext,
+  ICdmEntityHandler,
+  IUserRepository,
+  IUserService,
+} from '@grantjs/core';
+
+import {
+  buildCdmImportMetadata,
+  CDM_IMPORT_METADATA_KEY,
+  CDM_SOURCE_METADATA_KEY,
+  mergeCdmImporterMetadata,
+} from '@/constants/cdm-import.constants';
+import { ValidationError } from '@/lib/errors';
+import { Transaction } from '@/lib/transaction-manager.lib';
+import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
+
+import type { CdmUserProvisionInternal } from './cdm-internal.types';
+import { buildExternalKey } from './identity.helper';
+
+const INPUT_KEY = 'provisionedUsers' as const;
+
+/** CDM-marked Grant users for inbound porting (`metadata.cdmImport.kind === 'user'`). */
+export class UserProvisionHandler implements ICdmEntityHandler<
+  CdmUserProvisionInternal,
+  CdmUserProvisionInternal
+> {
+  public readonly handlerKind = 'user';
+  public readonly inputKey = INPUT_KEY;
+  public readonly order = 15;
+
+  constructor(
+    private readonly exportRepo: ProjectPermissionExportRepository,
+    private readonly users: IUserService,
+    private readonly userRepository: IUserRepository
+  ) {}
+
+  public validateInput(input: readonly CdmUserProvisionInternal[]): void {
+    const keys = new Set<string>();
+    for (const row of input) {
+      if (row.externalKey == null || row.externalKey === '') {
+        throw new ValidationError('users[]: externalKey is required for each entry');
+      }
+      if (keys.has(row.externalKey)) {
+        throw new ValidationError(`Duplicate users externalKey: ${row.externalKey}`);
+      }
+      keys.add(row.externalKey);
+      if (typeof row.name !== 'string' || row.name.trim() === '') {
+        throw new ValidationError(`users[${row.externalKey}]: name is required`);
+      }
+    }
+  }
+
+  public collectPermissionRefs(
+    _input: readonly CdmUserProvisionInternal[]
+  ): readonly CdmPermissionRefSpec[] {
+    return [];
+  }
+
+  /**
+   * Users are global entities — CDM does not delete Grant accounts on replace-import.
+   */
+  public async teardown(_ctx: CdmTeardownContext): Promise<void> {
+    return;
+  }
+
+  public async apply(
+    ctx: CdmApplyContext,
+    input: readonly CdmUserProvisionInternal[]
+  ): Promise<void> {
+    const tx = ctx.tx as Transaction;
+    for (const row of input) {
+      const existingId = await this.userRepository.findUserIdByCdmImport(
+        {
+          projectId: ctx.projectId,
+          kind: 'user',
+          externalKey: row.externalKey,
+        },
+        tx
+      );
+      if (existingId) {
+        ctx.produced.userIds.set(row.externalKey, existingId);
+        ctx.assignmentUserIds.add(existingId);
+        continue;
+      }
+      const metadata = mergeCdmImporterMetadata(
+        buildCdmImportMetadata(ctx.projectId, 'user', row.externalKey),
+        row.metadata
+      );
+      const user = await this.users.createUser({ name: row.name.trim(), metadata }, tx);
+      ctx.produced.userIds.set(row.externalKey, user.id);
+      ctx.assignmentUserIds.add(user.id);
+      ctx.result.usersCreated += 1;
+    }
+  }
+
+  public async export(ctx: CdmExportContext): Promise<readonly CdmUserProvisionInternal[]> {
+    const tx = ctx.tx as Transaction | undefined;
+    const rows = await this.exportRepo.getProjectCdmProvisionedUsers(ctx.projectId, tx);
+    return rows.map((r) => {
+      const cdmSource = extractCdmSourceMetadata(r.metadata);
+      const metadata = {
+        ...(cdmSource ?? {}),
+        grantUserId: r.userId,
+      };
+      return {
+        externalKey: buildExternalKey('user', r.userId, r.name),
+        name: r.name,
+        metadata,
+      };
+    });
+  }
+}
+
+function extractCdmSourceMetadata(
+  metadata: Record<string, unknown>
+): Record<string, unknown> | null {
+  const source = metadata[CDM_SOURCE_METADATA_KEY];
+  if (source == null || typeof source !== 'object' || Array.isArray(source)) {
+    return null;
+  }
+  const out = { ...(source as Record<string, unknown>) };
+  delete out[CDM_IMPORT_METADATA_KEY];
+  return Object.keys(out).length > 0 ? out : null;
+}

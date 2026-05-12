@@ -1,6 +1,15 @@
 import { DEFAULT_RESOURCE_ACTIONS } from '@grantjs/constants';
 import { relations } from 'drizzle-orm';
-import { boolean, index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 import { users } from './users.schema';
 
@@ -16,6 +25,7 @@ export const resources = pgTable(
       .default([...DEFAULT_RESOURCE_ACTIONS])
       .notNull(),
     isActive: boolean('is_active').default(true).notNull(),
+    metadata: jsonb('metadata').default({}).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -24,6 +34,7 @@ export const resources = pgTable(
     index('resources_slug_idx').on(t.slug),
     index('resources_deleted_at_idx').on(t.deletedAt),
     index('resources_is_active_idx').on(t.isActive),
+    index('resources_metadata_idx').using('gin', t.metadata),
   ]
 );
 

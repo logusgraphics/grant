@@ -6,9 +6,81 @@ export const CDM_IMPORT_METADATA_KEY = 'cdmImport' as const;
 /** Importer-owned payload merged under this key (never overwrites `cdmImport`). */
 export const CDM_SOURCE_METADATA_KEY = 'cdmSource' as const;
 
+/**
+ * When true on exported `resources[]` / `permissions[]` metadata, apply must
+ * bind to existing catalog rows (`grantResourceId` / `grantPermissionId`) and
+ * must not create new resource/permission entities.
+ */
+export const CDM_EXPORT_CATALOG_SNAPSHOT_KEY = 'cdmExportCatalogSnapshot' as const;
+
+function readMetadataRecord(metadata: unknown): Record<string, unknown> | null {
+  if (metadata == null || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    return null;
+  }
+  return metadata as Record<string, unknown>;
+}
+
+/** True when persisted metadata marks a row as CDM-owned for this project and kind. */
+export function isProjectCdmImportKind(
+  metadata: Record<string, unknown>,
+  projectId: string,
+  kind: 'resource' | 'permission'
+): boolean {
+  const cdm = metadata[CDM_IMPORT_METADATA_KEY];
+  if (cdm == null || typeof cdm !== 'object' || Array.isArray(cdm)) {
+    return false;
+  }
+  const c = cdm as Record<string, unknown>;
+  return c.projectId === projectId && c.kind === kind;
+}
+
+/** True when export metadata requests catalog bind-only apply (no entity create). */
+export function isCdmCatalogSnapshotMetadata(metadata: unknown): boolean {
+  const m = readMetadataRecord(metadata);
+  if (!m) return false;
+  if (m[CDM_EXPORT_CATALOG_SNAPSHOT_KEY] === true) return true;
+  const src = m[CDM_SOURCE_METADATA_KEY];
+  if (src != null && typeof src === 'object' && !Array.isArray(src)) {
+    return (src as Record<string, unknown>)[CDM_EXPORT_CATALOG_SNAPSHOT_KEY] === true;
+  }
+  return false;
+}
+
+export function readGrantResourceIdFromCdmExportMetadata(metadata: unknown): string | null {
+  return readGrantEntityIdFromCdmExportMetadata(metadata, 'grantResourceId');
+}
+
+export function readGrantPermissionIdFromCdmExportMetadata(metadata: unknown): string | null {
+  return readGrantEntityIdFromCdmExportMetadata(metadata, 'grantPermissionId');
+}
+
+function readGrantEntityIdFromCdmExportMetadata(
+  metadata: unknown,
+  grantKey: 'grantResourceId' | 'grantPermissionId'
+): string | null {
+  const m = readMetadataRecord(metadata);
+  if (!m) return null;
+  const top = m[grantKey];
+  if (typeof top === 'string' && top.trim() !== '') return top;
+  const src = m[CDM_SOURCE_METADATA_KEY];
+  if (src != null && typeof src === 'object' && !Array.isArray(src)) {
+    const v = (src as Record<string, unknown>)[grantKey];
+    if (typeof v === 'string' && v.trim() !== '') return v;
+  }
+  return null;
+}
+
 export type CdmImportMetadata = {
   projectId: string;
-  kind: 'role' | 'group' | 'directRole' | 'projectUserApiKey' | 'tag';
+  kind:
+    | 'role'
+    | 'group'
+    | 'directRole'
+    | 'projectUserApiKey'
+    | 'tag'
+    | 'resource'
+    | 'permission'
+    | 'user';
   externalKey?: string;
 };
 

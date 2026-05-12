@@ -2,7 +2,7 @@
  * Ensures permission sync job lifecycle writes append-only audit rows.
  */
 import type { IAuditLogger } from '@grantjs/core';
-import { ProjectPermissionsSyncJobStatus, Tenant } from '@grantjs/schema';
+import { CdmModeStrategy, ProjectPermissionsSyncJobStatus, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ProjectPermissionsSyncJobService } from '@/services/project-permissions-sync-job.service';
@@ -54,7 +54,21 @@ describe('ProjectPermissionsSyncJobService audit', () => {
       scope: { tenant: Tenant.AccountProject, id: `acct:${projectId}` },
       cdmVersion: 1,
       importId: null,
-      payload: { cdmVersion: 1, roleTemplates: [], userAssignments: [] },
+      payload: {
+        version: 1,
+        id: null,
+        mode: {
+          strategy: CdmModeStrategy.Merge,
+          onConflict: null,
+          confirmDestructive: false,
+        },
+        roles: [],
+        users: [],
+        resources: [],
+        permissions: [],
+        groups: [],
+        tags: [],
+      },
       enqueuedById: '30000000-0000-4000-8000-000000000099',
     });
 

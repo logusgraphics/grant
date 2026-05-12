@@ -31,6 +31,7 @@ function baseResult(): SyncProjectPermissionsResult {
     projectPermissionsLinked: 0,
     projectResourcesLinked: 0,
     projectUsersEnsured: 0,
+    usersCreated: 0,
     userRolesAssigned: 0,
     projectUserApiKeysCreated: 0,
     tagsCreated: 0,
@@ -38,6 +39,8 @@ function baseResult(): SyncProjectPermissionsResult {
     roleTagsLinked: 0,
     groupTagsLinked: 0,
     userTagsLinked: 0,
+    resourcesCreated: 0,
+    permissionsCreated: 0,
     warnings: [],
   };
 }
@@ -46,6 +49,9 @@ function buildHandler(deps?: {
   exportRepo?: {
     getProjectUsersWithRoleIds: ReturnType<typeof vi.fn>;
     getUserTagsByUserIds: ReturnType<typeof vi.fn>;
+    getProjectRolesWithPermissions: ReturnType<typeof vi.fn>;
+    getProjectTagDefinitions: ReturnType<typeof vi.fn>;
+    getProjectCdmProvisionedUsers: ReturnType<typeof vi.fn>;
   };
   projectUsers?: {
     addProjectUser: ReturnType<typeof vi.fn>;
@@ -57,6 +63,9 @@ function buildHandler(deps?: {
   const exportRepo = deps?.exportRepo ?? {
     getProjectUsersWithRoleIds: vi.fn().mockResolvedValue([]),
     getUserTagsByUserIds: vi.fn().mockResolvedValue([]),
+    getProjectRolesWithPermissions: vi.fn().mockResolvedValue([]),
+    getProjectTagDefinitions: vi.fn().mockResolvedValue([]),
+    getProjectCdmProvisionedUsers: vi.fn().mockResolvedValue([]),
   };
   const projectUsers = deps?.projectUsers ?? {
     addProjectUser: vi.fn().mockResolvedValue(undefined),
@@ -102,8 +111,11 @@ describe('UserAssignmentHandler — tag wiring', () => {
       lookupResolvedRef: () => ({ id: 'p', resourceId: 'r' }),
       result,
       produced: {
-        roleTemplateIds: new Map([['viewer', 'role-1']]),
+        roleIdsByKey: new Map([['viewer', 'role-1']]),
         tagIds,
+        resourceIds: new Map(),
+        permissionIds: new Map(),
+        userIds: new Map(),
       },
       assignmentUserIds: new Set([userId]),
     };
@@ -133,8 +145,11 @@ describe('UserAssignmentHandler — tag wiring', () => {
       lookupResolvedRef: () => ({ id: 'p', resourceId: 'r' }),
       result: baseResult(),
       produced: {
-        roleTemplateIds: new Map([['viewer', 'role-1']]),
+        roleIdsByKey: new Map([['viewer', 'role-1']]),
         tagIds: new Map(),
+        resourceIds: new Map(),
+        permissionIds: new Map(),
+        userIds: new Map(),
       },
       assignmentUserIds: new Set([userId]),
     };
@@ -144,18 +159,29 @@ describe('UserAssignmentHandler — tag wiring', () => {
     ).rejects.toThrow(/unknown tagKey 'nope'/);
   });
 
-  it('export projects user_tags back to UserAssignmentCdmInput.tagKeys (sorted)', async () => {
+  it('export projects user_tags as opaque tagKeys (sorted) and uses opaque role keys', async () => {
     const tagA = '60000000-0000-4000-8000-000000000aaa';
     const tagB = '60000000-0000-4000-8000-000000000bbb';
+    const roleId = '70000000-0000-4000-8000-000000000777';
     const { handler } = buildHandler({
       exportRepo: {
         getProjectUsersWithRoleIds: vi
           .fn()
-          .mockResolvedValue([{ userId, roleIds: ['role-1'], metadata: {} }]),
+          .mockResolvedValue([{ userId, roleIds: [roleId], metadata: {} }]),
         getUserTagsByUserIds: vi.fn().mockResolvedValue([
           { ownerId: userId, tagId: tagB },
           { ownerId: userId, tagId: tagA },
         ]),
+        getProjectRolesWithPermissions: vi
+          .fn()
+          .mockResolvedValue([
+            { roleId, name: 'CDM: Viewer', description: null, permissions: [], metadata: {} },
+          ]),
+        getProjectTagDefinitions: vi.fn().mockResolvedValue([
+          { tagId: tagA, name: 'Alpha', color: '#fff', isPrimary: false, metadata: {} },
+          { tagId: tagB, name: 'Beta', color: '#000', isPrimary: false, metadata: {} },
+        ]),
+        getProjectCdmProvisionedUsers: vi.fn().mockResolvedValue([]),
       },
     });
 
@@ -163,22 +189,31 @@ describe('UserAssignmentHandler — tag wiring', () => {
     const out = await handler.export(ctx);
 
     expect(out).toHaveLength(1);
-    expect(out[0]).toEqual(
-      expect.objectContaining({
-        userId,
-        roleTemplateKeys: ['role-1'],
-        tagKeys: [tagA, tagB],
-      })
-    );
+    expect(out[0].userId).toBe(userId);
+    expect(out[0].roleTemplateKeys).toHaveLength(1);
+    expect(out[0].roleTemplateKeys?.[0]).toMatch(/^cdm-role-[a-f0-9]{16}$/);
+    expect(out[0].roleTemplateKeys?.[0]).not.toBe(roleId);
+    expect(out[0].tagKeys).toHaveLength(2);
+    for (const k of out[0].tagKeys ?? []) {
+      expect(k).toMatch(/^cdm-tag-[a-f0-9]{16}$/);
+    }
   });
 
   it('export omits tagKeys when user has no user_tags', async () => {
+    const roleId = '70000000-0000-4000-8000-000000000777';
     const { handler } = buildHandler({
       exportRepo: {
         getProjectUsersWithRoleIds: vi
           .fn()
-          .mockResolvedValue([{ userId, roleIds: ['role-1'], metadata: {} }]),
+          .mockResolvedValue([{ userId, roleIds: [roleId], metadata: {} }]),
         getUserTagsByUserIds: vi.fn().mockResolvedValue([]),
+        getProjectRolesWithPermissions: vi
+          .fn()
+          .mockResolvedValue([
+            { roleId, name: 'Viewer', description: null, permissions: [], metadata: {} },
+          ]),
+        getProjectTagDefinitions: vi.fn().mockResolvedValue([]),
+        getProjectCdmProvisionedUsers: vi.fn().mockResolvedValue([]),
       },
     });
 

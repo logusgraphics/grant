@@ -1,8 +1,10 @@
 import type { ProjectPermissionsSyncJobExecutionData } from '@grantjs/core';
 import { ConflictError } from '@grantjs/core';
 import {
+  CdmFindBy,
   ProjectPermissionsSyncJobStatus,
   type Scope,
+  type SyncProjectPermissionsInput,
   type SyncProjectPermissionsResult,
 } from '@grantjs/schema';
 
@@ -112,7 +114,7 @@ export default class ProjectPermissionsSyncJob extends Job {
           {
             projectId: execData.job.projectId,
             scope: execData.scope,
-            cdmVersion: execData.payload.cdmVersion,
+            version: execData.payload.version,
           },
           tx
         );
@@ -228,8 +230,11 @@ export default class ProjectPermissionsSyncJob extends Job {
 
   private collectUserIds(execData: ProjectPermissionsSyncJobExecutionData): string[] {
     const ids = new Set<string>();
-    for (const ua of execData.payload.userAssignments ?? []) {
-      if (ua?.userId) ids.add(ua.userId);
+    const payload = execData.payload as SyncProjectPermissionsInput;
+    for (const u of payload.users ?? []) {
+      if (u.key.findBy === CdmFindBy.Id) {
+        ids.add(u.key.value);
+      }
     }
     return Array.from(ids);
   }

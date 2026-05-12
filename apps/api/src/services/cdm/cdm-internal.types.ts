@@ -1,0 +1,73 @@
+/**
+ * CDM shapes used only inside the API after expanding the public
+ * {@link SyncProjectPermissionsInput} contract. Handlers operate on these rows;
+ * they are not exposed on the GraphQL boundary.
+ */
+
+export interface CdmPermissionRefInternal {
+  resourceSlug?: string | null;
+  action?: string | null;
+  permissionKey?: string | null;
+  permissionId?: string | null;
+  condition?: unknown;
+}
+
+export interface CdmRoleTemplateInternal {
+  externalKey: string;
+  name: string;
+  description: string | null;
+  permissionRefs: CdmPermissionRefInternal[];
+  metadata: Record<string, unknown> | null | undefined;
+  tagKeys?: string[];
+  primaryRoleTagKey?: string | null;
+  groupTagKeys?: string[];
+  primaryGroupTagKey?: string | null;
+  /**
+   * Grant group linked via `role_groups` (export-only). Drives `groups[]` and
+   * `roles[].groups` in {@link assembleExportedSyncProjectPermissionsInput}.
+   */
+  linkedGrantGroup?: {
+    grantGroupId: string;
+    groupKey: string;
+    groupName: string;
+    groupDescription: string | null;
+    permissionKeys: readonly string[];
+    tagKeys: readonly string[];
+    primaryGroupTagKey?: string | null;
+  };
+  /**
+   * Import-only: first `groups[].name` / description from the CDM document for
+   * a role's linked group key(s), so {@link CdmEntityBuilder.createRoleWithGroup}
+   * can create the paired Grant group with a human label instead of `CDM: {roleKey}`.
+   */
+  linkedGroupImportName?: string | null;
+  linkedGroupImportDescription?: string | null;
+}
+
+export interface CdmUserAssignmentInternal {
+  userId?: string | null;
+  userKey?: string | null;
+  roleTemplateKeys?: string[];
+  directPermissionRefs?: CdmPermissionRefInternal[];
+  metadata?: Record<string, unknown> | null;
+  tagKeys?: string[];
+  primaryUserTagKey?: string | null;
+}
+
+export interface CdmProjectUserApiKeyInternal {
+  externalKey?: string | null;
+  userId?: string | null;
+  userKey?: string | null;
+  clientId?: string | null;
+  clientSecret?: string | null;
+  name?: string | null;
+  description?: string | null;
+  expiresAt?: string | Date | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface CdmUserProvisionInternal {
+  externalKey: string;
+  name: string;
+  metadata?: Record<string, unknown> | null;
+}

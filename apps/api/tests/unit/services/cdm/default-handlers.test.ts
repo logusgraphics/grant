@@ -1,11 +1,19 @@
 /**
  * Pins the default CDM handler registry order.
  *
- * Order matters: tags must run before roleTemplates and userAssignments so the
- * `produced.tagIds` map is populated when those handlers resolve `tagKeys` /
- * `groupTagKeys`. ProjectUserApiKey runs last because it depends on both
- * roleTemplates (project_users via userAssignments handler) and userAssignments
- * (assignmentUserIds gate).
+ * Order matters:
+ * - resource(2) → permission(4): permissions resolve `resourceKey` against the
+ *   resource handler's `produced.resourceIds`.
+ * - permission(4) → tag(5) / roleTemplate(10) / userAssignment(20): the role-
+ *   template + user-assignment handlers resolve `permissionKey` against the
+ *   permission handler's `produced.permissionIds`.
+ * - tag(5) → roleTemplate(10) / userAssignment(20): role-templates +
+ *   user-assignments resolve `tagKeys` / `groupTagKeys` against
+ *   `produced.tagIds`.
+ * - user(15) runs before userAssignment(20) so `produced.userIds`
+ *   is populated for `userKey` references.
+ * - projectUserApiKey(300) runs last because it depends on
+ *   user assignments (`assignmentUserIds` gate).
  */
 import { describe, expect, it, vi } from 'vitest';
 
@@ -33,16 +41,23 @@ function buildDeps(): CdmHandlerRegistryDeps {
     roleTags: stub as never,
     groupTags: stub as never,
     userTags: stub as never,
+    resources: stub as never,
+    permissions: stub as never,
+    users: stub as never,
+    userRepository: stub as never,
   };
 }
 
 describe('createDefaultCdmHandlers', () => {
-  it('registers tag(5), roleTemplate(10), userAssignment(20), projectUserApiKey(300) in ascending order', () => {
+  it('registers resource(2), permission(4), tag(5), roleTemplate(10), user(15), userAssignment(20), projectUserApiKey(300) in ascending order', () => {
     const handlers = createDefaultCdmHandlers(buildDeps());
     const orders = handlers.map((h) => ({ kind: h.handlerKind, order: h.order }));
     expect(orders).toEqual([
+      { kind: 'resource', order: 2 },
+      { kind: 'permission', order: 4 },
       { kind: 'tag', order: 5 },
       { kind: 'roleTemplate', order: 10 },
+      { kind: 'user', order: 15 },
       { kind: 'userAssignment', order: 20 },
       { kind: 'projectUserApiKey', order: 300 },
     ]);
@@ -53,12 +68,15 @@ describe('createDefaultCdmHandlers', () => {
     expect(Object.isFrozen(handlers)).toBe(true);
   });
 
-  it('each handler maps to its corresponding SyncProjectPermissionsInput field', () => {
+  it('each handler maps to its expanded CDM handler slice key', () => {
     const handlers = createDefaultCdmHandlers(buildDeps());
     const byKind = Object.fromEntries(handlers.map((h) => [h.handlerKind, h.inputKey]));
     expect(byKind).toEqual({
+      resource: 'resources',
+      permission: 'permissions',
       tag: 'tags',
       roleTemplate: 'roleTemplates',
+      user: 'provisionedUsers',
       userAssignment: 'userAssignments',
       projectUserApiKey: 'projectUserApiKeys',
     });

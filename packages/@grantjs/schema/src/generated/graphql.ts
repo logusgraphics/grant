@@ -401,6 +401,43 @@ export type AuthorizationResult = {
   reason?: Maybe<AuthorizationReason>;
 };
 
+export enum CdmFindBy {
+  Email = 'email',
+  Id = 'id',
+  Key = 'key',
+  Name = 'name',
+  Slug = 'slug',
+}
+
+export enum CdmIfMissing {
+  CreateNew = 'createNew',
+  Fail = 'fail',
+  Skip = 'skip',
+}
+
+export type CdmKeyResolverInput = {
+  findBy?: InputMaybe<CdmFindBy>;
+  ifMissing?: InputMaybe<CdmIfMissing>;
+  value: Scalars['String']['input'];
+};
+
+export type CdmModeInput = {
+  confirmDestructive?: InputMaybe<Scalars['Boolean']['input']>;
+  onConflict?: InputMaybe<CdmOnConflict>;
+  strategy: CdmModeStrategy;
+};
+
+export enum CdmModeStrategy {
+  Merge = 'merge',
+  Replace = 'replace',
+}
+
+export enum CdmOnConflict {
+  Fail = 'fail',
+  Skip = 'skip',
+  Update = 'update',
+}
+
 export type ChangeMyPasswordInput = {
   confirmPassword: Scalars['String']['input'];
   currentPassword: Scalars['String']['input'];
@@ -500,6 +537,7 @@ export type CreatePermissionInput = {
   action: Scalars['String']['input'];
   condition?: InputMaybe<Scalars['JSON']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   resourceId?: InputMaybe<Scalars['ID']['input']>;
@@ -554,6 +592,7 @@ export type CreateResourceInput = {
   createPermissions?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   scope: Scope;
@@ -671,6 +710,16 @@ export type Group = Auditable & {
   permissions?: Maybe<Array<Permission>>;
   tags?: Maybe<Array<Tag>>;
   updatedAt: Scalars['Date']['output'];
+};
+
+export type GroupCdmInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type GroupPage = PaginatedResults & {
@@ -1466,6 +1515,7 @@ export type Permission = Auditable & {
   deletedAt?: Maybe<Scalars['Date']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  metadata: Scalars['JSON']['output'];
   name: Scalars['String']['output'];
   resource?: Maybe<Resource>;
   resourceId?: Maybe<Scalars['ID']['output']>;
@@ -1473,20 +1523,29 @@ export type Permission = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
+/**
+ * Custom permission definition for this project. References a resource by opaque
+ * `resource` key from the same document. Tag keys come from `permission_tags` for tags
+ * in `project_tags`.
+ */
+export type PermissionCdmInput = {
+  action: Scalars['String']['input'];
+  condition?: InputMaybe<Scalars['JSON']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  groups?: InputMaybe<Array<Scalars['String']['input']>>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  resource: Scalars['String']['input'];
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type PermissionPage = PaginatedResults & {
   __typename?: 'PermissionPage';
   hasNextPage: Scalars['Boolean']['output'];
   permissions: Array<Permission>;
   totalCount: Scalars['Int']['output'];
-};
-
-/** Reference to a Grant permission (resource + action). Optional permissionId skips lookup. */
-export type PermissionRefCdmInput = {
-  action: Scalars['String']['input'];
-  /** When set, must match the permission row's condition (JSON) for resolution. */
-  condition?: InputMaybe<Scalars['JSON']['input']>;
-  permissionId?: InputMaybe<Scalars['ID']['input']>;
-  resourceSlug: Scalars['String']['input'];
 };
 
 export enum PermissionSearchableField {
@@ -1808,28 +1867,6 @@ export type ProjectUserApiKey = Auditable & {
   updatedAt: Scalars['Date']['output'];
   user?: Maybe<User>;
   userId: Scalars['ID']['output'];
-};
-
-/**
- * Project user API key (acts as a specific member). Export omits `clientSecret`; import requires it (BYOK).
- * Project (role-based) API keys are not part of CDM.
- */
-export type ProjectUserApiKeyCdmInput = {
-  /** Public client id from a prior export; omit on import to generate a new id with the supplied secret. */
-  clientId?: InputMaybe<Scalars['String']['input']>;
-  /** Plaintext secret — required on import for each key; never returned on export. */
-  clientSecret?: InputMaybe<Scalars['String']['input']>;
-  description?: InputMaybe<Scalars['String']['input']>;
-  expiresAt?: InputMaybe<Scalars['Date']['input']>;
-  /** Stable key within this CDM document for teardown correlation; recommended when exporting. */
-  externalKey?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * Importer-owned JSON merged into pivot metadata under `cdmSource`.
-   * Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
-   */
-  metadata?: InputMaybe<Scalars['JSON']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
-  userId: Scalars['ID']['input'];
 };
 
 export type Query = {
@@ -2390,11 +2427,29 @@ export type Resource = Auditable & {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
+  metadata: Scalars['JSON']['output'];
   name: Scalars['String']['output'];
   permissions?: Maybe<Array<Permission>>;
   slug: Scalars['String']['output'];
   tags: Array<Tag>;
   updatedAt: Scalars['Date']['output'];
+};
+
+/**
+ * Resource linked to this project (`project_resources`). Export includes catalog
+ * resources and CDM-created rows; catalog rows use `metadata.cdmExportCatalogSnapshot`
+ * so apply binds to existing rows. Tag keys on `tags` / `primaryTag` come from
+ * `resource_tags` for tags that appear in `project_tags`.
+ */
+export type ResourceCdmInput = {
+  actions: Array<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type ResourcePage = PaginatedResults & {
@@ -2467,6 +2522,23 @@ export type Role = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
+export type RoleCdmInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  groups?: InputMaybe<Array<Scalars['String']['input']>>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  /**
+   * Permission grants for this role template. Each entry is either an opaque key
+   * matching `permissions[].key` in this document, or a catalog reference
+   * `"{resourceSlug}:{action}"` (normalized lowercase) for global/system permissions
+   * not listed under `permissions`.
+   */
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type RoleGroup = Auditable & {
   __typename?: 'RoleGroup';
   createdAt: Scalars['Date']['output'];
@@ -2529,29 +2601,6 @@ export type RoleTagTagArgs = {
   scope: Scope;
 };
 
-/** Logical role from the source system with effective permission set. */
-export type RoleTemplateCdmInput = {
-  description?: InputMaybe<Scalars['String']['input']>;
-  externalKey: Scalars['String']['input'];
-  /**
-   * External keys of CDM tags to attach to the role's auto-created CDM group via `group_tags`.
-   * Each key must appear in the `tags` section of the same import.
-   */
-  groupTagKeys?: InputMaybe<Array<Scalars['String']['input']>>;
-  /**
-   * Importer-owned JSON merged into created role and group metadata under `cdmSource`.
-   * Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
-   */
-  metadata?: InputMaybe<Scalars['JSON']['input']>;
-  name: Scalars['String']['input'];
-  permissionRefs: Array<PermissionRefCdmInput>;
-  /**
-   * External keys of CDM tags to attach to the created role via `role_tags`.
-   * Each key must appear in the `tags` section of the same import.
-   */
-  tagKeys?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
 export type Scope = {
   id: Scalars['ID']['input'];
   tenant: Tenant;
@@ -2603,21 +2652,15 @@ export enum SortOrder {
 }
 
 export type SyncProjectPermissionsInput = {
-  /** CDM schema version; only 1 is supported initially. */
-  cdmVersion: Scalars['Int']['input'];
-  /** Optional idempotency / audit correlation id. */
-  importId?: InputMaybe<Scalars['String']['input']>;
-  /** Optional per-user API keys for this project. Omitted or empty means no change beyond handler teardown rules for prior CDM keys. */
-  projectUserApiKeys?: InputMaybe<Array<ProjectUserApiKeyCdmInput>>;
-  roleTemplates: Array<RoleTemplateCdmInput>;
-  /**
-   * Optional project tags. When provided, CDM tag rows + `project_tags` membership
-   * are recreated for the project, and other CDM entities (role templates, user
-   * assignments) can reference tag external keys for `role_tags`, `group_tags`,
-   * and `user_tags`.
-   */
+  groups?: InputMaybe<Array<GroupCdmInput>>;
+  id?: InputMaybe<Scalars['String']['input']>;
+  mode: CdmModeInput;
+  permissions?: InputMaybe<Array<PermissionCdmInput>>;
+  resources?: InputMaybe<Array<ResourceCdmInput>>;
+  roles: Array<RoleCdmInput>;
   tags?: InputMaybe<Array<TagCdmInput>>;
-  userAssignments: Array<UserAssignmentCdmInput>;
+  users: Array<UserCdmInput>;
+  version: Scalars['Int']['input'];
 };
 
 export type SyncProjectPermissionsResult = {
@@ -2627,6 +2670,8 @@ export type SyncProjectPermissionsResult = {
   groupTagsLinked: Scalars['Int']['output'];
   groupsCreated: Scalars['Int']['output'];
   importId?: Maybe<Scalars['String']['output']>;
+  /** Number of CDM permission rows created during this sync (one per `permissions[]` entry in the import). */
+  permissionsCreated: Scalars['Int']['output'];
   projectGroupsLinked: Scalars['Int']['output'];
   /** The project that was synced. */
   projectId: Scalars['ID']['output'];
@@ -2638,6 +2683,8 @@ export type SyncProjectPermissionsResult = {
   /** Number of project-user API key pivots created during this sync (each with a new or supplied api_keys row). */
   projectUserApiKeysCreated: Scalars['Int']['output'];
   projectUsersEnsured: Scalars['Int']['output'];
+  /** Number of CDM resource rows created during this sync (one per `resources[]` entry in the import). */
+  resourcesCreated: Scalars['Int']['output'];
   roleGroupsLinked: Scalars['Int']['output'];
   /** Number of `role_tags` pivot rows created during this sync (sum across all role templates). */
   roleTagsLinked: Scalars['Int']['output'];
@@ -2647,6 +2694,8 @@ export type SyncProjectPermissionsResult = {
   userRolesAssigned: Scalars['Int']['output'];
   /** Number of `user_tags` pivot rows created during this sync (sum across all user assignments). */
   userTagsLinked: Scalars['Int']['output'];
+  /** Number of Grant user rows created from the optional `users` section during this sync. */
+  usersCreated: Scalars['Int']['output'];
   warnings: Array<Scalars['String']['output']>;
 };
 
@@ -2662,24 +2711,9 @@ export type Tag = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
-/**
- * Project tag definition. Resolved via `project_tags` membership on export and recreated as
- * a CDM-marked tag row + `project_tags` membership on import. Cross-handler reference: other
- * CDM entities (role templates, user assignments) reference tags by `externalKey`.
- */
 export type TagCdmInput = {
   color: Scalars['String']['input'];
-  /**
-   * Stable key within this CDM document; recommended = original tag.id at export time.
-   * Other CDM entities reference tags by this key (`tagKeys`, `groupTagKeys`).
-   */
-  externalKey: Scalars['String']['input'];
-  /** Marks this tag as primary in `project_tags` for the importing project. */
-  isPrimary?: InputMaybe<Scalars['Boolean']['input']>;
-  /**
-   * Importer-owned JSON merged into created tag metadata under `cdmSource`.
-   * Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
-   */
+  key: Scalars['String']['input'];
   metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
 };
@@ -2803,6 +2837,7 @@ export type UpdatePermissionInput = {
   action?: InputMaybe<Scalars['String']['input']>;
   condition?: InputMaybe<Scalars['JSON']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   resourceId?: InputMaybe<Scalars['ID']['input']>;
@@ -2858,6 +2893,7 @@ export type UpdateResourceInput = {
   actions?: InputMaybe<Array<Scalars['String']['input']>>;
   description?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   scope: Scope;
@@ -2960,22 +2996,14 @@ export type User = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
-/** User membership: roles from templates and/or direct permission grants. */
-export type UserAssignmentCdmInput = {
-  directPermissionRefs?: InputMaybe<Array<PermissionRefCdmInput>>;
-  /**
-   * Importer-owned JSON merged into the project user's membership metadata under `cdmSource`.
-   * Do not send a top-level `cdmImport` key; Grant reserves it for future use.
-   */
+export type UserApiKeyCdmInput = {
+  clientId?: InputMaybe<Scalars['String']['input']>;
+  clientSecret?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  expiresAt?: InputMaybe<Scalars['Date']['input']>;
+  key?: InputMaybe<Scalars['String']['input']>;
   metadata?: InputMaybe<Scalars['JSON']['input']>;
-  roleTemplateKeys?: InputMaybe<Array<Scalars['String']['input']>>;
-  /**
-   * External keys of CDM tags to attach to the global user via `user_tags`.
-   * NOTE: `user_tags` are global rows (cross-project effect). Each key must appear in the
-   * `tags` section of the same import.
-   */
-  tagKeys?: InputMaybe<Array<Scalars['String']['input']>>;
-  userId: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export enum UserAuthenticationEmailProviderAction {
@@ -3005,6 +3033,22 @@ export enum UserAuthenticationMethodProvider {
   Github = 'github',
   Google = 'google',
 }
+
+export type UserCdmInput = {
+  apiKeys?: InputMaybe<Array<UserApiKeyCdmInput>>;
+  groups?: InputMaybe<Array<Scalars['String']['input']>>;
+  key: CdmKeyResolverInput;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  /**
+   * Direct permission keys or catalog refs `"{resourceSlug}:{action}"` not already
+   * implied by the user's roles (see `RoleCdmInput.permissions`).
+   */
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  roles?: InputMaybe<Array<Scalars['String']['input']>>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
 
 export type UserDataExport = {
   __typename?: 'UserDataExport';
@@ -4616,7 +4660,9 @@ export type ProjectPermissionsSyncJobQuery = {
       projectPermissionsLinked: number;
       projectResourcesLinked: number;
       projectUsersEnsured: number;
+      usersCreated: number;
       userRolesAssigned: number;
+      projectUserApiKeysCreated: number;
       warnings: Array<string>;
     } | null;
   };
@@ -9670,7 +9716,9 @@ export const ProjectPermissionsSyncJobDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'projectPermissionsLinked' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'projectResourcesLinked' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'projectUsersEnsured' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'usersCreated' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'userRolesAssigned' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectUserApiKeysCreated' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
                     ],
                   },

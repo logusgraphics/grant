@@ -72,20 +72,23 @@ Project permission CDM (canonical data model) sync supports tags as a first-clas
 
 ### CDM identity envelope
 
-Tag rows created by CDM sync carry a reserved `metadata.cdmImport` envelope:
+Tag rows created by CDM sync carry a reserved `metadata.cdmImport` envelope. The exporter emits derived, opaque external keys (e.g. `cdm-tag-3f2a9b1c0d1e2f30`) and threads the original Grant id through `metadata.cdmSource` for traceability:
 
 ```json
 {
   "cdmImport": {
     "projectId": "<importing project>",
     "kind": "tag",
-    "externalKey": "<TagCdmInput.externalKey>"
+    "externalKey": "cdm-tag-3f2a9b1c0d1e2f30"
   },
-  "cdmSource": { "...": "importer-supplied JSON" }
+  "cdmSource": {
+    "grantTagId": "<original Grant tag UUID>",
+    "...": "importer-supplied JSON"
+  }
 }
 ```
 
-Only rows with this envelope are torn down on re-import. User-created tags (created via `createTag` GraphQL mutation or the UI) never carry `cdmImport` and are therefore never touched by CDM sync, including its replace-import sweep.
+`externalKey` is opaque: Grant only requires uniqueness within the document. Importer-supplied keys are accepted as-is, while Grant's exporter generates them via `buildExternalKey('tag', tagId, name, color)` so the same row maps to the same key on re-export. Only rows with the `cdmImport` envelope are torn down on re-import. User-created tags (via `createTag` or the UI) never carry `cdmImport` and are never touched by CDM sync, including its replace-import sweep. See [CDM import & export → identity contract](/core-concepts/cdm-import-export#identity-contract-opaque-external-keys) for the full contract shared by all CDM-portable entities.
 
 ### Project membership creation
 

@@ -17,7 +17,9 @@ query ProjectPermissionsSyncJob($id: ID!, $scope: Scope!, $jobId: ID!) {
       projectPermissionsLinked
       projectResourcesLinked
       projectUsersEnsured
+      usersCreated
       userRolesAssigned
+      projectUserApiKeysCreated
       warnings
     }
     warnings

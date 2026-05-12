@@ -30,6 +30,7 @@ function baseResult(): SyncProjectPermissionsResult {
     projectPermissionsLinked: 0,
     projectResourcesLinked: 0,
     projectUsersEnsured: 0,
+    usersCreated: 0,
     userRolesAssigned: 0,
     projectUserApiKeysCreated: 0,
     tagsCreated: 0,
@@ -37,6 +38,8 @@ function baseResult(): SyncProjectPermissionsResult {
     roleTagsLinked: 0,
     groupTagsLinked: 0,
     userTagsLinked: 0,
+    resourcesCreated: 0,
+    permissionsCreated: 0,
     warnings: [],
   };
 }
@@ -45,12 +48,16 @@ function buildHandler(deps?: {
   roleTags?: { addRoleTag: ReturnType<typeof vi.fn> };
   groupTags?: { addGroupTag: ReturnType<typeof vi.fn> };
   builderCounts?: { roleId: string; groupId: string };
-  exportRepo?: {
+  exportRepo?: Partial<{
     getProjectRolesWithPermissions: ReturnType<typeof vi.fn>;
     getRoleTagsByRoleIds: ReturnType<typeof vi.fn>;
     getGroupTagsByGroupIds: ReturnType<typeof vi.fn>;
     getCdmGroupIdsForRoleIds: ReturnType<typeof vi.fn>;
-  };
+    getProjectTagDefinitions: ReturnType<typeof vi.fn>;
+    getProjectLinkedPermissionsForExport: ReturnType<typeof vi.fn>;
+    getGroupsByIds: ReturnType<typeof vi.fn>;
+    getGroupPermissionIdsByGroupIds: ReturnType<typeof vi.fn>;
+  }>;
 }) {
   const roleTags = deps?.roleTags ?? { addRoleTag: vi.fn().mockResolvedValue(undefined) };
   const groupTags = deps?.groupTags ?? { addGroupTag: vi.fn().mockResolvedValue(undefined) };
@@ -72,12 +79,25 @@ function buildHandler(deps?: {
       },
     }),
   };
-  const exportRepo = deps?.exportRepo ?? {
+  const defaultExportRepo = {
     getProjectRolesWithPermissions: vi.fn().mockResolvedValue([]),
     getRoleTagsByRoleIds: vi.fn().mockResolvedValue([]),
     getGroupTagsByGroupIds: vi.fn().mockResolvedValue([]),
     getCdmGroupIdsForRoleIds: vi.fn().mockResolvedValue(new Map()),
+    getProjectTagDefinitions: vi.fn().mockResolvedValue([]),
+    getProjectLinkedPermissionsForExport: vi.fn().mockResolvedValue([]),
+    getGroupsByIds: vi.fn().mockImplementation((ids: readonly string[]) =>
+      Promise.resolve(
+        (ids as string[]).map((gid) => ({
+          groupId: gid,
+          name: `group-${gid.slice(0, 8)}`,
+          description: null as string | null,
+        }))
+      )
+    ),
+    getGroupPermissionIdsByGroupIds: vi.fn().mockResolvedValue([]),
   };
+  const exportRepo = { ...defaultExportRepo, ...deps?.exportRepo };
   return {
     handler: new RoleTemplateHandler(
       {} as never,
@@ -102,6 +122,8 @@ describe('RoleTemplateHandler — tag wiring', () => {
         {
           externalKey: 'r1',
           name: 'R',
+          description: null,
+          metadata: null,
           permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
           tagKeys: ['t', 't'],
         },
@@ -113,6 +135,8 @@ describe('RoleTemplateHandler — tag wiring', () => {
         {
           externalKey: 'r1',
           name: 'R',
+          description: null,
+          metadata: null,
           permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
           groupTagKeys: ['g', 'g'],
         },
@@ -134,7 +158,13 @@ describe('RoleTemplateHandler — tag wiring', () => {
       tx: { __tx: true },
       lookupResolvedRef: () => ({ id: 'p', resourceId: 'r' }),
       result,
-      produced: { roleTemplateIds: new Map(), tagIds },
+      produced: {
+        roleIdsByKey: new Map(),
+        tagIds,
+        resourceIds: new Map(),
+        permissionIds: new Map(),
+        userIds: new Map(),
+      },
       assignmentUserIds: new Set<string>(),
     };
 
@@ -142,6 +172,8 @@ describe('RoleTemplateHandler — tag wiring', () => {
       {
         externalKey: 'role-1',
         name: 'Role 1',
+        description: null,
+        metadata: null,
         permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
         tagKeys: ['t1', 't2'],
         groupTagKeys: ['g1'],
@@ -175,7 +207,13 @@ describe('RoleTemplateHandler — tag wiring', () => {
       tx: { __tx: true },
       lookupResolvedRef: () => ({ id: 'p', resourceId: 'r' }),
       result: baseResult(),
-      produced: { roleTemplateIds: new Map(), tagIds: new Map() },
+      produced: {
+        roleIdsByKey: new Map(),
+        tagIds: new Map(),
+        resourceIds: new Map(),
+        permissionIds: new Map(),
+        userIds: new Map(),
+      },
       assignmentUserIds: new Set<string>(),
     };
 
@@ -184,6 +222,8 @@ describe('RoleTemplateHandler — tag wiring', () => {
         {
           externalKey: 'r1',
           name: 'R',
+          description: null,
+          metadata: null,
           permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
           tagKeys: ['unknown'],
         },
@@ -191,7 +231,7 @@ describe('RoleTemplateHandler — tag wiring', () => {
     ).rejects.toThrow(/unknown tagKey 'unknown'/);
   });
 
-  it('export projects role_tags and group_tags into tagKeys/groupTagKeys', async () => {
+  it('export projects role_tags and group_tags as opaque tagKeys/groupTagKeys', async () => {
     const roleId = '70000000-0000-4000-8000-000000000777';
     const groupId = '70000000-0000-4000-8000-000000000888';
     const tagA = '60000000-0000-4000-8000-000000000aaa';
@@ -222,6 +262,26 @@ describe('RoleTemplateHandler — tag wiring', () => {
         ]),
         getGroupTagsByGroupIds: vi.fn().mockResolvedValue([{ ownerId: groupId, tagId: tagG }]),
         getCdmGroupIdsForRoleIds: vi.fn().mockResolvedValue(new Map([[roleId, groupId]])),
+        getProjectTagDefinitions: vi.fn().mockResolvedValue([
+          { tagId: tagA, name: 'Alpha', color: '#fff', isPrimary: false, metadata: {} },
+          { tagId: tagB, name: 'Beta', color: '#000', isPrimary: false, metadata: {} },
+          { tagId: tagG, name: 'Gamma', color: '#abc', isPrimary: false, metadata: {} },
+        ]),
+        getProjectLinkedPermissionsForExport: vi.fn().mockResolvedValue([
+          {
+            permissionId: 'p1',
+            resourceId: 'res-x',
+            resourceSlug: 'Tag',
+            action: 'Query',
+            name: 'Tag:Query',
+            description: null,
+            condition: null,
+            metadata: {},
+          },
+        ]),
+        getGroupPermissionIdsByGroupIds: vi
+          .fn()
+          .mockResolvedValue([{ groupId, permissionId: 'p1' }]),
       },
     });
 
@@ -230,14 +290,93 @@ describe('RoleTemplateHandler — tag wiring', () => {
 
     expect(exportRepo.getProjectRolesWithPermissions).toHaveBeenCalled();
     expect(out).toHaveLength(1);
-    expect(out[0]).toEqual(
-      expect.objectContaining({
-        externalKey: roleId,
-        name: 'Viewer',
-        tagKeys: [tagA, tagB],
-        groupTagKeys: [tagG],
-      })
+    expect(out[0].externalKey).toMatch(/^cdm-role-[a-f0-9]{16}$/);
+    expect(out[0].externalKey).not.toBe(roleId);
+    expect(out[0].name).toBe('Viewer');
+    expect(out[0].tagKeys).toHaveLength(2);
+    for (const k of out[0].tagKeys ?? []) {
+      expect(k).toMatch(/^cdm-tag-[a-f0-9]{16}$/);
+    }
+    expect(out[0].groupTagKeys).toHaveLength(1);
+    expect(out[0].groupTagKeys?.[0]).toMatch(/^cdm-tag-[a-f0-9]{16}$/);
+    expect(out[0].metadata).toEqual(
+      expect.objectContaining({ grantRoleId: roleId, grantGroupId: groupId })
     );
+    expect(out[0].linkedGrantGroup?.permissionKeys).toHaveLength(1);
+    expect(out[0].linkedGrantGroup?.permissionKeys[0]).toBe(out[0].permissionRefs[0].permissionKey);
+  });
+
+  it('export emits permissionKey for CDM-imported permissions and falls back to slug+action otherwise', async () => {
+    const roleId = '70000000-0000-4000-8000-000000000777';
+    const groupId = '70000000-0000-4000-8000-000000000888';
+    const cdmPermissionId = '80000000-0000-4000-8000-0000000000aa';
+    const { handler } = buildHandler({
+      exportRepo: {
+        getProjectRolesWithPermissions: vi.fn().mockResolvedValue([
+          {
+            roleId,
+            name: 'Viewer',
+            description: null,
+            permissions: [
+              {
+                resourceSlug: 'documents',
+                action: 'read',
+                permissionId: cdmPermissionId,
+                condition: null,
+              },
+              {
+                resourceSlug: 'Tag',
+                action: 'Query',
+                permissionId: 'system-perm',
+                condition: null,
+              },
+            ],
+            metadata: {},
+          },
+        ]),
+        getRoleTagsByRoleIds: vi.fn().mockResolvedValue([]),
+        getGroupTagsByGroupIds: vi.fn().mockResolvedValue([]),
+        getCdmGroupIdsForRoleIds: vi.fn().mockResolvedValue(new Map([[roleId, groupId]])),
+        getProjectTagDefinitions: vi.fn().mockResolvedValue([]),
+        getProjectLinkedPermissionsForExport: vi.fn().mockResolvedValue([
+          {
+            permissionId: cdmPermissionId,
+            resourceId: 'res-1',
+            resourceSlug: 'documents',
+            action: 'read',
+            name: 'Documents:read',
+            description: null,
+            condition: null,
+            metadata: {},
+          },
+        ]),
+        getGroupsByIds: vi
+          .fn()
+          .mockResolvedValue([{ groupId, name: 'LinkedGroup', description: null }]),
+        getGroupPermissionIdsByGroupIds: vi
+          .fn()
+          .mockResolvedValue([{ groupId, permissionId: cdmPermissionId }]),
+      },
+    });
+
+    const out = await handler.export({ projectId, scope });
+    expect(out[0].permissionRefs[0]).toEqual({
+      permissionKey: expect.stringMatching(/^cdm-permission-[a-f0-9]{16}$/),
+      resourceSlug: null,
+      action: null,
+      condition: null,
+    });
+    expect(out[0].permissionRefs[1]).toEqual({
+      resourceSlug: 'Tag',
+      action: 'Query',
+      condition: null,
+    });
+    expect(out[0].linkedGrantGroup).toMatchObject({
+      grantGroupId: groupId,
+      groupName: 'LinkedGroup',
+    });
+    expect(out[0].linkedGrantGroup?.permissionKeys).toHaveLength(1);
+    expect(out[0].linkedGrantGroup?.permissionKeys[0]).toBe(out[0].permissionRefs[0].permissionKey);
   });
 
   it('export omits tagKeys / groupTagKeys when empty', async () => {
@@ -264,6 +403,8 @@ describe('RoleTemplateHandler — tag wiring', () => {
         getRoleTagsByRoleIds: vi.fn().mockResolvedValue([]),
         getGroupTagsByGroupIds: vi.fn().mockResolvedValue([]),
         getCdmGroupIdsForRoleIds: vi.fn().mockResolvedValue(new Map([[roleId, groupId]])),
+        getProjectTagDefinitions: vi.fn().mockResolvedValue([]),
+        getProjectLinkedPermissionsForExport: vi.fn().mockResolvedValue([]),
       },
     });
 

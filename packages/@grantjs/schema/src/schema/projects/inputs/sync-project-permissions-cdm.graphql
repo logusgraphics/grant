@@ -1,133 +1,143 @@
-"""
-Reference to a Grant permission (resource + action). Optional permissionId skips lookup.
-"""
-input PermissionRefCdmInput {
-  resourceSlug: String!
-  action: String!
-  permissionId: ID
-  """
-  When set, must match the permission row's condition (JSON) for resolution.
-  """
-  condition: JSON
+enum CdmModeStrategy {
+  merge
+  replace
+}
+
+enum CdmOnConflict {
+  fail
+  skip
+  update
+}
+
+enum CdmFindBy {
+  key
+  id
+  email
+  name
+  slug
+}
+
+enum CdmIfMissing {
+  fail
+  skip
+  createNew
+}
+
+input CdmModeInput {
+  strategy: CdmModeStrategy!
+  onConflict: CdmOnConflict
+  confirmDestructive: Boolean
+}
+
+input CdmKeyResolverInput {
+  value: String!
+  findBy: CdmFindBy
+  ifMissing: CdmIfMissing
 }
 
 """
-Project tag definition. Resolved via `project_tags` membership on export and recreated as
-a CDM-marked tag row + `project_tags` membership on import. Cross-handler reference: other
-CDM entities (role templates, user assignments) reference tags by `externalKey`.
+Resource linked to this project (`project_resources`). Export includes catalog
+resources and CDM-created rows; catalog rows use `metadata.cdmExportCatalogSnapshot`
+so apply binds to existing rows. Tag keys on `tags` / `primaryTag` come from
+`resource_tags` for tags that appear in `project_tags`.
 """
-input TagCdmInput {
-  """
-  Stable key within this CDM document; recommended = original tag.id at export time.
-  Other CDM entities reference tags by this key (`tagKeys`, `groupTagKeys`).
-  """
-  externalKey: String!
-  name: String!
-  color: String!
-  """
-  Marks this tag as primary in `project_tags` for the importing project.
-  """
-  isPrimary: Boolean
-  """
-  Importer-owned JSON merged into created tag metadata under `cdmSource`.
-  Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
-  """
-  metadata: JSON
-}
-
-"""
-Logical role from the source system with effective permission set.
-"""
-input RoleTemplateCdmInput {
-  externalKey: String!
+input ResourceCdmInput {
+  key: String!
+  slug: String
   name: String!
   description: String
-  permissionRefs: [PermissionRefCdmInput!]!
-  """
-  Importer-owned JSON merged into created role and group metadata under `cdmSource`.
-  Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
-  """
+  actions: [String!]!
+  tags: [String!]
+  primaryTag: String
   metadata: JSON
-  """
-  External keys of CDM tags to attach to the created role via `role_tags`.
-  Each key must appear in the `tags` section of the same import.
-  """
-  tagKeys: [String!]
-  """
-  External keys of CDM tags to attach to the role's auto-created CDM group via `group_tags`.
-  Each key must appear in the `tags` section of the same import.
-  """
-  groupTagKeys: [String!]
 }
 
 """
-User membership: roles from templates and/or direct permission grants.
+Custom permission definition for this project. References a resource by opaque
+`resource` key from the same document. Tag keys come from `permission_tags` for tags
+in `project_tags`.
 """
-input UserAssignmentCdmInput {
-  userId: ID!
-  roleTemplateKeys: [String!]
-  directPermissionRefs: [PermissionRefCdmInput!]
-  """
-  Importer-owned JSON merged into the project user's membership metadata under `cdmSource`.
-  Do not send a top-level `cdmImport` key; Grant reserves it for future use.
-  """
+input PermissionCdmInput {
+  key: String!
+  resource: String!
+  action: String!
+  name: String!
+  description: String
+  condition: JSON
+  groups: [String!]
+  tags: [String!]
+  primaryTag: String
   metadata: JSON
-  """
-  External keys of CDM tags to attach to the global user via `user_tags`.
-  NOTE: `user_tags` are global rows (cross-project effect). Each key must appear in the
-  `tags` section of the same import.
-  """
-  tagKeys: [String!]
 }
 
-"""
-Project user API key (acts as a specific member). Export omits `clientSecret`; import requires it (BYOK).
-Project (role-based) API keys are not part of CDM.
-"""
-input ProjectUserApiKeyCdmInput {
+input TagCdmInput {
+  key: String!
+  name: String!
+  color: String!
+  metadata: JSON
+}
+
+input GroupCdmInput {
+  key: String!
+  name: String!
+  description: String
+  permissions: [String!]
+  tags: [String!]
+  primaryTag: String
+  metadata: JSON
+}
+
+input RoleCdmInput {
+  key: String!
+  name: String!
+  description: String
+  groups: [String!]
   """
-  Stable key within this CDM document for teardown correlation; recommended when exporting.
+  Permission grants for this role template. Each entry is either an opaque key
+  matching `permissions[].key` in this document, or a catalog reference
+  `"{resourceSlug}:{action}"` (normalized lowercase) for global/system permissions
+  not listed under `permissions`.
   """
-  externalKey: String
-  userId: ID!
-  """
-  Public client id from a prior export; omit on import to generate a new id with the supplied secret.
-  """
+  permissions: [String!]
+  tags: [String!]
+  primaryTag: String
+  metadata: JSON
+}
+
+input UserApiKeyCdmInput {
+  key: String
   clientId: String
-  """
-  Plaintext secret — required on import for each key; never returned on export.
-  """
   clientSecret: String
   name: String
   description: String
   expiresAt: Date
+  metadata: JSON
+}
+
+input UserCdmInput {
+  key: CdmKeyResolverInput!
+  name: String!
+  roles: [String!]
+  groups: [String!]
   """
-  Importer-owned JSON merged into pivot metadata under `cdmSource`.
-  Do not send a top-level `cdmImport` key; Grant reserves it for sync lifecycle.
+  Direct permission keys or catalog refs `"{resourceSlug}:{action}"` not already
+  implied by the user's roles (see `RoleCdmInput.permissions`).
   """
+  permissions: [String!]
+  tags: [String!]
+  primaryTag: String
+  apiKeys: [UserApiKeyCdmInput!]
   metadata: JSON
 }
 
 input SyncProjectPermissionsInput {
-  """
-  CDM schema version; only 1 is supported initially.
-  """
-  cdmVersion: Int!
-  """
-  Optional idempotency / audit correlation id.
-  """
-  importId: String
-  roleTemplates: [RoleTemplateCdmInput!]!
-  userAssignments: [UserAssignmentCdmInput!]!
-  """
-  Optional per-user API keys for this project. Omitted or empty means no change beyond handler teardown rules for prior CDM keys.
-  """
-  projectUserApiKeys: [ProjectUserApiKeyCdmInput!]
-  """
-  Optional project tags. When provided, CDM tag rows + `project_tags` membership
-  are recreated for the project, and other CDM entities (role templates, user
-  assignments) can reference tag external keys for `role_tags`, `group_tags`,
-  and `user_tags`.
-  """
+  version: Int!
+  id: String
+  mode: CdmModeInput!
+  roles: [RoleCdmInput!]!
+  users: [UserCdmInput!]!
+  resources: [ResourceCdmInput!]
+  permissions: [PermissionCdmInput!]
+  groups: [GroupCdmInput!]
   tags: [TagCdmInput!]
 }

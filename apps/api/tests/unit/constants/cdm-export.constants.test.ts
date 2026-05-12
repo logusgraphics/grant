@@ -4,41 +4,34 @@ import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
 
 describe('assertValidCdmExportSections', () => {
   it('accepts a single comma-separated string (REST query shape)', () => {
-    expect(assertValidCdmExportSections('roleTemplates')).toEqual(['roleTemplates']);
-    expect(assertValidCdmExportSections('roleTemplates,userAssignments')).toEqual([
-      'roleTemplates',
-      'userAssignments',
-    ]);
+    expect(assertValidCdmExportSections('roles')).toEqual(['roles']);
+    expect(assertValidCdmExportSections('roles,users')).toEqual(['roles', 'users']);
   });
 
   it('dedupes and preserves order of first occurrence', () => {
-    expect(
-      assertValidCdmExportSections(['roleTemplates', 'roleTemplates', 'userAssignments'])
-    ).toEqual(['roleTemplates', 'userAssignments']);
-  });
-
-  it('allows projectUserApiKeys when userAssignments is present', () => {
-    expect(
-      assertValidCdmExportSections(['userAssignments', 'projectUserApiKeys', 'roleTemplates'])
-    ).toEqual(['userAssignments', 'projectUserApiKeys', 'roleTemplates']);
+    expect(assertValidCdmExportSections(['roles', 'roles', 'users'])).toEqual(['roles', 'users']);
   });
 
   it('accepts tags as a section', () => {
-    expect(assertValidCdmExportSections(['tags', 'roleTemplates'])).toEqual([
-      'tags',
-      'roleTemplates',
-    ]);
+    expect(assertValidCdmExportSections(['tags', 'roles'])).toEqual(['tags', 'roles']);
   });
 
   it('rejects unknown section', () => {
-    expect(() => assertValidCdmExportSections(['roleTemplates', 'definitelyNotASection'])).toThrow(
+    expect(() => assertValidCdmExportSections(['roles', 'definitelyNotASection'])).toThrow(
       /Invalid CDM export section/
     );
   });
 
-  it('rejects projectUserApiKeys without userAssignments', () => {
-    expect(() => assertValidCdmExportSections(['roleTemplates', 'projectUserApiKeys'])).toThrow(
-      /projectUserApiKeys requires userAssignments/
+  it('accepts resources and permissions sections', () => {
+    expect(assertValidCdmExportSections(['resources', 'permissions'])).toEqual([
+      'resources',
+      'permissions',
+    ]);
+  });
+
+  it('rejects permissions without resources', () => {
+    expect(() => assertValidCdmExportSections(['roles', 'permissions'])).toThrow(
+      /permissions requires resources/
     );
   });
 });

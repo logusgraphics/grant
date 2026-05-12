@@ -99,6 +99,8 @@
     "searchMin2": "Suchbegriff muss mindestens 2 Zeichen lang sein",
     "usernameMin3": "Benutzername muss mindestens 3 Zeichen lang sein",
     "eitherUserIdOrRoleIdRequired": "Es muss entweder userId oder roleId angegeben werden",
+    "cdmUserAssignmentUserXor": "Geben Sie für jede Benutzerzuweisung genau eines von userId oder userKey an",
+    "cdmApiKeyUserXor": "Geben Sie für jeden Projekt-Benutzer-API-Schlüssel genau eines von userId oder userKey an",
     "eitherRoleIdOrGroupIdRequired": "Es muss entweder roleId oder groupId angegeben werden",
     "eitherGroupIdOrPermissionIdRequired": "Es muss entweder groupId oder permissionId angegeben werden",
     "codeTooLong": "Autorisierungscode ist zu lang",

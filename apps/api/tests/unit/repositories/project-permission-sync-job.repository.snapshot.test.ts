@@ -11,7 +11,7 @@
  *     getById/listByProject.
  */
 import type { DbSchema } from '@grantjs/database';
-import type { SyncProjectPermissionsInput } from '@grantjs/schema';
+import { CdmModeStrategy, type SyncProjectPermissionsInput } from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { NotFoundError } from '@/lib/errors';
@@ -43,16 +43,30 @@ function buildChainable<T = unknown>(resolveTo: T) {
 }
 
 const sampleSnapshot: SyncProjectPermissionsInput = {
-  cdmVersion: 1,
-  importId: null,
-  roleTemplates: [
+  version: 1,
+  id: null,
+  mode: {
+    strategy: CdmModeStrategy.Merge,
+    onConflict: null,
+    confirmDestructive: false,
+  },
+  roles: [
     {
-      externalKey: 'role-1',
+      key: 'role-1',
       name: 'Existing role',
-      permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+      description: null,
+      groups: [],
+      permissions: [],
+      tags: [],
+      primaryTag: null,
+      metadata: null,
     },
   ],
-  userAssignments: [],
+  users: [],
+  resources: [],
+  permissions: [],
+  groups: [],
+  tags: [],
 };
 
 describe('ProjectPermissionSyncJobRepository.updateSnapshot', () => {

@@ -3214,15 +3214,20 @@
     },
     "exportDialog": {
       "title": "CDM exportieren",
-      "description": "Wähle, welche Teile des Berechtigungsmodells enthalten sein sollen. Nicht ausgewählte Abschnitte erscheinen im heruntergeladenen JSON als leere Arrays.",
+      "description": "Wähle, welche Teile des Berechtigungsmodells enthalten sein sollen. Nicht ausgewählte Abschnitte erscheinen im heruntergeladenen JSON als leere Arrays. Die obersten Felder `resources` / `permissions` listen nur Zeilen, die CDM für dieses Projekt importiert hat; Katalogzuweisungen stehen weiterhin unter `roles.permissions` (Berechtigungsschlüssel bzw. Slug/Aktion).",
       "sections": {
+        "resources": "Ressourcen (benutzerdefinierte Projektressourcen und Projektverknüpfungen)",
+        "permissions": "Berechtigungen (benutzerdefinierte Projektberechtigungen und Projektverknüpfungen)",
+        "permissionsNeedResources": "Benötigt Ressourcen — Berechtigungen verweisen auf Ressourcen im Export.",
+        "catalogResourcesMayBeEmpty": "Kann leer sein, wenn das Projekt nur den globalen Katalog nutzt — benutzerdefinierte Ressourcenzeilen erscheinen, wenn CDM sie für dieses Projekt erstellt hat.",
+        "catalogPermissionsMayBeEmpty": "Kann leer sein, wenn Zuweisungen nur Katalogberechtigungen nutzen — siehe `roles` für Berechtigungsschlüssel und Katalogreferenzen.",
         "tags": "Tags (Projekt-Tags und Rollen-/Gruppen-/Benutzer-Tag-Zuordnungen)",
-        "roleTemplates": "Rollenvorlagen (Rollen, Gruppen und Berechtigungsverknüpfungen)",
-        "userAssignments": "Benutzerzuweisungen (Projektmitglieder und Rollenverknüpfungen)",
-        "projectUserApiKeys": "Benutzer-API-Schlüssel (nur Identität; keine Geheimnisse)",
-        "keysNeedUsers": "Benötigt Benutzerzuweisungen — API-Schlüssel gehören zu Mitgliedern im Export."
+        "groups": "Gruppen (Gruppenzeilen, die über Rollen verknüpft sind, und Gruppen-Berechtigungsschlüssel)",
+        "roles": "Rollen (Rollenzeilen, Tag-Verknüpfungen und Berechtigungsschlüssel für dieses Projekt)",
+        "users": "Benutzer (Mitglieder, Rollen und Benutzer-API-Schlüssel in diesem Dokument)",
+        "usersIncludeApiKeys": "Wenn enthalten, tragen Benutzerzeilen `apiKeys` (nur Identität; keine Geheimnisse im Export)."
       },
-      "helperReimport": "Beim Import von Benutzerzuweisungen ohne Rollenvorlagen musst du diese Datei ggf. mit einem anderen Export zusammenführen, der Vorlagen enthält.",
+      "helperReimport": "Beim Import von Benutzern ohne Rollen musst du diese Datei ggf. mit einem anderen Export zusammenführen, der Rollen enthält.",
       "cancel": "Abbrechen",
       "export": "JSON herunterladen",
       "exporting": "Export läuft…"
@@ -3274,14 +3279,34 @@
         "invalidType": "Nur .json-Dateien werden akzeptiert.",
         "fileTooLarge": "Datei ist zu groß. Maximale Größe ist {maxSize} MB.",
         "invalidJson": "Die Datei ist kein gültiges JSON.",
-        "invalidShape": "Das JSON sieht nicht wie ein CDM-Payload aus (ungültige oder fehlende cdmVersion, roleTemplates oder userAssignments; projectUserApiKeys muss ein Array sein, falls gesetzt).",
+        "invalidShape": "Das JSON sieht nicht wie ein CDM-Payload aus (fehlende oder ungültige version, mode.strategy, roles[] oder users[]; optionale resources/permissions/groups/tags müssen Arrays sein, falls gesetzt).",
         "readFailed": "Fehler beim Lesen der Datei."
       },
       "summary": {
-        "cdmVersion": "CDM-Version",
-        "roleTemplates": "Rollenvorlagen",
-        "userAssignments": "Benutzerzuweisungen",
-        "projectUserApiKeys": "Benutzer-API-Schlüssel",
+        "jobParameters": "Import-Job",
+        "entityCounts": "Entitäten in der Datei",
+        "version": "CDM-Version",
+        "strategyLabel": "Modus",
+        "strategy": {
+          "merge": "Zusammenführen",
+          "replace": "Ersetzen"
+        },
+        "onConflictLabel": "Bei Konflikt",
+        "onConflict": {
+          "fail": "Fehlschlagen",
+          "skip": "Überspringen",
+          "update": "Aktualisieren"
+        },
+        "confirmDestructiveLabel": "Zerstörerische Änderung",
+        "confirmDestructiveYes": "Bestätigt",
+        "importId": "Import-ID",
+        "roles": "Rollen",
+        "users": "Benutzer",
+        "apiKeys": "Benutzer-API-Schlüssel",
+        "groups": "Gruppen",
+        "resources": "Ressourcen",
+        "permissions": "Berechtigungen",
+        "tags": "Tags",
         "byokNote": "Jeder aufgeführte Benutzer-API-Schlüssel muss im JSON clientSecret enthalten (nur Import). Export und Rollback-Snapshots enthalten niemals Geheimnisse."
       },
       "clear": "Datei entfernen",
@@ -3348,6 +3373,7 @@
           "right": "Ressourcen"
         },
         "projectUsersEnsured": "Projektnutzer sichergestellt",
+        "usersCreated": "Grant-Benutzer angelegt (CDM-Provision)",
         "userRolesAssigned": "Nutzerrollen zugewiesen",
         "projectUserApiKeysCreated": "Benutzer-API-Schlüssel erstellt"
       },

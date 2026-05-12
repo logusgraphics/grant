@@ -264,6 +264,7 @@ export function PermissionSyncJobViewDialog() {
                   ['projectPermissionsLinked', result.projectPermissionsLinked],
                   ['projectResourcesLinked', result.projectResourcesLinked],
                   ['projectUsersEnsured', result.projectUsersEnsured],
+                  ['usersCreated', result.usersCreated ?? 0],
                   ['userRolesAssigned', result.userRolesAssigned],
                   ['projectUserApiKeysCreated', result.projectUserApiKeysCreated],
                 ].map(([key, value]) => (

@@ -7,7 +7,9 @@ const ALLOWED = new Set<string>(CDM_EXPORT_SECTIONS);
 
 /**
  * Validates and dedupes CDM export section query values.
- * `projectUserApiKeys` requires `userAssignments` in the same request.
+ *
+ * Pairing rules:
+ * - `permissions` requires `resources` so permission resource references resolve.
  *
  * Accepts a token array or one comma-separated string. Query validation may
  * still surface `sections` as a string — do not use `for…of` on a string here
@@ -35,9 +37,9 @@ export function assertValidCdmExportSections(raw: readonly string[] | string): C
     out.push(trimmed as CdmExportSection);
   }
 
-  if (out.includes('projectUserApiKeys') && !out.includes('userAssignments')) {
+  if (out.includes('permissions') && !out.includes('resources')) {
     throw new ValidationError(
-      'CDM export section projectUserApiKeys requires userAssignments in the same export request'
+      'CDM export section permissions requires resources in the same export request'
     );
   }
 

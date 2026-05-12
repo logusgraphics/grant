@@ -22,6 +22,7 @@ function baseResult(): SyncProjectPermissionsResult {
     projectPermissionsLinked: 0,
     projectResourcesLinked: 0,
     projectUsersEnsured: 0,
+    usersCreated: 0,
     userRolesAssigned: 0,
     projectUserApiKeysCreated: 0,
     tagsCreated: 0,
@@ -29,6 +30,8 @@ function baseResult(): SyncProjectPermissionsResult {
     roleTagsLinked: 0,
     groupTagsLinked: 0,
     userTagsLinked: 0,
+    resourcesCreated: 0,
+    permissionsCreated: 0,
     warnings: [],
   };
 }
@@ -77,38 +80,38 @@ describe('TagHandler', () => {
     expect(handler.order).toBe(5);
   });
 
-  it('validateInput rejects duplicate externalKey', () => {
+  it('validateInput rejects duplicate key', () => {
     const { handler } = buildHandler();
     expect(() =>
       handler.validateInput([
-        { externalKey: 't1', name: 'Alpha', color: '#fff' },
-        { externalKey: 't1', name: 'Beta', color: '#000' },
+        { key: 't1', name: 'Alpha', color: '#fff' },
+        { key: 't1', name: 'Beta', color: '#000' },
       ])
-    ).toThrow(/Duplicate tags externalKey/);
+    ).toThrow(/Duplicate tags key/);
   });
 
-  it('validateInput rejects missing externalKey', () => {
+  it('validateInput rejects missing key', () => {
     const { handler } = buildHandler();
-    expect(() =>
-      handler.validateInput([{ externalKey: '', name: 'Alpha', color: '#fff' }])
-    ).toThrow(/externalKey is required/);
+    expect(() => handler.validateInput([{ key: '', name: 'Alpha', color: '#fff' }])).toThrow(
+      /key is required/
+    );
   });
 
   it('validateInput rejects empty name and color', () => {
     const { handler } = buildHandler();
-    expect(() =>
-      handler.validateInput([{ externalKey: 't1', name: '   ', color: '#fff' }])
-    ).toThrow(/name is required/);
-    expect(() => handler.validateInput([{ externalKey: 't1', name: 'Alpha', color: '' }])).toThrow(
+    expect(() => handler.validateInput([{ key: 't1', name: '   ', color: '#fff' }])).toThrow(
+      /name is required/
+    );
+    expect(() => handler.validateInput([{ key: 't1', name: 'Alpha', color: '' }])).toThrow(
       /color is required/
     );
   });
 
   it('collectPermissionRefs returns empty (tags have no permission deps)', () => {
     const { handler } = buildHandler();
-    expect(
-      handler.collectPermissionRefs([{ externalKey: 't1', name: 'Alpha', color: '#fff' }])
-    ).toEqual([]);
+    expect(handler.collectPermissionRefs([{ key: 't1', name: 'Alpha', color: '#fff' }])).toEqual(
+      []
+    );
   });
 
   it('teardown is a no-op when no CDM tags exist', async () => {
@@ -144,7 +147,13 @@ describe('TagHandler', () => {
     });
 
     const result = baseResult();
-    const produced = { roleTemplateIds: new Map(), tagIds: new Map<string, string>() };
+    const produced = {
+      roleIdsByKey: new Map<string, string>(),
+      tagIds: new Map<string, string>(),
+      resourceIds: new Map<string, string>(),
+      permissionIds: new Map<string, string>(),
+      userIds: new Map<string, string>(),
+    };
     const ctx: CdmApplyContext = {
       projectId,
       scope,
@@ -157,17 +166,15 @@ describe('TagHandler', () => {
 
     await handler.apply(ctx, [
       {
-        externalKey: 'k1',
+        key: 'k1',
         name: 'Alpha',
         color: '#fff',
-        isPrimary: true,
         metadata: { legacy: 'L1' },
       },
       {
-        externalKey: 'k2',
+        key: 'k2',
         name: 'Beta',
         color: '#000',
-        isPrimary: false,
       },
     ]);
 
@@ -191,7 +198,7 @@ describe('TagHandler', () => {
 
     expect(projectTags.addProjectTag).toHaveBeenNthCalledWith(
       1,
-      { projectId, tagId: created1.id, isPrimary: true },
+      { projectId, tagId: created1.id, isPrimary: false },
       ctx.tx
     );
     expect(projectTags.addProjectTag).toHaveBeenNthCalledWith(
@@ -206,7 +213,7 @@ describe('TagHandler', () => {
     expect(result.projectTagsLinked).toBe(2);
   });
 
-  it('export maps project tag rows to TagCdmInput[] with externalKey=tagId and stripped cdmImport metadata', async () => {
+  it('export maps project tag rows to TagCdmInput[] with opaque key and grantTagId in cdmSource', async () => {
     const tagId = '60000000-0000-4000-8000-0000000000aa';
     const getProjectTagDefinitions = vi.fn().mockResolvedValue([
       {
@@ -235,21 +242,32 @@ describe('TagHandler', () => {
     const out = await handler.export(ctx);
 
     expect(getProjectTagDefinitions).toHaveBeenCalledWith(projectId, undefined);
-    expect(out).toEqual([
-      {
-        externalKey: tagId,
-        name: 'Alpha',
-        color: '#fff',
-        isPrimary: true,
-        metadata: { legacy: 'L1' },
-      },
-      {
-        externalKey: '60000000-0000-4000-8000-0000000000bb',
-        name: 'Beta',
-        color: '#000',
-        isPrimary: false,
-        metadata: null,
-      },
-    ]);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toEqual({
+      key: expect.stringMatching(/^cdm-tag-[a-f0-9]{16}$/),
+      name: 'Alpha',
+      color: '#fff',
+      metadata: { legacy: 'L1', grantTagId: tagId },
+    });
+    expect(out[1]).toEqual({
+      key: expect.stringMatching(/^cdm-tag-[a-f0-9]{16}$/),
+      name: 'Beta',
+      color: '#000',
+      metadata: { grantTagId: '60000000-0000-4000-8000-0000000000bb' },
+    });
+    expect(out[0].key).not.toBe(out[1].key);
+  });
+
+  it('export key is stable for a given (tagId, name, color)', async () => {
+    const tagId = '60000000-0000-4000-8000-0000000000cc';
+    const getProjectTagDefinitions = vi
+      .fn()
+      .mockResolvedValue([{ tagId, name: 'Gamma', color: '#abc', isPrimary: false, metadata: {} }]);
+    const { handler } = buildHandler({ exportRepo: { getProjectTagDefinitions } });
+
+    const out1 = await handler.export({ projectId, scope } as CdmExportContext);
+    const out2 = await handler.export({ projectId, scope } as CdmExportContext);
+    expect(out1[0].key).toBe(out2[0].key);
+    expect(out1[0].key).not.toBe(tagId);
   });
 });

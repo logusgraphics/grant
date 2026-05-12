@@ -13,6 +13,7 @@ export const permissions = pgTable(
     action: varchar('action', { length: 255 }).notNull(),
     resourceId: uuid('resource_id').references(() => resources.id, { onDelete: 'set null' }),
     condition: jsonb('condition'),
+    metadata: jsonb('metadata').default({}).notNull(),
     deletedAt: timestamp('deleted_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -21,6 +22,7 @@ export const permissions = pgTable(
     index('permissions_deleted_at_idx').on(t.deletedAt),
     index('permissions_resource_id_idx').on(t.resourceId),
     index('permissions_condition_idx').using('gin', t.condition),
+    index('permissions_metadata_idx').using('gin', t.metadata),
   ]
 );
 

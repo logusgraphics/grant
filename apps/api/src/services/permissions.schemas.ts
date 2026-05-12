@@ -57,6 +57,7 @@ export const createPermissionParamsSchema = z.object({
   action: nonEmptyActionSchema,
   resourceId: idSchema.nullable().optional(),
   condition: permissionConditionSchema.nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const updatePermissionParamsSchema = z.object({
@@ -81,6 +82,7 @@ export const permissionSchema = baseEntitySchema.extend({
   resourceId: idSchema.nullable(),
   resource: resourceSchema.nullable().optional(),
   condition: permissionConditionSchema.nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()),
   tags: z.array(tagSchema).optional(),
 });
 

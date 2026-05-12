@@ -5,19 +5,24 @@ import {
   groups,
   groupTags,
   permissions,
+  permissionTags,
+  projectPermissions,
+  projectResources,
   projectRoles,
   projectTags,
   projectUserApiKeys,
   projectUsers,
   resources,
+  resourceTags,
   roleGroups,
   roles,
   roleTags,
   tags,
   userRoles,
+  users,
   userTags,
 } from '@grantjs/database';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 
@@ -73,6 +78,67 @@ export interface ProjectTagDefinitionRow {
 export interface TagAssociationRow {
   ownerId: string;
   tagId: string;
+  isPrimary: boolean;
+}
+
+/** `resource_tags` row joined to tag + project membership (CDM export). */
+export interface ProjectResourceTagExportRow {
+  resourceId: string;
+  tagId: string;
+  tagName: string;
+  tagColor: string;
+  isPrimary: boolean;
+}
+
+/** `permission_tags` row joined to tag + project membership (CDM export). */
+export interface ProjectPermissionTagExportRow {
+  permissionId: string;
+  tagId: string;
+  tagName: string;
+  tagColor: string;
+  isPrimary: boolean;
+}
+
+/** Grant `groups` row for CDM export (name + id for opaque key). */
+export interface GrantGroupExportRow {
+  groupId: string;
+  name: string;
+  description: string | null;
+}
+
+/** `group_permissions` pivot for CDM group ↔ permission export. */
+export interface GroupPermissionExportRow {
+  groupId: string;
+  permissionId: string;
+}
+
+/** CDM-imported Grant user (`metadata.cdmImport.kind === 'user'`) for export. */
+export interface ProjectCdmProvisionedUserRow {
+  userId: string;
+  name: string;
+  metadata: Record<string, unknown>;
+}
+
+/** Resource row projected for CDM export (catalog or CDM-owned). */
+export interface ProjectCdmResourceRow {
+  resourceId: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  actions: string[];
+  metadata: Record<string, unknown>;
+}
+
+/** Permission row projected for CDM export (catalog or CDM-owned). */
+export interface ProjectCdmPermissionRow {
+  permissionId: string;
+  resourceId: string | null;
+  resourceSlug: string | null;
+  action: string;
+  name: string;
+  description: string | null;
+  condition: Record<string, unknown> | null;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -337,7 +403,11 @@ export class ProjectPermissionExportRepository {
     if (roleIds.length === 0) return [];
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
-      .select({ ownerId: roleTags.roleId, tagId: roleTags.tagId })
+      .select({
+        ownerId: roleTags.roleId,
+        tagId: roleTags.tagId,
+        isPrimary: roleTags.isPrimary,
+      })
       .from(roleTags)
       .where(and(inArray(roleTags.roleId, roleIds as string[]), isNull(roleTags.deletedAt)));
     return rows;
@@ -351,7 +421,11 @@ export class ProjectPermissionExportRepository {
     if (groupIds.length === 0) return [];
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
-      .select({ ownerId: groupTags.groupId, tagId: groupTags.tagId })
+      .select({
+        ownerId: groupTags.groupId,
+        tagId: groupTags.tagId,
+        isPrimary: groupTags.isPrimary,
+      })
       .from(groupTags)
       .where(and(inArray(groupTags.groupId, groupIds as string[]), isNull(groupTags.deletedAt)));
     return rows;
@@ -365,10 +439,175 @@ export class ProjectPermissionExportRepository {
     if (userIds.length === 0) return [];
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
-      .select({ ownerId: userTags.userId, tagId: userTags.tagId })
+      .select({
+        ownerId: userTags.userId,
+        tagId: userTags.tagId,
+        isPrimary: userTags.isPrimary,
+      })
       .from(userTags)
       .where(and(inArray(userTags.userId, userIds as string[]), isNull(userTags.deletedAt)));
     return rows;
+  }
+
+  /** Active groups by id (for CDM export wiring). */
+  public async getGroupsByIds(
+    groupIds: readonly string[],
+    transaction?: Transaction
+  ): Promise<GrantGroupExportRow[]> {
+    if (groupIds.length === 0) return [];
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({
+        groupId: groups.id,
+        name: groups.name,
+        description: groups.description,
+      })
+      .from(groups)
+      .where(and(inArray(groups.id, groupIds as string[]), isNull(groups.deletedAt)));
+    return rows.map((r) => ({
+      groupId: r.groupId,
+      name: r.name,
+      description: r.description,
+    }));
+  }
+
+  /** `group_permissions` rows for the given group ids (active permissions only). */
+  public async getGroupPermissionIdsByGroupIds(
+    groupIds: readonly string[],
+    transaction?: Transaction
+  ): Promise<GroupPermissionExportRow[]> {
+    if (groupIds.length === 0) return [];
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({
+        groupId: groupPermissions.groupId,
+        permissionId: groupPermissions.permissionId,
+      })
+      .from(groupPermissions)
+      .innerJoin(permissions, eq(permissions.id, groupPermissions.permissionId))
+      .where(
+        and(
+          inArray(groupPermissions.groupId, groupIds as string[]),
+          isNull(groupPermissions.deletedAt),
+          isNull(permissions.deletedAt)
+        )
+      );
+    return rows.map((r) => ({ groupId: r.groupId, permissionId: r.permissionId }));
+  }
+
+  /**
+   * Resource tag pivots for resources linked to the project, restricted to tags
+   * in `project_tags` so exported keys match the `tags[]` section.
+   */
+  public async getProjectResourceTagsForExport(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<ProjectResourceTagExportRow[]> {
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({
+        resourceId: resourceTags.resourceId,
+        tagId: resourceTags.tagId,
+        tagName: tags.name,
+        tagColor: tags.color,
+        isPrimary: resourceTags.isPrimary,
+      })
+      .from(resourceTags)
+      .innerJoin(tags, eq(tags.id, resourceTags.tagId))
+      .innerJoin(projectTags, eq(projectTags.tagId, tags.id))
+      .innerJoin(projectResources, eq(projectResources.resourceId, resourceTags.resourceId))
+      .where(
+        and(
+          eq(projectTags.projectId, projectId),
+          eq(projectResources.projectId, projectId),
+          isNull(resourceTags.deletedAt),
+          isNull(tags.deletedAt),
+          isNull(projectTags.deletedAt),
+          isNull(projectResources.deletedAt)
+        )
+      );
+
+    return rows.map((r) => ({
+      resourceId: r.resourceId,
+      tagId: r.tagId,
+      tagName: r.tagName,
+      tagColor: r.tagColor,
+      isPrimary: r.isPrimary,
+    }));
+  }
+
+  /**
+   * Permission tag pivots for permissions linked to the project, restricted to
+   * tags in `project_tags` so exported keys match the `tags[]` section.
+   */
+  public async getProjectPermissionTagsForExport(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<ProjectPermissionTagExportRow[]> {
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({
+        permissionId: permissionTags.permissionId,
+        tagId: permissionTags.tagId,
+        tagName: tags.name,
+        tagColor: tags.color,
+        isPrimary: permissionTags.isPrimary,
+      })
+      .from(permissionTags)
+      .innerJoin(tags, eq(tags.id, permissionTags.tagId))
+      .innerJoin(projectTags, eq(projectTags.tagId, tags.id))
+      .innerJoin(
+        projectPermissions,
+        eq(projectPermissions.permissionId, permissionTags.permissionId)
+      )
+      .where(
+        and(
+          eq(projectTags.projectId, projectId),
+          eq(projectPermissions.projectId, projectId),
+          isNull(permissionTags.deletedAt),
+          isNull(tags.deletedAt),
+          isNull(projectTags.deletedAt),
+          isNull(projectPermissions.deletedAt)
+        )
+      );
+
+    return rows.map((r) => ({
+      permissionId: r.permissionId,
+      tagId: r.tagId,
+      tagName: r.tagName,
+      tagColor: r.tagColor,
+      isPrimary: r.isPrimary,
+    }));
+  }
+
+  /**
+   * Grant users created under CDM for this project (`metadata.cdmImport.kind === 'user'`).
+   */
+  public async getProjectCdmProvisionedUsers(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<ProjectCdmProvisionedUserRow[]> {
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({
+        userId: users.id,
+        name: users.name,
+        metadata: users.metadata,
+      })
+      .from(users)
+      .where(
+        and(
+          isNull(users.deletedAt),
+          sql`${users.metadata}->'cdmImport'->>'projectId' = ${projectId}`,
+          sql`${users.metadata}->'cdmImport'->>'kind' = 'user'`
+        )
+      );
+
+    return rows.map((r) => ({
+      userId: r.userId,
+      name: r.name,
+      metadata: (r.metadata as Record<string, unknown>) ?? {},
+    }));
   }
 
   /**
@@ -391,5 +630,88 @@ export class ProjectPermissionExportRepository {
       if (!out.has(r.roleId)) out.set(r.roleId, r.groupId);
     }
     return out;
+  }
+
+  /**
+   * All resources linked to the project via `project_resources`, including
+   * catalog (seed) resources. Used for CDM export when the resources section is
+   * selected; CDM-only teardown still uses the sync repository.
+   */
+  public async getProjectLinkedResourcesForExport(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<ProjectCdmResourceRow[]> {
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({
+        resourceId: resources.id,
+        slug: resources.slug,
+        name: resources.name,
+        description: resources.description,
+        actions: resources.actions,
+        metadata: resources.metadata,
+      })
+      .from(resources)
+      .innerJoin(projectResources, eq(projectResources.resourceId, resources.id))
+      .where(
+        and(
+          eq(projectResources.projectId, projectId),
+          isNull(projectResources.deletedAt),
+          isNull(resources.deletedAt)
+        )
+      );
+
+    return rows.map((r) => ({
+      resourceId: r.resourceId,
+      slug: r.slug,
+      name: r.name,
+      description: r.description,
+      actions: r.actions,
+      metadata: (r.metadata as Record<string, unknown>) ?? {},
+    }));
+  }
+
+  /**
+   * All permissions linked to the project via `project_permissions`, including
+   * catalog permissions. Joins `resources` for the resource slug used in export
+   * cross-references.
+   */
+  public async getProjectLinkedPermissionsForExport(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<ProjectCdmPermissionRow[]> {
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({
+        permissionId: permissions.id,
+        resourceId: permissions.resourceId,
+        resourceSlug: resources.slug,
+        action: permissions.action,
+        name: permissions.name,
+        description: permissions.description,
+        condition: permissions.condition,
+        metadata: permissions.metadata,
+      })
+      .from(permissions)
+      .innerJoin(projectPermissions, eq(projectPermissions.permissionId, permissions.id))
+      .leftJoin(resources, eq(resources.id, permissions.resourceId))
+      .where(
+        and(
+          eq(projectPermissions.projectId, projectId),
+          isNull(projectPermissions.deletedAt),
+          isNull(permissions.deletedAt)
+        )
+      );
+
+    return rows.map((r) => ({
+      permissionId: r.permissionId,
+      resourceId: r.resourceId,
+      resourceSlug: r.resourceSlug,
+      action: r.action,
+      name: r.name,
+      description: r.description,
+      condition: (r.condition as Record<string, unknown> | null) ?? null,
+      metadata: (r.metadata as Record<string, unknown>) ?? {},
+    }));
   }
 }

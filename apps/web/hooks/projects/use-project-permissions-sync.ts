@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { ApolloCache, NetworkStatus } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
@@ -11,9 +11,11 @@ import {
   SyncProjectPermissionsInput,
 } from '@grantjs/schema';
 
+import { evictApiKeysCache } from '../api-keys/cache';
 import { evictGroupsCache } from '../groups/cache';
 import { evictPermissionsCache } from '../permissions/cache';
 import { evictRolesCache } from '../roles/cache';
+import { evictTagsCache } from '../tags/cache';
 
 const TERMINAL_STATUSES: ReadonlyArray<ProjectPermissionsSyncJobStatus> = [
   ProjectPermissionsSyncJobStatus.Completed,
@@ -23,14 +25,25 @@ const TERMINAL_STATUSES: ReadonlyArray<ProjectPermissionsSyncJobStatus> = [
 
 const DEFAULT_POLL_INTERVAL_MS = 2000;
 
+/**
+ * Survives component remounts and React Strict Mode double-mount. A per-instance
+ * ref would reset and allow broad field evictions + `gc()` to run again for the
+ * same completed job, thrashing Apollo and downstream views.
+ */
+const completedSyncJobsCacheEvicted = new Set<string>();
+
 function isTerminalStatus(status: ProjectPermissionsSyncJobStatus | undefined): boolean {
   return status != null && TERMINAL_STATUSES.includes(status);
 }
 
-function evictAffectedCaches(cache: ApolloCache) {
+function evictAffectedCaches(cache: ApolloCache, jobId: string) {
+  if (completedSyncJobsCacheEvicted.has(jobId)) return;
+  completedSyncJobsCacheEvicted.add(jobId);
   evictPermissionsCache(cache);
   evictRolesCache(cache);
   evictGroupsCache(cache);
+  evictTagsCache(cache);
+  evictApiKeysCache(cache);
 }
 
 /**
@@ -77,7 +90,7 @@ export interface UseProjectPermissionsSyncJobParams {
  * Query hook that polls the status of an async sync job. Polling stops
  * automatically once the job reaches a terminal status (completed, failed,
  * or cancelled). On completion, scope-related Apollo caches are evicted so
- * downstream queries refetch fresh data.
+ * downstream queries refetch fresh data (including tags and API keys).
  */
 export function useProjectPermissionsSyncJob(params: UseProjectPermissionsSyncJobParams) {
   const { id, scope, jobId, pollIntervalMs = DEFAULT_POLL_INTERVAL_MS, skip: skipParam } = params;
@@ -103,15 +116,13 @@ export function useProjectPermissionsSyncJob(params: UseProjectPermissionsSyncJo
     status === ProjectPermissionsSyncJobStatus.Pending ||
     status === ProjectPermissionsSyncJobStatus.Running;
 
-  const evictedJobIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!job) return;
-    if (
-      status === ProjectPermissionsSyncJobStatus.Completed &&
-      evictedJobIdRef.current !== job.id
-    ) {
-      evictAffectedCaches(client.cache);
-      evictedJobIdRef.current = job.id;
+    if (status === ProjectPermissionsSyncJobStatus.Completed) {
+      // Defer past the current commit; eviction + gc touches all watchers.
+      queueMicrotask(() => {
+        evictAffectedCaches(client.cache, job.id);
+      });
     }
     if (isTerminal) {
       stopPolling();

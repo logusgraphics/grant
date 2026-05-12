@@ -1,5 +1,9 @@
 import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
 import {
+  CdmFindBy,
+  CdmIfMissing,
+  CdmModeStrategy,
+  CdmOnConflict,
   ProjectPermissionsSyncJobSortableField,
   ProjectSortableField,
   SortOrder,
@@ -17,7 +21,7 @@ import {
 /** OpenAPI-friendly wrapper for downloadable CDM JSON (payload, snapshot, export). */
 export const cdmJsonArtifactSchema = jsonSchema.openapi({
   description:
-    'CDM JSON document with the same logical shape as SyncProjectPermissionsInput (roleTemplates, userAssignments, optional projectUserApiKeys, etc.).',
+    'CDM JSON document with the same logical shape as SyncProjectPermissionsInput (version, mode, roles, users, optional resources, permissions, groups, tags).',
 });
 
 export const projectSchema = z.object({
@@ -151,47 +155,70 @@ export const deleteProjectQuerySchema = z.object({
 
 export const deleteProjectResponseSchema = createSuccessResponseSchema(projectSchema);
 
-const permissionRefCdmSchema = z.object({
-  resourceSlug: z.string().min(1),
-  action: z.string().min(1),
-  permissionId: z.uuid().optional(),
-  condition: z.record(z.string(), z.unknown()).optional().nullable(),
+const cdmKeyResolverSchema = z.object({
+  value: z.string().min(1),
+  findBy: z.nativeEnum(CdmFindBy).optional(),
+  ifMissing: z.nativeEnum(CdmIfMissing).optional(),
 });
 
-const roleTemplateCdmSchema = z.object({
-  externalKey: z.string().min(1),
-  name: z.string().min(1),
+const resourceCdmSchema = z.object({
+  key: z.string().min(1),
+  slug: z.string().min(1).optional(),
+  name: z.string().min(1).max(255),
   description: z.string().optional().nullable(),
-  permissionRefs: z.array(permissionRefCdmSchema),
+  actions: z.array(z.string().min(1)).min(1),
+  tags: z.array(z.string().min(1)).optional(),
+  primaryTag: z.string().min(1).optional().nullable(),
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
-  tagKeys: z.array(z.string().min(1)).optional(),
-  groupTagKeys: z.array(z.string().min(1)).optional(),
 });
 
-const userAssignmentCdmSchema = z.object({
-  userId: z.uuid(),
-  roleTemplateKeys: z.array(z.string()).optional(),
-  directPermissionRefs: z.array(permissionRefCdmSchema).optional(),
+const permissionCdmSchema = z.object({
+  key: z.string().min(1),
+  resource: z.string().min(1),
+  action: z.string().min(1),
+  name: z.string().min(1).max(255),
+  description: z.string().optional().nullable(),
+  condition: z.record(z.string(), z.unknown()).optional().nullable(),
+  groups: z.array(z.string().min(1)).optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  primaryTag: z.string().min(1).optional().nullable(),
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
-  tagKeys: z.array(z.string().min(1)).optional(),
 });
 
 const tagCdmSchema = z.object({
-  externalKey: z.string().min(1),
+  key: z.string().min(1),
   name: z.string().min(1).max(255),
   color: z.string().min(1).max(50),
-  isPrimary: z.boolean().optional(),
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
-const projectUserApiKeyCdmSchema = z.object({
-  externalKey: z.string().min(1).optional().nullable(),
-  userId: z.uuid(),
-  clientId: z.string().min(1).max(255).optional().nullable(),
-  /**
-   * Plaintext secret for BYOK import (min 32 chars). Omitted keys are rejected at sync time
-   * when this array is non-empty; never present on export payloads.
-   */
+const groupCdmSchema = z.object({
+  key: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().optional().nullable(),
+  permissions: z.array(z.string().min(1)).optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  primaryTag: z.string().min(1).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+});
+
+const roleCdmSchema = z.object({
+  key: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().optional().nullable(),
+  groups: z.array(z.string().min(1)).optional(),
+  permissions: z.array(z.string().min(1)).optional().openapi({
+    description:
+      'Opaque keys matching `permissions[].key` in this document, or catalog grants as `resourceSlug:action` (normalized; slug must not contain `:`).',
+  }),
+  tags: z.array(z.string().min(1)).optional(),
+  primaryTag: z.string().min(1).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+});
+
+const userApiKeyCdmSchema = z.object({
+  key: z.string().min(1).optional().nullable(),
+  clientId: z.string().optional().nullable(),
   clientSecret: z.string().min(32, 'errors.validation.clientSecretMin32').optional(),
   name: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
@@ -199,28 +226,55 @@ const projectUserApiKeyCdmSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
+const userCdmSchema = z.object({
+  key: cdmKeyResolverSchema,
+  name: z.string().min(1),
+  roles: z.array(z.string().min(1)).optional(),
+  groups: z.array(z.string().min(1)).optional(),
+  permissions: z.array(z.string().min(1)).optional().openapi({
+    description:
+      'Direct permission keys or catalog `resourceSlug:action` strings not already implied by the user roles (see role `permissions`).',
+  }),
+  tags: z.array(z.string().min(1)).optional(),
+  primaryTag: z.string().min(1).optional().nullable(),
+  apiKeys: z.array(userApiKeyCdmSchema).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+});
+
+const cdmModeSchema = z.object({
+  strategy: z.nativeEnum(CdmModeStrategy),
+  onConflict: z.nativeEnum(CdmOnConflict).optional().nullable(),
+  confirmDestructive: z.boolean().optional(),
+});
+
 /**
  * Body for POST /api/projects/:id/permissions/sync-jobs.
  *
  * Enqueues an asynchronous canonical-data-model permission sync. The request
  * returns immediately with a job descriptor; clients poll the job resource
- * for status. Pass `importId` to make the request idempotent — if an active
- * job already exists for the same `(project, importId)` it is returned instead
+ * for status. Pass `id` to make the request idempotent — if an active
+ * job already exists for the same `(project, id)` it is returned instead
  * of creating a new one.
  */
 export const startProjectPermissionsSyncRequestSchema = z.object({
   scope: scopeSchema,
-  cdmVersion: z.number().int(),
-  importId: z.string().optional(),
-  roleTemplates: z.array(roleTemplateCdmSchema),
-  userAssignments: z.array(userAssignmentCdmSchema),
-  projectUserApiKeys: z.array(projectUserApiKeyCdmSchema).optional().openapi({
+  version: z.number().int().openapi({ example: 1 }),
+  id: z.string().optional(),
+  mode: cdmModeSchema,
+  roles: z.array(roleCdmSchema),
+  users: z.array(userCdmSchema),
+  resources: z.array(resourceCdmSchema).optional().openapi({
     description:
-      'Optional per-user API keys for this project. Each entry requires `clientSecret` (BYOK) when importing; export and rollback snapshots omit secrets.',
+      'Optional custom resources. Permissions in this document reference them by opaque `resource` keys.',
   }),
+  permissions: z.array(permissionCdmSchema).optional().openapi({
+    description:
+      'Optional custom permissions for this project, each referencing a `resource` key from the same document.',
+  }),
+  groups: z.array(groupCdmSchema).optional(),
   tags: z.array(tagCdmSchema).optional().openapi({
     description:
-      'Optional CDM tags for this project. When present, recreates `tags` rows + `project_tags` membership; role templates and user assignments may then reference these tags via `tagKeys` / `groupTagKeys`. Note: `user_tags` are global rows (cross-project effect).',
+      'Optional CDM tags; role and user `tags` reference these keys. `user_tags` are global rows.',
   }),
 });
 
@@ -266,13 +320,13 @@ function normalizeCdmExportSectionsQueryInput(val: unknown): unknown {
 
 /**
  * Query for `GET /:id/permissions/export`. Reuses the same scope shape as the
- * sync-job endpoints; `cdmVersion` defaults to 1 — the only supported version
+ * sync-job endpoints; `version` defaults to 1 — the only supported version
  * — so existing callers can omit it.
  */
 export const exportProjectPermissionsQuerySchema = z.object({
   scopeId: z.string().min(1, 'errors.validation.invalidScopeId'),
   tenant: tenantSchema,
-  cdmVersion: z
+  version: z
     .union([z.string(), z.number()])
     .optional()
     .transform((val) => {
@@ -283,7 +337,7 @@ export const exportProjectPermissionsQuerySchema = z.object({
   /**
    * CDM slices to include. Repeat `sections=` or use a comma-separated value.
    * Omit or leave empty for a full export (same as sync rollback snapshot).
-   * `projectUserApiKeys` requires `userAssignments` in the same request.
+   * Keep `permissions` paired with `resources` for complete references.
    */
   sections: z
     .preprocess(
@@ -303,7 +357,7 @@ export const exportProjectPermissionsQuerySchema = z.object({
     .openapi({
       description:
         'CDM slices to include (repeat `sections` query param or comma-separated). Omit or empty = full export.',
-      example: 'roleTemplates,userAssignments',
+      example: 'roles,users',
     }),
 });
 
@@ -319,6 +373,7 @@ const syncProjectPermissionsResultSchema = z.object({
   projectPermissionsLinked: z.number(),
   projectResourcesLinked: z.number(),
   projectUsersEnsured: z.number(),
+  usersCreated: z.number(),
   userRolesAssigned: z.number(),
   projectUserApiKeysCreated: z.number(),
   tagsCreated: z.number(),
@@ -326,6 +381,8 @@ const syncProjectPermissionsResultSchema = z.object({
   roleTagsLinked: z.number(),
   groupTagsLinked: z.number(),
   userTagsLinked: z.number(),
+  resourcesCreated: z.number(),
+  permissionsCreated: z.number(),
   warnings: z.array(z.string()),
 });
 

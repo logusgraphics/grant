@@ -6,6 +6,7 @@ export const permissionTagSchema = z.object({
   id: idSchema,
   permissionId: idSchema,
   tagId: idSchema,
+  isPrimary: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
   deletedAt: z.date().nullable().optional(),

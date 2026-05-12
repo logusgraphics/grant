@@ -1,4 +1,10 @@
-import { type Scope, type SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
+import {
+  CdmFindBy,
+  CdmModeStrategy,
+  type Scope,
+  type SyncProjectPermissionsInput,
+  Tenant,
+} from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CDM_IMPORT_METADATA_KEY, CDM_SOURCE_METADATA_KEY } from '@/constants/cdm-import.constants';
@@ -8,6 +14,10 @@ const accountId = '10000000-0000-4000-8000-000000000020';
 const projectId = '10000000-0000-4000-8000-000000000011';
 const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` };
 
+/** Opaque keys so expand → roleTemplates get at least one permissionRef (RoleTemplateHandler.validateInput). */
+const CDM_RES_KEY = 'cdm-res-metadata';
+const CDM_PERM_KEY = 'cdm-perm-metadata';
+
 describe('ProjectPermissionSyncService CDM metadata', () => {
   const syncRepo = {
     listCdmRoleIdsForProject: vi.fn().mockResolvedValue([]),
@@ -15,6 +25,10 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     listCdmProjectUserApiKeyIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmTagIdsForProject: vi.fn().mockResolvedValue([]),
     bulkSoftDeleteCdmTags: vi.fn().mockResolvedValue(undefined),
+    listCdmResourceIdsForProject: vi.fn().mockResolvedValue([]),
+    bulkSoftDeleteCdmResources: vi.fn().mockResolvedValue(undefined),
+    listCdmPermissionIdsForProject: vi.fn().mockResolvedValue([]),
+    bulkSoftDeleteCdmPermissions: vi.fn().mockResolvedValue(undefined),
     resolvePermission: vi.fn().mockResolvedValue({ id: 'perm-1', resourceId: 'res-1' }),
   };
   const roles = { createRole: vi.fn(), deleteRole: vi.fn() };
@@ -56,6 +70,8 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     groups: { delete: vi.fn() },
     users: { delete: vi.fn() },
     resources: { delete: vi.fn() },
+    tags: { delete: vi.fn() },
+    apiKeys: { delete: vi.fn() },
   };
 
   const tags = { createTag: vi.fn() };
@@ -63,6 +79,10 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
   const roleTags = { addRoleTag: vi.fn() };
   const groupTags = { addGroupTag: vi.fn() };
   const userTags = { addUserTag: vi.fn() };
+  const resourcesService = { createResource: vi.fn() };
+  const permissionsService = { createPermission: vi.fn() };
+  const resourceTags = { addResourceTag: vi.fn() };
+  const permissionTags = { addPermissionTag: vi.fn() };
 
   function createService() {
     return new ProjectPermissionSyncService(
@@ -84,7 +104,13 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
       projectTags as never,
       roleTags as never,
       groupTags as never,
-      userTags as never
+      userTags as never,
+      resourcesService as never,
+      permissionsService as never,
+      {} as never,
+      {} as never,
+      resourceTags as never,
+      permissionTags as never
     );
   }
 
@@ -92,6 +118,8 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     vi.clearAllMocks();
     groups.createGroup.mockResolvedValue({ id: 'group-1' });
     roles.createRole.mockResolvedValue({ id: 'role-1' });
+    resourcesService.createResource.mockResolvedValue({ id: 'imported-res-1', slug: 'documents' });
+    permissionsService.createPermission.mockResolvedValue({ id: 'imported-perm-1' });
     roleGroups.addRoleGroup.mockResolvedValue({});
     projectGroups.addProjectGroup.mockResolvedValue({});
     projectRoles.addProjectRole.mockResolvedValue({});
@@ -104,16 +132,53 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
 
   it('merges template metadata into role and group create payloads', async () => {
     const input: SyncProjectPermissionsInput = {
-      cdmVersion: 1,
-      roleTemplates: [
+      version: 1,
+      id: null,
+      mode: {
+        strategy: CdmModeStrategy.Merge,
+        onConflict: null,
+        confirmDestructive: false,
+      },
+      roles: [
         {
-          externalKey: 'viewer',
+          key: 'viewer',
           name: 'Viewer',
-          permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+          permissions: [CDM_PERM_KEY],
+          groups: [],
+          tags: [],
+          primaryTag: null,
           metadata: { legacyRoleId: 'r-9' },
         },
       ],
-      userAssignments: [],
+      users: [],
+      resources: [
+        {
+          key: CDM_RES_KEY,
+          slug: 'documents',
+          name: 'Documents',
+          description: null,
+          actions: ['read'],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      permissions: [
+        {
+          key: CDM_PERM_KEY,
+          resource: CDM_RES_KEY,
+          action: 'read',
+          name: 'Documents:read',
+          description: null,
+          condition: null,
+          groups: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      groups: [],
+      tags: [],
     };
 
     const svc = createService();
@@ -141,21 +206,65 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
   it('calls mergeProjectUserCdmMetadata when user assignment includes metadata', async () => {
     const userId = '20000000-0000-4000-8000-000000000033';
     const input: SyncProjectPermissionsInput = {
-      cdmVersion: 1,
-      roleTemplates: [
+      version: 1,
+      id: null,
+      mode: {
+        strategy: CdmModeStrategy.Merge,
+        onConflict: null,
+        confirmDestructive: false,
+      },
+      roles: [
         {
-          externalKey: 'viewer',
+          key: 'viewer',
           name: 'Viewer',
-          permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+          permissions: [CDM_PERM_KEY],
+          groups: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
         },
       ],
-      userAssignments: [
+      users: [
         {
-          userId,
-          roleTemplateKeys: ['viewer'],
+          key: { value: userId, findBy: CdmFindBy.Id },
+          name: 'Member',
+          roles: ['viewer'],
+          groups: [],
+          permissions: [],
+          tags: [],
+          primaryTag: null,
+          apiKeys: [],
           metadata: { legacyUserId: 'u-1' },
         },
       ],
+      resources: [
+        {
+          key: CDM_RES_KEY,
+          slug: 'documents',
+          name: 'Documents',
+          description: null,
+          actions: ['read'],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      permissions: [
+        {
+          key: CDM_PERM_KEY,
+          resource: CDM_RES_KEY,
+          action: 'read',
+          name: 'Documents:read',
+          description: null,
+          condition: null,
+          groups: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      groups: [],
+      tags: [],
     };
 
     const svc = createService();
@@ -169,5 +278,15 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
       },
       {}
     );
+  });
+
+  it('invalidateCachesForSyncResult clears scoped entity caches including tags and API keys', async () => {
+    const expectedKey = `${scope.tenant}:${scope.id}`;
+    const svc = createService();
+    await svc.invalidateCachesForSyncResult({ scope, userIds: [] });
+
+    expect(cache.permissions.delete).toHaveBeenCalledWith(expectedKey);
+    expect(cache.tags.delete).toHaveBeenCalledWith(expectedKey);
+    expect(cache.apiKeys.delete).toHaveBeenCalledWith(expectedKey);
   });
 });

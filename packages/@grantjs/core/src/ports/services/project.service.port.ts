@@ -300,7 +300,8 @@ export interface IProjectPermissionExportService {
     params: {
       projectId: string;
       scope: Scope;
-      cdmVersion: number;
+      version?: number;
+      cdmVersion?: number;
       /**
        * When set and non-empty, only these CDM slices are exported; others are
        * empty arrays. Omit or pass empty for a full snapshot (sync worker).

@@ -272,6 +272,31 @@ CDM-marked \`tags\` row + \`project_tags\` membership for each entry, then expos
 them to other CDM entities via \`externalKey\`. \`roleTemplates[].tagKeys\` and
 \`groupTagKeys\` attach \`role_tags\`/\`group_tags\`; \`userAssignments[].tagKeys\`
 attaches \`user_tags\`. **Note:** \`user_tags\` are global rows (cross-project effect).
+
+### Resources and permissions (\`resources\`, \`permissions\`)
+
+Optional arrays of project-scoped custom resources and permissions. When present,
+the worker recreates CDM-marked \`resources\` / \`permissions\` rows plus their
+\`project_resources\` / \`project_permissions\` membership for the importing project.
+Permissions reference resources from the same document via \`resourceKey\`. Role
+templates and user assignments may reference these permissions via
+\`permissionRefs[i].permissionKey\`. Grant's global / system catalog is **not**
+emitted as CDM — system permissions are referenced by \`resourceSlug\`+\`action\`.
+
+### External keys (identity contract)
+
+\`externalKey\` is opaque to Grant. Importer-supplied keys are accepted as-is and
+must be unique within their section. Grant's exporter emits derived,
+non-UUID-looking keys (e.g. \`cdm-tag-3f2a9b1c\`) so round-tripped exports never
+leak Grant UUIDs as identity. Original Grant ids are preserved under
+\`metadata.cdmSource\` (e.g. \`grantTagId\`, \`grantRoleId\`) for traceability.
+
+### Permission ref resolution order
+
+Inside \`permissionRefs[]\`: (1) \`permissionKey\` against permissions declared in
+the same CDM document; (2) \`permissionId\` against an existing Grant permission
+UUID (kept for back-compat); (3) \`(resourceSlug, action [, condition])\` against
+the global catalog.
     `.trim(),
     request: {
       params: projectParamsSchema,
@@ -565,13 +590,13 @@ attachment\` header so browsers prompt for a save.
     tags: ['Projects'],
     summary: 'Export the project as a CDM JSON artifact',
     description: `
-Snapshot the project's current permission/role/group/user-assignment state and
+Snapshot the project's current permission/role/group/user state and
 download it as a CDM JSON artifact. The body is shaped like
 \`SyncProjectPermissionsInput\` so it can be replayed against this project (to
 reset it to the exported state) or against a different project (to clone its
 permission model).
 
-Pass \`cdmVersion\` to pin the artifact format; the only currently supported value
+Pass \`version\` to pin the artifact format; the only currently supported value
 is \`1\` (the default when omitted).
 
 ### Partial export (\`sections\`)
@@ -579,17 +604,16 @@ is \`1\` (the default when omitted).
 Omit \`sections\` or leave it empty for a **full** CDM snapshot (same shape as the
 async sync worker's rollback snapshot). To export only parts of the model, pass
 \`sections\` as repeated query params and/or a comma-separated list. Allowed
-values: \`tags\`, \`roleTemplates\`, \`userAssignments\`, \`projectUserApiKeys\`.
-Requesting \`projectUserApiKeys\` without \`userAssignments\` returns \`400\`.
+values: \`tags\`, \`resources\`, \`permissions\`, \`groups\`, \`roles\`, \`users\`.
 Omitted slices appear as empty arrays in the JSON; partial files may need to be
 merged or re-imported together with other artifacts.
 
 ### Tags
 
 When \`tags\` is included, the export emits all \`project_tags\` definitions plus
-the \`tagKeys\` / \`groupTagKeys\` references on \`roleTemplates[]\` and
-\`tagKeys\` on \`userAssignments[]\` so a re-import can fully reconstruct
-tag pivots. \`user_tags\` are global rows; documenting cross-project effect.
+role/user tag references needed by the canonical \`roles[]\` and \`users[]\`
+sections so a re-import can fully reconstruct tag pivots. \`user_tags\` are
+global rows; documenting cross-project effect.
 
 The response uses \`Content-Type: application/json\` and a \`Content-Disposition:
 attachment\` header so browsers prompt for a save.

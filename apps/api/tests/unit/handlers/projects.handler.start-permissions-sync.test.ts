@@ -1,10 +1,15 @@
 /**
  * Unit tests for ProjectHandler.startProjectPermissionsSync. Focused on the
  * orchestration concerns the handler owns: input validation, idempotency on
- * `importId`, and dispatching the worker. The actual import work belongs to
+ * `input.id`, and dispatching the worker. The actual import work belongs to
  * `ProjectPermissionSyncService` and is exercised separately.
  */
-import { ProjectPermissionsSyncJobStatus, Tenant } from '@grantjs/schema';
+import {
+  CdmFindBy,
+  CdmModeStrategy,
+  ProjectPermissionsSyncJobStatus,
+  Tenant,
+} from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProjectHandler } from '@/handlers/projects.handler';
@@ -32,15 +37,41 @@ function buildJob(importId: string | null) {
 
 function buildInput() {
   return {
-    cdmVersion: 1,
-    roleTemplates: [
+    version: 1,
+    id: null,
+    mode: {
+      strategy: CdmModeStrategy.Merge,
+      onConflict: null,
+      confirmDestructive: false,
+    },
+    roles: [
       {
-        externalKey: 'viewer',
+        key: 'viewer',
         name: 'Viewer',
-        permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+        permissions: [],
+        groups: [],
+        tags: [],
+        primaryTag: null,
+        metadata: null,
       },
     ],
-    userAssignments: [{ userId, roleTemplateKeys: ['viewer'] }],
+    users: [
+      {
+        key: { value: userId, findBy: CdmFindBy.Id },
+        name: 'User',
+        roles: ['viewer'],
+        groups: [],
+        permissions: [],
+        tags: [],
+        primaryTag: null,
+        apiKeys: [],
+        metadata: null,
+      },
+    ],
+    resources: [],
+    permissions: [],
+    groups: [],
+    tags: [],
   };
 }
 
@@ -120,7 +151,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     });
   });
 
-  it('creates a job record and enqueues exactly once when no importId is supplied', async () => {
+  it('creates a job record and enqueues exactly once when no idempotency id is supplied', async () => {
     const job = buildJob(null);
     create.mockResolvedValue(job);
 
@@ -146,7 +177,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     });
   });
 
-  it('returns the existing in-flight job and does not re-enqueue when importId is already pending', async () => {
+  it('returns the existing in-flight job and does not re-enqueue when id is already pending', async () => {
     const importId = 'import-123';
     const inflight = buildJob(importId);
     findActiveByImportId.mockResolvedValue(inflight);
@@ -159,7 +190,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     const result = await handler.startProjectPermissionsSync({
       id: projectId,
       scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
-      input: { ...buildInput(), importId },
+      input: { ...buildInput(), id: importId },
       enqueuedById: userId,
     });
 
@@ -196,10 +227,10 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
       handler.startProjectPermissionsSync({
         id: projectId,
         scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
-        input: { ...buildInput(), cdmVersion: 999 },
+        input: { ...buildInput(), version: 999 },
         enqueuedById: userId,
       })
-    ).rejects.toThrow(/cdmVersion/);
+    ).rejects.toThrow(/version/);
     expect(create).not.toHaveBeenCalled();
     expect(enqueue).not.toHaveBeenCalled();
   });

@@ -60,6 +60,7 @@ function normalizeSyncJobResult(raw: unknown): SyncProjectPermissionsResult | nu
     projectPermissionsLinked: Number(r.projectPermissionsLinked ?? 0),
     projectResourcesLinked: Number(r.projectResourcesLinked ?? 0),
     projectUsersEnsured: Number(r.projectUsersEnsured ?? 0),
+    usersCreated: Number(r.usersCreated ?? 0),
     userRolesAssigned: Number(r.userRolesAssigned ?? 0),
     projectUserApiKeysCreated: Number(r.projectUserApiKeysCreated ?? 0),
     tagsCreated: Number(r.tagsCreated ?? 0),
@@ -67,6 +68,8 @@ function normalizeSyncJobResult(raw: unknown): SyncProjectPermissionsResult | nu
     roleTagsLinked: Number(r.roleTagsLinked ?? 0),
     groupTagsLinked: Number(r.groupTagsLinked ?? 0),
     userTagsLinked: Number(r.userTagsLinked ?? 0),
+    resourcesCreated: Number(r.resourcesCreated ?? 0),
+    permissionsCreated: Number(r.permissionsCreated ?? 0),
     warnings: Array.isArray(r.warnings) ? (r.warnings as string[]) : [],
   };
 }

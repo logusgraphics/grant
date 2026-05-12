@@ -7,18 +7,18 @@ describe('exportProjectPermissionsQuerySchema sections', () => {
     const q = await exportProjectPermissionsQuerySchema.parseAsync({
       scopeId: 'a:b',
       tenant: 'accountProject',
-      sections: 'roleTemplates',
+      sections: 'roles',
     });
-    expect(q.sections).toEqual(['roleTemplates']);
+    expect(q.sections).toEqual(['roles']);
   });
 
   it('collapses mistaken per-character repeated keys into one section token', async () => {
-    const chars = [...'roleTemplates'];
+    const chars = [...'roles'];
     const q = await exportProjectPermissionsQuerySchema.parseAsync({
       scopeId: 'a:b',
       tenant: 'accountProject',
       sections: chars,
     });
-    expect(q.sections).toEqual(['roleTemplates']);
+    expect(q.sections).toEqual(['roles']);
   });
 });

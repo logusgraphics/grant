@@ -340,7 +340,7 @@ interface UseExportProjectPermissionsParams {
   id: string;
   scope: Scope | null | undefined;
   /** Optional CDM version override; defaults to the only currently-supported value (1). */
-  cdmVersion?: number;
+  version?: number;
 }
 
 interface UseExportProjectPermissionsResult {
@@ -381,7 +381,7 @@ function coerceExportSectionsParam(
 export function useExportProjectPermissions(
   params: UseExportProjectPermissionsParams
 ): UseExportProjectPermissionsResult {
-  const { id, scope, cdmVersion } = params;
+  const { id, scope, version } = params;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -395,8 +395,8 @@ export function useExportProjectPermissions(
       try {
         const apiBase = getApiBaseUrl();
         const search = new URLSearchParams({ scopeId: scope.id, tenant: scope.tenant });
-        if (cdmVersion != null) {
-          search.set('cdmVersion', String(cdmVersion));
+        if (version != null) {
+          search.set('version', String(version));
         }
         const normalized = coerceExportSectionsParam(sections);
         const isFullExport =
@@ -450,7 +450,7 @@ export function useExportProjectPermissions(
         setLoading(false);
       }
     },
-    [id, scope, cdmVersion]
+    [id, scope, version]
   );
 
   const reset = useCallback(() => {

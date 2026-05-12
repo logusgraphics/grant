@@ -7,7 +7,6 @@ import type {
   IGroupTagService,
   IRoleTagService,
 } from '@grantjs/core';
-import { RoleTemplateCdmInput, SyncProjectPermissionsInput } from '@grantjs/schema';
 
 import { CDM_IMPORT_METADATA_KEY, CDM_SOURCE_METADATA_KEY } from '@/constants/cdm-import.constants';
 import { ValidationError } from '@/lib/errors';
@@ -19,8 +18,10 @@ import type {
 } from '@/repositories/project-permission-sync.repository';
 
 import type { CdmEntityBuilder } from './cdm-entity-builder';
+import type { CdmRoleTemplateInternal } from './cdm-internal.types';
+import { buildExternalKey } from './identity.helper';
 
-const ROLE_TEMPLATE_INPUT_KEY: keyof SyncProjectPermissionsInput = 'roleTemplates';
+const ROLE_TEMPLATE_INPUT_KEY = 'roleTemplates' as const;
 
 /**
  * Handler for `roleTemplates`. Owns CDM-marked role/group entities (metadata
@@ -32,8 +33,8 @@ const ROLE_TEMPLATE_INPUT_KEY: keyof SyncProjectPermissionsInput = 'roleTemplate
  * field-by-field.
  */
 export class RoleTemplateHandler implements ICdmEntityHandler<
-  RoleTemplateCdmInput,
-  RoleTemplateCdmInput
+  CdmRoleTemplateInternal,
+  CdmRoleTemplateInternal
 > {
   public readonly handlerKind = 'roleTemplate';
   public readonly inputKey = ROLE_TEMPLATE_INPUT_KEY;
@@ -47,7 +48,7 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
     private readonly groupTags: IGroupTagService
   ) {}
 
-  public validateInput(input: readonly RoleTemplateCdmInput[]): void {
+  public validateInput(input: readonly CdmRoleTemplateInternal[]): void {
     const externalKeys = new Set<string>();
     for (const t of input) {
       if (externalKeys.has(t.externalKey)) {
@@ -61,18 +62,44 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
       }
       assertUniqueStringArray(t.tagKeys, `roleTemplates[${t.externalKey}].tagKeys`);
       assertUniqueStringArray(t.groupTagKeys, `roleTemplates[${t.externalKey}].groupTagKeys`);
+      if (t.primaryRoleTagKey != null && t.primaryRoleTagKey !== '') {
+        const tags = t.tagKeys ?? [];
+        if (!tags.includes(t.primaryRoleTagKey)) {
+          throw new ValidationError(
+            `roleTemplates[${t.externalKey}]: primaryRoleTagKey must appear in tagKeys`
+          );
+        }
+      }
+      if (t.primaryGroupTagKey != null && t.primaryGroupTagKey !== '') {
+        const gtags = t.groupTagKeys ?? [];
+        if (!gtags.includes(t.primaryGroupTagKey)) {
+          throw new ValidationError(
+            `roleTemplates[${t.externalKey}]: primaryGroupTagKey must appear in groupTagKeys`
+          );
+        }
+      }
     }
   }
 
   public collectPermissionRefs(
-    input: readonly RoleTemplateCdmInput[]
+    input: readonly CdmRoleTemplateInternal[]
   ): readonly CdmPermissionRefSpec[] {
     const refs: CdmPermissionRefSpec[] = [];
     for (const t of input) {
       for (const r of t.permissionRefs) {
+        if (r.permissionKey != null && r.permissionKey !== '') {
+          refs.push({
+            permissionKey: r.permissionKey,
+            permissionId: r.permissionId ?? null,
+            resourceSlug: r.resourceSlug ?? null,
+            action: r.action ?? null,
+            condition: (r.condition as Record<string, unknown> | null | undefined) ?? null,
+          });
+          continue;
+        }
         refs.push({
-          resourceSlug: r.resourceSlug,
-          action: r.action,
+          resourceSlug: r.resourceSlug ?? null,
+          action: r.action ?? null,
           permissionId: r.permissionId ?? null,
           condition: (r.condition as Record<string, unknown> | null | undefined) ?? null,
         });
@@ -101,13 +128,17 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
     }
   }
 
-  public async apply(ctx: CdmApplyContext, input: readonly RoleTemplateCdmInput[]): Promise<void> {
+  public async apply(
+    ctx: CdmApplyContext,
+    input: readonly CdmRoleTemplateInternal[]
+  ): Promise<void> {
     const tx = ctx.tx as Transaction;
     for (const tmpl of input) {
       const perms = tmpl.permissionRefs.map((r) =>
         this.lookupRef(ctx, {
-          resourceSlug: r.resourceSlug,
-          action: r.action,
+          permissionKey: r.permissionKey ?? null,
+          resourceSlug: r.resourceSlug ?? null,
+          action: r.action ?? null,
           permissionId: r.permissionId ?? null,
           condition: (r.condition as Record<string, unknown> | null | undefined) ?? null,
         })
@@ -121,9 +152,13 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
         'role',
         perms,
         tmpl.metadata,
-        tx
+        tx,
+        {
+          groupDisplayName: tmpl.linkedGroupImportName ?? undefined,
+          groupDisplayDescription: tmpl.linkedGroupImportDescription ?? undefined,
+        }
       );
-      ctx.produced.roleTemplateIds.set(tmpl.externalKey, roleId);
+      ctx.produced.roleIdsByKey.set(tmpl.externalKey, roleId);
       ctx.result.rolesCreated += 1;
       ctx.result.groupsCreated += 1;
       ctx.result.roleGroupsLinked += counts.roleGroups;
@@ -140,7 +175,8 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
             `roleTemplates[${tmpl.externalKey}]: unknown tagKey '${tagKey}'; must appear in the tags section`
           );
         }
-        await this.roleTags.addRoleTag({ roleId, tagId, isPrimary: false }, tx);
+        const isPrimary = tagKey === (tmpl.primaryRoleTagKey ?? '');
+        await this.roleTags.addRoleTag({ roleId, tagId, isPrimary }, tx);
         ctx.result.roleTagsLinked += 1;
       }
       for (const tagKey of tmpl.groupTagKeys ?? []) {
@@ -150,7 +186,8 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
             `roleTemplates[${tmpl.externalKey}]: unknown groupTagKey '${tagKey}'; must appear in the tags section`
           );
         }
-        await this.groupTags.addGroupTag({ groupId, tagId, isPrimary: false }, tx);
+        const isPrimary = tagKey === (tmpl.primaryGroupTagKey ?? '');
+        await this.groupTags.addGroupTag({ groupId, tagId, isPrimary }, tx);
         ctx.result.groupTagsLinked += 1;
       }
     }
@@ -160,61 +197,148 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
    * Project current roles + their effective permissions back to the CDM
    * `RoleTemplateCdmInput` shape.
    *
-   * Identity preservation: `externalKey = role.id`. Re-importing a snapshot
-   * uses the same external keys, so user assignments referencing those keys
-   * still resolve.
+   * Identity preservation: `externalKey = buildExternalKey('role', roleId, name)`.
+   * Round-tripped exports never leak Grant UUIDs as identity. The Grant ids are
+   * preserved under `metadata.cdmSource.grantRoleId` / `grantGroupId` for
+   * traceability.
    *
-   * Permission refs include `permissionId` so re-import is unambiguous (no
-   * fallback to slug/action/condition ambiguity resolution required).
+   * Permission refs prefer the opaque `permissionKey` form when the underlying
+   * permission appears in the exported `permissions[]` slice (CDM-owned or
+   * catalog snapshot). Otherwise we fall back to `resourceSlug + action + condition`.
    *
-   * Metadata: only `cdmSource` is forwarded to the export. The reserved
-   * `cdmImport` envelope is stripped because re-import reconstructs it from
-   * scratch via `mergeCdmImporterMetadata` and would otherwise reject the
-   * payload.
+   * Tag references (`tagKeys`, `groupTagKeys`) use opaque tag external keys
+   * computed via `buildExternalKey('tag', ...)`, mirroring the tag handler's
+   * export. Tags not in `project_tags` are omitted because the cross-reference
+   * could not resolve on re-import.
    */
-  public async export(ctx: CdmExportContext): Promise<readonly RoleTemplateCdmInput[]> {
+  public async export(ctx: CdmExportContext): Promise<readonly CdmRoleTemplateInternal[]> {
     const tx = ctx.tx as Transaction | undefined;
     const rows = await this.exportRepo.getProjectRolesWithPermissions(ctx.projectId, tx);
     if (rows.length === 0) return [];
 
     const roleIds = rows.map((r) => r.roleId);
-    const [roleTagAssoc, groupIdByRoleId] = await Promise.all([
+    const [roleTagAssoc, groupIdByRoleId, projectTagDefs, cdmPermissions] = await Promise.all([
       this.exportRepo.getRoleTagsByRoleIds(roleIds, tx),
       this.exportRepo.getCdmGroupIdsForRoleIds(roleIds, tx),
+      this.exportRepo.getProjectTagDefinitions(ctx.projectId, tx),
+      this.exportRepo.getProjectLinkedPermissionsForExport(ctx.projectId, tx),
     ]);
     const groupIds = Array.from(new Set(Array.from(groupIdByRoleId.values())));
-    const groupTagAssoc = await this.exportRepo.getGroupTagsByGroupIds(groupIds, tx);
+    const [groupTagAssoc, groupRows, groupPermRows] = await Promise.all([
+      this.exportRepo.getGroupTagsByGroupIds(groupIds, tx),
+      this.exportRepo.getGroupsByIds(groupIds, tx),
+      this.exportRepo.getGroupPermissionIdsByGroupIds(groupIds, tx),
+    ]);
+
+    const tagKeyByTagId = new Map<string, string>();
+    for (const t of projectTagDefs) {
+      tagKeyByTagId.set(t.tagId, buildExternalKey('tag', t.tagId, t.name, t.color));
+    }
+
+    const permissionKeyById = new Map<string, string>();
+    for (const p of cdmPermissions) {
+      permissionKeyById.set(
+        p.permissionId,
+        buildExternalKey('permission', p.permissionId, p.resourceSlug ?? '', p.action)
+      );
+    }
+
+    const permissionKeysByGroupId = new Map<string, Set<string>>();
+    for (const row of groupPermRows) {
+      const pk = permissionKeyById.get(row.permissionId);
+      if (!pk) continue;
+      let acc = permissionKeysByGroupId.get(row.groupId);
+      if (!acc) {
+        acc = new Set<string>();
+        permissionKeysByGroupId.set(row.groupId, acc);
+      }
+      acc.add(pk);
+    }
+    const sortedPermissionKeysByGroupId = new Map<string, readonly string[]>();
+    for (const [gid, set] of permissionKeysByGroupId) {
+      sortedPermissionKeysByGroupId.set(gid, [...set].sort());
+    }
+
+    const groupMetaById = new Map(groupRows.map((g) => [g.groupId, g]));
 
     const tagKeysByRoleId = new Map<string, string[]>();
+    const primaryRoleTagKeyByRoleId = new Map<string, string>();
     for (const a of roleTagAssoc) {
+      const key = tagKeyByTagId.get(a.tagId);
+      if (!key) continue;
       const arr = tagKeysByRoleId.get(a.ownerId) ?? [];
-      arr.push(a.tagId);
+      arr.push(key);
       tagKeysByRoleId.set(a.ownerId, arr);
+      if (a.isPrimary) {
+        primaryRoleTagKeyByRoleId.set(a.ownerId, key);
+      }
     }
     const tagKeysByGroupId = new Map<string, string[]>();
+    const primaryGroupTagKeyByGroupId = new Map<string, string>();
     for (const a of groupTagAssoc) {
+      const key = tagKeyByTagId.get(a.tagId);
+      if (!key) continue;
       const arr = tagKeysByGroupId.get(a.ownerId) ?? [];
-      arr.push(a.tagId);
+      arr.push(key);
       tagKeysByGroupId.set(a.ownerId, arr);
+      if (a.isPrimary) {
+        primaryGroupTagKeyByGroupId.set(a.ownerId, key);
+      }
     }
 
     return rows.map((r) => {
       const groupId = groupIdByRoleId.get(r.roleId);
       const tagKeys = (tagKeysByRoleId.get(r.roleId) ?? []).slice().sort();
       const groupTagKeys = groupId ? (tagKeysByGroupId.get(groupId) ?? []).slice().sort() : [];
+      const prk = primaryRoleTagKeyByRoleId.get(r.roleId);
+      const primaryRoleTagKey = prk != null && tagKeys.includes(prk) ? prk : undefined;
+      const pgk = groupId ? primaryGroupTagKeyByGroupId.get(groupId) : undefined;
+      const primaryGroupTagKey = pgk != null && groupTagKeys.includes(pgk) ? pgk : undefined;
+      const cdmSource = extractCdmSourceMetadata(r.metadata);
+      const metadata = {
+        ...(cdmSource ?? {}),
+        grantRoleId: r.roleId,
+        ...(groupId ? { grantGroupId: groupId } : {}),
+      };
+      const groupMeta = groupId ? groupMetaById.get(groupId) : undefined;
+      const linkedGrantGroup =
+        groupId && groupMeta
+          ? {
+              grantGroupId: groupId,
+              groupKey: buildExternalKey('group', groupId, groupMeta.name),
+              groupName: groupMeta.name,
+              groupDescription: groupMeta.description,
+              permissionKeys: sortedPermissionKeysByGroupId.get(groupId) ?? [],
+              tagKeys: groupTagKeys,
+              primaryGroupTagKey: primaryGroupTagKey ?? null,
+            }
+          : undefined;
       return {
-        externalKey: r.roleId,
+        externalKey: buildExternalKey('role', r.roleId, stripCdmRolePrefix(r.name)),
         name: stripCdmRolePrefix(r.name),
         description: r.description,
-        permissionRefs: r.permissions.map((p) => ({
-          resourceSlug: p.resourceSlug,
-          action: p.action,
-          permissionId: p.permissionId,
-          condition: p.condition,
-        })),
-        metadata: extractCdmSourceMetadata(r.metadata),
+        permissionRefs: r.permissions.map((p) => {
+          const permissionKey = permissionKeyById.get(p.permissionId);
+          if (permissionKey) {
+            return {
+              permissionKey,
+              resourceSlug: null,
+              action: null,
+              condition: null,
+            };
+          }
+          return {
+            resourceSlug: p.resourceSlug,
+            action: p.action,
+            condition: p.condition,
+          };
+        }),
+        metadata,
         tagKeys: tagKeys.length > 0 ? tagKeys : undefined,
+        primaryRoleTagKey,
         groupTagKeys: groupTagKeys.length > 0 ? groupTagKeys : undefined,
+        primaryGroupTagKey,
+        linkedGrantGroup,
       };
     });
   }

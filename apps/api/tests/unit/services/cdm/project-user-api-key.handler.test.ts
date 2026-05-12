@@ -25,6 +25,7 @@ function baseResult(): SyncProjectPermissionsResult {
     projectPermissionsLinked: 0,
     projectResourcesLinked: 0,
     projectUsersEnsured: 0,
+    usersCreated: 0,
     userRolesAssigned: 0,
     projectUserApiKeysCreated: 0,
     tagsCreated: 0,
@@ -32,13 +33,18 @@ function baseResult(): SyncProjectPermissionsResult {
     roleTagsLinked: 0,
     groupTagsLinked: 0,
     userTagsLinked: 0,
+    resourcesCreated: 0,
+    permissionsCreated: 0,
     warnings: [],
   };
 }
 
 function buildHandler(deps?: {
   syncRepo?: { listCdmProjectUserApiKeyIdsForProject: ReturnType<typeof vi.fn> };
-  exportRepo?: { getProjectUserApiKeysForCdmExport: ReturnType<typeof vi.fn> };
+  exportRepo?: {
+    getProjectUserApiKeysForCdmExport: ReturnType<typeof vi.fn>;
+    getProjectCdmProvisionedUsers: ReturnType<typeof vi.fn>;
+  };
   apiKeys?: {
     createApiKeyForCdmImport: ReturnType<typeof vi.fn>;
     deleteApiKey: ReturnType<typeof vi.fn>;
@@ -50,6 +56,7 @@ function buildHandler(deps?: {
   };
   const exportRepo = deps?.exportRepo ?? {
     getProjectUserApiKeysForCdmExport: vi.fn().mockResolvedValue([]),
+    getProjectCdmProvisionedUsers: vi.fn().mockResolvedValue([]),
   };
   const apiKeys = deps?.apiKeys ?? {
     createApiKeyForCdmImport: vi.fn(),
@@ -146,7 +153,13 @@ describe('ProjectUserApiKeyCdmHandler', () => {
       tx: {},
       lookupResolvedRef: () => ({}),
       result: baseResult(),
-      produced: { roleTemplateIds: new Map(), tagIds: new Map() },
+      produced: {
+        roleIdsByKey: new Map(),
+        tagIds: new Map(),
+        resourceIds: new Map(),
+        permissionIds: new Map(),
+        userIds: new Map(),
+      },
       assignmentUserIds: new Set<string>(),
     };
 
@@ -157,7 +170,7 @@ describe('ProjectUserApiKeyCdmHandler', () => {
           clientSecret: BYOK_SECRET,
         },
       ])
-    ).rejects.toThrow(/not listed in userAssignments/);
+    ).rejects.toThrow(/not part of this import's user assignments/);
   });
 
   it('apply creates api key, pivot with CDM metadata, and increments counter', async () => {
@@ -179,7 +192,13 @@ describe('ProjectUserApiKeyCdmHandler', () => {
       tx: { __tx: true },
       lookupResolvedRef: () => ({}),
       result,
-      produced: { roleTemplateIds: new Map(), tagIds: new Map() },
+      produced: {
+        roleIdsByKey: new Map(),
+        tagIds: new Map(),
+        resourceIds: new Map(),
+        permissionIds: new Map(),
+        userIds: new Map(),
+      },
       assignmentUserIds: new Set([userId]),
     };
 
@@ -240,7 +259,10 @@ describe('ProjectUserApiKeyCdmHandler', () => {
       },
     ]);
     const { handler, exportRepo } = buildHandler({
-      exportRepo: { getProjectUserApiKeysForCdmExport },
+      exportRepo: {
+        getProjectUserApiKeysForCdmExport,
+        getProjectCdmProvisionedUsers: vi.fn().mockResolvedValue([]),
+      },
     });
 
     const ctx: CdmExportContext = { projectId, scope };

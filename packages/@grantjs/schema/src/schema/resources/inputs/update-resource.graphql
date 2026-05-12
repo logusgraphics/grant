@@ -7,4 +7,5 @@ input UpdateResourceInput {
   isActive: Boolean
   tagIds: [ID!]
   primaryTagId: ID
+  metadata: JSON
 }

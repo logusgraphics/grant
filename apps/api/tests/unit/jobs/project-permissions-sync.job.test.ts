@@ -6,8 +6,11 @@
  */
 import { ConflictError } from '@grantjs/core';
 import {
+  CdmFindBy,
+  CdmModeStrategy,
   ProjectPermissionsSyncJobStatus,
   type Scope,
+  type SyncProjectPermissionsInput,
   type SyncProjectPermissionsResult,
   Tenant,
 } from '@grantjs/schema';
@@ -48,6 +51,27 @@ const enqueueScope: Scope = {
   id: `${accountId}:${projectId}`,
 };
 
+function emptyCanonicalPayload(
+  overrides: Partial<SyncProjectPermissionsInput> = {}
+): SyncProjectPermissionsInput {
+  return {
+    version: 1,
+    id: null,
+    mode: {
+      strategy: CdmModeStrategy.Merge,
+      onConflict: null,
+      confirmDestructive: false,
+    },
+    roles: [],
+    users: [],
+    resources: [],
+    permissions: [],
+    groups: [],
+    tags: [],
+    ...overrides,
+  };
+}
+
 function buildJobRow(
   status: ProjectPermissionsSyncJobStatus = ProjectPermissionsSyncJobStatus.Pending
 ) {
@@ -77,20 +101,31 @@ function buildExecData(
   const status = overrides.status ?? ProjectPermissionsSyncJobStatus.Pending;
   return {
     job: buildJobRow(status),
-    payload: {
-      cdmVersion: 1,
-      roleTemplates: [
+    payload: emptyCanonicalPayload({
+      roles: [
         {
-          externalKey: 'viewer',
+          key: 'viewer',
           name: 'Viewer',
-          permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+          description: null,
+          groups: [],
+          permissions: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
         },
       ],
-      userAssignments: (overrides.userIds ?? [userId]).map((uid) => ({
-        userId: uid,
-        roleTemplateKeys: ['viewer'],
+      users: (overrides.userIds ?? [userId]).map((uid) => ({
+        key: { value: uid, findBy: CdmFindBy.Id },
+        name: 'User',
+        roles: ['viewer'],
+        groups: [],
+        permissions: [],
+        tags: [],
+        primaryTag: null,
+        apiKeys: [],
+        metadata: null,
       })),
-    },
+    }),
     scope: enqueueScope,
     cancelRequested: overrides.cancelRequested ?? false,
   };
@@ -112,6 +147,7 @@ function buildSyncResult(): SyncProjectPermissionsResult {
     projectPermissionsLinked: 1,
     projectResourcesLinked: 0,
     projectUsersEnsured: 1,
+    usersCreated: 0,
     userRolesAssigned: 1,
     projectUserApiKeysCreated: 0,
     tagsCreated: 0,
@@ -119,6 +155,8 @@ function buildSyncResult(): SyncProjectPermissionsResult {
     roleTagsLinked: 0,
     groupTagsLinked: 0,
     userTagsLinked: 0,
+    resourcesCreated: 0,
+    permissionsCreated: 0,
     warnings: ['orphan permission ignored'],
   };
 }
@@ -171,11 +209,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
       saveSnapshot: vi.fn().mockResolvedValue(undefined),
       syncProjectPermissions: vi.fn(),
       invalidateCachesForSyncResult: vi.fn().mockResolvedValue(undefined),
-      exportProjectPermissions: vi.fn().mockResolvedValue({
-        cdmVersion: 1,
-        roleTemplates: [],
-        userAssignments: [],
-      }),
+      exportProjectPermissions: vi.fn().mockResolvedValue(emptyCanonicalPayload()),
     };
   });
 
@@ -218,17 +252,20 @@ describe('ProjectPermissionsSyncJob worker', () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
     mocks.syncProjectPermissions.mockResolvedValue(buildSyncResult());
 
-    const exportedSnapshot = {
-      cdmVersion: 1,
-      roleTemplates: [
+    const exportedSnapshot = emptyCanonicalPayload({
+      roles: [
         {
-          externalKey: 'pre-existing',
+          key: 'pre-existing',
           name: 'Pre-existing',
-          permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+          description: null,
+          groups: [],
+          permissions: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
         },
       ],
-      userAssignments: [],
-    };
+    });
     mocks.exportProjectPermissions.mockResolvedValue(exportedSnapshot);
 
     const callOrder: string[] = [];
@@ -260,7 +297,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
     expect(exportArgs[0]).toMatchObject({
       projectId,
       scope: enqueueScope,
-      cdmVersion: 1,
+      version: 1,
     });
     expect(exportArgs[1]).toMatchObject({ __mockTx: true });
 

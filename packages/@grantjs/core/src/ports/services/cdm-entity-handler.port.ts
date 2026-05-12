@@ -8,20 +8,25 @@
  * etc.) means implementing this port and registering it with the appropriate
  * `order`; the orchestrator does not need to change.
  */
-import type {
-  Scope,
-  SyncProjectPermissionsInput,
-  SyncProjectPermissionsResult,
-} from '@grantjs/schema';
+import type { Scope, SyncProjectPermissionsResult } from '@grantjs/schema';
+
+import type { CdmHandlerInputKey } from '../../cdm-export-sections';
 
 /**
  * Permission reference shape collected from CDM input. Used by the orchestrator
  * to deduplicate and resolve permissions across all handlers in a single pass
  * before any handler runs `apply`.
+ *
+ * Resolution order on apply:
+ * 1. `permissionKey` against `CdmProducedRefs.permissionIds` (CDM-imported in
+ *    the same document, preferred for full-project porting).
+ * 2. `permissionId` (existing Grant permission UUID, kept for back-compat).
+ * 3. `(resourceSlug, action [, condition])` against the global catalog.
  */
 export interface CdmPermissionRefSpec {
-  resourceSlug: string;
-  action: string;
+  resourceSlug?: string | null;
+  action?: string | null;
+  permissionKey?: string | null;
   permissionId?: string | null;
   condition?: Record<string, unknown> | null;
 }
@@ -42,11 +47,11 @@ export type CdmResolvedPermission = unknown;
  */
 export interface CdmProducedRefs {
   /**
-   * External-key → created role id.
-   * Populated by the role-template handler during `apply`, consumed by the
-   * user-assignment handler to map `roleTemplateKeys` to role ids.
+   * Opaque CDM role key (template `externalKey` / `RoleCdmInput.key`) → created role id.
+   * Populated by the role handler during `apply`, consumed by the user-assignment
+   * handler to map `roleTemplateKeys` to role ids.
    */
-  roleTemplateIds: Map<string, string>;
+  roleIdsByKey: Map<string, string>;
   /**
    * External-key → created tag id.
    * Populated by the tag handler during `apply`, consumed by:
@@ -54,6 +59,24 @@ export interface CdmProducedRefs {
    * - user-assignment handler to map `tagKeys` to global `user_tags`.
    */
   tagIds: Map<string, string>;
+  /**
+   * External-key → created resource id.
+   * Populated by the resource handler during `apply`, consumed by the
+   * permission handler to resolve `PermissionCdmInput.resourceKey`.
+   */
+  resourceIds: Map<string, string>;
+  /**
+   * External-key → created permission id.
+   * Populated by the permission handler during `apply`, consumed by the
+   * orchestrator/permission-ref helper to resolve `permissionKey` references
+   * from role templates and user assignments.
+   */
+  permissionIds: Map<string, string>;
+  /**
+   * External-key → created Grant user id (CDM user provisioning handler).
+   * Consumed by user-assignment and project-user-api-key handlers for `userKey`.
+   */
+  userIds: Map<string, string>;
 }
 
 export interface CdmTeardownContext {
@@ -75,10 +98,11 @@ export interface CdmApplyContext {
   /** Cross-handler shared state. */
   produced: CdmProducedRefs;
   /**
-   * `userId`s listed on this import's `userAssignments` (for handlers that must
-   * only attach entities to users declared in the same payload).
+   * Grant user ids allowed for this import (explicit `userId`s plus provisioned
+   * users). Handlers may add ids when creating users. Used so API keys attach
+   * only to users from this payload.
    */
-  assignmentUserIds: ReadonlySet<string>;
+  assignmentUserIds: Set<string>;
 }
 
 export interface CdmExportContext {
@@ -94,17 +118,17 @@ export interface CdmExportContext {
  * and exports the project's current state back to the same input shape.
  *
  * Type parameters:
- *   - `TInput`  shape of one entry in `SyncProjectPermissionsInput[inputKey]`
+ *   - `TInput`  shape of one entry in the expanded handler slice at `inputKey`
  *   - `TExport` shape returned by `export(...)`, typically equal to `TInput`
  */
 export interface ICdmEntityHandler<TInput = unknown, TExport = TInput> {
   /** Stable identifier for this handler (e.g. `'roleTemplate'`, `'userAssignment'`). */
   readonly handlerKind: string;
   /**
-   * Field on `SyncProjectPermissionsInput` this handler reads and writes.
-   * Must be one of the array-typed keys (e.g. `'roleTemplates'`, `'userAssignments'`).
+   * Key on the API-internal expanded CDM payload this handler owns
+   * (see {@link CDM_HANDLER_INPUT_KEYS}).
    */
-  readonly inputKey: keyof SyncProjectPermissionsInput;
+  readonly inputKey: CdmHandlerInputKey;
   /** Order within the sync/export pipeline. Lower runs earlier. */
   readonly order: number;
 

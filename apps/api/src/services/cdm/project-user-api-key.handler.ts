@@ -7,7 +7,6 @@ import type {
   ICdmEntityHandler,
   IProjectUserApiKeyService,
 } from '@grantjs/core';
-import { ProjectUserApiKeyCdmInput, SyncProjectPermissionsInput } from '@grantjs/schema';
 
 import {
   buildCdmImportMetadata,
@@ -21,8 +20,10 @@ import type { ProjectPermissionExportRepository } from '@/repositories/project-p
 import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
 
 import { clientSecretSchema } from '../api-keys.schemas';
+import type { CdmProjectUserApiKeyInternal } from './cdm-internal.types';
+import { buildExternalKey } from './identity.helper';
 
-const INPUT_KEY: keyof SyncProjectPermissionsInput = 'projectUserApiKeys';
+const INPUT_KEY = 'projectUserApiKeys' as const;
 
 type CdmImportMetadataBlock = {
   projectId?: string;
@@ -35,8 +36,8 @@ type CdmImportMetadataBlock = {
  * import requires BYOK `clientSecret`. Runs after {@link UserAssignmentHandler}.
  */
 export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
-  ProjectUserApiKeyCdmInput,
-  ProjectUserApiKeyCdmInput
+  CdmProjectUserApiKeyInternal,
+  CdmProjectUserApiKeyInternal
 > {
   public readonly handlerKind = 'projectUserApiKey';
   public readonly inputKey = INPUT_KEY;
@@ -49,7 +50,7 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
     private readonly projectUserApiKeys: IProjectUserApiKeyService
   ) {}
 
-  public validateInput(input: readonly ProjectUserApiKeyCdmInput[]): void {
+  public validateInput(input: readonly CdmProjectUserApiKeyInternal[]): void {
     const externalKeys = new Set<string>();
     for (const row of input) {
       if (row.externalKey != null && row.externalKey !== '') {
@@ -72,7 +73,7 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
   }
 
   public collectPermissionRefs(
-    _input: readonly ProjectUserApiKeyCdmInput[]
+    _input: readonly CdmProjectUserApiKeyInternal[]
   ): readonly CdmPermissionRefSpec[] {
     return [];
   }
@@ -87,19 +88,20 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
 
   public async apply(
     ctx: CdmApplyContext,
-    input: readonly ProjectUserApiKeyCdmInput[]
+    input: readonly CdmProjectUserApiKeyInternal[]
   ): Promise<void> {
     const tx = ctx.tx as Transaction;
     for (const row of input) {
-      if (!ctx.assignmentUserIds.has(row.userId)) {
+      const effectiveUserId = resolveApiKeyUserId(row, ctx);
+      if (!ctx.assignmentUserIds.has(effectiveUserId)) {
         throw new ValidationError(
-          `projectUserApiKeys: userId ${row.userId} is not listed in userAssignments for this import`
+          `projectUserApiKeys: user ${effectiveUserId} is not part of this import's user assignments`
         );
       }
       const secret = row.clientSecret?.trim();
       if (!secret) {
         throw new ValidationError(
-          `projectUserApiKeys: clientSecret is required for userId ${row.userId}`
+          `projectUserApiKeys: clientSecret is required for each key (user ${effectiveUserId})`
         );
       }
 
@@ -124,7 +126,7 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
       await this.projectUserApiKeys.addProjectUserApiKey(
         {
           projectId: ctx.projectId,
-          userId: row.userId,
+          userId: effectiveUserId,
           apiKeyId: created.id,
           metadata: pivotMetadata,
         },
@@ -134,15 +136,41 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
     }
   }
 
-  public async export(ctx: CdmExportContext): Promise<readonly ProjectUserApiKeyCdmInput[]> {
+  /**
+   * Project current `project_user_api_keys` rows back to `ProjectUserApiKeyCdmInput[]`.
+   *
+   * Identity: `externalKey = buildExternalKey('apikey', clientId, userId)`. Always
+   * emitted (deterministic from the row), so the CDM contract stays uniform with
+   * the other handlers — no UUIDs leak as identity, and downstream tools can
+   * dedupe by externalKey across exports.
+   *
+   * The Grant client id is preserved on the row itself (not as identity); the
+   * importer-supplied `cdmSource` history is preserved via
+   * `extractProjectUserMetadataForCdmExport`. `clientSecret` is never emitted.
+   */
+  public async export(ctx: CdmExportContext): Promise<readonly CdmProjectUserApiKeyInternal[]> {
     const tx = ctx.tx as Transaction | undefined;
-    const rows = await this.exportRepo.getProjectUserApiKeysForCdmExport(ctx.projectId, tx);
+    const [rows, provisionedUsers] = await Promise.all([
+      this.exportRepo.getProjectUserApiKeysForCdmExport(ctx.projectId, tx),
+      this.exportRepo.getProjectCdmProvisionedUsers(ctx.projectId, tx),
+    ]);
+    const provisionKeyByUserId = new Map<string, string>();
+    for (const p of provisionedUsers) {
+      const imp = p.metadata['cdmImport'] as { externalKey?: string } | undefined;
+      const ext = imp?.externalKey;
+      provisionKeyByUserId.set(
+        p.userId,
+        ext && ext.length > 0 ? ext : buildExternalKey('user', p.userId, p.name)
+      );
+    }
+
     return rows.map((r) => {
       const cdm = r.pivotMetadata[CDM_IMPORT_METADATA_KEY] as CdmImportMetadataBlock | undefined;
-      const externalKey =
-        cdm?.externalKey != null && cdm.externalKey !== '' ? cdm.externalKey : undefined;
-      return {
-        userId: r.userId,
+      const importerExternalKey =
+        cdm?.externalKey != null && cdm.externalKey !== '' ? cdm.externalKey : null;
+      const externalKey = importerExternalKey ?? buildExternalKey('apikey', r.clientId, r.userId);
+      const userKey = provisionKeyByUserId.get(r.userId);
+      const base = {
         clientId: r.clientId,
         name: r.name ?? undefined,
         description: r.description ?? undefined,
@@ -155,6 +183,24 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
         externalKey,
         metadata: extractProjectUserMetadataForCdmExport(r.pivotMetadata) ?? undefined,
       };
+      if (userKey != null) {
+        return { ...base, userKey, userId: undefined };
+      }
+      return { ...base, userId: r.userId, userKey: undefined };
     });
   }
+}
+
+function resolveApiKeyUserId(row: CdmProjectUserApiKeyInternal, ctx: CdmApplyContext): string {
+  if (row.userId != null && row.userId !== '') {
+    return row.userId;
+  }
+  if (row.userKey != null && row.userKey !== '') {
+    const id = ctx.produced.userIds.get(row.userKey);
+    if (!id) {
+      throw new ValidationError(`projectUserApiKeys: unresolved userKey '${row.userKey}'`);
+    }
+    return id;
+  }
+  throw new ValidationError('projectUserApiKeys: each entry requires userId or userKey');
 }

@@ -17,11 +17,18 @@
 import type {
   CdmApplyContext,
   CdmExportContext,
+  CdmHandlerInputKey,
   CdmPermissionRefSpec,
   CdmTeardownContext,
   ICdmEntityHandler,
 } from '@grantjs/core';
-import { type Scope, type SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
+import {
+  CdmFindBy,
+  CdmModeStrategy,
+  type Scope,
+  type SyncProjectPermissionsInput,
+  Tenant,
+} from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ProjectPermissionSyncService } from '@/services/project-permission-sync.service';
@@ -36,7 +43,7 @@ interface EventLog {
 
 function createRecordingHandler(
   name: string,
-  inputKey: keyof SyncProjectPermissionsInput,
+  inputKey: CdmHandlerInputKey,
   order: number,
   log: EventLog,
   options: {
@@ -74,6 +81,10 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
     listCdmProjectUserApiKeyIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmTagIdsForProject: vi.fn().mockResolvedValue([]),
     bulkSoftDeleteCdmTags: vi.fn().mockResolvedValue(undefined),
+    listCdmResourceIdsForProject: vi.fn().mockResolvedValue([]),
+    bulkSoftDeleteCdmResources: vi.fn().mockResolvedValue(undefined),
+    listCdmPermissionIdsForProject: vi.fn().mockResolvedValue([]),
+    bulkSoftDeleteCdmPermissions: vi.fn().mockResolvedValue(undefined),
     resolvePermission: vi.fn().mockResolvedValue({ id: 'perm-1', resourceId: 'res-1' }),
   };
   const cache = {
@@ -103,21 +114,53 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
     {} as never,
     {} as never,
     {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
     undefined,
     handlers
   );
 }
 
 const baseInput: SyncProjectPermissionsInput = {
-  cdmVersion: 1,
-  roleTemplates: [
+  version: 1,
+  id: null,
+  mode: {
+    strategy: CdmModeStrategy.Merge,
+    onConflict: null,
+    confirmDestructive: false,
+  },
+  roles: [
     {
-      externalKey: 'viewer',
+      key: 'viewer',
       name: 'Viewer',
-      permissionRefs: [{ resourceSlug: 'Tag', action: 'Query' }],
+      permissions: [],
+      groups: [],
+      tags: [],
+      primaryTag: null,
+      metadata: null,
     },
   ],
-  userAssignments: [{ userId: 'u-1', roleTemplateKeys: ['viewer'] }],
+  users: [
+    {
+      key: { value: 'u-1', findBy: CdmFindBy.Id },
+      name: 'User',
+      roles: ['viewer'],
+      groups: [],
+      permissions: [],
+      tags: [],
+      primaryTag: null,
+      apiKeys: [],
+      metadata: null,
+    },
+  ],
+  resources: [],
+  permissions: [],
+  groups: [],
+  tags: [],
 };
 
 describe('ICdmEntityHandler registry contract', () => {
@@ -151,7 +194,15 @@ describe('ICdmEntityHandler registry contract', () => {
     const userAssignment = createRecordingHandler('userAssignment', 'userAssignments', 200, log);
 
     const svc = buildService([roleTemplate, userAssignment]);
-    await svc.syncProjectPermissions({ projectId, scope, input: baseInput }, {});
+    const replaceInput: SyncProjectPermissionsInput = {
+      ...baseInput,
+      mode: {
+        strategy: CdmModeStrategy.Replace,
+        onConflict: null,
+        confirmDestructive: true,
+      },
+    };
+    await svc.syncProjectPermissions({ projectId, scope, input: replaceInput }, {});
 
     const teardownIdx = log.events
       .map((e, i) => ({ e, i }))
@@ -199,12 +250,12 @@ describe('ICdmEntityHandler registry contract', () => {
     let observedFromLater: string | undefined;
     const roleTemplate = createRecordingHandler('roleTemplate', 'roleTemplates', 100, log, {
       apply: (ctx) => {
-        ctx.produced.roleTemplateIds.set('viewer', 'role-1');
+        ctx.produced.roleIdsByKey.set('viewer', 'role-1');
       },
     });
     const userAssignment = createRecordingHandler('userAssignment', 'userAssignments', 200, log, {
       apply: (ctx) => {
-        observedFromLater = ctx.produced.roleTemplateIds.get('viewer');
+        observedFromLater = ctx.produced.roleIdsByKey.get('viewer');
       },
     });
 
@@ -245,5 +296,66 @@ describe('ICdmEntityHandler registry contract', () => {
 
     expect(observedByRole).toBe('tag-1');
     expect(observedByUser).toBe('tag-1');
+  });
+
+  it('produced.permissionIds flows from permission handler to later role/user handlers', async () => {
+    const log: EventLog = { events: [] };
+
+    let observedByRole: string | undefined;
+    const permission = createRecordingHandler('permission', 'permissions', 4, log, {
+      apply: (ctx) => {
+        ctx.produced.permissionIds.set('pk1', 'perm-1');
+      },
+    });
+    const roleTemplate = createRecordingHandler('roleTemplate', 'roleTemplates', 10, log, {
+      apply: (ctx) => {
+        observedByRole = ctx.produced.permissionIds.get('pk1');
+      },
+    });
+
+    const svc = buildService([permission, roleTemplate]);
+    await svc.syncProjectPermissions({ projectId, scope, input: baseInput }, {});
+
+    expect(observedByRole).toBe('perm-1');
+  });
+
+  it('lookupResolvedRef resolves permissionKey via produced.permissionIds with resourceId=null', async () => {
+    const log: EventLog = { events: [] };
+
+    let resolved: { id: string; resourceId: string | null } | undefined;
+    const permission = createRecordingHandler('permission', 'permissions', 4, log, {
+      apply: (ctx) => {
+        ctx.produced.permissionIds.set('pk1', 'perm-from-cdm');
+      },
+    });
+    const roleTemplate = createRecordingHandler('roleTemplate', 'roleTemplates', 10, log, {
+      apply: (ctx) => {
+        resolved = ctx.lookupResolvedRef({ permissionKey: 'pk1' }) as {
+          id: string;
+          resourceId: string | null;
+        };
+      },
+    });
+
+    const svc = buildService([permission, roleTemplate]);
+    await svc.syncProjectPermissions({ projectId, scope, input: baseInput }, {});
+
+    expect(resolved?.id).toBe('perm-from-cdm');
+    expect(resolved?.resourceId).toBeNull();
+  });
+
+  it('lookupResolvedRef throws ValidationError when permissionKey is missing from produced', async () => {
+    const log: EventLog = { events: [] };
+
+    const failing = createRecordingHandler('roleTemplate', 'roleTemplates', 10, log, {
+      apply: (ctx) => {
+        ctx.lookupResolvedRef({ permissionKey: 'missing' });
+      },
+    });
+
+    const svc = buildService([failing]);
+    await expect(
+      svc.syncProjectPermissions({ projectId, scope, input: baseInput }, {})
+    ).rejects.toThrow(/permissionKey "missing" did not match any permission/);
   });
 });

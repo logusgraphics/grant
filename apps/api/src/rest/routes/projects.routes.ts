@@ -257,12 +257,20 @@ export function createProjectsRouter(context: RequestContext): Router {
     ) => {
       try {
         const { id } = req.params;
-        const { scopeId, tenant, cdmVersion, sections } = req.query;
+        const { scopeId, tenant, version, sections } = req.query;
+        const parsedVersion =
+          typeof version === 'number'
+            ? version
+            : typeof version === 'string'
+              ? Number(version)
+              : Array.isArray(version)
+                ? Number(version[0])
+                : null;
 
         const snapshot = await context.handlers.projects.exportProjectPermissions({
           id,
           scope: { id: scopeId, tenant },
-          cdmVersion: cdmVersion ?? null,
+          version: parsedVersion != null && Number.isFinite(parsedVersion) ? parsedVersion : null,
           sections,
         });
 

@@ -2,10 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildCdmImportMetadata,
+  CDM_EXPORT_CATALOG_SNAPSHOT_KEY,
   CDM_IMPORT_METADATA_KEY,
   CDM_SOURCE_METADATA_KEY,
   extractProjectUserMetadataForCdmExport,
+  isCdmCatalogSnapshotMetadata,
+  isProjectCdmImportKind,
   mergeCdmImporterMetadata,
+  readGrantPermissionIdFromCdmExportMetadata,
+  readGrantResourceIdFromCdmExportMetadata,
 } from '@/constants/cdm-import.constants';
 import { ValidationError } from '@/lib/errors';
 
@@ -96,5 +101,36 @@ describe('extractProjectUserMetadataForCdmExport', () => {
       onlySource: 1,
       onlyTop: 2,
     });
+  });
+});
+
+describe('CDM catalog snapshot metadata helpers', () => {
+  it('isProjectCdmImportKind matches project + kind', () => {
+    const md = {
+      [CDM_IMPORT_METADATA_KEY]: { projectId: 'p1', kind: 'resource' },
+    };
+    expect(isProjectCdmImportKind(md, 'p1', 'resource')).toBe(true);
+    expect(isProjectCdmImportKind(md, 'p2', 'resource')).toBe(false);
+    expect(isProjectCdmImportKind(md, 'p1', 'permission')).toBe(false);
+  });
+
+  it('isCdmCatalogSnapshotMetadata reads top-level and cdmSource', () => {
+    expect(isCdmCatalogSnapshotMetadata({ [CDM_EXPORT_CATALOG_SNAPSHOT_KEY]: true })).toBe(true);
+    expect(
+      isCdmCatalogSnapshotMetadata({
+        [CDM_SOURCE_METADATA_KEY]: { [CDM_EXPORT_CATALOG_SNAPSHOT_KEY]: true },
+      })
+    ).toBe(true);
+    expect(isCdmCatalogSnapshotMetadata({})).toBe(false);
+  });
+
+  it('readGrant*Id reads top-level then cdmSource', () => {
+    expect(readGrantResourceIdFromCdmExportMetadata({ grantResourceId: 'r1' })).toBe('r1');
+    expect(
+      readGrantResourceIdFromCdmExportMetadata({
+        [CDM_SOURCE_METADATA_KEY]: { grantResourceId: 'r2' },
+      })
+    ).toBe('r2');
+    expect(readGrantPermissionIdFromCdmExportMetadata({ grantPermissionId: 'p1' })).toBe('p1');
   });
 });

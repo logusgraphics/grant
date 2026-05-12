@@ -17,6 +17,7 @@ import type {
   ITransactionalConnection,
 } from '@grantjs/core';
 import {
+  CdmFindBy,
   MutationCancelProjectPermissionsSyncArgs,
   MutationCreateProjectArgs,
   MutationDeleteProjectArgs,
@@ -146,7 +147,7 @@ export class ProjectHandler extends CacheHandler {
    * Enqueue an asynchronous CDM permission sync job. Performs the same fast
    * pre-flight validation as the legacy synchronous endpoint (so callers see
    * malformed input immediately instead of after the worker picks up the job),
-   * checks for an in-flight job with the same `importId` (idempotency), then
+   * checks for an in-flight job with the same `id` (idempotency), then
    * persists the job tracking row and dispatches a one-off job.
    */
   public async startProjectPermissionsSync(
@@ -169,7 +170,7 @@ export class ProjectHandler extends CacheHandler {
     }
     this.validateSyncInput(params.input);
 
-    const importId = params.input.importId ?? null;
+    const importId = params.input.id ?? null;
     if (importId !== null) {
       const inflight = await this.projectPermissionsSyncJobs.findActiveByImportId({
         projectId: params.id,
@@ -183,7 +184,7 @@ export class ProjectHandler extends CacheHandler {
     const job = await this.projectPermissionsSyncJobs.create({
       projectId: params.id,
       scope: params.scope,
-      cdmVersion: params.input.cdmVersion,
+      cdmVersion: params.input.version,
       importId,
       payload: params.input,
       enqueuedById: params.enqueuedById,
@@ -288,7 +289,7 @@ export class ProjectHandler extends CacheHandler {
   public async exportProjectPermissions(params: {
     id: string;
     scope: { tenant: Tenant; id: string };
-    cdmVersion?: number | null;
+    version?: number | null;
     /** Raw query values; validated when non-empty (may still be a comma-separated string). */
     sections?: readonly string[] | string;
   }): Promise<SyncProjectPermissionsInput> {
@@ -299,7 +300,7 @@ export class ProjectHandler extends CacheHandler {
         'scope id must contain the same projectId as the projectId argument'
       );
     }
-    const cdmVersion = params.cdmVersion ?? 1;
+    const version = params.version ?? 1;
     let sections: readonly CdmExportSection[] | undefined;
     if (params.sections != null && params.sections.length > 0) {
       sections = assertValidCdmExportSections(params.sections);
@@ -307,7 +308,7 @@ export class ProjectHandler extends CacheHandler {
     return this.projectPermissionExport.exportProjectPermissions({
       projectId: params.id,
       scope: params.scope,
-      cdmVersion,
+      version,
       sections,
     });
   }
@@ -355,29 +356,31 @@ export class ProjectHandler extends CacheHandler {
   }
 
   private validateSyncInput(input: MutationStartProjectPermissionsSyncArgs['input']): void {
-    if (input.cdmVersion !== 1) {
-      throw new ValidationError('Unsupported cdmVersion; only 1 is allowed');
+    if (input.version !== 1) {
+      throw new ValidationError('Unsupported version; only 1 is allowed');
+    }
+    if (input.mode?.strategy === 'replace' && input.mode.confirmDestructive !== true) {
+      throw new ValidationError(
+        'mode.confirmDestructive must be true when mode.strategy is replace'
+      );
     }
 
-    const userIdsSeen = new Set<string>();
-    for (const ua of input.userAssignments) {
-      if (userIdsSeen.has(ua.userId)) {
-        throw new ValidationError(`Duplicate userId in userAssignments: ${ua.userId}`);
+    const roleKeys = new Set<string>();
+    for (const r of input.roles) {
+      if (roleKeys.has(r.key)) {
+        throw new ValidationError(`Duplicate role key: ${r.key}`);
       }
-      userIdsSeen.add(ua.userId);
+      roleKeys.add(r.key);
     }
 
-    const externalKeys = new Set<string>();
-    for (const t of input.roleTemplates) {
-      if (externalKeys.has(t.externalKey)) {
-        throw new ValidationError(`Duplicate role template externalKey: ${t.externalKey}`);
+    const userSeen = new Set<string>();
+    for (const u of input.users) {
+      const isId = u.key.findBy === CdmFindBy.Id;
+      const dedupe = isId ? `id:${u.key.value}` : `key:${u.key.value}`;
+      if (userSeen.has(dedupe)) {
+        throw new ValidationError(`Duplicate user entry: ${dedupe}`);
       }
-      externalKeys.add(t.externalKey);
-      if (t.permissionRefs.length === 0) {
-        throw new ValidationError(
-          `roleTemplates[${t.externalKey}] must include at least one permissionRef`
-        );
-      }
+      userSeen.add(dedupe);
     }
   }
 

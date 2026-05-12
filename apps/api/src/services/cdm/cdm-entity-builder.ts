@@ -37,6 +37,12 @@ export interface CdmRoleCreationResult {
   counts: CdmRoleCreationCounts;
 }
 
+/** Optional display labels when the CDM document already supplies human names. */
+export interface CdmRoleWithGroupNaming {
+  groupDisplayName?: string | null;
+  groupDisplayDescription?: string | null;
+}
+
 /**
  * Cross-handler primitives for creating, removing, and book-keeping CDM-marked
  * roles/groups. Owned by the orchestrator; injected into handlers so the
@@ -77,9 +83,19 @@ export class CdmEntityBuilder {
     kind: 'role' | 'directRole',
     perms: readonly ResolvedCdmPermission[],
     importerMetadata: unknown,
-    tx: Transaction
+    tx: Transaction,
+    naming?: CdmRoleWithGroupNaming
   ): Promise<CdmRoleCreationResult> {
-    const groupName = this.truncateName(`CDM: ${externalKey}`);
+    const groupLabel =
+      naming?.groupDisplayName != null && String(naming.groupDisplayName).trim() !== ''
+        ? String(naming.groupDisplayName).trim()
+        : `CDM: ${externalKey}`;
+    const groupName = this.truncateName(groupLabel);
+    const groupDescription =
+      naming?.groupDisplayDescription != null &&
+      String(naming.groupDisplayDescription).trim() !== ''
+        ? String(naming.groupDisplayDescription).trim()
+        : (description ?? `Imported group for ${externalKey}`);
     const groupMetadata = mergeCdmImporterMetadata(
       buildCdmImportMetadata(projectId, 'group', externalKey),
       importerMetadata
@@ -87,7 +103,7 @@ export class CdmEntityBuilder {
     const group = await this.groups.createGroup(
       {
         name: groupName,
-        description: description ?? `Imported group for ${externalKey}`,
+        description: groupDescription,
         metadata: groupMetadata,
       },
       tx
@@ -111,7 +127,7 @@ export class CdmEntityBuilder {
       projectResourcesLinked += n.resources;
     }
 
-    const roleName = this.truncateName(`CDM: ${name}`);
+    const roleName = this.truncateName(name.trim());
     const roleMetadata = mergeCdmImporterMetadata(
       buildCdmImportMetadata(projectId, kind, externalKey),
       importerMetadata

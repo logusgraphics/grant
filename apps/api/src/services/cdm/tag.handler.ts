@@ -7,7 +7,7 @@ import type {
   IProjectTagService,
   ITagService,
 } from '@grantjs/core';
-import { SyncProjectPermissionsInput, TagCdmInput } from '@grantjs/schema';
+import { TagCdmInput } from '@grantjs/schema';
 
 import {
   buildCdmImportMetadata,
@@ -20,7 +20,9 @@ import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
 import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
 
-const TAG_INPUT_KEY: keyof SyncProjectPermissionsInput = 'tags';
+import { buildExternalKey } from './identity.helper';
+
+const TAG_INPUT_KEY = 'tags' as const;
 
 /**
  * Handler for the CDM `tags` section. Owns CDM-marked tag rows
@@ -50,18 +52,19 @@ export class TagHandler implements ICdmEntityHandler<TagCdmInput, TagCdmInput> {
   public validateInput(input: readonly TagCdmInput[]): void {
     const externalKeys = new Set<string>();
     for (const t of input) {
-      if (t.externalKey == null || t.externalKey === '') {
-        throw new ValidationError('tags[]: externalKey is required for each tag');
+      const key = t.key?.trim() ?? '';
+      if (key === '') {
+        throw new ValidationError('tags[]: key is required for each tag');
       }
-      if (externalKeys.has(t.externalKey)) {
-        throw new ValidationError(`Duplicate tags externalKey: ${t.externalKey}`);
+      if (externalKeys.has(key)) {
+        throw new ValidationError(`Duplicate tags key: ${key}`);
       }
-      externalKeys.add(t.externalKey);
+      externalKeys.add(key);
       if (typeof t.name !== 'string' || t.name.trim() === '') {
-        throw new ValidationError(`tags[${t.externalKey}]: name is required`);
+        throw new ValidationError(`tags[${key}]: name is required`);
       }
       if (typeof t.color !== 'string' || t.color.trim() === '') {
-        throw new ValidationError(`tags[${t.externalKey}]: color is required`);
+        throw new ValidationError(`tags[${key}]: color is required`);
       }
     }
   }
@@ -80,8 +83,9 @@ export class TagHandler implements ICdmEntityHandler<TagCdmInput, TagCdmInput> {
   public async apply(ctx: CdmApplyContext, input: readonly TagCdmInput[]): Promise<void> {
     const tx = ctx.tx as Transaction;
     for (const row of input) {
+      const key = row.key?.trim() ?? '';
       const tagMetadata = mergeCdmImporterMetadata(
-        buildCdmImportMetadata(ctx.projectId, 'tag', row.externalKey),
+        buildCdmImportMetadata(ctx.projectId, 'tag', key),
         row.metadata
       );
       const tag = await this.tags.createTag(
@@ -96,11 +100,11 @@ export class TagHandler implements ICdmEntityHandler<TagCdmInput, TagCdmInput> {
         {
           projectId: ctx.projectId,
           tagId: tag.id,
-          isPrimary: row.isPrimary ?? false,
+          isPrimary: false,
         },
         tx
       );
-      ctx.produced.tagIds.set(row.externalKey, tag.id);
+      ctx.produced.tagIds.set(key, tag.id);
       ctx.result.tagsCreated += 1;
       ctx.result.projectTagsLinked += 1;
     }
@@ -109,23 +113,33 @@ export class TagHandler implements ICdmEntityHandler<TagCdmInput, TagCdmInput> {
   /**
    * Project current `project_tags` membership back to `TagCdmInput[]`.
    *
-   * Identity: `externalKey = tag.id` so re-imports preserve cross-references
-   * from `tagKeys` / `groupTagKeys` on roles and users.
+   * Identity: `externalKey = buildExternalKey('tag', tagId, name, color)` so
+   * round-tripped exports never leak Grant UUIDs as identity. The Grant id is
+   * preserved under `metadata.cdmSource.grantTagId` for traceability and is
+   * the source of truth other handlers use to map their own pivot rows
+   * (`role_tags`, `group_tags`, `user_tags`) back to the same externalKey.
    *
-   * Metadata: only `cdmSource` is forwarded (Grant strips the reserved
-   * `cdmImport` envelope on export to make the artifact re-importable via
-   * `mergeCdmImporterMetadata`).
+   * Metadata: importer-supplied `cdmSource` is forwarded; Grant strips the
+   * reserved `cdmImport` envelope on export and adds `grantTagId` for
+   * traceability.
    */
   public async export(ctx: CdmExportContext): Promise<readonly TagCdmInput[]> {
     const tx = ctx.tx as Transaction | undefined;
     const rows = await this.exportRepo.getProjectTagDefinitions(ctx.projectId, tx);
-    return rows.map((r) => ({
-      externalKey: r.tagId,
-      name: r.name,
-      color: r.color,
-      isPrimary: r.isPrimary,
-      metadata: extractCdmSourceMetadata(r.metadata),
-    }));
+    return rows.map((r) => {
+      const cdmSource = extractCdmSourceMetadata(r.metadata);
+      const metadata = {
+        ...(cdmSource ?? {}),
+        grantTagId: r.tagId,
+      };
+      const opaqueKey = buildExternalKey('tag', r.tagId, r.name, r.color);
+      return {
+        key: opaqueKey,
+        name: r.name,
+        color: r.color,
+        metadata,
+      };
+    });
   }
 }
 

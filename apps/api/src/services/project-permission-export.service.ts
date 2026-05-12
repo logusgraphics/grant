@@ -1,11 +1,13 @@
 import type {
   CdmExportContext,
   CdmExportSection,
+  CdmHandlerInputKey,
   IApiKeyService,
   ICdmEntityHandler,
   IGroupPermissionService,
   IGroupService,
   IGroupTagService,
+  IPermissionService,
   IProjectGroupService,
   IProjectPermissionExportService,
   IProjectPermissionService,
@@ -14,22 +16,55 @@ import type {
   IProjectTagService,
   IProjectUserApiKeyService,
   IProjectUserService,
+  IResourceService,
   IRoleGroupService,
   IRoleService,
   IRoleTagService,
   ITagService,
+  IUserRepository,
   IUserRoleService,
+  IUserService,
   IUserTagService,
 } from '@grantjs/core';
 import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
-import { Scope, SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
+import { CdmModeStrategy, Scope, SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
 
 import { ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
 import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
 
-import { createDefaultCdmHandlers } from './cdm';
+import { assembleExportedSyncProjectPermissionsInput, createDefaultCdmHandlers } from './cdm';
+import type {
+  CdmProjectUserApiKeyInternal,
+  CdmRoleTemplateInternal,
+  CdmUserAssignmentInternal,
+  CdmUserProvisionInternal,
+} from './cdm/cdm-internal.types';
+
+function exportHandlerIncluded(
+  includeAll: boolean,
+  include: Set<string>,
+  key: CdmHandlerInputKey
+): boolean {
+  if (includeAll) return true;
+  switch (key) {
+    case 'resources':
+      return include.has('resources');
+    case 'permissions':
+      return include.has('permissions');
+    case 'tags':
+      return include.has('tags');
+    case 'roleTemplates':
+      return include.has('roles') || include.has('groups');
+    case 'provisionedUsers':
+    case 'userAssignments':
+    case 'projectUserApiKeys':
+      return include.has('users');
+    default:
+      return false;
+  }
+}
 
 /**
  * Inverse of {@link ProjectPermissionSyncService}: snapshots the project's
@@ -69,6 +104,10 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
     roleTags: IRoleTagService,
     groupTags: IGroupTagService,
     userTags: IUserTagService,
+    resources: IResourceService,
+    permissions: IPermissionService,
+    users: IUserService,
+    userRepository: IUserRepository,
     handlers?: ReadonlyArray<ICdmEntityHandler>
   ) {
     this.handlers =
@@ -93,6 +132,10 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
         roleTags,
         groupTags,
         userTags,
+        resources,
+        permissions,
+        users,
+        userRepository,
       });
   }
 
@@ -100,7 +143,8 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
     params: {
       projectId: string;
       scope: Scope;
-      cdmVersion: number;
+      version?: number;
+      cdmVersion?: number;
       sections?: readonly CdmExportSection[];
     },
     transaction?: unknown
@@ -112,8 +156,9 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
         'scope id must contain the same projectId as the projectId argument'
       );
     }
-    if (params.cdmVersion !== 1) {
-      throw new ValidationError('Unsupported cdmVersion; only 1 is allowed');
+    const version = params.version ?? params.cdmVersion ?? 1;
+    if (version !== 1) {
+      throw new ValidationError('Unsupported version; only 1 is allowed');
     }
 
     const tx = transaction as Transaction | undefined;
@@ -125,12 +170,19 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
     };
 
     const result: SyncProjectPermissionsInput = {
-      cdmVersion: params.cdmVersion,
-      importId: null,
-      roleTemplates: [],
-      userAssignments: [],
-      projectUserApiKeys: [],
+      version,
+      id: null,
+      mode: {
+        strategy: CdmModeStrategy.Merge,
+        onConflict: null,
+        confirmDestructive: false,
+      },
+      roles: [],
+      users: [],
+      groups: [],
       tags: [],
+      resources: [],
+      permissions: [],
     };
 
     const includeAll = params.sections == null || params.sections.length === 0;
@@ -138,18 +190,40 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       ? new Set<string>(CDM_EXPORT_SECTIONS)
       : new Set<string>(params.sections);
 
+    const slices: Partial<Record<CdmHandlerInputKey, readonly unknown[]>> = {};
+
     for (const handler of this.handlers) {
-      const inputKey = handler.inputKey as string;
-      if (!include.has(inputKey)) {
+      if (!exportHandlerIncluded(includeAll, include, handler.inputKey)) {
         continue;
       }
-      const slice = await handler.export(exportCtx);
-      // Each handler writes to the field on the canonical input shape it
-      // owns. Casting here is the registry's escape hatch for typing the
-      // dynamic slot assignment (the `inputKey` is constrained to keys of
-      // `SyncProjectPermissionsInput` at the port level).
-      (result as unknown as Record<string, readonly unknown[]>)[handler.inputKey] = slice;
+      slices[handler.inputKey] = await handler.export(exportCtx);
     }
+
+    const roleTemplates = (slices.roleTemplates ?? []) as readonly CdmRoleTemplateInternal[];
+    const userAssignments = (slices.userAssignments ?? []) as readonly CdmUserAssignmentInternal[];
+    const projectUserApiKeys = (slices.projectUserApiKeys ??
+      []) as readonly CdmProjectUserApiKeyInternal[];
+    const provisionedUsers = (slices.provisionedUsers ?? []) as readonly CdmUserProvisionInternal[];
+
+    const assembled = assembleExportedSyncProjectPermissionsInput({
+      roleTemplates,
+      userAssignments,
+      projectUserApiKeys,
+      provisionedUsers,
+      resourcesSlice: (slices.resources ?? []) as NonNullable<
+        SyncProjectPermissionsInput['resources']
+      >,
+      permissionsSlice: (slices.permissions ?? []) as NonNullable<
+        SyncProjectPermissionsInput['permissions']
+      >,
+      tagsSlice: (slices.tags ?? []) as NonNullable<SyncProjectPermissionsInput['tags']>,
+    });
+    result.roles = assembled.roles;
+    result.users = assembled.users;
+    result.groups = assembled.groups;
+    result.resources = assembled.resources;
+    result.permissions = assembled.permissions;
+    result.tags = assembled.tags;
 
     return result;
   }

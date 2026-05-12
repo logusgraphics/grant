@@ -41,6 +41,7 @@ function compactResultSummary(result: SyncProjectPermissionsResult): Record<stri
     projectPermissionsLinked: result.projectPermissionsLinked,
     projectResourcesLinked: result.projectResourcesLinked,
     projectUsersEnsured: result.projectUsersEnsured,
+    usersCreated: result.usersCreated,
     userRolesAssigned: result.userRolesAssigned,
     projectUserApiKeysCreated: result.projectUserApiKeysCreated,
     warningsCount: Array.isArray(result.warnings) ? result.warnings.length : 0,

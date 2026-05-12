@@ -6,6 +6,7 @@ type Permission implements Auditable {
   resourceId: ID
   resource: Resource
   condition: JSON
+  metadata: JSON!
   tags: [Tag!]
   createdAt: Date!
   updatedAt: Date!

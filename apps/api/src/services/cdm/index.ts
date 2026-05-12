@@ -4,6 +4,7 @@ import type {
   IGroupPermissionService,
   IGroupService,
   IGroupTagService,
+  IPermissionService,
   IProjectGroupService,
   IProjectPermissionService,
   IProjectResourceService,
@@ -11,11 +12,14 @@ import type {
   IProjectTagService,
   IProjectUserApiKeyService,
   IProjectUserService,
+  IResourceService,
   IRoleGroupService,
   IRoleService,
   IRoleTagService,
   ITagService,
+  IUserRepository,
   IUserRoleService,
+  IUserService,
   IUserTagService,
 } from '@grantjs/core';
 
@@ -23,20 +27,36 @@ import type { ProjectPermissionExportRepository } from '@/repositories/project-p
 import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
 
 import { CdmEntityBuilder } from './cdm-entity-builder';
+import { PermissionHandler } from './permission.handler';
 import { ProjectUserApiKeyCdmHandler } from './project-user-api-key.handler';
+import { ResourceHandler } from './resource.handler';
 import { RoleTemplateHandler } from './role-template.handler';
 import { TagHandler } from './tag.handler';
 import { UserAssignmentHandler } from './user-assignment.handler';
+import { UserProvisionHandler } from './user-provision.handler';
 
+export type { CdmRoleWithGroupNaming } from './cdm-entity-builder';
 export { CdmEntityBuilder } from './cdm-entity-builder';
+export { assembleExportedSyncProjectPermissionsInput } from './cdm-export-assemble';
 export {
+  addPermissionRefDeduped,
+  canonicalPermissionDocumentString,
+  parseCdmPermissionDocumentString,
+  serializePermissionRefForCdmDocument,
+} from './cdm-permission-document-ref';
+export type { CdmExternalKeyKind } from './identity.helper';
+export { buildExternalKey, stableHash } from './identity.helper';
+export {
+  isPermissionKeyOnlyRef,
   refDedupKey,
   resolveAllPermissionRefs,
   resolveSinglePermissionRef,
 } from './permission-ref.helper';
+export { ResourceHandler } from './resource.handler';
 export { RoleTemplateHandler } from './role-template.handler';
 export { TagHandler } from './tag.handler';
 export { UserAssignmentHandler } from './user-assignment.handler';
+export { UserProvisionHandler } from './user-provision.handler';
 
 /**
  * Bag of services injected into the default CDM handlers. Centralised here so
@@ -63,6 +83,10 @@ export interface CdmHandlerRegistryDeps {
   roleTags: IRoleTagService;
   groupTags: IGroupTagService;
   userTags: IUserTagService;
+  resources: IResourceService;
+  permissions: IPermissionService;
+  users: IUserService;
+  userRepository: IUserRepository;
 }
 
 /**
@@ -93,8 +117,17 @@ export function createDefaultCdmHandlers(
   );
 
   const handlers: ICdmEntityHandler[] = [
+    new ResourceHandler(deps.syncRepo, deps.exportRepo, deps.resources, deps.projectResources),
+    new PermissionHandler(
+      deps.syncRepo,
+      deps.exportRepo,
+      deps.permissions,
+      deps.projectPermissions,
+      deps.resources
+    ),
     new TagHandler(deps.syncRepo, deps.exportRepo, deps.tags, deps.projectTags),
     new RoleTemplateHandler(deps.syncRepo, deps.exportRepo, builder, deps.roleTags, deps.groupTags),
+    new UserProvisionHandler(deps.exportRepo, deps.users, deps.userRepository),
     new UserAssignmentHandler(
       deps.exportRepo,
       builder,

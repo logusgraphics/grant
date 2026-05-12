@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { SyncProjectPermissionsInput } from '@grantjs/schema';
+import { CdmModeStrategy, CdmOnConflict, type SyncProjectPermissionsInput } from '@grantjs/schema';
 import { AlertCircle, FileJson, Loader2, ShieldAlert, X } from 'lucide-react';
 import { type FileRejection, useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
@@ -41,12 +41,16 @@ interface ParsedPayload {
 function isParsedPayload(value: unknown): value is SyncProjectPermissionsInput {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Record<string, unknown>;
-  if (typeof candidate.cdmVersion !== 'number') return false;
-  if (!Array.isArray(candidate.roleTemplates)) return false;
-  if (!Array.isArray(candidate.userAssignments)) return false;
-  if (candidate.projectUserApiKeys !== undefined && !Array.isArray(candidate.projectUserApiKeys)) {
-    return false;
-  }
+  if (typeof candidate.version !== 'number') return false;
+  if (!candidate.mode || typeof candidate.mode !== 'object') return false;
+  const mode = candidate.mode as Record<string, unknown>;
+  if (typeof mode.strategy !== 'string') return false;
+  if (!Array.isArray(candidate.roles)) return false;
+  if (!Array.isArray(candidate.users)) return false;
+  if (candidate.resources !== undefined && !Array.isArray(candidate.resources)) return false;
+  if (candidate.permissions !== undefined && !Array.isArray(candidate.permissions)) return false;
+  if (candidate.groups !== undefined && !Array.isArray(candidate.groups)) return false;
+  if (candidate.tags !== undefined && !Array.isArray(candidate.tags)) return false;
   return true;
 }
 
@@ -161,21 +165,55 @@ export function PermissionSyncJobStartDialog() {
 
   const stats = useMemo(() => {
     if (!parsed) return null;
+    const p = parsed.payload;
+    const apiKeyCount = p.users?.reduce((n, u) => n + (u.apiKeys?.length ?? 0), 0) ?? 0;
+    const importId = typeof p.id === 'string' && p.id.trim() !== '' ? p.id.trim() : null;
+    const strategy = p.mode?.strategy;
+    const onConflict = p.mode?.onConflict ?? null;
+    const confirmDestructive = Boolean(p.mode?.confirmDestructive);
     return {
-      roleTemplates: parsed.payload.roleTemplates?.length ?? 0,
-      userAssignments: parsed.payload.userAssignments?.length ?? 0,
-      projectUserApiKeys: parsed.payload.projectUserApiKeys?.length ?? 0,
-      cdmVersion: parsed.payload.cdmVersion,
+      version: p.version,
+      strategy,
+      onConflict,
+      confirmDestructive,
+      importId,
+      roles: p.roles?.length ?? 0,
+      users: p.users?.length ?? 0,
+      apiKeys: apiKeyCount,
+      groups: p.groups?.length ?? 0,
+      resources: p.resources?.length ?? 0,
+      permissions: p.permissions?.length ?? 0,
+      tags: p.tags?.length ?? 0,
     };
   }, [parsed]);
+
+  const strategyLabel = useMemo(() => {
+    if (!stats?.strategy) return null;
+    if (stats.strategy === CdmModeStrategy.Merge) return t('summary.strategy.merge');
+    if (stats.strategy === CdmModeStrategy.Replace) return t('summary.strategy.replace');
+    return String(stats.strategy);
+  }, [stats?.strategy, t]);
+
+  const onConflictLabel = useMemo(() => {
+    if (!stats?.onConflict) return null;
+    if (stats.onConflict === CdmOnConflict.Fail) return t('summary.onConflict.fail');
+    if (stats.onConflict === CdmOnConflict.Skip) return t('summary.onConflict.skip');
+    if (stats.onConflict === CdmOnConflict.Update) return t('summary.onConflict.update');
+    return String(stats.onConflict);
+  }, [stats?.onConflict, t]);
 
   const handleSubmit = useCallback(async () => {
     if (!parsed || !scope) return;
     setSubmitting(true);
     try {
+      const existingId = parsed.payload.id;
+      const id =
+        typeof existingId === 'string' && existingId.trim() !== ''
+          ? existingId.trim()
+          : generateImportId();
       const input: SyncProjectPermissionsInput = {
         ...parsed.payload,
-        importId: parsed.payload.importId ?? generateImportId(),
+        id,
       };
       await startSync({ id: projectId, scope, input });
       toast.success(tNotifications('startSuccess'));
@@ -197,7 +235,7 @@ export function PermissionSyncJobStartDialog() {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="min-w-0 overflow-x-hidden sm:max-w-[560px]">
+      <DialogContent className="min-w-0 overflow-x-hidden sm:max-w-xl md:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
@@ -256,28 +294,86 @@ export function PermissionSyncJobStartDialog() {
             </div>
 
             {stats && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
-                  <div className="rounded-md bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">{t('summary.cdmVersion')}</p>
-                    <p className="text-lg font-semibold">v{stats.cdmVersion}</p>
-                  </div>
-                  <div className="rounded-md bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">{t('summary.roleTemplates')}</p>
-                    <p className="text-lg font-semibold">{stats.roleTemplates}</p>
-                  </div>
-                  <div className="rounded-md bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">{t('summary.userAssignments')}</p>
-                    <p className="text-lg font-semibold">{stats.userAssignments}</p>
-                  </div>
-                  <div className="rounded-md bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">
-                      {t('summary.projectUserApiKeys')}
-                    </p>
-                    <p className="text-lg font-semibold">{stats.projectUserApiKeys}</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {t('summary.jobParameters')}
+                  </p>
+                  <dl className="grid grid-cols-1 gap-x-4 gap-y-2.5 rounded-md border bg-muted/30 p-3 text-sm sm:grid-cols-2">
+                    <div className="min-w-0 sm:col-span-1">
+                      <dt className="text-xs text-muted-foreground">{t('summary.version')}</dt>
+                      <dd className="font-medium tabular-nums">v{stats.version}</dd>
+                    </div>
+                    <div className="min-w-0 sm:col-span-1">
+                      <dt className="text-xs text-muted-foreground">
+                        {t('summary.strategyLabel')}
+                      </dt>
+                      <dd className="font-medium">{strategyLabel ?? '—'}</dd>
+                    </div>
+                    {onConflictLabel ? (
+                      <div className="min-w-0 sm:col-span-1">
+                        <dt className="text-xs text-muted-foreground">
+                          {t('summary.onConflictLabel')}
+                        </dt>
+                        <dd className="font-medium">{onConflictLabel}</dd>
+                      </div>
+                    ) : null}
+                    {stats.confirmDestructive ? (
+                      <div className="min-w-0 sm:col-span-1">
+                        <dt className="text-xs text-muted-foreground">
+                          {t('summary.confirmDestructiveLabel')}
+                        </dt>
+                        <dd className="font-medium">{t('summary.confirmDestructiveYes')}</dd>
+                      </div>
+                    ) : null}
+                    {stats.importId ? (
+                      <div className="min-w-0 sm:col-span-2">
+                        <dt className="text-xs text-muted-foreground">{t('summary.importId')}</dt>
+                        <dd className="break-all font-mono text-xs font-medium">
+                          {stats.importId}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {t('summary.entityCounts')}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+                    <div className="rounded-md bg-muted p-2.5 sm:p-3">
+                      <p className="text-xs text-muted-foreground">{t('summary.roles')}</p>
+                      <p className="text-lg font-semibold tabular-nums">{stats.roles}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2.5 sm:p-3">
+                      <p className="text-xs text-muted-foreground">{t('summary.users')}</p>
+                      <p className="text-lg font-semibold tabular-nums">{stats.users}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2.5 sm:p-3">
+                      <p className="text-xs text-muted-foreground">{t('summary.apiKeys')}</p>
+                      <p className="text-lg font-semibold tabular-nums">{stats.apiKeys}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2.5 sm:p-3">
+                      <p className="text-xs text-muted-foreground">{t('summary.groups')}</p>
+                      <p className="text-lg font-semibold tabular-nums">{stats.groups}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2.5 sm:p-3">
+                      <p className="text-xs text-muted-foreground">{t('summary.resources')}</p>
+                      <p className="text-lg font-semibold tabular-nums">{stats.resources}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2.5 sm:p-3">
+                      <p className="text-xs text-muted-foreground">{t('summary.permissions')}</p>
+                      <p className="text-lg font-semibold tabular-nums">{stats.permissions}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2.5 sm:p-3">
+                      <p className="text-xs text-muted-foreground">{t('summary.tags')}</p>
+                      <p className="text-lg font-semibold tabular-nums">{stats.tags}</p>
+                    </div>
                   </div>
                 </div>
-                {stats.projectUserApiKeys > 0 ? (
+
+                {stats.apiKeys > 0 ? (
                   <p className="text-xs text-muted-foreground">{t('summary.byokNote')}</p>
                 ) : null}
               </div>

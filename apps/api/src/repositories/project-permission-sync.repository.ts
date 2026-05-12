@@ -1,11 +1,16 @@
 import {
   DbSchema,
+  groupPermissions,
   groups,
   groupTags,
   permissions,
+  permissionTags,
+  projectPermissions,
+  projectResources,
   projectTags,
   projectUserApiKeys,
   resources,
+  resourceTags,
   roles,
   roleTags,
   tags,
@@ -252,5 +257,139 @@ export class ProjectPermissionSyncRepository {
       .update(tags)
       .set({ deletedAt: now, updatedAt: now })
       .where(and(inArray(tags.id, tagIds), isNull(tags.deletedAt)));
+  }
+
+  /**
+   * Resource ids managed by the CDM resource handler for this project.
+   * Identified via `resources.metadata.cdmImport.projectId` + `kind = 'resource'`
+   * so we only delete CDM resources belonging to this project (never user-created
+   * or system catalog ones).
+   */
+  public async listCdmResourceIdsForProject(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<string[]> {
+    const db = transaction ?? this.db;
+    const rows = await db
+      .select({ id: resources.id })
+      .from(resources)
+      .where(
+        and(
+          isNull(resources.deletedAt),
+          sql`${resources.metadata}->'cdmImport'->>'projectId' = ${projectId}`,
+          sql`${resources.metadata}->'cdmImport'->>'kind' = 'resource'`
+        )
+      );
+    return rows.map((r) => r.id);
+  }
+
+  /**
+   * Permission ids managed by the CDM permission handler for this project.
+   * Identified via `permissions.metadata.cdmImport.projectId` + `kind = 'permission'`.
+   */
+  public async listCdmPermissionIdsForProject(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<string[]> {
+    const db = transaction ?? this.db;
+    const rows = await db
+      .select({ id: permissions.id })
+      .from(permissions)
+      .where(
+        and(
+          isNull(permissions.deletedAt),
+          sql`${permissions.metadata}->'cdmImport'->>'projectId' = ${projectId}`,
+          sql`${permissions.metadata}->'cdmImport'->>'kind' = 'permission'`
+        )
+      );
+    return rows.map((r) => r.id);
+  }
+
+  /**
+   * Soft-delete CDM-marked resource rows together with their pivot memberships.
+   *
+   * Touches: `project_resources` (this project only), `resource_tags` referencing
+   * the given resource ids, and the `resources` rows themselves. Permissions
+   * tied to these resources are torn down separately by the permission handler.
+   */
+  public async bulkSoftDeleteCdmResources(
+    resourceIds: string[],
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<void> {
+    if (resourceIds.length === 0) return;
+    const db = transaction ?? this.db;
+    const now = new Date();
+
+    await db
+      .update(projectResources)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(projectResources.projectId, projectId),
+          inArray(projectResources.resourceId, resourceIds),
+          isNull(projectResources.deletedAt)
+        )
+      );
+
+    await db
+      .update(resourceTags)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(inArray(resourceTags.resourceId, resourceIds), isNull(resourceTags.deletedAt)));
+
+    await db
+      .update(resources)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(inArray(resources.id, resourceIds), isNull(resources.deletedAt)));
+  }
+
+  /**
+   * Soft-delete CDM-marked permission rows together with their pivot memberships.
+   *
+   * Touches: `project_permissions` (this project only), `group_permissions`
+   * and `permission_tags` referencing the given permission ids, and the
+   * `permissions` rows themselves.
+   */
+  public async bulkSoftDeleteCdmPermissions(
+    permissionIds: string[],
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<void> {
+    if (permissionIds.length === 0) return;
+    const db = transaction ?? this.db;
+    const now = new Date();
+
+    await db
+      .update(projectPermissions)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(projectPermissions.projectId, projectId),
+          inArray(projectPermissions.permissionId, permissionIds),
+          isNull(projectPermissions.deletedAt)
+        )
+      );
+
+    await db
+      .update(groupPermissions)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(
+          inArray(groupPermissions.permissionId, permissionIds),
+          isNull(groupPermissions.deletedAt)
+        )
+      );
+
+    await db
+      .update(permissionTags)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(
+        and(inArray(permissionTags.permissionId, permissionIds), isNull(permissionTags.deletedAt))
+      );
+
+    await db
+      .update(permissions)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(inArray(permissions.id, permissionIds), isNull(permissions.deletedAt)));
   }
 }

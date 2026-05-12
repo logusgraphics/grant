@@ -1,14 +1,16 @@
 /**
  * Unit tests for ProjectPermissionExportService.
  *
- * The service iterates the same `ICdmEntityHandler[]` registry as the sync
- * service and assembles each handler's `export(...)` output into the field on
- * `SyncProjectPermissionsInput` it owns. We mock handlers entirely so the
- * test pins the orchestrator's wiring contract rather than the role-template
- * read joins (those are covered by the export repo's own tests).
+ * Mocks handlers to pin orchestration: canonical `SyncProjectPermissionsInput`
+ * is assembled from internal handler slices (`roleTemplates`, `userAssignments`, …).
  */
-import type { CdmExportContext, CdmPermissionRefSpec, ICdmEntityHandler } from '@grantjs/core';
-import { type Scope, type SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
+import type {
+  CdmExportContext,
+  CdmHandlerInputKey,
+  CdmPermissionRefSpec,
+  ICdmEntityHandler,
+} from '@grantjs/core';
+import { CdmFindBy, type Scope, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ProjectPermissionExportService } from '@/services/project-permission-export.service';
@@ -18,7 +20,7 @@ const projectId = '10000000-0000-4000-8000-000000000011';
 const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` };
 
 function stubHandler(
-  inputKey: keyof SyncProjectPermissionsInput,
+  inputKey: CdmHandlerInputKey,
   exported: readonly unknown[]
 ): ICdmEntityHandler {
   return {
@@ -54,12 +56,16 @@ function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
     {} as never,
     {} as never,
     {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
     handlers
   );
 }
 
 describe('ProjectPermissionExportService', () => {
-  it('assembles a SyncProjectPermissionsInput by writing each handler.export into its inputKey slot', async () => {
+  it('merges handler exports into canonical roles and users', async () => {
     const roleTemplate = stubHandler('roleTemplates', [
       {
         externalKey: 'role-1',
@@ -77,22 +83,26 @@ describe('ProjectPermissionExportService', () => {
         metadata: null,
       },
     ]);
+    const provisioned = stubHandler('provisionedUsers', []);
+    const keys = stubHandler('projectUserApiKeys', []);
 
-    const svc = buildService([roleTemplate, userAssignment]);
+    const svc = buildService([roleTemplate, userAssignment, provisioned, keys]);
     const out = await svc.exportProjectPermissions({
       projectId,
       scope,
-      cdmVersion: 1,
+      version: 1,
     });
 
-    expect(out.cdmVersion).toBe(1);
-    expect(out.roleTemplates).toEqual([
-      expect.objectContaining({ externalKey: 'role-1', name: 'Existing role' }),
+    expect(out.version).toBe(1);
+    expect(out.roles).toEqual([
+      expect.objectContaining({ key: 'role-1', name: 'Existing role', permissions: ['tag:query'] }),
     ]);
-    expect(out.userAssignments).toEqual([
-      expect.objectContaining({ userId: 'u-1', roleTemplateKeys: ['role-1'] }),
+    expect(out.users).toEqual([
+      expect.objectContaining({
+        key: { value: 'u-1', findBy: CdmFindBy.Id },
+        roles: ['role-1'],
+      }),
     ]);
-    expect(out.projectUserApiKeys).toEqual([]);
 
     expect(roleTemplate.export).toHaveBeenCalledWith(expect.objectContaining({ projectId, scope }));
     expect(userAssignment.export).toHaveBeenCalledWith(
@@ -103,10 +113,12 @@ describe('ProjectPermissionExportService', () => {
   it('passes the supplied transaction through to each handler.export', async () => {
     const roleTemplate = stubHandler('roleTemplates', []);
     const userAssignment = stubHandler('userAssignments', []);
+    const provisioned = stubHandler('provisionedUsers', []);
+    const keys = stubHandler('projectUserApiKeys', []);
 
-    const svc = buildService([roleTemplate, userAssignment]);
+    const svc = buildService([roleTemplate, userAssignment, provisioned, keys]);
     const tx = { __mockTx: true };
-    await svc.exportProjectPermissions({ projectId, scope, cdmVersion: 1 }, tx);
+    await svc.exportProjectPermissions({ projectId, scope, version: 1 }, tx);
 
     expect(roleTemplate.export).toHaveBeenCalledWith(expect.objectContaining({ tx }));
     expect(userAssignment.export).toHaveBeenCalledWith(expect.objectContaining({ tx }));
@@ -118,7 +130,7 @@ describe('ProjectPermissionExportService', () => {
       svc.exportProjectPermissions({
         projectId,
         scope: { tenant: Tenant.Account, id: accountId },
-        cdmVersion: 1,
+        version: 1,
       })
     ).rejects.toThrow(/accountProject or organizationProject/);
   });
@@ -129,34 +141,37 @@ describe('ProjectPermissionExportService', () => {
       svc.exportProjectPermissions({
         projectId: 'different-project',
         scope,
-        cdmVersion: 1,
+        version: 1,
       })
     ).rejects.toThrow(/scope id must contain the same projectId/);
   });
 
-  it('rejects unsupported cdmVersion', async () => {
+  it('rejects unsupported version', async () => {
     const svc = buildService([stubHandler('roleTemplates', [])]);
-    await expect(svc.exportProjectPermissions({ projectId, scope, cdmVersion: 2 })).rejects.toThrow(
-      /Unsupported cdmVersion/
+    await expect(svc.exportProjectPermissions({ projectId, scope, version: 2 })).rejects.toThrow(
+      /Unsupported version/
     );
   });
 
-  it('when sections is set, only those handlers run export', async () => {
-    const roleTemplate = stubHandler('roleTemplates', [{ externalKey: 'r1' }]);
-    const userAssignment = stubHandler('userAssignments', [{ userId: 'u-1' }]);
+  it('when sections is set, only matching handlers run export', async () => {
+    const roleTemplate = stubHandler('roleTemplates', [
+      { externalKey: 'r1', name: 'R', description: null, permissionRefs: [], metadata: null },
+    ]);
+    const userAssignment = stubHandler('userAssignments', [
+      { userId: 'u-1', roleTemplateKeys: [] },
+    ]);
     const keys = stubHandler('projectUserApiKeys', [{ userId: 'u-1', clientId: 'c1' }]);
 
     const svc = buildService([roleTemplate, userAssignment, keys]);
     const out = await svc.exportProjectPermissions({
       projectId,
       scope,
-      cdmVersion: 1,
-      sections: ['roleTemplates'],
+      version: 1,
+      sections: ['roles'],
     });
 
-    expect(out.roleTemplates).toEqual([{ externalKey: 'r1' }]);
-    expect(out.userAssignments).toEqual([]);
-    expect(out.projectUserApiKeys).toEqual([]);
+    expect(out.roles).toEqual([expect.objectContaining({ key: 'r1' })]);
+    expect(out.users).toEqual([]);
     expect(roleTemplate.export).toHaveBeenCalledTimes(1);
     expect(userAssignment.export).not.toHaveBeenCalled();
     expect(keys.export).not.toHaveBeenCalled();
@@ -166,11 +181,12 @@ describe('ProjectPermissionExportService', () => {
     const roleTemplate = stubHandler('roleTemplates', []);
     const userAssignment = stubHandler('userAssignments', []);
     const keys = stubHandler('projectUserApiKeys', []);
-    const svc = buildService([roleTemplate, userAssignment, keys]);
+    const provisioned = stubHandler('provisionedUsers', []);
+    const svc = buildService([roleTemplate, userAssignment, keys, provisioned]);
     await svc.exportProjectPermissions({
       projectId,
       scope,
-      cdmVersion: 1,
+      version: 1,
       sections: [],
     });
     expect(roleTemplate.export).toHaveBeenCalled();
@@ -178,17 +194,19 @@ describe('ProjectPermissionExportService', () => {
     expect(keys.export).toHaveBeenCalled();
   });
 
-  it('round-trip: handlers produce a CDM artifact whose `tags` and tagKeys/groupTagKeys/userTags fields can feed sync back without manual transformation', async () => {
-    const tagId = '60000000-0000-4000-8000-000000000aaa';
+  it('maps tag + role + user handler output into canonical tags and roles.users tag keys', async () => {
+    const tagOpaque = '60000000-0000-4000-8000-000000000aaa';
     const roleId = '70000000-0000-4000-8000-000000000777';
     const userId = '30000000-0000-4000-8000-000000000099';
+    const grantGroupId = '80000000-0000-4000-8000-0000000000g1';
+    const groupKey = 'cdm-group-linked-test';
 
     const tag = stubHandler('tags', [
       {
-        externalKey: tagId,
+        key: tagOpaque,
         name: 'Alpha',
         color: '#fff',
-        isPrimary: true,
+        metadata: null,
       },
     ]);
     const roleTemplate = stubHandler('roleTemplates', [
@@ -198,8 +216,17 @@ describe('ProjectPermissionExportService', () => {
         description: null,
         permissionRefs: [{ resourceSlug: 'Tag', action: 'Query', permissionId: 'p-1' }],
         metadata: null,
-        tagKeys: [tagId],
-        groupTagKeys: [tagId],
+        tagKeys: [tagOpaque],
+        groupTagKeys: [tagOpaque],
+        linkedGrantGroup: {
+          grantGroupId,
+          groupKey,
+          groupName: 'Linked group',
+          groupDescription: null,
+          permissionKeys: [],
+          tagKeys: [tagOpaque],
+          primaryGroupTagKey: null,
+        },
       },
     ]);
     const userAssignment = stubHandler('userAssignments', [
@@ -208,21 +235,39 @@ describe('ProjectPermissionExportService', () => {
         roleTemplateKeys: [roleId],
         directPermissionRefs: [],
         metadata: null,
-        tagKeys: [tagId],
+        tagKeys: [tagOpaque],
       },
     ]);
+    const provisioned = stubHandler('provisionedUsers', []);
+    const keys = stubHandler('projectUserApiKeys', []);
 
-    const svc = buildService([tag, roleTemplate, userAssignment]);
-    const out = await svc.exportProjectPermissions({ projectId, scope, cdmVersion: 1 });
+    const svc = buildService([tag, roleTemplate, userAssignment, provisioned, keys]);
+    const out = await svc.exportProjectPermissions({ projectId, scope, version: 1 });
 
-    expect(out.tags).toEqual([expect.objectContaining({ externalKey: tagId, name: 'Alpha' })]);
-    expect(out.roleTemplates).toEqual([
+    expect(out.tags).toEqual([expect.objectContaining({ key: tagOpaque, name: 'Alpha' })]);
+    expect(out.groups).toEqual([
       expect.objectContaining({
-        externalKey: roleId,
-        tagKeys: [tagId],
-        groupTagKeys: [tagId],
+        key: groupKey,
+        name: 'Linked group',
+        permissions: [],
+        tags: [tagOpaque],
+        primaryTag: null,
+        metadata: { grantGroupId },
       }),
     ]);
-    expect(out.userAssignments).toEqual([expect.objectContaining({ userId, tagKeys: [tagId] })]);
+    expect(out.roles).toEqual([
+      expect.objectContaining({
+        key: roleId,
+        tags: [tagOpaque],
+        groups: [groupKey],
+        permissions: ['tag:query'],
+      }),
+    ]);
+    expect(out.users).toEqual([
+      expect.objectContaining({
+        key: { value: userId, findBy: CdmFindBy.Id },
+        tags: [tagOpaque],
+      }),
+    ]);
   });
 });

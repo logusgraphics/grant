@@ -13,11 +13,23 @@ type SyncProjectPermissionsResult {
   projectPermissionsLinked: Int!
   projectResourcesLinked: Int!
   projectUsersEnsured: Int!
+  """
+  Number of Grant user rows created from the optional `users` section during this sync.
+  """
+  usersCreated: Int!
   userRolesAssigned: Int!
   """
   Number of project-user API key pivots created during this sync (each with a new or supplied api_keys row).
   """
   projectUserApiKeysCreated: Int!
+  """
+  Number of CDM resource rows created during this sync (one per `resources[]` entry in the import).
+  """
+  resourcesCreated: Int!
+  """
+  Number of CDM permission rows created during this sync (one per `permissions[]` entry in the import).
+  """
+  permissionsCreated: Int!
   """
   Number of CDM tag rows created during this sync (one per `tags[]` entry in the import).
   """

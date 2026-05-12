@@ -3215,15 +3215,20 @@
     },
     "exportDialog": {
       "title": "Export CDM",
-      "description": "Choose which parts of the permission model to include. Unchecked sections appear as empty arrays in the downloaded JSON.",
+      "description": "Choose which parts of the permission model to include. Unchecked sections appear as empty arrays in the downloaded JSON. Top-level `resources` / `permissions` only list rows CDM imported for this project; catalog grants still appear under `roles.permissions` (permission keys or slug/action where applicable).",
       "sections": {
+        "resources": "Resources (custom project resources and project links)",
+        "permissions": "Permissions (custom project permissions and project links)",
+        "permissionsNeedResources": "Requires resources — permissions reference resources in the export.",
+        "catalogResourcesMayBeEmpty": "May be empty if this project only uses the global catalog—custom resource rows are listed when CDM created them for this project.",
+        "catalogPermissionsMayBeEmpty": "May be empty if grants use only catalog permissions—see `roles` for permission keys and catalog references.",
         "tags": "Tags (project tags and role/group/user tag associations)",
-        "roleTemplates": "Role templates (roles, groups, and permission links)",
-        "userAssignments": "User assignments (project members and role links)",
-        "projectUserApiKeys": "Per-user API keys (identity only; no secrets)",
-        "keysNeedUsers": "Requires user assignments — API keys belong to members in the export."
+        "groups": "Groups (group rows linked from roles and group permission keys)",
+        "roles": "Roles (role rows, tag links, and permission keys for this project)",
+        "users": "Users (members, roles, and user API keys in this document)",
+        "usersIncludeApiKeys": "When included, user rows carry `apiKeys` (identity only; no secrets on export)."
       },
-      "helperReimport": "Importing user assignments without role templates may require merging this file with another export that includes templates.",
+      "helperReimport": "Importing users without roles may require merging this file with another export that includes roles.",
       "cancel": "Cancel",
       "export": "Download JSON",
       "exporting": "Exporting…"
@@ -3275,14 +3280,34 @@
         "invalidType": "Only .json files are accepted.",
         "fileTooLarge": "File is too large. Maximum size is {maxSize} MB.",
         "invalidJson": "The file is not valid JSON.",
-        "invalidShape": "The JSON does not look like a CDM payload (missing or invalid cdmVersion, roleTemplates, or userAssignments; projectUserApiKeys must be an array when present).",
+        "invalidShape": "The JSON does not look like a CDM payload (missing or invalid version, mode.strategy, roles[], or users[]; optional resources/permissions/groups/tags must be arrays when present).",
         "readFailed": "Failed to read the file."
       },
       "summary": {
-        "cdmVersion": "CDM version",
-        "roleTemplates": "Role templates",
-        "userAssignments": "User assignments",
-        "projectUserApiKeys": "User API keys",
+        "jobParameters": "Import job",
+        "entityCounts": "Entities in file",
+        "version": "CDM version",
+        "strategyLabel": "Mode",
+        "strategy": {
+          "merge": "Merge",
+          "replace": "Replace"
+        },
+        "onConflictLabel": "On conflict",
+        "onConflict": {
+          "fail": "Fail",
+          "skip": "Skip",
+          "update": "Update"
+        },
+        "confirmDestructiveLabel": "Destructive change",
+        "confirmDestructiveYes": "Confirmed",
+        "importId": "Import ID",
+        "roles": "Roles",
+        "users": "Users",
+        "apiKeys": "User API keys",
+        "groups": "Groups",
+        "resources": "Resources",
+        "permissions": "Permissions",
+        "tags": "Tags",
         "byokNote": "Each listed user API key must include clientSecret in the JSON (import only). Export and rollback snapshots never contain secrets."
       },
       "clear": "Remove file",
@@ -3349,6 +3374,7 @@
           "right": "resources"
         },
         "projectUsersEnsured": "Project users ensured",
+        "usersCreated": "Grant users created (CDM provision)",
         "userRolesAssigned": "User roles assigned",
         "projectUserApiKeysCreated": "User API keys created"
       },
