@@ -11,17 +11,17 @@ import {
   exportProjectPermissionsQuerySchema,
   getProjectsQuerySchema,
   getProjectsResponseSchema,
-  listProjectPermissionsSyncJobsQuerySchema,
-  listProjectPermissionsSyncJobsResponseSchema,
+  listProjectSyncJobsQuerySchema,
+  listProjectSyncJobsResponseSchema,
   notFoundErrorResponseSchema,
   projectParamsSchema,
-  projectPermissionsSyncJobParamsSchema,
-  projectPermissionsSyncJobResponseSchema,
-  projectPermissionsSyncJobSchema,
-  projectPermissionsSyncJobScopeQuerySchema,
   projectSchema,
+  projectSyncJobParamsSchema,
+  projectSyncJobResponseSchema,
+  projectSyncJobSchema,
+  projectSyncJobScopeQuerySchema,
   projectWithRelationsSchema,
-  startProjectPermissionsSyncRequestSchema,
+  startProjectSyncRequestSchema,
   updateProjectRequestSchema,
   updateProjectResponseSchema,
   validationErrorResponseSchema,
@@ -35,23 +35,14 @@ export function registerProjectsOpenApi(registry: OpenAPIRegistry) {
   registry.register('GetProjectsResponse', getProjectsResponseSchema);
   registry.register('GetProjectResponse', createSuccessResponseSchema(projectWithRelationsSchema));
   registry.register('ProjectParams', projectParamsSchema);
-  registry.register('StartProjectPermissionsSyncRequest', startProjectPermissionsSyncRequestSchema);
-  registry.register('ProjectPermissionsSyncJob', projectPermissionsSyncJobSchema);
-  registry.register('ProjectPermissionsSyncJobResponse', projectPermissionsSyncJobResponseSchema);
-  registry.register(
-    'ListProjectPermissionsSyncJobsQuery',
-    listProjectPermissionsSyncJobsQuerySchema
-  );
-  registry.register(
-    'ListProjectPermissionsSyncJobsResponse',
-    listProjectPermissionsSyncJobsResponseSchema
-  );
+  registry.register('StartProjectSyncRequest', startProjectSyncRequestSchema);
+  registry.register('ProjectSyncJob', projectSyncJobSchema);
+  registry.register('ProjectSyncJobResponse', projectSyncJobResponseSchema);
+  registry.register('ListProjectSyncJobsQuery', listProjectSyncJobsQuerySchema);
+  registry.register('ListProjectSyncJobsResponse', listProjectSyncJobsResponseSchema);
   registry.register('ExportProjectPermissionsQuery', exportProjectPermissionsQuerySchema);
-  registry.register('ProjectPermissionsSyncJobParams', projectPermissionsSyncJobParamsSchema);
-  registry.register(
-    'ProjectPermissionsSyncJobScopeQuery',
-    projectPermissionsSyncJobScopeQuerySchema
-  );
+  registry.register('ProjectSyncJobParams', projectSyncJobParamsSchema);
+  registry.register('ProjectSyncJobScopeQuery', projectSyncJobScopeQuerySchema);
   registry.register('CdmJsonArtifact', cdmJsonArtifactSchema);
 
   /**
@@ -229,17 +220,17 @@ Projects are ideal for:
   });
 
   /**
-   * POST /api/projects/:id/permissions/sync-jobs
+   * POST /api/projects/:id/sync/jobs
    */
   registry.registerPath({
     method: 'post',
-    path: '/api/projects/{id}/permissions/sync-jobs',
+    path: '/api/projects/{id}/sync/jobs',
     tags: ['Projects'],
     summary: 'Start an asynchronous CDM permission sync job',
     description: `
 Enqueue an asynchronous CDM permission sync job for the project. The endpoint returns
 immediately with the created job descriptor in \`PENDING\` status; the actual import runs
-in the background. Poll \`GET /api/projects/{id}/permissions/sync-jobs/{jobId}\` for status.
+in the background. Poll \`GET /api/projects/{id}/sync/jobs/{jobId}\` for status.
 
 Requires a verified email and the same MFA policy as other mutating project routes, when
 enforced. The body must include an \`accountProject\` or \`organizationProject\` scope.
@@ -303,7 +294,7 @@ the global catalog.
       body: {
         content: {
           'application/json': {
-            schema: startProjectPermissionsSyncRequestSchema,
+            schema: startProjectSyncRequestSchema,
           },
         },
       },
@@ -313,7 +304,7 @@ the global catalog.
         description: 'Sync job enqueued',
         content: {
           'application/json': {
-            schema: projectPermissionsSyncJobResponseSchema,
+            schema: projectSyncJobResponseSchema,
           },
         },
       },
@@ -362,11 +353,11 @@ the global catalog.
   });
 
   /**
-   * GET /api/projects/:id/permissions/sync-jobs
+   * GET /api/projects/:id/sync/jobs
    */
   registry.registerPath({
     method: 'get',
-    path: '/api/projects/{id}/permissions/sync-jobs',
+    path: '/api/projects/{id}/sync/jobs',
     tags: ['Projects'],
     summary: 'List project permissions sync jobs',
     description: `
@@ -376,19 +367,19 @@ or \`importId\`.
 
 Each job row includes snapshot metadata (\`hasSnapshot\`, \`snapshotTakenAt\`, \`snapshotSizeBytes\`).
 
-Use this endpoint to render a job history view; use \`GET .../sync-jobs/{jobId}\` to poll a single
+Use this endpoint to render a job history view; use \`GET .../sync/jobs/{jobId}\` to poll a single
 job's lifecycle.
     `.trim(),
     request: {
       params: projectParamsSchema,
-      query: listProjectPermissionsSyncJobsQuerySchema,
+      query: listProjectSyncJobsQuerySchema,
     },
     responses: {
       200: {
         description: 'Paginated list of sync jobs',
         content: {
           'application/json': {
-            schema: listProjectPermissionsSyncJobsResponseSchema,
+            schema: listProjectSyncJobsResponseSchema,
           },
         },
       },
@@ -436,21 +427,21 @@ job's lifecycle.
   });
 
   /**
-   * GET /api/projects/:id/permissions/sync-jobs/:jobId/payload
+   * GET /api/projects/:id/sync/jobs/:jobId/payload
    */
   registry.registerPath({
     method: 'get',
-    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}/payload',
+    path: '/api/projects/{id}/sync/jobs/{jobId}/payload',
     tags: ['Projects'],
     summary: 'Download the original CDM JSON payload for a sync job',
     description: `
-Download the original \`SyncProjectPermissionsInput\` JSON body that was submitted when the
+Download the original \`SyncProjectInput\` JSON body that was submitted when the
 sync job was enqueued. The response uses \`Content-Type: application/json\` and a
 \`Content-Disposition: attachment\` header so browsers prompt for a save.
     `.trim(),
     request: {
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     },
     responses: {
       200: {
@@ -505,18 +496,18 @@ sync job was enqueued. The response uses \`Content-Type: application/json\` and 
   });
 
   /**
-   * GET /api/projects/:id/permissions/sync-jobs/:jobId/snapshot
+   * GET /api/projects/:id/sync/jobs/:jobId/snapshot
    */
   registry.registerPath({
     method: 'get',
-    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}/snapshot',
+    path: '/api/projects/{id}/sync/jobs/{jobId}/snapshot',
     tags: ['Projects'],
     summary: 'Download the rollback snapshot captured before a sync job ran',
     description: `
 Download the pre-sync rollback snapshot captured by the worker inside the import
 transaction, just before the project's permissions were modified. The snapshot has
-the same shape as \`SyncProjectPermissionsInput\`, so it can be replayed via
-\`POST .../sync-jobs\` to roll the project back to the state it had right before the
+the same shape as \`SyncProjectInput\`, so it can be replayed via
+\`POST .../sync/jobs\` to roll the project back to the state it had right before the
 selected job ran.
 
 Returns 404 when the job has no snapshot (e.g. it failed before the worker reached
@@ -526,8 +517,8 @@ The response uses \`Content-Type: application/json\` and a \`Content-Disposition
 attachment\` header so browsers prompt for a save.
     `.trim(),
     request: {
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     },
     responses: {
       200: {
@@ -582,17 +573,17 @@ attachment\` header so browsers prompt for a save.
   });
 
   /**
-   * GET /api/projects/:id/permissions/export
+   * GET /api/projects/:id/sync/export
    */
   registry.registerPath({
     method: 'get',
-    path: '/api/projects/{id}/permissions/export',
+    path: '/api/projects/{id}/sync/export',
     tags: ['Projects'],
     summary: 'Export the project as a CDM JSON artifact',
     description: `
 Snapshot the project's current permission/role/group/user state and
 download it as a CDM JSON artifact. The body is shaped like
-\`SyncProjectPermissionsInput\` so it can be replayed against this project (to
+\`SyncProjectInput\` so it can be replayed against this project (to
 reset it to the exported state) or against a different project (to clone its
 permission model).
 
@@ -675,19 +666,19 @@ attachment\` header so browsers prompt for a save.
   });
 
   /**
-   * GET /api/projects/:id/permissions/sync-jobs/:jobId
+   * GET /api/projects/:id/sync/jobs/:jobId
    */
   registry.registerPath({
     method: 'get',
-    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}',
+    path: '/api/projects/{id}/sync/jobs/{jobId}',
     tags: ['Projects'],
     summary: 'Get the status of a project permissions sync job',
     description: `
 Read the current state of an asynchronous CDM permission sync job. Use this endpoint
-to poll the lifecycle of a job started via \`POST .../sync-jobs\`.
+to poll the lifecycle of a job started via \`POST .../sync/jobs\`.
 
 Snapshot metadata (\`hasSnapshot\`, \`snapshotTakenAt\`, \`snapshotSizeBytes\`) indicates whether
-\`GET .../sync-jobs/{jobId}/snapshot\` will return a pre-sync rollback artifact.
+\`GET .../sync/jobs/{jobId}/snapshot\` will return a pre-sync rollback artifact.
 
 Statuses:
 - \`PENDING\`  — enqueued, not started yet
@@ -697,15 +688,15 @@ Statuses:
 - \`CANCELLED\` — cancelled before or during execution
     `.trim(),
     request: {
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     },
     responses: {
       200: {
         description: 'Sync job status retrieved',
         content: {
           'application/json': {
-            schema: projectPermissionsSyncJobResponseSchema,
+            schema: projectSyncJobResponseSchema,
           },
         },
       },
@@ -753,16 +744,16 @@ Statuses:
   });
 
   /**
-   * DELETE /api/projects/:id/permissions/sync-jobs/:jobId
+   * DELETE /api/projects/:id/sync/jobs/:jobId
    */
   registry.registerPath({
     method: 'delete',
-    path: '/api/projects/{id}/permissions/sync-jobs/{jobId}',
+    path: '/api/projects/{id}/sync/jobs/{jobId}',
     tags: ['Projects'],
     summary: 'Cancel a project permissions sync job',
     description: `
 Cancel a pending or running project permissions sync job. Requires the same verified-email /
-MFA gate as \`POST .../sync-jobs\`.
+MFA gate as \`POST .../sync/jobs\`.
 
 - If the job is \`PENDING\`, cancellation is immediate — the worker will not run.
 - If the job is \`RUNNING\`, cancellation is recorded and the worker stops at the next
@@ -770,15 +761,15 @@ MFA gate as \`POST .../sync-jobs\`.
 - Terminal statuses (\`COMPLETED\`, \`FAILED\`, \`CANCELLED\`) cannot be cancelled.
     `.trim(),
     request: {
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     },
     responses: {
       200: {
         description: 'Sync job cancelled (or cancellation requested)',
         content: {
           'application/json': {
-            schema: projectPermissionsSyncJobResponseSchema,
+            schema: projectSyncJobResponseSchema,
           },
         },
       },

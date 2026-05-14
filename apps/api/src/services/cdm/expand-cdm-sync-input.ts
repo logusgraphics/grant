@@ -3,7 +3,7 @@ import type {
   PermissionCdmInput,
   ResourceCdmInput,
   RoleCdmInput,
-  SyncProjectPermissionsInput,
+  SyncProjectInput,
   TagCdmInput,
 } from '@grantjs/schema';
 import { CdmFindBy } from '@grantjs/schema';
@@ -28,7 +28,7 @@ import {
 export interface ExpandedCdmSyncPayload {
   version: number;
   id: string | null;
-  mode: SyncProjectPermissionsInput['mode'];
+  mode: SyncProjectInput['mode'];
   resources: ResourceCdmInput[];
   permissions: PermissionCdmInput[];
   tags: TagCdmInput[];
@@ -42,7 +42,7 @@ export interface ExpandedCdmSyncPayload {
 /**
  * Expand the ubiquitous CDM document into handler-owned slices.
  */
-export function expandCdmSyncInput(input: SyncProjectPermissionsInput): ExpandedCdmSyncPayload {
+export function expandCdmSyncInput(input: SyncProjectInput): ExpandedCdmSyncPayload {
   const version = input.version;
   const id = input.id ?? null;
   const mode = input.mode;

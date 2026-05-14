@@ -3,7 +3,7 @@ import type { AppContext } from '@/types';
 
 import DataRetentionCleanupJob from './data-retention-cleanup.job';
 import DemoDbRefreshJob from './demo-db-refresh.job';
-import ProjectPermissionsSyncJob from './project-permissions-sync.job';
+import ProjectSyncJob from './project-sync.job';
 import SystemSigningKeyRotationJob from './system-signing-key-rotation.job';
 
 export type Jobs = ReturnType<typeof createJobs>;
@@ -13,6 +13,6 @@ export function createJobs(appContext: AppContext): Job[] {
     new DataRetentionCleanupJob(appContext),
     new SystemSigningKeyRotationJob(appContext),
     new DemoDbRefreshJob(appContext),
-    new ProjectPermissionsSyncJob(appContext),
+    new ProjectSyncJob(appContext),
   ];
 }

@@ -27,11 +27,11 @@ import { ProjectAppTagRepository } from './project-app-tags.repository';
 import { ProjectAppRepository } from './project-apps.repository';
 import { ProjectGroupRepository } from './project-groups.repository';
 import { ProjectPermissionExportRepository } from './project-permission-export.repository';
-import { ProjectPermissionSyncRepository } from './project-permission-sync.repository';
-import { ProjectPermissionSyncJobRepository } from './project-permission-sync-job.repository';
 import { ProjectPermissionRepository } from './project-permissions.repository';
 import { ProjectResourceRepository } from './project-resources.repository';
 import { ProjectRoleRepository } from './project-roles.repository';
+import { ProjectSyncRepository } from './project-sync.repository';
+import { ProjectSyncJobRepository } from './project-sync-job.repository';
 import { ProjectTagRepository } from './project-tags.repository';
 import { ProjectUserApiKeyRepository } from './project-user-api-keys.repository';
 import { ProjectUserRepository } from './project-users.repository';
@@ -78,9 +78,9 @@ export function createRepositories(db: DbSchema) {
     organizationRepository: new OrganizationRepository(db),
     permissionTagRepository: new PermissionTagRepository(db),
     permissionRepository: new PermissionRepository(db),
-    projectPermissionSyncRepository: new ProjectPermissionSyncRepository(db),
+    projectSyncRepository: new ProjectSyncRepository(db),
     projectPermissionExportRepository: new ProjectPermissionExportRepository(db),
-    projectPermissionSyncJobRepository: new ProjectPermissionSyncJobRepository(db),
+    projectSyncJobRepository: new ProjectSyncJobRepository(db),
     projectAppRepository: new ProjectAppRepository(db),
     projectAppTagRepository: new ProjectAppTagRepository(db),
     projectGroupRepository: new ProjectGroupRepository(db),

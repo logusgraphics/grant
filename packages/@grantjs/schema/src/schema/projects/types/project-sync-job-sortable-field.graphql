@@ -1,4 +1,4 @@
-enum ProjectPermissionsSyncJobSortableField {
+enum ProjectSyncJobSortableField {
   enqueuedAt
   startedAt
   completedAt

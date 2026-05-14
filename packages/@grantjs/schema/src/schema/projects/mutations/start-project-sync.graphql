@@ -1,0 +1,14 @@
+extend type Mutation {
+  """
+  Enqueue an asynchronous project CDM import job for the given project.
+  Applies a canonical data model document: roles, groups, resources, permissions,
+  tags, project pivots, and user assignments scoped to the project.
+  Requires Project:update in the given project scope.
+
+  Returns immediately with a job descriptor in the PENDING status; the actual
+  import runs in the background. Poll `projectSyncJob` for status.
+  Pass `input.importId` for idempotency: if an active job already exists for
+  the same (project, importId), that job is returned instead of creating a new one.
+  """
+  startProjectSync(id: ID!, scope: Scope!, input: SyncProjectInput!): ProjectSyncJob!
+}

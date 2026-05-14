@@ -1,3 +1,4 @@
+export * from './cdm/cdm-export-sections';
 export * from './generated/graphql';
 export type {
   AccountResolvers,

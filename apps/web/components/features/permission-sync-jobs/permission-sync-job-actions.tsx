@@ -4,22 +4,22 @@ import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { ProjectPermissionsSyncJob, ProjectPermissionsSyncJobStatus } from '@grantjs/schema';
+import { ProjectSyncJob, ProjectSyncJobStatus } from '@grantjs/schema';
 import { Ban, Download, Eye } from 'lucide-react';
 
 import { type ActionItem, Actions } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
-import { useProjectPermissionsSyncJobPayload } from '@/hooks/projects';
+import { useProjectSyncJobPayload } from '@/hooks/projects';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 interface PermissionSyncJobActionsProps {
-  job: ProjectPermissionsSyncJob;
+  job: ProjectSyncJob;
 }
 
-const ACTIVE_STATUSES: ReadonlyArray<ProjectPermissionsSyncJobStatus> = [
-  ProjectPermissionsSyncJobStatus.Pending,
-  ProjectPermissionsSyncJobStatus.Running,
+const ACTIVE_STATUSES: ReadonlyArray<ProjectSyncJobStatus> = [
+  ProjectSyncJobStatus.Pending,
+  ProjectSyncJobStatus.Running,
 ];
 
 export function PermissionSyncJobActions({ job }: PermissionSyncJobActionsProps) {
@@ -45,7 +45,7 @@ export function PermissionSyncJobActions({ job }: PermissionSyncJobActionsProps)
 
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  const { download, loading: downloading } = useProjectPermissionsSyncJobPayload({
+  const { download, loading: downloading } = useProjectSyncJobPayload({
     id: job.projectId,
     scope: scope ?? null,
     jobId: hasBeenOpened ? job.id : null,
@@ -56,7 +56,7 @@ export function PermissionSyncJobActions({ job }: PermissionSyncJobActionsProps)
   const isActive = ACTIVE_STATUSES.includes(job.status);
   const canCancel = isActive && canUpdate && !requiresEmailVerification;
 
-  const actions: ActionItem<ProjectPermissionsSyncJob>[] = [
+  const actions: ActionItem<ProjectSyncJob>[] = [
     {
       key: 'view',
       label: t('view'),

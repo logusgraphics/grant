@@ -1,13 +1,13 @@
-query ProjectPermissionsSyncJobs(
+query ProjectSyncJobs(
   $id: ID!
   $scope: Scope!
   $page: Int
   $limit: Int
   $search: String
-  $sort: ProjectPermissionsSyncJobSortInput
-  $status: ProjectPermissionsSyncJobStatus
+  $sort: ProjectSyncJobSortInput
+  $status: ProjectSyncJobStatus
 ) {
-  projectPermissionsSyncJobs(
+  projectSyncJobs(
     id: $id
     scope: $scope
     page: $page

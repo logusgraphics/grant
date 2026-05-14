@@ -1,5 +1,5 @@
 /**
- * Unit tests for the async ProjectPermissionsSyncJob worker. The worker is
+ * Unit tests for the async ProjectSyncJob worker. The worker is
  * responsible for state-machine transitions, executing the sync inside a
  * transaction, and post-commit cache invalidation. We mock the transactional
  * connection so tests are independent of Postgres.
@@ -8,15 +8,15 @@ import { ConflictError } from '@grantjs/core';
 import {
   CdmFindBy,
   CdmModeStrategy,
-  ProjectPermissionsSyncJobStatus,
+  ProjectSyncJobStatus,
   type Scope,
-  type SyncProjectPermissionsInput,
-  type SyncProjectPermissionsResult,
+  type SyncProjectInput,
+  type SyncProjectResult,
   Tenant,
 } from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ProjectPermissionsSyncJob from '@/jobs/project-permissions-sync.job';
+import ProjectSyncJob from '@/jobs/project-sync.job';
 import type { AppContext } from '@/types';
 
 vi.mock('@/lib/jobs/tenant-job.validation', () => ({
@@ -51,9 +51,7 @@ const enqueueScope: Scope = {
   id: `${accountId}:${projectId}`,
 };
 
-function emptyCanonicalPayload(
-  overrides: Partial<SyncProjectPermissionsInput> = {}
-): SyncProjectPermissionsInput {
+function emptyCanonicalPayload(overrides: Partial<SyncProjectInput> = {}): SyncProjectInput {
   return {
     version: 1,
     id: null,
@@ -72,9 +70,7 @@ function emptyCanonicalPayload(
   };
 }
 
-function buildJobRow(
-  status: ProjectPermissionsSyncJobStatus = ProjectPermissionsSyncJobStatus.Pending
-) {
+function buildJobRow(status: ProjectSyncJobStatus = ProjectSyncJobStatus.Pending) {
   return {
     id: jobRecordId,
     projectId,
@@ -93,12 +89,12 @@ function buildJobRow(
 
 function buildExecData(
   overrides: Partial<{
-    status: ProjectPermissionsSyncJobStatus;
+    status: ProjectSyncJobStatus;
     cancelRequested: boolean;
     userIds: string[];
   }> = {}
 ) {
-  const status = overrides.status ?? ProjectPermissionsSyncJobStatus.Pending;
+  const status = overrides.status ?? ProjectSyncJobStatus.Pending;
   return {
     job: buildJobRow(status),
     payload: emptyCanonicalPayload({
@@ -134,7 +130,7 @@ function buildExecData(
 /** Passed through `db.transaction` mocks so assertions match worker RLS wrappers. */
 const mockOuterTx = { __outerTx: true };
 
-function buildSyncResult(): SyncProjectPermissionsResult {
+function buildSyncResult(): SyncProjectResult {
   return {
     projectId,
     importId: null,
@@ -167,7 +163,7 @@ interface MockServices {
   markCompleted: ReturnType<typeof vi.fn>;
   markFailed: ReturnType<typeof vi.fn>;
   saveSnapshot: ReturnType<typeof vi.fn>;
-  syncProjectPermissions: ReturnType<typeof vi.fn>;
+  syncProject: ReturnType<typeof vi.fn>;
   invalidateCachesForSyncResult: ReturnType<typeof vi.fn>;
   exportProjectPermissions: ReturnType<typeof vi.fn>;
 }
@@ -178,15 +174,15 @@ function buildJobInstance(mocks: MockServices) {
       transaction: vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => cb(mockOuterTx)),
     },
     services: {
-      projectPermissionsSyncJobs: {
+      projectSyncJobs: {
         loadForExecution: mocks.loadForExecution,
         transitionToRunning: mocks.transitionToRunning,
         markCompleted: mocks.markCompleted,
         markFailed: mocks.markFailed,
         saveSnapshot: mocks.saveSnapshot,
       },
-      projectPermissionSync: {
-        syncProjectPermissions: mocks.syncProjectPermissions,
+      projectSync: {
+        syncProject: mocks.syncProject,
         invalidateCachesForSyncResult: mocks.invalidateCachesForSyncResult,
       },
       projectPermissionExport: {
@@ -194,10 +190,10 @@ function buildJobInstance(mocks: MockServices) {
       },
     },
   } as unknown as AppContext;
-  return new ProjectPermissionsSyncJob(appContext);
+  return new ProjectSyncJob(appContext);
 }
 
-describe('ProjectPermissionsSyncJob worker', () => {
+describe('ProjectSyncJob worker', () => {
   let mocks: MockServices;
 
   beforeEach(() => {
@@ -207,7 +203,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
       markCompleted: vi.fn().mockResolvedValue(undefined),
       markFailed: vi.fn().mockResolvedValue(undefined),
       saveSnapshot: vi.fn().mockResolvedValue(undefined),
-      syncProjectPermissions: vi.fn(),
+      syncProject: vi.fn(),
       invalidateCachesForSyncResult: vi.fn().mockResolvedValue(undefined),
       exportProjectPermissions: vi.fn().mockResolvedValue(emptyCanonicalPayload()),
     };
@@ -216,7 +212,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
   it('runs the full happy path: pending → running → completed and invalidates caches', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
     const result = buildSyncResult();
-    mocks.syncProjectPermissions.mockResolvedValue(result);
+    mocks.syncProject.mockResolvedValue(result);
 
     const job = buildJobInstance(mocks);
     const ctx = {
@@ -232,7 +228,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
     expect(outcome.success).toBe(true);
     expect(mocks.loadForExecution).toHaveBeenCalledWith({ jobId: jobRecordId }, mockOuterTx);
     expect(mocks.transitionToRunning).toHaveBeenCalledWith({ jobId: jobRecordId }, mockOuterTx);
-    expect(mocks.syncProjectPermissions).toHaveBeenCalledTimes(1);
+    expect(mocks.syncProject).toHaveBeenCalledTimes(1);
     expect(mocks.markCompleted).toHaveBeenCalledWith(
       {
         jobId: jobRecordId,
@@ -248,9 +244,9 @@ describe('ProjectPermissionsSyncJob worker', () => {
     expect(mocks.markFailed).not.toHaveBeenCalled();
   });
 
-  it('captures a pre-sync snapshot inside the same transaction, before syncProjectPermissions runs', async () => {
+  it('captures a pre-sync snapshot inside the same transaction, before syncProject runs', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
-    mocks.syncProjectPermissions.mockResolvedValue(buildSyncResult());
+    mocks.syncProject.mockResolvedValue(buildSyncResult());
 
     const exportedSnapshot = emptyCanonicalPayload({
       roles: [
@@ -276,7 +272,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
     mocks.saveSnapshot.mockImplementation(async () => {
       callOrder.push('saveSnapshot');
     });
-    mocks.syncProjectPermissions.mockImplementation(async () => {
+    mocks.syncProject.mockImplementation(async () => {
       callOrder.push('sync');
       return buildSyncResult();
     });
@@ -310,13 +306,13 @@ describe('ProjectPermissionsSyncJob worker', () => {
     expect(saveArgs[0].takenAt).toBeInstanceOf(Date);
     expect(saveArgs[1]).toMatchObject({ __mockTx: true });
 
-    const syncTx = mocks.syncProjectPermissions.mock.calls[0][1];
+    const syncTx = mocks.syncProject.mock.calls[0][1];
     expect(syncTx).toMatchObject({ __mockTx: true });
   });
 
   it('rolls back the snapshot when sync fails (snapshot save and sync share the same transaction)', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
-    mocks.syncProjectPermissions.mockRejectedValue(new Error('sync exploded'));
+    mocks.syncProject.mockRejectedValue(new Error('sync exploded'));
 
     const job = buildJobInstance(mocks);
     await expect(
@@ -353,7 +349,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
   it('marks the job failed, rethrows, and skips cache invalidation when sync errors', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
     const boom = new Error('replace failed');
-    mocks.syncProjectPermissions.mockRejectedValue(boom);
+    mocks.syncProject.mockRejectedValue(boom);
 
     const job = buildJobInstance(mocks);
 
@@ -382,7 +378,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
 
   it('throws ConflictError when the job is not in PENDING (illegal transition)', async () => {
     mocks.loadForExecution.mockResolvedValue(
-      buildExecData({ status: ProjectPermissionsSyncJobStatus.Completed })
+      buildExecData({ status: ProjectSyncJobStatus.Completed })
     );
 
     const job = buildJobInstance(mocks);
@@ -397,7 +393,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
       })
     ).rejects.toBeInstanceOf(ConflictError);
     expect(mocks.transitionToRunning).not.toHaveBeenCalled();
-    expect(mocks.syncProjectPermissions).not.toHaveBeenCalled();
+    expect(mocks.syncProject).not.toHaveBeenCalled();
   });
 
   it('returns success without executing when the job was cancelled before pickup', async () => {
@@ -414,7 +410,7 @@ describe('ProjectPermissionsSyncJob worker', () => {
 
     expect(outcome.success).toBe(true);
     expect(mocks.transitionToRunning).not.toHaveBeenCalled();
-    expect(mocks.syncProjectPermissions).not.toHaveBeenCalled();
+    expect(mocks.syncProject).not.toHaveBeenCalled();
     expect(mocks.markCompleted).not.toHaveBeenCalled();
   });
 

@@ -1,4 +1,4 @@
-import { ProjectPermissionsSyncJob, ProjectPermissionsSyncJobStatus } from '@grantjs/schema';
+import { ProjectSyncJob, ProjectSyncJobStatus } from '@grantjs/schema';
 
 /** View mode for the sync-jobs viewer (table or cards). */
 export enum PermissionSyncJobView {
@@ -7,7 +7,7 @@ export enum PermissionSyncJobView {
 }
 
 /** Status filter value shown in the toolbar. `null` means "all". */
-export type PermissionSyncJobStatusFilterValue = ProjectPermissionsSyncJobStatus | null;
+export type PermissionSyncJobStatusFilterValue = ProjectSyncJobStatus | null;
 
 /** Re-export for stable import paths within the feature module. */
-export type { ProjectPermissionsSyncJob };
+export type { ProjectSyncJob };

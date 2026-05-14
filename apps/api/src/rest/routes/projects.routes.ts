@@ -3,10 +3,10 @@ import {
   CreateProjectMutationVariables,
   DeleteProjectMutationVariables,
   Project,
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobSortableField,
-  ProjectPermissionsSyncJobStatus,
-  SyncProjectPermissionsInput,
+  ProjectSyncJob,
+  ProjectSyncJobSortableField,
+  ProjectSyncJobStatus,
+  SyncProjectInput,
   UpdateProjectMutationVariables,
 } from '@grantjs/schema';
 import { ProjectSortInput } from '@grantjs/schema';
@@ -20,11 +20,11 @@ import {
   deleteProjectQuerySchema,
   exportProjectPermissionsQuerySchema,
   getProjectsQuerySchema,
-  listProjectPermissionsSyncJobsQuerySchema,
+  listProjectSyncJobsQuerySchema,
   projectParamsSchema,
-  projectPermissionsSyncJobParamsSchema,
-  projectPermissionsSyncJobScopeQuerySchema,
-  startProjectPermissionsSyncRequestSchema,
+  projectSyncJobParamsSchema,
+  projectSyncJobScopeQuerySchema,
+  startProjectSyncRequestSchema,
   updateProjectRequestSchema,
 } from '@/rest/schemas';
 import { TypedRequest } from '@/rest/types';
@@ -88,8 +88,8 @@ export function createProjectsRouter(context: RequestContext): Router {
   );
 
   router.post(
-    '/:id/permissions/sync-jobs',
-    validate({ params: projectParamsSchema, body: startProjectPermissionsSyncRequestSchema }),
+    '/:id/sync/jobs',
+    validate({ params: projectParamsSchema, body: startProjectSyncRequestSchema }),
     requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
@@ -99,7 +99,7 @@ export function createProjectsRouter(context: RequestContext): Router {
     async (
       req: TypedRequest<{
         params: typeof projectParamsSchema;
-        body: typeof startProjectPermissionsSyncRequestSchema;
+        body: typeof startProjectSyncRequestSchema;
       }>,
       res: Response
     ) => {
@@ -118,23 +118,22 @@ export function createProjectsRouter(context: RequestContext): Router {
        * strings; the handler/service layer normalises them to `Date` again,
        * so the cast through `unknown` is a contract gap, not a runtime bug.
        */
-      const job: ProjectPermissionsSyncJob =
-        await context.handlers.projects.startProjectPermissionsSync({
-          id,
-          scope,
-          input: input as unknown as SyncProjectPermissionsInput,
-          enqueuedById,
-        });
+      const job: ProjectSyncJob = await context.handlers.projects.startProjectSync({
+        id,
+        scope,
+        input: input as unknown as SyncProjectInput,
+        enqueuedById,
+      });
 
       sendSuccessResponse(res, job, 202);
     }
   );
 
   router.get(
-    '/:id/permissions/sync-jobs',
+    '/:id/sync/jobs',
     validate({
       params: projectParamsSchema,
-      query: listProjectPermissionsSyncJobsQuerySchema,
+      query: listProjectSyncJobsQuerySchema,
     }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
@@ -144,23 +143,23 @@ export function createProjectsRouter(context: RequestContext): Router {
     async (
       req: TypedRequest<{
         params: typeof projectParamsSchema;
-        query: typeof listProjectPermissionsSyncJobsQuerySchema;
+        query: typeof listProjectSyncJobsQuerySchema;
       }>,
       res: Response
     ) => {
       const { id } = req.params;
       const { scopeId, tenant, page, limit, search, sortField, sortOrder, status } = req.query;
 
-      const sort = buildSortInput<ProjectPermissionsSyncJobSortableField>(sortField, sortOrder);
+      const sort = buildSortInput<ProjectSyncJobSortableField>(sortField, sortOrder);
 
-      const result = await context.handlers.projects.listProjectPermissionsSyncJobs({
+      const result = await context.handlers.projects.listProjectSyncJobs({
         id,
         scope: { id: scopeId, tenant },
         page,
         limit,
         search,
         sort,
-        status: (status ?? null) as ProjectPermissionsSyncJobStatus | null,
+        status: (status ?? null) as ProjectSyncJobStatus | null,
       });
 
       sendSuccessResponse(res, result);
@@ -168,10 +167,10 @@ export function createProjectsRouter(context: RequestContext): Router {
   );
 
   router.get(
-    '/:id/permissions/sync-jobs/:jobId/payload',
+    '/:id/sync/jobs/:jobId/payload',
     validate({
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
@@ -180,20 +179,19 @@ export function createProjectsRouter(context: RequestContext): Router {
     }),
     async (
       req: TypedRequest<{
-        params: typeof projectPermissionsSyncJobParamsSchema;
-        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+        params: typeof projectSyncJobParamsSchema;
+        query: typeof projectSyncJobScopeQuerySchema;
       }>,
       res: Response
     ) => {
       const { id, jobId } = req.params;
       const { scopeId, tenant } = req.query;
 
-      const { payload, importId } =
-        await context.handlers.projects.getProjectPermissionsSyncJobPayload({
-          id,
-          jobId,
-          scope: { id: scopeId, tenant },
-        });
+      const { payload, importId } = await context.handlers.projects.getProjectSyncJobPayload({
+        id,
+        jobId,
+        scope: { id: scopeId, tenant },
+      });
 
       const filename = `cdm-${importId ?? jobId}.json`;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -203,10 +201,10 @@ export function createProjectsRouter(context: RequestContext): Router {
   );
 
   router.get(
-    '/:id/permissions/sync-jobs/:jobId/snapshot',
+    '/:id/sync/jobs/:jobId/snapshot',
     validate({
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
@@ -215,15 +213,15 @@ export function createProjectsRouter(context: RequestContext): Router {
     }),
     async (
       req: TypedRequest<{
-        params: typeof projectPermissionsSyncJobParamsSchema;
-        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+        params: typeof projectSyncJobParamsSchema;
+        query: typeof projectSyncJobScopeQuerySchema;
       }>,
       res: Response
     ) => {
       const { id, jobId } = req.params;
       const { scopeId, tenant } = req.query;
 
-      const { snapshot } = await context.handlers.projects.getProjectPermissionsSyncJobSnapshot({
+      const { snapshot } = await context.handlers.projects.getProjectSyncJobSnapshot({
         id,
         jobId,
         scope: { id: scopeId, tenant },
@@ -237,7 +235,7 @@ export function createProjectsRouter(context: RequestContext): Router {
   );
 
   router.get(
-    '/:id/permissions/export',
+    '/:id/sync/export',
     validate({
       params: projectParamsSchema,
       query: exportProjectPermissionsQuerySchema,
@@ -286,10 +284,10 @@ export function createProjectsRouter(context: RequestContext): Router {
   );
 
   router.get(
-    '/:id/permissions/sync-jobs/:jobId',
+    '/:id/sync/jobs/:jobId',
     validate({
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     }),
     authorizeRestRoute({
       resource: ResourceSlug.Project,
@@ -298,15 +296,15 @@ export function createProjectsRouter(context: RequestContext): Router {
     }),
     async (
       req: TypedRequest<{
-        params: typeof projectPermissionsSyncJobParamsSchema;
-        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+        params: typeof projectSyncJobParamsSchema;
+        query: typeof projectSyncJobScopeQuerySchema;
       }>,
       res: Response
     ) => {
       const { id, jobId } = req.params;
       const { scopeId, tenant } = req.query;
 
-      const job = await context.handlers.projects.getProjectPermissionsSyncJob({
+      const job = await context.handlers.projects.getProjectSyncJob({
         id,
         jobId,
         scope: { id: scopeId, tenant },
@@ -317,10 +315,10 @@ export function createProjectsRouter(context: RequestContext): Router {
   );
 
   router.delete(
-    '/:id/permissions/sync-jobs/:jobId',
+    '/:id/sync/jobs/:jobId',
     validate({
-      params: projectPermissionsSyncJobParamsSchema,
-      query: projectPermissionsSyncJobScopeQuerySchema,
+      params: projectSyncJobParamsSchema,
+      query: projectSyncJobScopeQuerySchema,
     }),
     requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
@@ -330,15 +328,15 @@ export function createProjectsRouter(context: RequestContext): Router {
     }),
     async (
       req: TypedRequest<{
-        params: typeof projectPermissionsSyncJobParamsSchema;
-        query: typeof projectPermissionsSyncJobScopeQuerySchema;
+        params: typeof projectSyncJobParamsSchema;
+        query: typeof projectSyncJobScopeQuerySchema;
       }>,
       res: Response
     ) => {
       const { id, jobId } = req.params;
       const { scopeId, tenant } = req.query;
 
-      const job = await context.handlers.projects.cancelProjectPermissionsSync({
+      const job = await context.handlers.projects.cancelProjectSync({
         id,
         jobId,
         scope: { id: scopeId, tenant },

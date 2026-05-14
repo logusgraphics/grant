@@ -17,7 +17,7 @@ import {
 import { ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
-import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
+import type { ProjectSyncRepository } from '@/repositories/project-sync.repository';
 
 import { clientSecretSchema } from '../api-keys.schemas';
 import type { CdmProjectUserApiKeyInternal } from './cdm-internal.types';
@@ -44,7 +44,7 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
   public readonly order = 300;
 
   constructor(
-    private readonly syncRepo: ProjectPermissionSyncRepository,
+    private readonly syncRepo: ProjectSyncRepository,
     private readonly exportRepo: ProjectPermissionExportRepository,
     private readonly apiKeys: IApiKeyService,
     private readonly projectUserApiKeys: IProjectUserApiKeyService
@@ -139,10 +139,9 @@ export class ProjectUserApiKeyCdmHandler implements ICdmEntityHandler<
   /**
    * Project current `project_user_api_keys` rows back to `ProjectUserApiKeyCdmInput[]`.
    *
-   * Identity: `externalKey = buildExternalKey('apikey', clientId, userId)`. Always
-   * emitted (deterministic from the row), so the CDM contract stays uniform with
-   * the other handlers — no UUIDs leak as identity, and downstream tools can
-   * dedupe by externalKey across exports.
+   * Identity: prefer `metadata.cdmImport.externalKey` from the pivot (set on import);
+   * otherwise `externalKey = buildExternalKey('apikey', clientId, userId)` so rows
+   * without importer identity still get a deterministic key.
    *
    * The Grant client id is preserved on the row itself (not as identity); the
    * importer-supplied `cdmSource` history is preserved via

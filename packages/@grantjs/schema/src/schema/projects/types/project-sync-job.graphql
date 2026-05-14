@@ -1,7 +1,7 @@
 """
-Lifecycle status of an asynchronous project permissions sync job.
+Lifecycle status of an asynchronous project CDM sync job.
 """
-enum ProjectPermissionsSyncJobStatus {
+enum ProjectSyncJobStatus {
   PENDING
   RUNNING
   COMPLETED
@@ -11,19 +11,19 @@ enum ProjectPermissionsSyncJobStatus {
 
 """
 A row in `project_permission_sync_jobs` representing one queued or completed
-CDM permission sync. The actual import runs in the background via the jobs
+project CDM import. The actual import runs in the background via the jobs
 adapter; clients enqueue a job and poll this resource for status.
 """
-type ProjectPermissionsSyncJob {
+type ProjectSyncJob {
   id: ID!
   projectId: ID!
-  status: ProjectPermissionsSyncJobStatus!
+  status: ProjectSyncJobStatus!
   cdmVersion: Int!
   importId: String
   """
   Counts and warnings populated when the job reaches COMPLETED.
   """
-  result: SyncProjectPermissionsResult
+  result: SyncProjectResult
   """
   Warnings produced during execution (also surfaced inside `result.warnings`
   on completion; exposed at the top level for incremental visibility).

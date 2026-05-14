@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { ProjectPermissionsSyncJob } from '@grantjs/schema';
+import { ProjectSyncJob } from '@grantjs/schema';
 import { Activity, Fingerprint, History } from 'lucide-react';
 
 import { CardBody, CardGrid, CardHeader } from '@/components/common';
@@ -25,7 +25,7 @@ export function PermissionSyncJobCards() {
   const isFiltered = !!search || status !== null;
 
   return (
-    <CardGrid<ProjectPermissionsSyncJob>
+    <CardGrid<ProjectSyncJob>
       entities={jobs}
       loading={loading}
       emptyState={{

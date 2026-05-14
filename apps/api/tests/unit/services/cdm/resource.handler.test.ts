@@ -1,5 +1,5 @@
 import type { CdmApplyContext, CdmExportContext, CdmTeardownContext } from '@grantjs/core';
-import { Scope, SyncProjectPermissionsResult, Tenant } from '@grantjs/schema';
+import { Scope, SyncProjectResult, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -15,7 +15,7 @@ const projectId = '10000000-0000-4000-8000-000000000011';
 const accountId = '20000000-0000-4000-8000-000000000020';
 const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` };
 
-function baseResult(): SyncProjectPermissionsResult {
+function baseResult(): SyncProjectResult {
   return {
     projectId,
     importId: null,
@@ -56,6 +56,7 @@ function buildHandler(deps?: {
   syncRepo?: {
     listCdmResourceIdsForProject: ReturnType<typeof vi.fn>;
     bulkSoftDeleteCdmResources: ReturnType<typeof vi.fn>;
+    reviveCdmResourceAndProjectLinkForProject?: ReturnType<typeof vi.fn>;
   };
   exportRepo?: {
     getProjectLinkedResourcesForExport: ReturnType<typeof vi.fn>;
@@ -70,6 +71,7 @@ function buildHandler(deps?: {
   const syncRepo = deps?.syncRepo ?? {
     listCdmResourceIdsForProject: vi.fn().mockResolvedValue([]),
     bulkSoftDeleteCdmResources: vi.fn().mockResolvedValue(undefined),
+    reviveCdmResourceAndProjectLinkForProject: vi.fn().mockResolvedValue(false),
   };
   const exportRepo = deps?.exportRepo ?? {
     getProjectLinkedResourcesForExport: vi.fn().mockResolvedValue([]),
@@ -333,6 +335,62 @@ describe('ResourceHandler', () => {
     expect(addProjectResource).toHaveBeenCalledWith({ projectId, resourceId: existingId }, ctx.tx);
     expect(produced.resourceIds.get('rk1')).toBe(existingId);
     expect(result.resourcesCreated).toBe(0);
+    expect(result.projectResourcesLinked).toBe(1);
+  });
+
+  it('apply catalog snapshot revives soft-deleted resource then links', async () => {
+    const existingId = '60000000-0000-4000-8000-0000000000aa';
+    const getResourceById = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: existingId, slug: 'documents' });
+    const reviveCdmResourceAndProjectLinkForProject = vi.fn().mockResolvedValue(true);
+    const addProjectResource = vi.fn().mockResolvedValue(undefined);
+    const createResource = vi.fn();
+    const { handler, projectResources } = buildHandler({
+      syncRepo: {
+        listCdmResourceIdsForProject: vi.fn().mockResolvedValue([]),
+        bulkSoftDeleteCdmResources: vi.fn().mockResolvedValue(undefined),
+        reviveCdmResourceAndProjectLinkForProject,
+      },
+      resources: { createResource, getResourceById },
+      projectResources: { addProjectResource },
+    });
+
+    const result = baseResult();
+    const produced = buildProduced();
+    const ctx: CdmApplyContext = {
+      projectId,
+      scope,
+      tx: { __tx: true },
+      lookupResolvedRef: () => ({}),
+      result,
+      produced,
+      assignmentUserIds: new Set<string>(),
+    };
+
+    await handler.apply(ctx, [
+      {
+        key: 'rk1',
+        slug: 'documents',
+        name: 'Documents',
+        actions: ['read'],
+        metadata: {
+          grantResourceId: existingId,
+          [CDM_EXPORT_CATALOG_SNAPSHOT_KEY]: true,
+        },
+      },
+    ]);
+
+    expect(reviveCdmResourceAndProjectLinkForProject).toHaveBeenCalledWith(
+      existingId,
+      projectId,
+      ctx.tx
+    );
+    expect(getResourceById).toHaveBeenCalledTimes(2);
+    expect(createResource).not.toHaveBeenCalled();
+    expect(addProjectResource).toHaveBeenCalledWith({ projectId, resourceId: existingId }, ctx.tx);
+    expect(produced.resourceIds.get('rk1')).toBe(existingId);
     expect(result.projectResourcesLinked).toBe(1);
   });
 

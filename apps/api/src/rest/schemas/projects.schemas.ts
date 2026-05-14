@@ -1,11 +1,11 @@
-import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
 import {
+  CDM_EXPORT_SECTIONS,
   CdmFindBy,
   CdmIfMissing,
   CdmModeStrategy,
   CdmOnConflict,
-  ProjectPermissionsSyncJobSortableField,
   ProjectSortableField,
+  ProjectSyncJobSortableField,
   SortOrder,
 } from '@grantjs/schema';
 
@@ -21,7 +21,7 @@ import {
 /** OpenAPI-friendly wrapper for downloadable CDM JSON (payload, snapshot, export). */
 export const cdmJsonArtifactSchema = jsonSchema.openapi({
   description:
-    'CDM JSON document with the same logical shape as SyncProjectPermissionsInput (version, mode, roles, users, optional resources, permissions, groups, tags).',
+    'CDM JSON document with the same logical shape as SyncProjectInput (version, mode, roles, users, optional resources, permissions, groups, tags).',
 });
 
 export const projectSchema = z.object({
@@ -248,7 +248,7 @@ const cdmModeSchema = z.object({
 });
 
 /**
- * Body for POST /api/projects/:id/permissions/sync-jobs.
+ * Body for POST /api/projects/:id/sync/jobs.
  *
  * Enqueues an asynchronous canonical-data-model permission sync. The request
  * returns immediately with a job descriptor; clients poll the job resource
@@ -256,7 +256,7 @@ const cdmModeSchema = z.object({
  * job already exists for the same `(project, id)` it is returned instead
  * of creating a new one.
  */
-export const startProjectPermissionsSyncRequestSchema = z.object({
+export const startProjectSyncRequestSchema = z.object({
   scope: scopeSchema,
   version: z.number().int().openapi({ example: 1 }),
   id: z.string().optional(),
@@ -278,7 +278,7 @@ export const startProjectPermissionsSyncRequestSchema = z.object({
   }),
 });
 
-export const projectPermissionsSyncJobParamsSchema = z.object({
+export const projectSyncJobParamsSchema = z.object({
   id: z.uuid('errors.validation.invalidProjectId').openapi({
     description: 'UUID of the project',
     example: '123e4567-e89b-12d3-a456-426614174005',
@@ -291,7 +291,7 @@ export const projectPermissionsSyncJobParamsSchema = z.object({
   }),
 });
 
-export const projectPermissionsSyncJobScopeQuerySchema = z.object({
+export const projectSyncJobScopeQuerySchema = z.object({
   /**
    * Permission sync only operates against `accountProject` or `organizationProject`
    * scopes whose id is a composite `${parentId}:${projectId}` — so we accept any
@@ -319,7 +319,7 @@ function normalizeCdmExportSectionsQueryInput(val: unknown): unknown {
 }
 
 /**
- * Query for `GET /:id/permissions/export`. Reuses the same scope shape as the
+ * Query for `GET /:id/sync/export`. Reuses the same scope shape as the
  * sync-job endpoints; `version` defaults to 1 — the only supported version
  * — so existing callers can omit it.
  */
@@ -361,7 +361,7 @@ export const exportProjectPermissionsQuerySchema = z.object({
     }),
 });
 
-const syncProjectPermissionsResultSchema = z.object({
+const syncProjectResultSchema = z.object({
   projectId: z.string(),
   importId: z.string().nullable(),
   rolesCreated: z.number(),
@@ -386,7 +386,7 @@ const syncProjectPermissionsResultSchema = z.object({
   warnings: z.array(z.string()),
 });
 
-export const projectPermissionsSyncJobStatusEnum = z.enum([
+export const projectSyncJobStatusEnum = z.enum([
   'PENDING',
   'RUNNING',
   'COMPLETED',
@@ -394,13 +394,13 @@ export const projectPermissionsSyncJobStatusEnum = z.enum([
   'CANCELLED',
 ]);
 
-export const projectPermissionsSyncJobSchema = z.object({
+export const projectSyncJobSchema = z.object({
   id: z.string(),
   projectId: z.string(),
-  status: projectPermissionsSyncJobStatusEnum,
+  status: projectSyncJobStatusEnum,
   cdmVersion: z.number().int(),
   importId: z.string().nullable(),
-  result: syncProjectPermissionsResultSchema.nullable(),
+  result: syncProjectResultSchema.nullable(),
   warnings: z.array(z.string()),
   errorMessage: z.string().nullable(),
   enqueuedAt: z.string(),
@@ -419,25 +419,23 @@ export const projectPermissionsSyncJobSchema = z.object({
   }),
 });
 
-export const projectPermissionsSyncJobResponseSchema = createSuccessResponseSchema(
-  projectPermissionsSyncJobSchema
-);
+export const projectSyncJobResponseSchema = createSuccessResponseSchema(projectSyncJobSchema);
 
 /**
  * Query for listing project permissions sync jobs.
  * Reuses the standard pagination/search shape and adds a status filter and the
  * scope query params shared with the single-job endpoint.
  */
-export const listProjectPermissionsSyncJobsQuerySchema = listQuerySchema
+export const listProjectSyncJobsQuerySchema = listQuerySchema
   .omit({ relations: true, ids: true })
   .extend({
     scopeId: z.string().min(1, 'errors.validation.invalidScopeId'),
     tenant: tenantSchema,
     sortField: z
       .enum(
-        Object.values(ProjectPermissionsSyncJobSortableField) as [
-          ProjectPermissionsSyncJobSortableField,
-          ...ProjectPermissionsSyncJobSortableField[],
+        Object.values(ProjectSyncJobSortableField) as [
+          ProjectSyncJobSortableField,
+          ...ProjectSyncJobSortableField[],
         ]
       )
       .optional(),
@@ -448,9 +446,9 @@ export const listProjectPermissionsSyncJobsQuerySchema = listQuerySchema
     }),
   });
 
-export const listProjectPermissionsSyncJobsResponseSchema = createSuccessResponseSchema(
+export const listProjectSyncJobsResponseSchema = createSuccessResponseSchema(
   z.object({
-    jobs: z.array(projectPermissionsSyncJobSchema),
+    jobs: z.array(projectSyncJobSchema),
     totalCount: z.number(),
     hasNextPage: z.boolean(),
   })

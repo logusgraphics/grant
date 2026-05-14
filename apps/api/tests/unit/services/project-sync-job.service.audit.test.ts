@@ -2,19 +2,19 @@
  * Ensures permission sync job lifecycle writes append-only audit rows.
  */
 import type { IAuditLogger } from '@grantjs/core';
-import { CdmModeStrategy, ProjectPermissionsSyncJobStatus, Tenant } from '@grantjs/schema';
+import { CdmModeStrategy, ProjectSyncJobStatus, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ProjectPermissionsSyncJobService } from '@/services/project-permissions-sync-job.service';
+import { ProjectSyncJobService } from '@/services/project-sync-job.service';
 
 const jobId = '40000000-0000-4000-8000-000000000077';
 const projectId = '00000000-0000-4000-8000-000000000011';
 
-function buildJob(overrides: Partial<{ status: ProjectPermissionsSyncJobStatus }> = {}) {
+function buildJob(overrides: Partial<{ status: ProjectSyncJobStatus }> = {}) {
   return {
     id: jobId,
     projectId,
-    status: overrides.status ?? ProjectPermissionsSyncJobStatus.Pending,
+    status: overrides.status ?? ProjectSyncJobStatus.Pending,
     cdmVersion: 1,
     importId: null as string | null,
     result: null,
@@ -40,14 +40,14 @@ function noopAudit(): IAuditLogger {
   };
 }
 
-describe('ProjectPermissionsSyncJobService audit', () => {
+describe('ProjectSyncJobService audit', () => {
   it('records CREATE after enqueue', async () => {
     const inserted = buildJob();
     const repo = {
       insert: vi.fn().mockResolvedValue(inserted),
     };
     const audit = noopAudit();
-    const svc = new ProjectPermissionsSyncJobService(repo as never, audit);
+    const svc = new ProjectSyncJobService(repo as never, audit);
 
     await svc.create({
       projectId,
@@ -75,15 +75,15 @@ describe('ProjectPermissionsSyncJobService audit', () => {
     expect(audit.logCreate).toHaveBeenCalledTimes(1);
     expect(vi.mocked(audit.logCreate).mock.calls[0][0]).toBe(jobId);
     expect(vi.mocked(audit.logCreate).mock.calls[0][1]).toMatchObject({
-      status: ProjectPermissionsSyncJobStatus.Pending,
+      status: ProjectSyncJobStatus.Pending,
       projectId,
       cdmVersion: 1,
     });
   });
 
   it('records UPDATE when transitioning to RUNNING', async () => {
-    const pending = buildJob({ status: ProjectPermissionsSyncJobStatus.Pending });
-    const running = buildJob({ status: ProjectPermissionsSyncJobStatus.Running });
+    const pending = buildJob({ status: ProjectSyncJobStatus.Pending });
+    const running = buildJob({ status: ProjectSyncJobStatus.Running });
     running.startedAt = new Date();
 
     const repo = {
@@ -91,7 +91,7 @@ describe('ProjectPermissionsSyncJobService audit', () => {
       updateStatus: vi.fn().mockResolvedValue(running),
     };
     const audit = noopAudit();
-    const svc = new ProjectPermissionsSyncJobService(repo as never, audit);
+    const svc = new ProjectSyncJobService(repo as never, audit);
 
     await svc.transitionToRunning({ jobId });
 
@@ -102,7 +102,7 @@ describe('ProjectPermissionsSyncJobService audit', () => {
   });
 
   it('records CANCEL_REQUESTED for a running job', async () => {
-    const running = buildJob({ status: ProjectPermissionsSyncJobStatus.Running });
+    const running = buildJob({ status: ProjectSyncJobStatus.Running });
     const updated = { ...running };
 
     const repo = {
@@ -110,7 +110,7 @@ describe('ProjectPermissionsSyncJobService audit', () => {
       updateStatus: vi.fn().mockResolvedValue(updated),
     };
     const audit = noopAudit();
-    const svc = new ProjectPermissionsSyncJobService(repo as never, audit);
+    const svc = new ProjectSyncJobService(repo as never, audit);
 
     await svc.cancel({ projectId, jobId });
 

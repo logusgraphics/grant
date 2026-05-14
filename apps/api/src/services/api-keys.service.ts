@@ -502,8 +502,10 @@ export class ApiKeyService implements IApiKeyService {
 
     let deletedKey: ApiKey;
     if (hardDelete) {
-      deletedKey = await this.apiKeyRepository.hardDeleteApiKey(id, transaction);
+      // Audit row FKs to `api_keys.id`; insert the log before the row is removed
+      // so the transaction is not left aborted (Postgres aborts the whole tx on FK failure).
       await this.audit.logHardDelete(id, oldValues, { action: 'HARD_DELETE_API_KEY' }, transaction);
+      deletedKey = await this.apiKeyRepository.hardDeleteApiKey(id, transaction);
     } else {
       deletedKey = await this.apiKeyRepository.softDeleteApiKey(id, transaction);
       await this.audit.logSoftDelete(

@@ -1,7 +1,0 @@
-extend type Query {
-  """
-  Read the current state of a project permissions sync job. Use this to poll
-  the lifecycle of a job started via `startProjectPermissionsSync`.
-  """
-  projectPermissionsSyncJob(id: ID!, scope: Scope!, jobId: ID!): ProjectPermissionsSyncJob!
-}

@@ -1,6 +1,6 @@
 /**
  * CDM shapes used only inside the API after expanding the public
- * {@link SyncProjectPermissionsInput} contract. Handlers operate on these rows;
+ * {@link SyncProjectInput} contract. Handlers operate on these rows;
  * they are not exposed on the GraphQL boundary.
  */
 
@@ -24,7 +24,7 @@ export interface CdmRoleTemplateInternal {
   primaryGroupTagKey?: string | null;
   /**
    * Grant group linked via `role_groups` (export-only). Drives `groups[]` and
-   * `roles[].groups` in {@link assembleExportedSyncProjectPermissionsInput}.
+   * `roles[].groups` in {@link assembleExportedSyncProjectInput}.
    */
   linkedGrantGroup?: {
     grantGroupId: string;

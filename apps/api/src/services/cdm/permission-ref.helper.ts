@@ -3,9 +3,9 @@ import type { CdmPermissionRefSpec } from '@grantjs/core';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import {
-  ProjectPermissionSyncRepository,
+  ProjectSyncRepository,
   ResolvedCdmPermission,
-} from '@/repositories/project-permission-sync.repository';
+} from '@/repositories/project-sync.repository';
 
 /**
  * Stable hashable key for a permission reference. Used to deduplicate refs
@@ -45,10 +45,10 @@ export function isPermissionKeyOnlyRef(ref: CdmPermissionRefSpec): boolean {
  * Returns `null` when the ref can only be resolved at apply time via
  * `produced.permissionIds` (i.e. only `permissionKey` is set). The orchestrator
  * picks those up from cross-handler shared state in
- * {@link ProjectPermissionSyncService.lookupRef} when each handler runs `apply`.
+ * {@link ProjectSyncService.lookupRef} when each handler runs `apply`.
  */
 export async function resolveSinglePermissionRef(
-  syncRepo: ProjectPermissionSyncRepository,
+  syncRepo: ProjectSyncRepository,
   ref: CdmPermissionRefSpec,
   tx: Transaction
 ): Promise<ResolvedCdmPermission | null> {
@@ -103,7 +103,7 @@ export async function resolveSinglePermissionRef(
  * apply time against `produced.permissionIds`.
  */
 export async function resolveAllPermissionRefs(
-  syncRepo: ProjectPermissionSyncRepository,
+  syncRepo: ProjectSyncRepository,
   refs: readonly CdmPermissionRefSpec[],
   tx: Transaction
 ): Promise<Map<string, ResolvedCdmPermission>> {

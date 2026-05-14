@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { ApolloCache, NetworkStatus } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
-  CancelProjectPermissionsSyncDocument,
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobDocument,
-  ProjectPermissionsSyncJobStatus,
+  CancelProjectSyncDocument,
+  ProjectSyncJob,
+  ProjectSyncJobDocument,
+  ProjectSyncJobStatus,
   Scope,
-  StartProjectPermissionsSyncDocument,
-  SyncProjectPermissionsInput,
+  StartProjectSyncDocument,
+  SyncProjectInput,
 } from '@grantjs/schema';
 
 import { evictApiKeysCache } from '../api-keys/cache';
@@ -17,10 +17,10 @@ import { evictPermissionsCache } from '../permissions/cache';
 import { evictRolesCache } from '../roles/cache';
 import { evictTagsCache } from '../tags/cache';
 
-const TERMINAL_STATUSES: ReadonlyArray<ProjectPermissionsSyncJobStatus> = [
-  ProjectPermissionsSyncJobStatus.Completed,
-  ProjectPermissionsSyncJobStatus.Failed,
-  ProjectPermissionsSyncJobStatus.Cancelled,
+const TERMINAL_STATUSES: ReadonlyArray<ProjectSyncJobStatus> = [
+  ProjectSyncJobStatus.Completed,
+  ProjectSyncJobStatus.Failed,
+  ProjectSyncJobStatus.Cancelled,
 ];
 
 const DEFAULT_POLL_INTERVAL_MS = 2000;
@@ -32,7 +32,7 @@ const DEFAULT_POLL_INTERVAL_MS = 2000;
  */
 const completedSyncJobsCacheEvicted = new Set<string>();
 
-function isTerminalStatus(status: ProjectPermissionsSyncJobStatus | undefined): boolean {
+function isTerminalStatus(status: ProjectSyncJobStatus | undefined): boolean {
   return status != null && TERMINAL_STATUSES.includes(status);
 }
 
@@ -50,16 +50,16 @@ function evictAffectedCaches(cache: ApolloCache, jobId: string) {
  * Mutation hook to enqueue an async CDM permission sync.
  * Returns the persisted job row including its id and current status.
  */
-export function useStartProjectPermissionsSync() {
-  const [start, state] = useMutation<{ startProjectPermissionsSync: ProjectPermissionsSyncJob }>(
-    StartProjectPermissionsSyncDocument
+export function useStartProjectSync() {
+  const [start, state] = useMutation<{ startProjectSync: ProjectSyncJob }>(
+    StartProjectSyncDocument
   );
 
   const startSync = useCallback(
-    async (params: { id: string; scope: Scope; input: SyncProjectPermissionsInput }) => {
+    async (params: { id: string; scope: Scope; input: SyncProjectInput }) => {
       const { id, scope, input } = params;
       const result = await start({ variables: { id, scope, input } });
-      return result.data?.startProjectPermissionsSync;
+      return result.data?.startProjectSync;
     },
     [start]
   );
@@ -68,12 +68,12 @@ export function useStartProjectPermissionsSync() {
     startSync,
     loading: state.loading,
     error: state.error,
-    job: state.data?.startProjectPermissionsSync,
+    job: state.data?.startProjectSync,
     reset: state.reset,
   };
 }
 
-export interface UseProjectPermissionsSyncJobParams {
+export interface UseProjectSyncJobParams {
   id: string;
   scope: Scope | undefined;
   jobId: string | undefined;
@@ -92,7 +92,7 @@ export interface UseProjectPermissionsSyncJobParams {
  * or cancelled). On completion, scope-related Apollo caches are evicted so
  * downstream queries refetch fresh data (including tags and API keys).
  */
-export function useProjectPermissionsSyncJob(params: UseProjectPermissionsSyncJobParams) {
+export function useProjectSyncJob(params: UseProjectSyncJobParams) {
   const { id, scope, jobId, pollIntervalMs = DEFAULT_POLL_INTERVAL_MS, skip: skipParam } = params;
 
   const skip = useMemo(
@@ -101,7 +101,7 @@ export function useProjectPermissionsSyncJob(params: UseProjectPermissionsSyncJo
   );
 
   const { data, loading, error, networkStatus, refetch, startPolling, stopPolling, client } =
-    useQuery(ProjectPermissionsSyncJobDocument, {
+    useQuery(ProjectSyncJobDocument, {
       variables: { id, scope: scope ?? ({} as Scope), jobId: jobId ?? '' },
       skip,
       fetchPolicy: 'cache-and-network',
@@ -109,16 +109,15 @@ export function useProjectPermissionsSyncJob(params: UseProjectPermissionsSyncJo
       pollInterval: pollIntervalMs > 0 ? pollIntervalMs : 0,
     });
 
-  const job = data?.projectPermissionsSyncJob as ProjectPermissionsSyncJob | undefined;
+  const job = data?.projectSyncJob as ProjectSyncJob | undefined;
   const status = job?.status;
   const isTerminal = isTerminalStatus(status);
   const isActive =
-    status === ProjectPermissionsSyncJobStatus.Pending ||
-    status === ProjectPermissionsSyncJobStatus.Running;
+    status === ProjectSyncJobStatus.Pending || status === ProjectSyncJobStatus.Running;
 
   useEffect(() => {
     if (!job) return;
-    if (status === ProjectPermissionsSyncJobStatus.Completed) {
+    if (status === ProjectSyncJobStatus.Completed) {
       // Defer past the current commit; eviction + gc touches all watchers.
       queueMicrotask(() => {
         evictAffectedCaches(client.cache, job.id);
@@ -143,15 +142,15 @@ export function useProjectPermissionsSyncJob(params: UseProjectPermissionsSyncJo
 }
 
 /** Mutation hook to cancel an in-flight sync job (best-effort once RUNNING). */
-export function useCancelProjectPermissionsSync() {
-  const [cancel, state] = useMutation<{ cancelProjectPermissionsSync: ProjectPermissionsSyncJob }>(
-    CancelProjectPermissionsSyncDocument
+export function useCancelProjectSync() {
+  const [cancel, state] = useMutation<{ cancelProjectSync: ProjectSyncJob }>(
+    CancelProjectSyncDocument
   );
 
   const cancelSync = useCallback(
     async (params: { id: string; scope: Scope; jobId: string }) => {
       const result = await cancel({ variables: params });
-      return result.data?.cancelProjectPermissionsSync;
+      return result.data?.cancelProjectSync;
     },
     [cancel]
   );

@@ -13,9 +13,9 @@ import { ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
 import type {
-  ProjectPermissionSyncRepository,
+  ProjectSyncRepository,
   ResolvedCdmPermission,
-} from '@/repositories/project-permission-sync.repository';
+} from '@/repositories/project-sync.repository';
 
 import type { CdmEntityBuilder } from './cdm-entity-builder';
 import type { CdmRoleTemplateInternal } from './cdm-internal.types';
@@ -28,7 +28,7 @@ const ROLE_TEMPLATE_INPUT_KEY = 'roleTemplates' as const;
  * `cdmImport.kind === 'role'` and `'group'`).
  *
  * Behavioural parity invariant: this handler must produce the exact same
- * counts and metadata writes that the monolithic `ProjectPermissionSyncService`
+ * counts and metadata writes that the monolithic `ProjectSyncService`
  * used to produce, because the integration suite asserts the result counters
  * field-by-field.
  */
@@ -41,7 +41,7 @@ export class RoleTemplateHandler implements ICdmEntityHandler<
   public readonly order = 10;
 
   constructor(
-    private readonly syncRepo: ProjectPermissionSyncRepository,
+    private readonly syncRepo: ProjectSyncRepository,
     private readonly exportRepo: ProjectPermissionExportRepository,
     private readonly builder: CdmEntityBuilder,
     private readonly roleTags: IRoleTagService,

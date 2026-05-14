@@ -130,7 +130,11 @@ input UserCdmInput {
   metadata: JSON
 }
 
-input SyncProjectPermissionsInput {
+"""
+Versioned canonical project document (CDM) for export/import: roles, users,
+resources, permissions, groups, and tags scoped to one project.
+"""
+input SyncProjectInput {
   version: Int!
   id: String
   mode: CdmModeInput!

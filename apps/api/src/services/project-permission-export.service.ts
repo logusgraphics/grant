@@ -1,7 +1,5 @@
 import type {
   CdmExportContext,
-  CdmExportSection,
-  CdmHandlerInputKey,
   IApiKeyService,
   ICdmEntityHandler,
   IGroupPermissionService,
@@ -26,15 +24,22 @@ import type {
   IUserService,
   IUserTagService,
 } from '@grantjs/core';
-import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
-import { CdmModeStrategy, Scope, SyncProjectPermissionsInput, Tenant } from '@grantjs/schema';
+import {
+  CDM_EXPORT_SECTIONS,
+  type CdmExportSection,
+  type CdmHandlerInputKey,
+  CdmModeStrategy,
+  Scope,
+  SyncProjectInput,
+  Tenant,
+} from '@grantjs/schema';
 
 import { ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
-import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
+import type { ProjectSyncRepository } from '@/repositories/project-sync.repository';
 
-import { assembleExportedSyncProjectPermissionsInput, createDefaultCdmHandlers } from './cdm';
+import { assembleExportedSyncProjectInput, createDefaultCdmHandlers } from './cdm';
 import type {
   CdmProjectUserApiKeyInternal,
   CdmRoleTemplateInternal,
@@ -67,9 +72,9 @@ function exportHandlerIncluded(
 }
 
 /**
- * Inverse of {@link ProjectPermissionSyncService}: snapshots the project's
+ * Inverse of {@link ProjectSyncService}: snapshots the project's
  * current permission/role/group/user-assignment state and packages it as a
- * replay-ready `SyncProjectPermissionsInput`.
+ * replay-ready `SyncProjectInput`.
  *
  * Iterates the same `ICdmEntityHandler[]` registry used by the sync service.
  * The full-project export shape is therefore determined entirely by the
@@ -85,7 +90,7 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
   private readonly handlers: ReadonlyArray<ICdmEntityHandler>;
 
   constructor(
-    syncRepo: ProjectPermissionSyncRepository,
+    syncRepo: ProjectSyncRepository,
     exportRepo: ProjectPermissionExportRepository,
     roles: IRoleService,
     groups: IGroupService,
@@ -148,7 +153,7 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       sections?: readonly CdmExportSection[];
     },
     transaction?: unknown
-  ): Promise<SyncProjectPermissionsInput> {
+  ): Promise<SyncProjectInput> {
     this.assertProjectScope(params.scope);
     const scopeProjectId = this.projectIdFromScope(params.scope);
     if (scopeProjectId !== params.projectId) {
@@ -169,7 +174,7 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       tx,
     };
 
-    const result: SyncProjectPermissionsInput = {
+    const result: SyncProjectInput = {
       version,
       id: null,
       mode: {
@@ -205,18 +210,14 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       []) as readonly CdmProjectUserApiKeyInternal[];
     const provisionedUsers = (slices.provisionedUsers ?? []) as readonly CdmUserProvisionInternal[];
 
-    const assembled = assembleExportedSyncProjectPermissionsInput({
+    const assembled = assembleExportedSyncProjectInput({
       roleTemplates,
       userAssignments,
       projectUserApiKeys,
       provisionedUsers,
-      resourcesSlice: (slices.resources ?? []) as NonNullable<
-        SyncProjectPermissionsInput['resources']
-      >,
-      permissionsSlice: (slices.permissions ?? []) as NonNullable<
-        SyncProjectPermissionsInput['permissions']
-      >,
-      tagsSlice: (slices.tags ?? []) as NonNullable<SyncProjectPermissionsInput['tags']>,
+      resourcesSlice: (slices.resources ?? []) as NonNullable<SyncProjectInput['resources']>,
+      permissionsSlice: (slices.permissions ?? []) as NonNullable<SyncProjectInput['permissions']>,
+      tagsSlice: (slices.tags ?? []) as NonNullable<SyncProjectInput['tags']>,
     });
     result.roles = assembled.roles;
     result.users = assembled.users;

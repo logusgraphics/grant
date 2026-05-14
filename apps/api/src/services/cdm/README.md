@@ -2,7 +2,7 @@
 
 This folder contains the entity-handler registry that powers project permission
 sync, export, and pre-sync rollback snapshots. The orchestrator
-(`ProjectPermissionSyncService`) and the exporter
+(`ProjectSyncService`) and the exporter
 (`ProjectPermissionExportService`) both iterate the same `ICdmEntityHandler[]`
 registry; adding a new entity is a localised change here and a matching schema
 addition in `@grantjs/schema`.
@@ -13,9 +13,9 @@ addition in `@grantjs/schema`.
 | ------------------------- | ---------------------------------------------------------------------- |
 | Port definition           | `packages/@grantjs/core/src/ports/services/cdm-entity-handler.port.ts` |
 | Default registry          | `apps/api/src/services/cdm/index.ts` (`createDefaultCdmHandlers`)      |
-| Sync orchestrator         | `apps/api/src/services/project-permission-sync.service.ts`             |
+| Sync orchestrator         | `apps/api/src/services/project-sync.service.ts`                        |
 | Export orchestrator       | `apps/api/src/services/project-permission-export.service.ts`           |
-| Worker snapshot capture   | `apps/api/src/jobs/project-permissions-sync.job.ts`                    |
+| Worker snapshot capture   | `apps/api/src/jobs/project-sync.job.ts`                                |
 | Permission-ref helper     | `apps/api/src/services/cdm/permission-ref.helper.ts`                   |
 | Shared role+group builder | `apps/api/src/services/cdm/cdm-entity-builder.ts`                      |
 
@@ -24,14 +24,14 @@ addition in `@grantjs/schema`.
 Walk-through for adding e.g. `apiKeys`:
 
 1. **Add the input + output GraphQL types** in `@grantjs/schema` and re-run
-   `pnpm --filter @grantjs/schema generate` so `SyncProjectPermissionsInput`
+   `pnpm --filter @grantjs/schema generate` so `SyncProjectInput`
    gains a new array slot (e.g. `apiKeys: ApiKeyCdmInput[]`) and the matching
    server-side resolvers compile.
 2. **Implement `ICdmEntityHandler`** in a new file under
    `apps/api/src/services/cdm/<entity>.handler.ts`:
    - `handlerKind` — stable identifier, persisted under
      `metadata.cdmImport.kind` so teardown can find rows this handler created.
-   - `inputKey` — the new field name on `SyncProjectPermissionsInput`.
+   - `inputKey` — the new field name on `SyncProjectInput`.
    - `order` — lower numbers run earlier; pick a number after every dependency
      (e.g. role templates use `100`, user assignments `200`).
    - `validateInput(input)` — throw `ValidationError` for shape/semantic
@@ -63,7 +63,7 @@ Walk-through for adding e.g. `apiKeys`:
      state from an earlier handler.
    - handler-specific — drop a `tests/unit/services/<entity>.handler.test.ts`
      covering `validateInput`, `apply`, `teardown`, and `export`.
-   - integration — extend the project-permissions-sync integration test so a
+   - integration — extend the `project-sync.integration.test.ts` so a
      full sync round-trip exercises the new entity.
 
 ## Identity contract
@@ -95,7 +95,7 @@ sprawl by synthesizing deterministic role/group links where needed.
 
 ## Mode policy
 
-`SyncProjectPermissionsInput.mode` controls import behavior:
+`SyncProjectInput.mode` controls import behavior:
 
 - `strategy: merge | replace`
 - `onConflict: fail | skip | update` (merge path)
@@ -131,7 +131,7 @@ For entities tied to projects only through pivot tables (e.g. tags, where
 `project_tags` is the membership row), `teardown` must also soft-delete the
 pivot rows that reference the row being removed — soft-delete cascades do not
 fire on the FK side. See `TagHandler.teardown` and
-`ProjectPermissionSyncRepository.bulkSoftDeleteCdmTags` for the canonical
+`ProjectSyncRepository.bulkSoftDeleteCdmTags` for the canonical
 pattern.
 
 ## Cross-handler refs (`produced`)
@@ -211,6 +211,6 @@ for those rows.
   artifact and download path are in place, so this is a one-button addition
   later. For secret-bearing entities, the rollback UI must prompt for the
   BYOK secrets before submitting the snapshot back through
-  `startProjectPermissionsSync`.
+  `startProjectSync`.
 - Snapshot retention / compaction — drop snapshots older than N days for
   cancelled / failed jobs once usage patterns are clearer.

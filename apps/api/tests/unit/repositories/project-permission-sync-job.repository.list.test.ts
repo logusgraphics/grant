@@ -1,12 +1,8 @@
 import type { DbSchema } from '@grantjs/database';
-import {
-  ProjectPermissionsSyncJobSortableField,
-  ProjectPermissionsSyncJobStatus,
-  SortOrder,
-} from '@grantjs/schema';
+import { ProjectSyncJobSortableField, ProjectSyncJobStatus, SortOrder } from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ProjectPermissionSyncJobRepository } from '@/repositories/project-permission-sync-job.repository';
+import { ProjectSyncJobRepository } from '@/repositories/project-sync-job.repository';
 
 const projectId = '00000000-0000-4000-8000-000000000011';
 const accountId = '00000000-0000-4000-8000-000000000020';
@@ -38,11 +34,11 @@ function buildChainable<T = unknown>(resolveTo: T) {
   return { chain: proxy as never, calls };
 }
 
-describe('ProjectPermissionSyncJobRepository.listByProject', () => {
+describe('ProjectSyncJobRepository.listByProject', () => {
   let countChain: ReturnType<typeof buildChainable>;
   let dataChain: ReturnType<typeof buildChainable>;
   let db: DbSchema;
-  let repo: ProjectPermissionSyncJobRepository;
+  let repo: ProjectSyncJobRepository;
 
   function buildRepo({
     countResult = [{ value: 0 }],
@@ -64,7 +60,7 @@ describe('ProjectPermissionSyncJobRepository.listByProject', () => {
         return target.chain;
       }),
     } as unknown as DbSchema;
-    repo = new ProjectPermissionSyncJobRepository(db);
+    repo = new ProjectSyncJobRepository(db);
   }
 
   beforeEach(() => {
@@ -78,7 +74,7 @@ describe('ProjectPermissionSyncJobRepository.listByProject', () => {
       scopeId: `${accountId}:${projectId}`,
       page: 2,
       limit: 25,
-      status: ProjectPermissionsSyncJobStatus.Pending,
+      status: ProjectSyncJobStatus.Pending,
     });
 
     const limitCall = dataChain.calls.find((c) => c.method === 'limit');
@@ -112,7 +108,7 @@ describe('ProjectPermissionSyncJobRepository.listByProject', () => {
       scopeTenant: 'organizationProject',
       scopeId: `org-1:${projectId}`,
       sort: {
-        field: ProjectPermissionsSyncJobSortableField.CompletedAt,
+        field: ProjectSyncJobSortableField.CompletedAt,
         order: SortOrder.Asc,
       },
     });

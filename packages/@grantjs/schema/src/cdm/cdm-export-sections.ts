@@ -14,8 +14,8 @@ export const CDM_EXPORT_SECTIONS = [
 export type CdmExportSection = (typeof CDM_EXPORT_SECTIONS)[number];
 
 /**
- * Keys on {@link ExpandedCdmSyncPayload} (API-internal) each handler reads.
- * Kept in core so the handler port and export pairing stay aligned.
+ * Keys on the expanded CDM sync payload produced by `expandCdmSyncInput` (apps/api)
+ * that each `ICdmEntityHandler` reads.
  */
 export const CDM_HANDLER_INPUT_KEYS = [
   'resources',

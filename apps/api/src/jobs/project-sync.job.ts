@@ -1,11 +1,11 @@
-import type { ProjectPermissionsSyncJobExecutionData } from '@grantjs/core';
+import type { ProjectSyncJobExecutionData } from '@grantjs/core';
 import { ConflictError } from '@grantjs/core';
 import {
   CdmFindBy,
-  ProjectPermissionsSyncJobStatus,
+  ProjectSyncJobStatus,
   type Scope,
-  type SyncProjectPermissionsInput,
-  type SyncProjectPermissionsResult,
+  type SyncProjectInput,
+  type SyncProjectResult,
 } from '@grantjs/schema';
 
 import {
@@ -20,26 +20,26 @@ import { scopeToRlsContext, setRlsContext } from '@/lib/rls';
 import { DrizzleTransactionalConnection, type Transaction } from '@/lib/transaction-manager.lib';
 
 /**
- * Async worker for CDM permission sync. The handler in `ProjectHandler.startProjectPermissionsSync`
+ * Async worker for CDM permission sync. The handler in `ProjectHandler.startProjectSync`
  * persists a job tracking row and enqueues this worker with `{ scope, payload: { jobRecordId } }`.
  *
  * Flow:
  *   1. Validate tenant scope from the enqueue context.
  *   2. Load the persisted payload + scope from the tracking row (worker-only `loadForExecution`).
  *   3. Transition to RUNNING (raises ConflictError if the row is already non-pending).
- *   4. Run `syncProjectPermissions` inside a Drizzle transaction.
+ *   4. Run `syncProject` inside a Drizzle transaction.
  *   5. On success: mark COMPLETED and invalidate scope/user caches.
  *   6. On failure: mark FAILED and rethrow so the queue applies retry/backoff policy.
  *
  * Every query touching `project_permission_sync_jobs` (and project-scoped sync data)
  * runs inside a transaction after {@link setRlsContext} for the enqueue scope.
  * Otherwise pooled connections without `app.current_project_id` set correctly can hit
- * RLS on `project_permission_sync_jobs` and return no row (`ProjectPermissionsSyncJob not found`)
+ * RLS on `project_permission_sync_jobs` and return no row (`ProjectSyncJob not found`)
  * even when the job exists.
  */
-export default class ProjectPermissionsSyncJob extends Job {
+export default class ProjectSyncJob extends Job {
   readonly config: ScheduledJob = {
-    id: 'project-permissions-sync',
+    id: 'project-sync',
     schedule: '',
     enabled: true,
     enqueueOnly: true,
@@ -53,8 +53,8 @@ export default class ProjectPermissionsSyncJob extends Job {
     const jobRecordId = this.extractJobRecordId(context.payload);
 
     const {
-      projectPermissionsSyncJobs: jobService,
-      projectPermissionSync,
+      projectSyncJobs: jobService,
+      projectSync,
       projectPermissionExport,
     } = this.appContext.services;
 
@@ -63,10 +63,7 @@ export default class ProjectPermissionsSyncJob extends Job {
     );
     this.assertScopesMatch(enqueueScope, execData.scope);
 
-    if (
-      execData.cancelRequested ||
-      execData.job.status === ProjectPermissionsSyncJobStatus.Cancelled
-    ) {
+    if (execData.cancelRequested || execData.job.status === ProjectSyncJobStatus.Cancelled) {
       this.logger.info({
         jobRecordId,
         msg: 'Skipping permission sync because the job was cancelled before execution',
@@ -77,9 +74,9 @@ export default class ProjectPermissionsSyncJob extends Job {
       };
     }
 
-    if (execData.job.status !== ProjectPermissionsSyncJobStatus.Pending) {
+    if (execData.job.status !== ProjectSyncJobStatus.Pending) {
       throw new ConflictError(
-        `Cannot execute project-permissions-sync job ${jobRecordId} from status ${execData.job.status}`
+        `Cannot execute project-sync job ${jobRecordId} from status ${execData.job.status}`
       );
     }
 
@@ -87,7 +84,7 @@ export default class ProjectPermissionsSyncJob extends Job {
       jobService.transitionToRunning({ jobId: jobRecordId }, tx)
     );
 
-    let result: SyncProjectPermissionsResult;
+    let result: SyncProjectResult;
     try {
       const txConn = new DrizzleTransactionalConnection(this.appContext.db);
       result = await txConn.withTransaction(async (tx: Transaction) => {
@@ -99,14 +96,14 @@ export default class ProjectPermissionsSyncJob extends Job {
          * with `teardownCdmEntities` and immediately mutates project state).
          *
          * Why inside the transaction: the snapshot must commit if and only
-         * if the import commits. If `syncProjectPermissions` throws, the
+         * if the import commits. If `syncProject` throws, the
          * whole transaction rolls back — including the snapshot write — so
          * a `failed` job ends with `snapshot IS NULL`, which correctly
          * reflects the unchanged project state on the rolled-back side.
          *
          * The export service iterates the same `ICdmEntityHandler[]`
          * registry as the sync service, so the snapshot's shape exactly
-         * matches what `syncProjectPermissions` accepts as input — making
+         * matches what `syncProject` accepts as input — making
          * a future "rollback" action a one-line resubmit of the snapshot.
          */
         const takenAt = new Date();
@@ -119,7 +116,7 @@ export default class ProjectPermissionsSyncJob extends Job {
           tx
         );
         await jobService.saveSnapshot({ jobId: jobRecordId, snapshot, takenAt }, tx);
-        return projectPermissionSync.syncProjectPermissions(
+        return projectSync.syncProject(
           {
             projectId: execData.job.projectId,
             scope: execData.scope,
@@ -146,7 +143,7 @@ export default class ProjectPermissionsSyncJob extends Job {
         this.logger.error({
           jobRecordId,
           err: markErr,
-          msg: 'Failed to mark project-permissions-sync job as failed; original error will still be rethrown',
+          msg: 'Failed to mark project-sync job as failed; original error will still be rethrown',
         });
       }
       throw error;
@@ -166,7 +163,7 @@ export default class ProjectPermissionsSyncJob extends Job {
 
     const userIds = this.collectUserIds(execData);
     try {
-      await projectPermissionSync.invalidateCachesForSyncResult({
+      await projectSync.invalidateCachesForSyncResult({
         scope: execData.scope,
         userIds,
       });
@@ -213,9 +210,7 @@ export default class ProjectPermissionsSyncJob extends Job {
       typeof (payload as { jobRecordId: unknown }).jobRecordId !== 'string' ||
       (payload as { jobRecordId: string }).jobRecordId.trim() === ''
     ) {
-      throw new Error(
-        'project-permissions-sync job payload must include a non-empty jobRecordId string'
-      );
+      throw new Error('project-sync job payload must include a non-empty jobRecordId string');
     }
     return (payload as { jobRecordId: string }).jobRecordId;
   }
@@ -223,14 +218,14 @@ export default class ProjectPermissionsSyncJob extends Job {
   private assertScopesMatch(enqueueScope: Scope, persistedScope: Scope): void {
     if (enqueueScope.tenant !== persistedScope.tenant || enqueueScope.id !== persistedScope.id) {
       throw new Error(
-        `project-permissions-sync scope mismatch: enqueue=${enqueueScope.tenant}:${enqueueScope.id} persisted=${persistedScope.tenant}:${persistedScope.id}`
+        `project-sync scope mismatch: enqueue=${enqueueScope.tenant}:${enqueueScope.id} persisted=${persistedScope.tenant}:${persistedScope.id}`
       );
     }
   }
 
-  private collectUserIds(execData: ProjectPermissionsSyncJobExecutionData): string[] {
+  private collectUserIds(execData: ProjectSyncJobExecutionData): string[] {
     const ids = new Set<string>();
-    const payload = execData.payload as SyncProjectPermissionsInput;
+    const payload = execData.payload as SyncProjectInput;
     for (const u of payload.users ?? []) {
       if (u.key.findBy === CdmFindBy.Id) {
         ids.add(u.key.value);

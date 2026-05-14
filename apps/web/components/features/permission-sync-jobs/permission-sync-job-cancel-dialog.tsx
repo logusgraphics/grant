@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
-import { useCancelProjectPermissionsSync } from '@/hooks/projects';
+import { useCancelProjectSync } from '@/hooks/projects';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 export function PermissionSyncJobCancelDialog() {
@@ -31,7 +31,7 @@ export function PermissionSyncJobCancelDialog() {
   const setJobToCancel = usePermissionSyncJobsStore((state) => state.setJobToCancel);
   const refetch = usePermissionSyncJobsStore((state) => state.refetch);
 
-  const { cancelSync } = useCancelProjectPermissionsSync();
+  const { cancelSync } = useCancelProjectSync();
   const [isCancelling, setIsCancelling] = useState(false);
 
   const canUpdate = useGrant(ResourceSlug.Project, ResourceAction.Update, {

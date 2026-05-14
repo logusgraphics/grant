@@ -11,6 +11,7 @@ import type {
   AddProjectRoleInput,
   AddProjectTagInput,
   AddProjectUserInput,
+  CdmExportSection,
   CreateProjectInput,
   MutationDeleteProjectArgs,
   MutationUpdateProjectArgs,
@@ -18,12 +19,12 @@ import type {
   ProjectGroup,
   ProjectPage,
   ProjectPermission,
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobPage,
-  ProjectPermissionsSyncJobSortInput,
-  ProjectPermissionsSyncJobStatus,
   ProjectResource,
   ProjectRole,
+  ProjectSyncJob,
+  ProjectSyncJobPage,
+  ProjectSyncJobSortInput,
+  ProjectSyncJobStatus,
   ProjectTag,
   ProjectUser,
   ProjectUserApiKey,
@@ -37,12 +38,11 @@ import type {
   RemoveProjectTagInput,
   RemoveProjectUserInput,
   Scope,
-  SyncProjectPermissionsInput,
-  SyncProjectPermissionsResult,
+  SyncProjectInput,
+  SyncProjectResult,
   UpdateProjectTagInput,
 } from '@grantjs/schema';
 
-import type { CdmExportSection } from '../../cdm-export-sections';
 import type { SelectedFields } from '../repositories/common';
 import type { DeleteParams } from './user.service.port';
 
@@ -259,19 +259,19 @@ export interface IProjectUserApiKeyService {
 }
 
 // ---------------------------------------------------------------------------
-// IProjectPermissionSyncService
+// IProjectSyncService
 // ---------------------------------------------------------------------------
 
 /** Replace-import of project RBAC from the canonical data model (CDM). */
-export interface IProjectPermissionSyncService {
-  syncProjectPermissions(
+export interface IProjectSyncService {
+  syncProject(
     params: {
       projectId: string;
       scope: Scope;
-      input: SyncProjectPermissionsInput;
+      input: SyncProjectInput;
     },
     transaction: unknown
-  ): Promise<SyncProjectPermissionsResult>;
+  ): Promise<SyncProjectResult>;
 
   /**
    * Post-commit cache invalidation for a successful sync. Invalidates
@@ -287,9 +287,9 @@ export interface IProjectPermissionSyncService {
 // ---------------------------------------------------------------------------
 
 /**
- * Inverse of {@link IProjectPermissionSyncService}: snapshot the project's
+ * Inverse of {@link IProjectSyncService}: snapshot the project's
  * current permission/role/group/user-assignment state and package it as a
- * replay-ready `SyncProjectPermissionsInput` (the CDM canonical artifact).
+ * replay-ready `SyncProjectInput` (the CDM canonical artifact).
  *
  * Used both by the standalone export endpoint (clone-a-project, manual
  * backups) and by the sync worker to capture a pre-import rollback snapshot
@@ -309,11 +309,11 @@ export interface IProjectPermissionExportService {
       sections?: readonly CdmExportSection[];
     },
     transaction?: unknown
-  ): Promise<SyncProjectPermissionsInput>;
+  ): Promise<SyncProjectInput>;
 }
 
 // ---------------------------------------------------------------------------
-// IProjectPermissionsSyncJobService
+// IProjectSyncJobService
 // ---------------------------------------------------------------------------
 
 /**
@@ -321,9 +321,9 @@ export interface IProjectPermissionExportService {
  * preserved at enqueue time. Returned only by `loadForExecution` so the
  * payload + scope never leak through the public `getById` (GraphQL) path.
  */
-export interface ProjectPermissionsSyncJobExecutionData {
-  job: ProjectPermissionsSyncJob;
-  payload: SyncProjectPermissionsInput;
+export interface ProjectSyncJobExecutionData {
+  job: ProjectSyncJob;
+  payload: SyncProjectInput;
   scope: Scope;
   /** Whether `cancel()` has been invoked while the job was RUNNING. */
   cancelRequested: boolean;
@@ -332,29 +332,29 @@ export interface ProjectPermissionsSyncJobExecutionData {
 /**
  * State-machine service for the async CDM sync job-tracking row.
  * Owns persistence + transitions only; never performs the import itself.
- * The actual import is delegated to {@link IProjectPermissionSyncService}.
+ * The actual import is delegated to {@link IProjectSyncService}.
  */
-export interface IProjectPermissionsSyncJobService {
+export interface IProjectSyncJobService {
   create(
     params: {
       projectId: string;
       scope: Scope;
       cdmVersion: number;
       importId: string | null;
-      payload: SyncProjectPermissionsInput;
+      payload: SyncProjectInput;
       enqueuedById: string;
     },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  ): Promise<ProjectSyncJob>;
 
   getById(
     params: { projectId: string; jobId: string },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  ): Promise<ProjectSyncJob>;
 
   /**
    * Paginated list of jobs scoped to a single project. Returns the
-   * standard `ProjectPermissionsSyncJobPage` shape: items + totalCount +
+   * standard `ProjectSyncJobPage` shape: items + totalCount +
    * hasNextPage. Used by the GraphQL list query, the REST list route, and
    * the web job-history viewer.
    */
@@ -365,11 +365,11 @@ export interface IProjectPermissionsSyncJobService {
       page?: number | null;
       limit?: number | null;
       search?: string | null;
-      sort?: ProjectPermissionsSyncJobSortInput | null;
-      status?: ProjectPermissionsSyncJobStatus | null;
+      sort?: ProjectSyncJobSortInput | null;
+      status?: ProjectSyncJobStatus | null;
     },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJobPage>;
+  ): Promise<ProjectSyncJobPage>;
 
   /**
    * Read the persisted CDM payload that triggered this job. Used by the
@@ -381,7 +381,7 @@ export interface IProjectPermissionsSyncJobService {
     params: { projectId: string; jobId: string },
     transaction?: unknown
   ): Promise<{
-    payload: SyncProjectPermissionsInput;
+    payload: SyncProjectInput;
     importId: string | null;
     cdmVersion: number;
   }>;
@@ -395,33 +395,30 @@ export interface IProjectPermissionsSyncJobService {
   loadForExecution(
     params: { jobId: string },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJobExecutionData>;
+  ): Promise<ProjectSyncJobExecutionData>;
 
   /** Idempotency: returns an active job for (projectId, importId) when importId is set. */
   findActiveByImportId(
     params: { projectId: string; importId: string },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob | null>;
+  ): Promise<ProjectSyncJob | null>;
 
-  transitionToRunning(
-    params: { jobId: string },
-    transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  transitionToRunning(params: { jobId: string }, transaction?: unknown): Promise<ProjectSyncJob>;
 
   markCompleted(
-    params: { jobId: string; result: SyncProjectPermissionsResult; warnings: string[] },
+    params: { jobId: string; result: SyncProjectResult; warnings: string[] },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  ): Promise<ProjectSyncJob>;
 
   markFailed(
     params: { jobId: string; errorMessage: string; errorDetails?: Record<string, unknown> | null },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  ): Promise<ProjectSyncJob>;
 
   cancel(
     params: { projectId: string; jobId: string },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  ): Promise<ProjectSyncJob>;
 
   /**
    * Persist a rollback snapshot for a job. Captured by the worker inside the
@@ -432,7 +429,7 @@ export interface IProjectPermissionsSyncJobService {
    * callers do not pre-serialise.
    */
   saveSnapshot(
-    params: { jobId: string; snapshot: SyncProjectPermissionsInput; takenAt: Date },
+    params: { jobId: string; snapshot: SyncProjectInput; takenAt: Date },
     transaction?: unknown
   ): Promise<void>;
 
@@ -446,7 +443,7 @@ export interface IProjectPermissionsSyncJobService {
     params: { projectId: string; jobId: string },
     transaction?: unknown
   ): Promise<{
-    snapshot: SyncProjectPermissionsInput;
+    snapshot: SyncProjectInput;
     takenAt: Date;
     sizeBytes: number;
   } | null>;

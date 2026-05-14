@@ -18,7 +18,7 @@ import {
 import { ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
-import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
+import type { ProjectSyncRepository } from '@/repositories/project-sync.repository';
 
 import { buildExternalKey } from './identity.helper';
 
@@ -43,7 +43,7 @@ export class TagHandler implements ICdmEntityHandler<TagCdmInput, TagCdmInput> {
   public readonly order = 5;
 
   constructor(
-    private readonly syncRepo: ProjectPermissionSyncRepository,
+    private readonly syncRepo: ProjectSyncRepository,
     private readonly exportRepo: ProjectPermissionExportRepository,
     private readonly tags: ITagService,
     private readonly projectTags: IProjectTagService

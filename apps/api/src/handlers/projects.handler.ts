@@ -1,5 +1,4 @@
 import type {
-  CdmExportSection,
   IAccountProjectService,
   IAccountProjectTagService,
   IJobAdapter,
@@ -8,29 +7,30 @@ import type {
   IProjectGroupService,
   IProjectPermissionExportService,
   IProjectPermissionService,
-  IProjectPermissionsSyncJobService,
-  IProjectPermissionSyncService,
   IProjectRoleService,
   IProjectService,
+  IProjectSyncJobService,
+  IProjectSyncService,
   IProjectTagService,
   IProjectUserService,
   ITransactionalConnection,
 } from '@grantjs/core';
 import {
+  type CdmExportSection,
   CdmFindBy,
-  MutationCancelProjectPermissionsSyncArgs,
+  MutationCancelProjectSyncArgs,
   MutationCreateProjectArgs,
   MutationDeleteProjectArgs,
-  MutationStartProjectPermissionsSyncArgs,
+  MutationStartProjectSyncArgs,
   MutationUpdateProjectArgs,
   Project,
   ProjectPage,
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobPage,
-  QueryProjectPermissionsSyncJobArgs,
-  QueryProjectPermissionsSyncJobsArgs,
+  ProjectSyncJob,
+  ProjectSyncJobPage,
   QueryProjectsArgs,
-  SyncProjectPermissionsInput,
+  QueryProjectSyncJobArgs,
+  QueryProjectSyncJobsArgs,
+  SyncProjectInput,
   Tenant,
 } from '@grantjs/schema';
 
@@ -43,7 +43,7 @@ import { DeleteParams, SelectedFields } from '@/types';
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
 
 /** Job id for the async project permissions sync worker (registered in apps/api/src/jobs). */
-const PROJECT_PERMISSIONS_SYNC_JOB_ID = 'project-permissions-sync';
+const PROJECT_SYNC_JOB_ID = 'project-sync';
 
 export class ProjectHandler extends CacheHandler {
   constructor(
@@ -57,9 +57,9 @@ export class ProjectHandler extends CacheHandler {
     private readonly projectGroups: IProjectGroupService,
     private readonly projectRoles: IProjectRoleService,
     private readonly projectUsers: IProjectUserService,
-    private readonly projectPermissionSync: IProjectPermissionSyncService,
+    private readonly projectSync: IProjectSyncService,
     private readonly projectPermissionExport: IProjectPermissionExportService,
-    private readonly projectPermissionsSyncJobs: IProjectPermissionsSyncJobService,
+    private readonly projectSyncJobs: IProjectSyncJobService,
     private readonly jobs: IJobAdapter | null,
     cache: IEntityCacheAdapter,
     scopeServices: ScopeServices,
@@ -150,9 +150,9 @@ export class ProjectHandler extends CacheHandler {
    * checks for an in-flight job with the same `id` (idempotency), then
    * persists the job tracking row and dispatches a one-off job.
    */
-  public async startProjectPermissionsSync(
-    params: MutationStartProjectPermissionsSyncArgs & { enqueuedById: string }
-  ): Promise<ProjectPermissionsSyncJob> {
+  public async startProjectSync(
+    params: MutationStartProjectSyncArgs & { enqueuedById: string }
+  ): Promise<ProjectSyncJob> {
     const jobs = this.jobs;
     if (!jobs || !jobs.enqueue) {
       throw new ConfigurationError(
@@ -172,7 +172,7 @@ export class ProjectHandler extends CacheHandler {
 
     const importId = params.input.id ?? null;
     if (importId !== null) {
-      const inflight = await this.projectPermissionsSyncJobs.findActiveByImportId({
+      const inflight = await this.projectSyncJobs.findActiveByImportId({
         projectId: params.id,
         importId,
       });
@@ -181,7 +181,7 @@ export class ProjectHandler extends CacheHandler {
       }
     }
 
-    const job = await this.projectPermissionsSyncJobs.create({
+    const job = await this.projectSyncJobs.create({
       projectId: params.id,
       scope: params.scope,
       cdmVersion: params.input.version,
@@ -198,10 +198,10 @@ export class ProjectHandler extends CacheHandler {
     /**
      * Must run after the HTTP transaction commits. Otherwise BullMQ can pick
      * up the job before the INSERT is visible to other connections (worker →
-     * `ProjectPermissionsSyncJob not found`).
+     * `ProjectSyncJob not found`).
      */
     const runEnqueue = (): void => {
-      void enqueueJob(PROJECT_PERMISSIONS_SYNC_JOB_ID, enqueueData);
+      void enqueueJob(PROJECT_SYNC_JOB_ID, enqueueData);
     };
 
     const defer =
@@ -214,19 +214,15 @@ export class ProjectHandler extends CacheHandler {
     return job;
   }
 
-  public async getProjectPermissionsSyncJob(
-    params: QueryProjectPermissionsSyncJobArgs
-  ): Promise<ProjectPermissionsSyncJob> {
+  public async getProjectSyncJob(params: QueryProjectSyncJobArgs): Promise<ProjectSyncJob> {
     this.assertProjectScope(params.scope);
-    return this.projectPermissionsSyncJobs.getById({
+    return this.projectSyncJobs.getById({
       projectId: params.id,
       jobId: params.jobId,
     });
   }
 
-  public async listProjectPermissionsSyncJobs(
-    params: QueryProjectPermissionsSyncJobsArgs
-  ): Promise<ProjectPermissionsSyncJobPage> {
+  public async listProjectSyncJobs(params: QueryProjectSyncJobsArgs): Promise<ProjectSyncJobPage> {
     this.assertProjectScope(params.scope);
     const scopeProjectId = this.projectIdFromScope(params.scope);
     if (scopeProjectId !== params.id) {
@@ -234,7 +230,7 @@ export class ProjectHandler extends CacheHandler {
         'scope id must contain the same projectId as the projectId argument'
       );
     }
-    return this.projectPermissionsSyncJobs.list({
+    return this.projectSyncJobs.list({
       projectId: params.id,
       scope: params.scope,
       page: params.page,
@@ -250,10 +246,8 @@ export class ProjectHandler extends CacheHandler {
    * enqueued. Used by the REST download endpoint. The payload is read from
    * the persisted JSONB column on the job row; no file storage is involved.
    */
-  public async getProjectPermissionsSyncJobPayload(
-    params: QueryProjectPermissionsSyncJobArgs
-  ): Promise<{
-    payload: SyncProjectPermissionsInput;
+  public async getProjectSyncJobPayload(params: QueryProjectSyncJobArgs): Promise<{
+    payload: SyncProjectInput;
     importId: string | null;
     cdmVersion: number;
   }> {
@@ -264,17 +258,15 @@ export class ProjectHandler extends CacheHandler {
         'scope id must contain the same projectId as the projectId argument'
       );
     }
-    return this.projectPermissionsSyncJobs.getPayload({
+    return this.projectSyncJobs.getPayload({
       projectId: params.id,
       jobId: params.jobId,
     });
   }
 
-  public async cancelProjectPermissionsSync(
-    params: MutationCancelProjectPermissionsSyncArgs
-  ): Promise<ProjectPermissionsSyncJob> {
+  public async cancelProjectSync(params: MutationCancelProjectSyncArgs): Promise<ProjectSyncJob> {
     this.assertProjectScope(params.scope);
-    return this.projectPermissionsSyncJobs.cancel({
+    return this.projectSyncJobs.cancel({
       projectId: params.id,
       jobId: params.jobId,
     });
@@ -282,7 +274,7 @@ export class ProjectHandler extends CacheHandler {
 
   /**
    * Snapshot the project's current permission/role/group/user-assignment
-   * state and return it as a replay-ready `SyncProjectPermissionsInput` body.
+   * state and return it as a replay-ready `SyncProjectInput` body.
    * The REST layer streams the response with a `Content-Disposition`
    * attachment header so browsers prompt for a save.
    */
@@ -292,7 +284,7 @@ export class ProjectHandler extends CacheHandler {
     version?: number | null;
     /** Raw query values; validated when non-empty (may still be a comma-separated string). */
     sections?: readonly string[] | string;
-  }): Promise<SyncProjectPermissionsInput> {
+  }): Promise<SyncProjectInput> {
     this.assertProjectScope(params.scope);
     const scopeProjectId = this.projectIdFromScope(params.scope);
     if (scopeProjectId !== params.id) {
@@ -319,10 +311,8 @@ export class ProjectHandler extends CacheHandler {
    * failed before the worker reached the snapshot step, or it is a legacy
    * row enqueued before this column existed).
    */
-  public async getProjectPermissionsSyncJobSnapshot(
-    params: QueryProjectPermissionsSyncJobArgs
-  ): Promise<{
-    snapshot: SyncProjectPermissionsInput;
+  public async getProjectSyncJobSnapshot(params: QueryProjectSyncJobArgs): Promise<{
+    snapshot: SyncProjectInput;
     takenAt: Date;
     sizeBytes: number;
   }> {
@@ -333,12 +323,12 @@ export class ProjectHandler extends CacheHandler {
         'scope id must contain the same projectId as the projectId argument'
       );
     }
-    const result = await this.projectPermissionsSyncJobs.getSnapshot({
+    const result = await this.projectSyncJobs.getSnapshot({
       projectId: params.id,
       jobId: params.jobId,
     });
     if (!result) {
-      throw new NotFoundError('ProjectPermissionsSyncJobSnapshot', params.jobId);
+      throw new NotFoundError('ProjectSyncJobSnapshot', params.jobId);
     }
     return result;
   }
@@ -355,7 +345,7 @@ export class ProjectHandler extends CacheHandler {
     return scope.id.split(':')[1] ?? '';
   }
 
-  private validateSyncInput(input: MutationStartProjectPermissionsSyncArgs['input']): void {
+  private validateSyncInput(input: MutationStartProjectSyncArgs['input']): void {
     if (input.version !== 1) {
       throw new ValidationError('Unsupported version; only 1 is allowed');
     }

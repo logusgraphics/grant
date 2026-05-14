@@ -29,7 +29,7 @@ export interface PermissionSyncJobExportTriggerProps {
  * the button is rendered disabled with a spinner so layout does not jump.
  *
  * On click, opens the export dialog so the operator can choose CDM sections
- * before downloading JSON from `GET /api/projects/:id/permissions/export`.
+ * before downloading JSON from `GET /api/projects/:id/sync/export`.
  */
 export function PermissionSyncJobExportTrigger({
   layout = 'empty',

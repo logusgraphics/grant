@@ -23,7 +23,7 @@ import {
 import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
-import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
+import type { ProjectSyncRepository } from '@/repositories/project-sync.repository';
 
 import { buildExternalKey } from './identity.helper';
 import { resolveSinglePermissionRef } from './permission-ref.helper';
@@ -58,7 +58,7 @@ export class PermissionHandler implements ICdmEntityHandler<
   public readonly order = 4;
 
   constructor(
-    private readonly syncRepo: ProjectPermissionSyncRepository,
+    private readonly syncRepo: ProjectSyncRepository,
     private readonly exportRepo: ProjectPermissionExportRepository,
     private readonly permissions: IPermissionService,
     private readonly projectPermissions: IProjectPermissionService,

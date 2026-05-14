@@ -1,5 +1,5 @@
-query ProjectPermissionsSyncJob($id: ID!, $scope: Scope!, $jobId: ID!) {
-  projectPermissionsSyncJob(id: $id, scope: $scope, jobId: $jobId) {
+query ProjectSyncJob($id: ID!, $scope: Scope!, $jobId: ID!) {
+  projectSyncJob(id: $id, scope: $scope, jobId: $jobId) {
     id
     projectId
     status

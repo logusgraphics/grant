@@ -1,5 +1,5 @@
 import type { CdmApplyContext, CdmExportContext, CdmTeardownContext } from '@grantjs/core';
-import { Scope, SyncProjectPermissionsResult, Tenant } from '@grantjs/schema';
+import { Scope, SyncProjectResult, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -15,7 +15,7 @@ const projectId = '10000000-0000-4000-8000-000000000011';
 const accountId = '20000000-0000-4000-8000-000000000020';
 const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` };
 
-function baseResult(): SyncProjectPermissionsResult {
+function baseResult(): SyncProjectResult {
   return {
     projectId,
     importId: null,

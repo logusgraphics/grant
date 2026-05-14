@@ -11,9 +11,9 @@ import type {
   IPermissionTagService,
   IProjectGroupService,
   IProjectPermissionService,
-  IProjectPermissionSyncService,
   IProjectResourceService,
   IProjectRoleService,
+  IProjectSyncService,
   IProjectTagService,
   IProjectUserApiKeyService,
   IProjectUserService,
@@ -33,8 +33,8 @@ import {
   PermissionCdmInput,
   ResourceCdmInput,
   Scope,
-  SyncProjectPermissionsInput,
-  SyncProjectPermissionsResult,
+  SyncProjectInput,
+  SyncProjectResult,
   Tenant,
 } from '@grantjs/schema';
 
@@ -44,9 +44,9 @@ import { ConflictError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
 import {
-  ProjectPermissionSyncRepository,
+  ProjectSyncRepository,
   ResolvedCdmPermission,
-} from '@/repositories/project-permission-sync.repository';
+} from '@/repositories/project-sync.repository';
 
 import { createDefaultCdmHandlers } from './cdm';
 import type { ExpandedCdmSyncPayload } from './cdm/expand-cdm-sync-input';
@@ -70,15 +70,16 @@ import { refDedupKey, resolveAllPermissionRefs } from './cdm/permission-ref.help
  * project apps, etc.) implement the port and add it to the registry — the
  * orchestrator does not need to change.
  */
-export class ProjectPermissionSyncService implements IProjectPermissionSyncService {
-  private readonly syncRepo: ProjectPermissionSyncRepository;
+export class ProjectSyncService implements IProjectSyncService {
+  private readonly syncRepo: ProjectSyncRepository;
   private readonly cache: IEntityCacheAdapter;
   private readonly handlers: ReadonlyArray<ICdmEntityHandler>;
   private readonly resourceTags: IResourceTagService;
   private readonly permissionTags: IPermissionTagService;
+  private readonly projectUsers: IProjectUserService;
 
   constructor(
-    syncRepo: ProjectPermissionSyncRepository,
+    syncRepo: ProjectSyncRepository,
     roles: IRoleService,
     groups: IGroupService,
     roleGroups: IRoleGroupService,
@@ -125,6 +126,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     this.cache = cache;
     this.resourceTags = resourceTags;
     this.permissionTags = permissionTags;
+    this.projectUsers = projectUsers;
     this.handlers =
       handlers ??
       createDefaultCdmHandlers({
@@ -164,15 +166,20 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     userIds: string[];
   }): Promise<void> {
     const cacheKey = `${params.scope.tenant}:${params.scope.id}`;
-    await Promise.all([
-      this.cache.permissions.delete(cacheKey),
-      this.cache.roles.delete(cacheKey),
-      this.cache.groups.delete(cacheKey),
-      this.cache.users.delete(cacheKey),
-      this.cache.resources.delete(cacheKey),
-      this.cache.tags.delete(cacheKey),
-      this.cache.apiKeys.delete(cacheKey),
-    ]);
+    await this.invalidateEntityCachesForScopeKey(cacheKey);
+
+    const projectId = this.projectIdFromAccountOrOrgProjectScope(params.scope);
+    const memberUserIds =
+      projectId != null && projectId !== ''
+        ? (await this.projectUsers.getProjectUsers({ projectId })).map((m) => m.userId)
+        : [];
+    const userIdsForCompositeCaches = new Set([...params.userIds, ...memberUserIds]);
+
+    for (const userId of userIdsForCompositeCaches) {
+      for (const relatedKey of this.projectUserRelatedScopeCacheKeys(params.scope, userId)) {
+        await this.invalidateEntityCachesForScopeKey(relatedKey);
+      }
+    }
 
     for (const userId of params.userIds) {
       const pattern = `${AUTH_RESULT_CACHE_KEY_PREFIX}${userId}:*`;
@@ -183,14 +190,62 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     }
   }
 
-  public async syncProjectPermissions(
+  private projectIdFromAccountOrOrgProjectScope(scope: Scope): string | null {
+    if (scope.tenant !== Tenant.AccountProject && scope.tenant !== Tenant.OrganizationProject) {
+      return null;
+    }
+    const parts = scope.id.split(':');
+    return parts[1] ?? null;
+  }
+
+  /**
+   * {@link CacheHandler.createCacheKey} is `${tenant}:${scope.id}`. CDM jobs
+   * run under {@link Tenant.AccountProject} / {@link Tenant.OrganizationProject},
+   * but list/detail UIs often query under {@link Tenant.AccountProjectUser} /
+   * {@link Tenant.OrganizationProjectUser} or {@link Tenant.ProjectUser}. Those
+   * caches must be cleared too or `getScopedApiKeyIds` keeps stale api key ids.
+   */
+  private projectUserRelatedScopeCacheKeys(scope: Scope, userId: string): string[] {
+    const keys: string[] = [];
+    const parts = scope.id.split(':');
+    if (scope.tenant === Tenant.AccountProject) {
+      const accountId = parts[0];
+      const projectIdPart = parts[1];
+      if (accountId && projectIdPart && userId) {
+        keys.push(`${Tenant.AccountProjectUser}:${accountId}:${projectIdPart}:${userId}`);
+        keys.push(`${Tenant.ProjectUser}:${projectIdPart}:${userId}`);
+      }
+    } else if (scope.tenant === Tenant.OrganizationProject) {
+      const organizationId = parts[0];
+      const projectIdPart = parts[1];
+      if (organizationId && projectIdPart && userId) {
+        keys.push(`${Tenant.OrganizationProjectUser}:${organizationId}:${projectIdPart}:${userId}`);
+        keys.push(`${Tenant.ProjectUser}:${projectIdPart}:${userId}`);
+      }
+    }
+    return keys;
+  }
+
+  private async invalidateEntityCachesForScopeKey(cacheKey: string): Promise<void> {
+    await Promise.all([
+      this.cache.permissions.delete(cacheKey),
+      this.cache.roles.delete(cacheKey),
+      this.cache.groups.delete(cacheKey),
+      this.cache.users.delete(cacheKey),
+      this.cache.resources.delete(cacheKey),
+      this.cache.tags.delete(cacheKey),
+      this.cache.apiKeys.delete(cacheKey),
+    ]);
+  }
+
+  public async syncProject(
     params: {
       projectId: string;
       scope: Scope;
-      input: SyncProjectPermissionsInput;
+      input: SyncProjectInput;
     },
     transaction: unknown
-  ): Promise<SyncProjectPermissionsResult> {
+  ): Promise<SyncProjectResult> {
     const tx = transaction as Transaction;
     const { projectId, scope, input } = params;
     this.assertProjectScope(scope);
@@ -212,6 +267,19 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
 
     this.validateCdmUserReferences(expanded);
 
+    if (expanded.mode?.strategy === CdmModeStrategy.Replace) {
+      const existingCdmProjectUserApiKeyIds =
+        await this.syncRepo.listCdmProjectUserApiKeyIdsForProject(projectId, tx);
+      const incomingProjectUserApiKeyCount = expanded.projectUserApiKeys?.length ?? 0;
+      if (existingCdmProjectUserApiKeyIds.length > 0 && incomingProjectUserApiKeyCount === 0) {
+        throw new ValidationError(
+          'Replace CDM sync would delete all CDM-managed project user API keys without creating replacements. ' +
+            'The document has no users[].apiKeys entries with a BYOK clientSecret (exported JSON omits secrets). ' +
+            'Merge each key’s clientSecret into the document before importing, or remove existing keys first if you intend to clear them.'
+        );
+      }
+    }
+
     const allRefs: CdmPermissionRefSpec[] = [];
     for (const handler of this.handlers) {
       const slice = this.sliceForHandler(expanded, handler);
@@ -220,7 +288,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
     }
     const resolvedByKey = await resolveAllPermissionRefs(this.syncRepo, allRefs, tx);
 
-    const result: SyncProjectPermissionsResult = {
+    const result: SyncProjectResult = {
       projectId,
       importId: expanded.id ?? null,
       rolesCreated: 0,
@@ -395,9 +463,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
 
   private assertProjectScope(scope: Scope): void {
     if (scope.tenant !== Tenant.AccountProject && scope.tenant !== Tenant.OrganizationProject) {
-      throw new ValidationError(
-        'syncProjectPermissions requires accountProject or organizationProject scope'
-      );
+      throw new ValidationError('syncProject requires accountProject or organizationProject scope');
     }
   }
 
@@ -466,7 +532,7 @@ export class ProjectPermissionSyncService implements IProjectPermissionSyncServi
 function createUnboundExportRepo(): ProjectPermissionExportRepository {
   const fail = () => {
     throw new Error(
-      'ProjectPermissionExportRepository was not provided to ProjectPermissionSyncService; export(...) is unavailable in this configuration.'
+      'ProjectPermissionExportRepository was not provided to ProjectSyncService; export(...) is unavailable in this configuration.'
     );
   };
   return new Proxy(Object.create(null) as ProjectPermissionExportRepository, {

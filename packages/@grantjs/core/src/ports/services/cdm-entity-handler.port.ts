@@ -1,16 +1,14 @@
 /**
  * CDM (canonical data model) entity handler port.
  *
- * The project permission sync orchestrator (`IProjectPermissionSyncService`)
+ * The project CDM sync orchestrator (`IProjectSyncService`)
  * delegates per-entity work — validation, permission-ref collection,
  * teardown, apply, and export — to an ordered registry of handlers
  * implementing this port. Adding a new CDM entity (API keys, project apps,
  * etc.) means implementing this port and registering it with the appropriate
  * `order`; the orchestrator does not need to change.
  */
-import type { Scope, SyncProjectPermissionsResult } from '@grantjs/schema';
-
-import type { CdmHandlerInputKey } from '../../cdm-export-sections';
+import type { CdmHandlerInputKey, Scope, SyncProjectResult } from '@grantjs/schema';
 
 /**
  * Permission reference shape collected from CDM input. Used by the orchestrator
@@ -94,7 +92,7 @@ export interface CdmApplyContext {
   /** Lookup a previously-resolved permission by its CDM ref shape. */
   lookupResolvedRef: (ref: CdmPermissionRefSpec) => CdmResolvedPermission;
   /** Mutable result counters; handlers increment their relevant fields. */
-  result: SyncProjectPermissionsResult;
+  result: SyncProjectResult;
   /** Cross-handler shared state. */
   produced: CdmProducedRefs;
   /**
@@ -114,7 +112,7 @@ export interface CdmExportContext {
 
 /**
  * Unit of CDM responsibility: validates and applies one section of
- * `SyncProjectPermissionsInput`, tears it down for replace-import semantics,
+ * `SyncProjectInput`, tears it down for replace-import semantics,
  * and exports the project's current state back to the same input shape.
  *
  * Type parameters:
@@ -126,7 +124,7 @@ export interface ICdmEntityHandler<TInput = unknown, TExport = TInput> {
   readonly handlerKind: string;
   /**
    * Key on the API-internal expanded CDM payload this handler owns
-   * (see {@link CDM_HANDLER_INPUT_KEYS}).
+   * (see `CDM_HANDLER_INPUT_KEYS` in `@grantjs/schema`).
    */
   readonly inputKey: CdmHandlerInputKey;
   /** Order within the sync/export pipeline. Lower runs earlier. */

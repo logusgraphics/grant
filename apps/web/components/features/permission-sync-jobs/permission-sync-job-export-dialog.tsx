@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import type { CdmExportSection } from '@grantjs/core';
-import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
+import type { CdmExportSection } from '@grantjs/schema';
+import { CDM_EXPORT_SECTIONS } from '@grantjs/schema';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useScopeFromParams } from '@/hooks/common';
-import { useExportProjectPermissions } from '@/hooks/projects';
+import { useExportProjectSync } from '@/hooks/projects';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 function buildSections(params: {
@@ -63,7 +63,7 @@ export function PermissionSyncJobExportDialog() {
   const [roles, setRoles] = useState(true);
   const [users, setUsers] = useState(true);
 
-  const { exportProject, loading, error, reset } = useExportProjectPermissions({
+  const { exportProject, loading, error, reset } = useExportProjectSync({
     id: projectId ?? '',
     scope,
   });

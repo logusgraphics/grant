@@ -1,42 +1,42 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApolloClient, NetworkStatus } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import type { CdmExportSection } from '@grantjs/core';
-import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
+import type { CdmExportSection } from '@grantjs/schema';
+import { CDM_EXPORT_SECTIONS } from '@grantjs/schema';
 import {
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobPage,
-  ProjectPermissionsSyncJobsDocument,
-  ProjectPermissionsSyncJobSortInput,
-  ProjectPermissionsSyncJobStatus,
-  QueryProjectPermissionsSyncJobsArgs,
+  ProjectSyncJob,
+  ProjectSyncJobPage,
+  ProjectSyncJobsDocument,
+  ProjectSyncJobSortInput,
+  ProjectSyncJobStatus,
+  QueryProjectSyncJobsArgs,
   Scope,
-  SyncProjectPermissionsInput,
+  SyncProjectInput,
 } from '@grantjs/schema';
 
 import { getApiBaseUrl } from '@/lib/constants';
 import { useAuthStore } from '@/stores/auth.store';
 
 const POLL_INTERVAL_MS = 5000;
-const ACTIVE_STATUSES: ReadonlyArray<ProjectPermissionsSyncJobStatus> = [
-  ProjectPermissionsSyncJobStatus.Pending,
-  ProjectPermissionsSyncJobStatus.Running,
+const ACTIVE_STATUSES: ReadonlyArray<ProjectSyncJobStatus> = [
+  ProjectSyncJobStatus.Pending,
+  ProjectSyncJobStatus.Running,
 ];
 
-interface UseProjectPermissionsSyncJobsParams {
+interface UseProjectSyncJobsParams {
   id: string;
   scope: Scope | null | undefined;
   page?: number;
   limit?: number;
   search?: string | null;
-  sort?: ProjectPermissionsSyncJobSortInput | null;
-  status?: ProjectPermissionsSyncJobStatus | null;
+  sort?: ProjectSyncJobSortInput | null;
+  status?: ProjectSyncJobStatus | null;
   /** Disable polling regardless of job activity (e.g. when the page is hidden). */
   disablePolling?: boolean;
 }
 
-interface UseProjectPermissionsSyncJobsResult {
-  jobs: ProjectPermissionsSyncJob[];
+interface UseProjectSyncJobsResult {
+  jobs: ProjectSyncJob[];
   totalCount: number;
   hasNextPage: boolean;
   loading: boolean;
@@ -44,10 +44,8 @@ interface UseProjectPermissionsSyncJobsResult {
   error: Error | undefined;
   hasActiveJob: boolean;
   refetch: (
-    variables?: Partial<QueryProjectPermissionsSyncJobsArgs>
-  ) => Promise<
-    ApolloClient.QueryResult<{ projectPermissionsSyncJobs: ProjectPermissionsSyncJobPage }>
-  >;
+    variables?: Partial<QueryProjectSyncJobsArgs>
+  ) => Promise<ApolloClient.QueryResult<{ projectSyncJobs: ProjectSyncJobPage }>>;
 }
 
 /**
@@ -56,14 +54,12 @@ interface UseProjectPermissionsSyncJobsResult {
  * the table reflects lifecycle transitions; stops polling when no active
  * jobs remain.
  */
-export function useProjectPermissionsSyncJobs(
-  params: UseProjectPermissionsSyncJobsParams
-): UseProjectPermissionsSyncJobsResult {
+export function useProjectSyncJobs(params: UseProjectSyncJobsParams): UseProjectSyncJobsResult {
   const { id, scope, page, limit, search, sort, status, disablePolling } = params;
 
   const skip = useMemo(() => !id || !scope || !scope.id || !scope.tenant, [id, scope]);
 
-  const variables = useMemo<QueryProjectPermissionsSyncJobsArgs>(
+  const variables = useMemo<QueryProjectSyncJobsArgs>(
     () => ({
       id,
       scope: scope ?? ({} as Scope),
@@ -77,17 +73,17 @@ export function useProjectPermissionsSyncJobs(
   );
 
   const { data, loading, error, networkStatus, refetch, startPolling, stopPolling } = useQuery<{
-    projectPermissionsSyncJobs: ProjectPermissionsSyncJobPage;
-  }>(ProjectPermissionsSyncJobsDocument, {
+    projectSyncJobs: ProjectSyncJobPage;
+  }>(ProjectSyncJobsDocument, {
     variables,
     skip,
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
 
-  const jobs = useMemo(() => data?.projectPermissionsSyncJobs?.jobs ?? [], [data]);
-  const totalCount = data?.projectPermissionsSyncJobs?.totalCount ?? 0;
-  const hasNextPage = data?.projectPermissionsSyncJobs?.hasNextPage ?? false;
+  const jobs = useMemo(() => data?.projectSyncJobs?.jobs ?? [], [data]);
+  const totalCount = data?.projectSyncJobs?.totalCount ?? 0;
+  const hasNextPage = data?.projectSyncJobs?.hasNextPage ?? false;
 
   const hasActiveJob = useMemo(
     () => jobs.some((job) => ACTIVE_STATUSES.includes(job.status)),
@@ -119,14 +115,14 @@ export function useProjectPermissionsSyncJobs(
   };
 }
 
-interface UseProjectPermissionsSyncJobPayloadParams {
+interface UseProjectSyncJobPayloadParams {
   id: string;
   scope: Scope | null | undefined;
   jobId: string | null | undefined;
 }
 
-interface UseProjectPermissionsSyncJobPayloadResult {
-  payload: SyncProjectPermissionsInput | null;
+interface UseProjectSyncJobPayloadResult {
+  payload: SyncProjectInput | null;
   loading: boolean;
   error: Error | null;
   /** Triggers a browser download of the original CDM JSON payload. */
@@ -141,11 +137,11 @@ interface UseProjectPermissionsSyncJobPayloadResult {
  * large blobs through Apollo's normalized cache. Exposes a `download()`
  * helper that triggers a browser save.
  */
-export function useProjectPermissionsSyncJobPayload(
-  params: UseProjectPermissionsSyncJobPayloadParams
-): UseProjectPermissionsSyncJobPayloadResult {
+export function useProjectSyncJobPayload(
+  params: UseProjectSyncJobPayloadParams
+): UseProjectSyncJobPayloadResult {
   const { id, scope, jobId } = params;
-  const [payload, setPayload] = useState<SyncProjectPermissionsInput | null>(null);
+  const [payload, setPayload] = useState<SyncProjectInput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -153,10 +149,10 @@ export function useProjectPermissionsSyncJobPayload(
     if (!id || !jobId || !scope || !scope.id || !scope.tenant) return null;
     const apiBase = getApiBaseUrl();
     const search = new URLSearchParams({ scopeId: scope.id, tenant: scope.tenant });
-    return `${apiBase}/api/projects/${id}/permissions/sync-jobs/${jobId}/payload?${search.toString()}`;
+    return `${apiBase}/api/projects/${id}/sync/jobs/${jobId}/payload?${search.toString()}`;
   }, [id, scope, jobId]);
 
-  const fetchPayload = useCallback(async (): Promise<SyncProjectPermissionsInput | null> => {
+  const fetchPayload = useCallback(async (): Promise<SyncProjectInput | null> => {
     const url = buildUrl();
     if (!url) return null;
     setLoading(true);
@@ -179,7 +175,7 @@ export function useProjectPermissionsSyncJobPayload(
         }
         throw new Error(bodyText || `Failed to load payload (${res.status})`);
       }
-      const data = (await res.json()) as SyncProjectPermissionsInput;
+      const data = (await res.json()) as SyncProjectInput;
       setPayload(data);
       return data;
     } catch (err) {
@@ -225,7 +221,7 @@ export function useProjectPermissionsSyncJobPayload(
   return { payload, loading, error, download, reload };
 }
 
-interface UseProjectPermissionsSyncJobSnapshotParams {
+interface UseProjectSyncJobSnapshotParams {
   id: string;
   scope: Scope | null | undefined;
   jobId: string | null | undefined;
@@ -237,8 +233,8 @@ interface UseProjectPermissionsSyncJobSnapshotParams {
   skip?: boolean;
 }
 
-interface UseProjectPermissionsSyncJobSnapshotResult {
-  snapshot: SyncProjectPermissionsInput | null;
+interface UseProjectSyncJobSnapshotResult {
+  snapshot: SyncProjectInput | null;
   loading: boolean;
   error: Error | null;
   /** Triggers a browser download of the rollback snapshot JSON. */
@@ -248,15 +244,15 @@ interface UseProjectPermissionsSyncJobSnapshotResult {
 
 /**
  * Fetch the pre-sync rollback snapshot captured by the worker for a given
- * sync job. Mirrors {@link useProjectPermissionsSyncJobPayload} but hits the
+ * sync job. Mirrors {@link useProjectSyncJobPayload} but hits the
  * `snapshot` REST endpoint. Returns `null` and sets `error` to a 404-shaped
  * value when the job has no snapshot.
  */
-export function useProjectPermissionsSyncJobSnapshot(
-  params: UseProjectPermissionsSyncJobSnapshotParams
-): UseProjectPermissionsSyncJobSnapshotResult {
+export function useProjectSyncJobSnapshot(
+  params: UseProjectSyncJobSnapshotParams
+): UseProjectSyncJobSnapshotResult {
   const { id, scope, jobId, skip } = params;
-  const [snapshot, setSnapshot] = useState<SyncProjectPermissionsInput | null>(null);
+  const [snapshot, setSnapshot] = useState<SyncProjectInput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -264,10 +260,10 @@ export function useProjectPermissionsSyncJobSnapshot(
     if (!id || !jobId || !scope || !scope.id || !scope.tenant) return null;
     const apiBase = getApiBaseUrl();
     const search = new URLSearchParams({ scopeId: scope.id, tenant: scope.tenant });
-    return `${apiBase}/api/projects/${id}/permissions/sync-jobs/${jobId}/snapshot?${search.toString()}`;
+    return `${apiBase}/api/projects/${id}/sync/jobs/${jobId}/snapshot?${search.toString()}`;
   }, [id, scope, jobId]);
 
-  const fetchSnapshot = useCallback(async (): Promise<SyncProjectPermissionsInput | null> => {
+  const fetchSnapshot = useCallback(async (): Promise<SyncProjectInput | null> => {
     const url = buildUrl();
     if (!url) return null;
     setLoading(true);
@@ -290,7 +286,7 @@ export function useProjectPermissionsSyncJobSnapshot(
         }
         throw new Error(bodyText || `Failed to load snapshot (${res.status})`);
       }
-      const data = (await res.json()) as SyncProjectPermissionsInput;
+      const data = (await res.json()) as SyncProjectInput;
       setSnapshot(data);
       return data;
     } catch (err) {
@@ -336,14 +332,14 @@ export function useProjectPermissionsSyncJobSnapshot(
   return { snapshot, loading, error, download, reload };
 }
 
-interface UseExportProjectPermissionsParams {
+interface UseExportProjectSyncParams {
   id: string;
   scope: Scope | null | undefined;
   /** Optional CDM version override; defaults to the only currently-supported value (1). */
   version?: number;
 }
 
-interface UseExportProjectPermissionsResult {
+interface UseExportProjectSyncResult {
   loading: boolean;
   error: Error | null;
   /**
@@ -352,7 +348,7 @@ interface UseExportProjectPermissionsResult {
    */
   exportProject: (
     sections?: readonly CdmExportSection[] | string
-  ) => Promise<SyncProjectPermissionsInput | null>;
+  ) => Promise<SyncProjectInput | null>;
   reset: () => void;
 }
 
@@ -378,17 +374,15 @@ function coerceExportSectionsParam(
  * permission model or take a manual backup outside the worker's automatic
  * pre-sync snapshot.
  */
-export function useExportProjectPermissions(
-  params: UseExportProjectPermissionsParams
-): UseExportProjectPermissionsResult {
+export function useExportProjectSync(
+  params: UseExportProjectSyncParams
+): UseExportProjectSyncResult {
   const { id, scope, version } = params;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const exportProject = useCallback(
-    async (
-      sections?: readonly CdmExportSection[] | string
-    ): Promise<SyncProjectPermissionsInput | null> => {
+    async (sections?: readonly CdmExportSection[] | string): Promise<SyncProjectInput | null> => {
       if (!id || !scope || !scope.id || !scope.tenant) return null;
       setLoading(true);
       setError(null);
@@ -409,7 +403,7 @@ export function useExportProjectPermissions(
             search.append('sections', s);
           }
         }
-        const url = `${apiBase}/api/projects/${id}/permissions/export?${search.toString()}`;
+        const url = `${apiBase}/api/projects/${id}/sync/export?${search.toString()}`;
         const accessToken = useAuthStore.getState().accessToken;
         const res = await fetch(url, {
           credentials: 'include',
@@ -427,7 +421,7 @@ export function useExportProjectPermissions(
           }
           throw new Error(bodyText || `Failed to export project (${res.status})`);
         }
-        const data = (await res.json()) as SyncProjectPermissionsInput;
+        const data = (await res.json()) as SyncProjectInput;
         if (typeof window !== 'undefined') {
           const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
           const objectUrl = URL.createObjectURL(blob);

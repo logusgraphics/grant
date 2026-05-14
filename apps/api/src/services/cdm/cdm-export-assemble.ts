@@ -2,7 +2,7 @@ import {
   CdmFindBy,
   type PermissionCdmInput,
   type ResourceCdmInput,
-  type SyncProjectPermissionsInput,
+  type SyncProjectInput,
   type TagCdmInput,
 } from '@grantjs/schema';
 
@@ -77,12 +77,12 @@ function permissionKeyToGroupKeysFromGrantGroups(
 }
 
 /**
- * Maps handler export slices into the public {@link SyncProjectPermissionsInput}
+ * Maps handler export slices into the public {@link SyncProjectInput}
  * shape (roles, users, groups, resources, permissions, tags).
  * Shared by {@link ProjectPermissionExportService} and integration tests so the
  * mapping cannot drift.
  */
-export function assembleExportedSyncProjectPermissionsInput(params: {
+export function assembleExportedSyncProjectInput(params: {
   roleTemplates: readonly CdmRoleTemplateInternal[];
   userAssignments: readonly CdmUserAssignmentInternal[];
   projectUserApiKeys: readonly CdmProjectUserApiKeyInternal[];
@@ -90,10 +90,7 @@ export function assembleExportedSyncProjectPermissionsInput(params: {
   resourcesSlice: readonly ResourceCdmInput[];
   permissionsSlice: readonly PermissionCdmInput[];
   tagsSlice: readonly TagCdmInput[];
-}): Pick<
-  SyncProjectPermissionsInput,
-  'roles' | 'users' | 'groups' | 'resources' | 'permissions' | 'tags'
-> {
+}): Pick<SyncProjectInput, 'roles' | 'users' | 'groups' | 'resources' | 'permissions' | 'tags'> {
   const {
     roleTemplates,
     userAssignments,
@@ -107,7 +104,7 @@ export function assembleExportedSyncProjectPermissionsInput(params: {
   const grantGroupsById = aggregateLinkedGrantGroups(roleTemplates);
   const permissionKeyToGroupKeys = permissionKeyToGroupKeysFromGrantGroups(grantGroupsById);
 
-  const groups: SyncProjectPermissionsInput['groups'] = [...grantGroupsById.values()]
+  const groups: SyncProjectInput['groups'] = [...grantGroupsById.values()]
     .map((g) => ({
       key: g.groupKey,
       name: g.groupName,
@@ -119,7 +116,7 @@ export function assembleExportedSyncProjectPermissionsInput(params: {
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
-  const roles: SyncProjectPermissionsInput['roles'] = roleTemplates.map((rt) => ({
+  const roles: SyncProjectInput['roles'] = roleTemplates.map((rt) => ({
     key: rt.externalKey,
     name: rt.name,
     description: rt.description ?? null,
@@ -132,7 +129,7 @@ export function assembleExportedSyncProjectPermissionsInput(params: {
     metadata: rt.metadata ?? null,
   }));
 
-  const usersOut: SyncProjectPermissionsInput['users'] = userAssignments.map((ua) => ({
+  const usersOut: SyncProjectInput['users'] = userAssignments.map((ua) => ({
     key: ua.userId
       ? { value: ua.userId, findBy: CdmFindBy.Id }
       : { value: ua.userKey ?? '', findBy: CdmFindBy.Key },
@@ -183,7 +180,7 @@ export function assembleExportedSyncProjectPermissionsInput(params: {
     });
   }
 
-  const resources: SyncProjectPermissionsInput['resources'] = resourcesSlice.map((r) => {
+  const resources: SyncProjectInput['resources'] = resourcesSlice.map((r) => {
     const md = r.metadata as Record<string, unknown> | null | undefined;
     const fromFieldTags = Array.isArray(r.tags) ? r.tags : [];
     const fromMetaTags = (Array.isArray(md?.tags) ? (md.tags as string[]) : []) ?? [];
@@ -201,7 +198,7 @@ export function assembleExportedSyncProjectPermissionsInput(params: {
     };
   });
 
-  const permissions: SyncProjectPermissionsInput['permissions'] = permissionsSlice.map((p) => {
+  const permissions: SyncProjectInput['permissions'] = permissionsSlice.map((p) => {
     const md = p.metadata as Record<string, unknown> | null | undefined;
     const fromFieldTags = Array.isArray(p.tags) ? p.tags : [];
     const fromMetaTags = (Array.isArray(md?.tags) ? (md.tags as string[]) : []) ?? [];
@@ -227,7 +224,7 @@ export function assembleExportedSyncProjectPermissionsInput(params: {
     };
   });
 
-  const tags = tagsSlice as SyncProjectPermissionsInput['tags'];
+  const tags = tagsSlice as SyncProjectInput['tags'];
 
   return { roles, users: usersOut, groups, resources, permissions, tags };
 }

@@ -17,7 +17,7 @@ import {
   userRoles,
   userTags,
 } from '@grantjs/database';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 
@@ -30,7 +30,7 @@ export type ResolvedCdmPermission = {
 /**
  * Read-side helpers for CDM permission sync (resolve refs, find prior import entities).
  */
-export class ProjectPermissionSyncRepository {
+export class ProjectSyncRepository {
   constructor(private readonly db: DbSchema) {}
 
   public listCdmRoleIdsForProject(projectId: string, transaction?: Transaction): Promise<string[]> {
@@ -341,6 +341,95 @@ export class ProjectPermissionSyncRepository {
       .update(resources)
       .set({ deletedAt: now, updatedAt: now })
       .where(and(inArray(resources.id, resourceIds), isNull(resources.deletedAt)));
+  }
+
+  /**
+   * Clears soft-delete on a resource and its project link when a Replace import
+   * reconnects catalog `grantResourceId` to a row tombstoned by a prior import.
+   * Returns true when the resource row existed and was revived.
+   */
+  public async reviveCdmResourceAndProjectLinkForProject(
+    resourceId: string,
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<boolean> {
+    const db = transaction ?? this.db;
+    const now = new Date();
+
+    await db
+      .update(resources)
+      .set({ deletedAt: sql`NULL`, updatedAt: now })
+      .where(and(eq(resources.id, resourceId), isNotNull(resources.deletedAt)));
+
+    const [liveResource] = await db
+      .select({ id: resources.id })
+      .from(resources)
+      .where(and(eq(resources.id, resourceId), isNull(resources.deletedAt)))
+      .limit(1);
+
+    if (!liveResource) {
+      return false;
+    }
+
+    const tombTagRows = await db
+      .select({
+        id: resourceTags.id,
+        tagId: resourceTags.tagId,
+      })
+      .from(resourceTags)
+      .where(and(eq(resourceTags.resourceId, resourceId), isNotNull(resourceTags.deletedAt)))
+      .orderBy(desc(resourceTags.updatedAt), desc(resourceTags.id));
+
+    const seenTag = new Set<string>();
+    const tagPivotIdsToRevive: string[] = [];
+    const tagPivotIdsToDrop: string[] = [];
+    for (const row of tombTagRows) {
+      if (seenTag.has(row.tagId)) {
+        tagPivotIdsToDrop.push(row.id);
+      } else {
+        seenTag.add(row.tagId);
+        tagPivotIdsToRevive.push(row.id);
+      }
+    }
+
+    if (tagPivotIdsToDrop.length > 0) {
+      await db.delete(resourceTags).where(inArray(resourceTags.id, tagPivotIdsToDrop));
+    }
+    if (tagPivotIdsToRevive.length > 0) {
+      await db
+        .update(resourceTags)
+        .set({ deletedAt: sql`NULL`, updatedAt: now })
+        .where(inArray(resourceTags.id, tagPivotIdsToRevive));
+    }
+
+    const tombPivotRows = await db
+      .select({ id: projectResources.id })
+      .from(projectResources)
+      .where(
+        and(
+          eq(projectResources.projectId, projectId),
+          eq(projectResources.resourceId, resourceId),
+          isNotNull(projectResources.deletedAt)
+        )
+      )
+      .orderBy(desc(projectResources.updatedAt), desc(projectResources.id));
+
+    if (tombPivotRows.length === 0) {
+      return true;
+    }
+
+    const [keepPivot, ...extraPivots] = tombPivotRows;
+    const extraIds = extraPivots.map((r) => r.id);
+    if (extraIds.length > 0) {
+      await db.delete(projectResources).where(inArray(projectResources.id, extraIds));
+    }
+
+    await db
+      .update(projectResources)
+      .set({ deletedAt: sql`NULL`, updatedAt: now })
+      .where(eq(projectResources.id, keepPivot.id));
+
+    return true;
   }
 
   /**

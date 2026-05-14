@@ -1,12 +1,12 @@
 /**
  * Integration: REST routes for the async CDM permission sync flow:
- *   POST   /api/projects/:id/permissions/sync-jobs                  — enqueue a job
- *   GET    /api/projects/:id/permissions/sync-jobs                  — paginated list
- *   GET    /api/projects/:id/permissions/sync-jobs/:jobId           — poll status
- *   GET    /api/projects/:id/permissions/sync-jobs/:jobId/payload   — download original CDM JSON
- *   DELETE /api/projects/:id/permissions/sync-jobs/:jobId           — cancel
+ *   POST   /api/projects/:id/sync/jobs                  — enqueue a job
+ *   GET    /api/projects/:id/sync/jobs                  — paginated list
+ *   GET    /api/projects/:id/sync/jobs/:jobId           — poll status
+ *   GET    /api/projects/:id/sync/jobs/:jobId/payload   — download original CDM JSON
+ *   DELETE /api/projects/:id/sync/jobs/:jobId           — cancel
  */
-import { CdmFindBy, CdmModeStrategy, type SyncProjectPermissionsInput } from '@grantjs/schema';
+import { CdmFindBy, CdmModeStrategy, type SyncProjectInput } from '@grantjs/schema';
 import express from 'express';
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -45,15 +45,13 @@ const userId = '30000000-0000-4000-8000-000000000099';
 const jobId = '40000000-0000-4000-8000-000000000077';
 const enqueuedAt = '2026-05-02T10:00:00.000Z';
 
-const canonicalMode: SyncProjectPermissionsInput['mode'] = {
+const canonicalMode: SyncProjectInput['mode'] = {
   strategy: CdmModeStrategy.Merge,
   onConflict: null,
   confirmDestructive: false,
 };
 
-function emptyCdm(
-  overrides: Partial<SyncProjectPermissionsInput> = {}
-): SyncProjectPermissionsInput {
+function emptyCdm(overrides: Partial<SyncProjectInput> = {}): SyncProjectInput {
   return {
     version: 1,
     id: null,
@@ -88,32 +86,32 @@ function buildJobResponse(status: 'PENDING' | 'COMPLETED' | 'CANCELLED' = 'PENDI
   };
 }
 
-describe('project permissions sync REST (async jobs)', () => {
+describe('project CDM sync REST (async jobs)', () => {
   let app: express.Express;
-  let startProjectPermissionsSync: ReturnType<typeof vi.fn>;
-  let getProjectPermissionsSyncJob: ReturnType<typeof vi.fn>;
-  let listProjectPermissionsSyncJobs: ReturnType<typeof vi.fn>;
-  let getProjectPermissionsSyncJobPayload: ReturnType<typeof vi.fn>;
-  let getProjectPermissionsSyncJobSnapshot: ReturnType<typeof vi.fn>;
+  let startProjectSync: ReturnType<typeof vi.fn>;
+  let getProjectSyncJob: ReturnType<typeof vi.fn>;
+  let listProjectSyncJobs: ReturnType<typeof vi.fn>;
+  let getProjectSyncJobPayload: ReturnType<typeof vi.fn>;
+  let getProjectSyncJobSnapshot: ReturnType<typeof vi.fn>;
   let exportProjectPermissions: ReturnType<typeof vi.fn>;
-  let cancelProjectPermissionsSync: ReturnType<typeof vi.fn>;
+  let cancelProjectSync: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    startProjectPermissionsSync = vi.fn().mockResolvedValue(buildJobResponse('PENDING'));
-    getProjectPermissionsSyncJob = vi.fn().mockResolvedValue(buildJobResponse('COMPLETED'));
-    listProjectPermissionsSyncJobs = vi.fn().mockResolvedValue({
+    startProjectSync = vi.fn().mockResolvedValue(buildJobResponse('PENDING'));
+    getProjectSyncJob = vi.fn().mockResolvedValue(buildJobResponse('COMPLETED'));
+    listProjectSyncJobs = vi.fn().mockResolvedValue({
       jobs: [buildJobResponse('COMPLETED'), buildJobResponse('PENDING')],
       totalCount: 2,
       hasNextPage: false,
     });
-    getProjectPermissionsSyncJobPayload = vi.fn().mockResolvedValue({
+    getProjectSyncJobPayload = vi.fn().mockResolvedValue({
       payload: emptyCdm({ id: 'imp-1' }),
       importId: 'imp-1',
       cdmVersion: 1,
     });
-    getProjectPermissionsSyncJobSnapshot = vi.fn().mockResolvedValue({
+    getProjectSyncJobSnapshot = vi.fn().mockResolvedValue({
       snapshot: emptyCdm({
         roles: [
           {
@@ -146,19 +144,19 @@ describe('project permissions sync REST (async jobs)', () => {
         return emptyCdm();
       }
     );
-    cancelProjectPermissionsSync = vi.fn().mockResolvedValue(buildJobResponse('CANCELLED'));
+    cancelProjectSync = vi.fn().mockResolvedValue(buildJobResponse('CANCELLED'));
 
     const context = {
       user: { userId },
       handlers: {
         projects: {
-          startProjectPermissionsSync,
-          getProjectPermissionsSyncJob,
-          listProjectPermissionsSyncJobs,
-          getProjectPermissionsSyncJobPayload,
-          getProjectPermissionsSyncJobSnapshot,
+          startProjectSync,
+          getProjectSyncJob,
+          listProjectSyncJobs,
+          getProjectSyncJobPayload,
+          getProjectSyncJobSnapshot,
           exportProjectPermissions,
-          cancelProjectPermissionsSync,
+          cancelProjectSync,
         },
       },
     } as unknown as RequestContext;
@@ -169,9 +167,9 @@ describe('project permissions sync REST (async jobs)', () => {
     app.use(errorHandler);
   });
 
-  it('POST /sync-jobs returns 202 with the persisted job and forwards enqueuedById from auth context', async () => {
+  it('POST /sync/jobs returns 202 with the persisted job and forwards enqueuedById from auth context', async () => {
     const res = await request(app)
-      .post(`/api/projects/${projectId}/permissions/sync-jobs`)
+      .post(`/api/projects/${projectId}/sync/jobs`)
       .send({
         scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
         version: 1,
@@ -209,8 +207,8 @@ describe('project permissions sync REST (async jobs)', () => {
       projectId,
       status: 'PENDING',
     });
-    expect(startProjectPermissionsSync).toHaveBeenCalledTimes(1);
-    expect(startProjectPermissionsSync.mock.calls[0][0]).toMatchObject({
+    expect(startProjectSync).toHaveBeenCalledTimes(1);
+    expect(startProjectSync.mock.calls[0][0]).toMatchObject({
       id: projectId,
       enqueuedById: userId,
       input: {
@@ -232,10 +230,10 @@ describe('project permissions sync REST (async jobs)', () => {
     });
   });
 
-  it('POST /sync-jobs forwards tags, nested user api keys, and tag cross-references end-to-end', async () => {
+  it('POST /sync/jobs forwards tags, nested user api keys, and tag cross-references end-to-end', async () => {
     const tagId = '60000000-0000-4000-8000-000000000aaa';
     const res = await request(app)
-      .post(`/api/projects/${projectId}/permissions/sync-jobs`)
+      .post(`/api/projects/${projectId}/sync/jobs`)
       .send({
         scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
         version: 1,
@@ -280,8 +278,8 @@ describe('project permissions sync REST (async jobs)', () => {
       });
 
     expect(res.status).toBe(202);
-    expect(startProjectPermissionsSync).toHaveBeenCalledTimes(1);
-    expect(startProjectPermissionsSync.mock.calls[0][0]).toMatchObject({
+    expect(startProjectSync).toHaveBeenCalledTimes(1);
+    expect(startProjectSync.mock.calls[0][0]).toMatchObject({
       id: projectId,
       enqueuedById: userId,
       input: {
@@ -306,9 +304,9 @@ describe('project permissions sync REST (async jobs)', () => {
     });
   });
 
-  it('GET /permissions/export accepts `tags` as an exportable section', async () => {
+  it('GET /sync/export accepts `tags` as an exportable section', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/export`)
+      .get(`/api/projects/${projectId}/sync/export`)
       .query({
         scopeId: `${accountId}:${projectId}`,
         tenant: 'accountProject',
@@ -324,46 +322,46 @@ describe('project permissions sync REST (async jobs)', () => {
     );
   });
 
-  it('POST /sync-jobs returns 400 when body is invalid', async () => {
-    const res = await request(app).post(`/api/projects/${projectId}/permissions/sync-jobs`).send({
+  it('POST /sync/jobs returns 400 when body is invalid', async () => {
+    const res = await request(app).post(`/api/projects/${projectId}/sync/jobs`).send({
       version: 1,
     });
 
     expect(res.status).toBe(400);
-    expect(startProjectPermissionsSync).not.toHaveBeenCalled();
+    expect(startProjectSync).not.toHaveBeenCalled();
   });
 
-  it('GET /sync-jobs/:jobId returns the polled job status', async () => {
+  it('GET /sync/jobs/:jobId returns the polled job status', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/sync-jobs/${jobId}`)
+      .get(`/api/projects/${projectId}/sync/jobs/${jobId}`)
       .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
 
     expect(res.status).toBe(200);
     expect(res.body.data).toMatchObject({ id: jobId, status: 'COMPLETED' });
-    expect(getProjectPermissionsSyncJob).toHaveBeenCalledWith({
+    expect(getProjectSyncJob).toHaveBeenCalledWith({
       id: projectId,
       jobId,
       scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
     });
   });
 
-  it('DELETE /sync-jobs/:jobId cancels the job', async () => {
+  it('DELETE /sync/jobs/:jobId cancels the job', async () => {
     const res = await request(app)
-      .delete(`/api/projects/${projectId}/permissions/sync-jobs/${jobId}`)
+      .delete(`/api/projects/${projectId}/sync/jobs/${jobId}`)
       .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
 
     expect(res.status).toBe(200);
     expect(res.body.data).toMatchObject({ id: jobId, status: 'CANCELLED' });
-    expect(cancelProjectPermissionsSync).toHaveBeenCalledWith({
+    expect(cancelProjectSync).toHaveBeenCalledWith({
       id: projectId,
       jobId,
       scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
     });
   });
 
-  it('GET /sync-jobs returns the paginated list', async () => {
+  it('GET /sync/jobs returns the paginated list', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/sync-jobs`)
+      .get(`/api/projects/${projectId}/sync/jobs`)
       .query({
         scopeId: `${accountId}:${projectId}`,
         tenant: 'accountProject',
@@ -377,8 +375,8 @@ describe('project permissions sync REST (async jobs)', () => {
     expect(res.status).toBe(200);
     expect(res.body.data).toMatchObject({ totalCount: 2, hasNextPage: false });
     expect(res.body.data.jobs).toHaveLength(2);
-    expect(listProjectPermissionsSyncJobs).toHaveBeenCalledTimes(1);
-    const args = listProjectPermissionsSyncJobs.mock.calls[0][0];
+    expect(listProjectSyncJobs).toHaveBeenCalledTimes(1);
+    const args = listProjectSyncJobs.mock.calls[0][0];
     expect(args).toMatchObject({
       id: projectId,
       scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
@@ -392,9 +390,9 @@ describe('project permissions sync REST (async jobs)', () => {
     expect(Number(args.limit)).toBe(20);
   });
 
-  it('GET /sync-jobs/:jobId/payload streams the CDM JSON with attachment headers', async () => {
+  it('GET /sync/jobs/:jobId/payload streams the CDM JSON with attachment headers', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/sync-jobs/${jobId}/payload`)
+      .get(`/api/projects/${projectId}/sync/jobs/${jobId}/payload`)
       .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
 
     expect(res.status).toBe(200);
@@ -406,31 +404,31 @@ describe('project permissions sync REST (async jobs)', () => {
       roles: [],
       users: [],
     });
-    expect(getProjectPermissionsSyncJobPayload).toHaveBeenCalledWith({
+    expect(getProjectSyncJobPayload).toHaveBeenCalledWith({
       id: projectId,
       jobId,
       scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
     });
   });
 
-  it('GET /sync-jobs/:jobId/payload falls back to jobId in filename when payload id is null', async () => {
-    getProjectPermissionsSyncJobPayload.mockResolvedValueOnce({
+  it('GET /sync/jobs/:jobId/payload falls back to jobId in filename when payload id is null', async () => {
+    getProjectSyncJobPayload.mockResolvedValueOnce({
       payload: emptyCdm(),
       importId: null,
       cdmVersion: 1,
     });
 
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/sync-jobs/${jobId}/payload`)
+      .get(`/api/projects/${projectId}/sync/jobs/${jobId}/payload`)
       .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
 
     expect(res.status).toBe(200);
     expect(res.headers['content-disposition']).toBe(`attachment; filename="cdm-${jobId}.json"`);
   });
 
-  it('GET /sync-jobs/:jobId/snapshot streams the rollback snapshot with attachment headers', async () => {
+  it('GET /sync/jobs/:jobId/snapshot streams the rollback snapshot with attachment headers', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/sync-jobs/${jobId}/snapshot`)
+      .get(`/api/projects/${projectId}/sync/jobs/${jobId}/snapshot`)
       .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
 
     expect(res.status).toBe(200);
@@ -447,16 +445,16 @@ describe('project permissions sync REST (async jobs)', () => {
         },
       ],
     });
-    expect(getProjectPermissionsSyncJobSnapshot).toHaveBeenCalledWith({
+    expect(getProjectSyncJobSnapshot).toHaveBeenCalledWith({
       id: projectId,
       jobId,
       scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
     });
   });
 
-  it('GET /permissions/export streams the project CDM export with attachment headers', async () => {
+  it('GET /sync/export streams the project CDM export with attachment headers', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/export`)
+      .get(`/api/projects/${projectId}/sync/export`)
       .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
 
     expect(res.status).toBe(200);
@@ -477,9 +475,9 @@ describe('project permissions sync REST (async jobs)', () => {
     });
   });
 
-  it('GET /permissions/export forwards a numeric version query param to the handler', async () => {
+  it('GET /sync/export forwards a numeric version query param to the handler', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/export`)
+      .get(`/api/projects/${projectId}/sync/export`)
       .query({
         scopeId: `${accountId}:${projectId}`,
         tenant: 'accountProject',
@@ -502,9 +500,9 @@ describe('project permissions sync REST (async jobs)', () => {
     expect(Number(args.version)).toBe(1);
   });
 
-  it('GET /permissions/export passes sections to the handler when provided', async () => {
+  it('GET /sync/export passes sections to the handler when provided', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/export`)
+      .get(`/api/projects/${projectId}/sync/export`)
       .query({
         scopeId: `${accountId}:${projectId}`,
         tenant: 'accountProject',
@@ -520,9 +518,9 @@ describe('project permissions sync REST (async jobs)', () => {
     );
   });
 
-  it('GET /permissions/export returns 400 when permissions is requested without resources', async () => {
+  it('GET /sync/export returns 400 when permissions is requested without resources', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/permissions/export`)
+      .get(`/api/projects/${projectId}/sync/export`)
       .query({
         scopeId: `${accountId}:${projectId}`,
         tenant: 'accountProject',

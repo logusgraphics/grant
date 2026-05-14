@@ -2,13 +2,13 @@ import {
   CdmFindBy,
   CdmModeStrategy,
   type Scope,
-  type SyncProjectPermissionsInput,
+  type SyncProjectInput,
   Tenant,
 } from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CDM_IMPORT_METADATA_KEY, CDM_SOURCE_METADATA_KEY } from '@/constants/cdm-import.constants';
-import { ProjectPermissionSyncService } from '@/services/project-permission-sync.service';
+import { ProjectSyncService } from '@/services/project-sync.service';
 
 const accountId = '10000000-0000-4000-8000-000000000020';
 const projectId = '10000000-0000-4000-8000-000000000011';
@@ -18,7 +18,7 @@ const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projec
 const CDM_RES_KEY = 'cdm-res-metadata';
 const CDM_PERM_KEY = 'cdm-perm-metadata';
 
-describe('ProjectPermissionSyncService CDM metadata', () => {
+describe('ProjectSyncService CDM metadata', () => {
   const syncRepo = {
     listCdmRoleIdsForProject: vi.fn().mockResolvedValue([]),
     listCdmGroupIdsForProject: vi.fn().mockResolvedValue([]),
@@ -27,6 +27,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     bulkSoftDeleteCdmTags: vi.fn().mockResolvedValue(undefined),
     listCdmResourceIdsForProject: vi.fn().mockResolvedValue([]),
     bulkSoftDeleteCdmResources: vi.fn().mockResolvedValue(undefined),
+    reviveCdmResourceAndProjectLinkForProject: vi.fn().mockResolvedValue(false),
     listCdmPermissionIdsForProject: vi.fn().mockResolvedValue([]),
     bulkSoftDeleteCdmPermissions: vi.fn().mockResolvedValue(undefined),
     resolvePermission: vi.fn().mockResolvedValue({ id: 'perm-1', resourceId: 'res-1' }),
@@ -56,6 +57,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
   const projectUsers = {
     addProjectUser: vi.fn(),
     mergeProjectUserCdmMetadata: vi.fn(),
+    getProjectUsers: vi.fn().mockResolvedValue([]),
   };
   const userRoles = { addUserRole: vi.fn(), removeUserRole: vi.fn(), getUserRoles: vi.fn() };
   const apiKeys = {
@@ -85,7 +87,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
   const permissionTags = { addPermissionTag: vi.fn() };
 
   function createService() {
-    return new ProjectPermissionSyncService(
+    return new ProjectSyncService(
       syncRepo as never,
       roles as never,
       groups as never,
@@ -116,6 +118,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    projectUsers.getProjectUsers.mockResolvedValue([]);
     groups.createGroup.mockResolvedValue({ id: 'group-1' });
     roles.createRole.mockResolvedValue({ id: 'role-1' });
     resourcesService.createResource.mockResolvedValue({ id: 'imported-res-1', slug: 'documents' });
@@ -131,7 +134,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
   });
 
   it('merges template metadata into role and group create payloads', async () => {
-    const input: SyncProjectPermissionsInput = {
+    const input: SyncProjectInput = {
       version: 1,
       id: null,
       mode: {
@@ -182,7 +185,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     };
 
     const svc = createService();
-    await svc.syncProjectPermissions({ projectId, scope, input }, {});
+    await svc.syncProject({ projectId, scope, input }, {});
 
     expect(groups.createGroup).toHaveBeenCalledTimes(1);
     const groupMeta = groups.createGroup.mock.calls[0][0].metadata as Record<string, unknown>;
@@ -205,7 +208,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
 
   it('calls mergeProjectUserCdmMetadata when user assignment includes metadata', async () => {
     const userId = '20000000-0000-4000-8000-000000000033';
-    const input: SyncProjectPermissionsInput = {
+    const input: SyncProjectInput = {
       version: 1,
       id: null,
       mode: {
@@ -268,7 +271,7 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     };
 
     const svc = createService();
-    await svc.syncProjectPermissions({ projectId, scope, input }, {});
+    await svc.syncProject({ projectId, scope, input }, {});
 
     expect(projectUsers.mergeProjectUserCdmMetadata).toHaveBeenCalledWith(
       {
@@ -288,5 +291,125 @@ describe('ProjectPermissionSyncService CDM metadata', () => {
     expect(cache.permissions.delete).toHaveBeenCalledWith(expectedKey);
     expect(cache.tags.delete).toHaveBeenCalledWith(expectedKey);
     expect(cache.apiKeys.delete).toHaveBeenCalledWith(expectedKey);
+  });
+
+  it('invalidateCachesForSyncResult clears AccountProjectUser and ProjectUser caches for each user id', async () => {
+    const userId = '898d0272-0c07-4d9b-8461-6a0c0f3c926c';
+    const accountProjectUserKey = `${Tenant.AccountProjectUser}:${accountId}:${projectId}:${userId}`;
+    const projectUserKey = `${Tenant.ProjectUser}:${projectId}:${userId}`;
+    const svc = createService();
+    await svc.invalidateCachesForSyncResult({ scope, userIds: [userId] });
+
+    expect(cache.apiKeys.delete).toHaveBeenCalledWith(`${scope.tenant}:${scope.id}`);
+    expect(cache.apiKeys.delete).toHaveBeenCalledWith(accountProjectUserKey);
+    expect(cache.apiKeys.delete).toHaveBeenCalledWith(projectUserKey);
+  });
+
+  it('invalidateCachesForSyncResult clears composite caches for every project user', async () => {
+    projectUsers.getProjectUsers.mockResolvedValue([
+      { userId: 'u-extra-1' },
+      { userId: 'u-extra-2' },
+    ]);
+    const svc = createService();
+    await svc.invalidateCachesForSyncResult({ scope, userIds: [] });
+
+    expect(projectUsers.getProjectUsers).toHaveBeenCalledWith({ projectId });
+    expect(cache.groups.delete).toHaveBeenCalledWith(
+      `${Tenant.AccountProjectUser}:${accountId}:${projectId}:u-extra-1`
+    );
+    expect(cache.groups.delete).toHaveBeenCalledWith(
+      `${Tenant.AccountProjectUser}:${accountId}:${projectId}:u-extra-2`
+    );
+  });
+
+  it('invalidateCachesForSyncResult clears OrganizationProjectUser and ProjectUser caches for each user id', async () => {
+    const organizationId = '30000000-0000-4000-8000-000000000030';
+    const orgScope: Scope = {
+      tenant: Tenant.OrganizationProject,
+      id: `${organizationId}:${projectId}`,
+    };
+    const userId = '898d0272-0c07-4d9b-8461-6a0c0f3c926c';
+    const organizationProjectUserKey = `${Tenant.OrganizationProjectUser}:${organizationId}:${projectId}:${userId}`;
+    const projectUserKey = `${Tenant.ProjectUser}:${projectId}:${userId}`;
+    const svc = createService();
+    await svc.invalidateCachesForSyncResult({ scope: orgScope, userIds: [userId] });
+
+    expect(cache.apiKeys.delete).toHaveBeenCalledWith(`${orgScope.tenant}:${orgScope.id}`);
+    expect(cache.apiKeys.delete).toHaveBeenCalledWith(organizationProjectUserKey);
+    expect(cache.apiKeys.delete).toHaveBeenCalledWith(projectUserKey);
+  });
+
+  it('rejects Replace when the document omits users[].apiKeys but CDM-managed project user API keys still exist', async () => {
+    syncRepo.listCdmProjectUserApiKeyIdsForProject.mockResolvedValue([
+      '40000000-0000-4000-8000-000000000001',
+    ]);
+    const userId = '20000000-0000-4000-8000-000000000033';
+    const input: SyncProjectInput = {
+      version: 1,
+      id: null,
+      mode: {
+        strategy: CdmModeStrategy.Replace,
+        onConflict: null,
+        confirmDestructive: true,
+      },
+      roles: [
+        {
+          key: 'viewer',
+          name: 'Viewer',
+          permissions: [CDM_PERM_KEY],
+          groups: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      users: [
+        {
+          key: { value: userId, findBy: CdmFindBy.Id },
+          name: 'Member',
+          roles: ['viewer'],
+          groups: [],
+          permissions: [],
+          tags: [],
+          primaryTag: null,
+          apiKeys: [],
+          metadata: null,
+        },
+      ],
+      resources: [
+        {
+          key: CDM_RES_KEY,
+          slug: 'documents',
+          name: 'Documents',
+          description: null,
+          actions: ['read'],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      permissions: [
+        {
+          key: CDM_PERM_KEY,
+          resource: CDM_RES_KEY,
+          action: 'read',
+          name: 'Documents:read',
+          description: null,
+          condition: null,
+          groups: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      groups: [],
+      tags: [],
+    };
+
+    const svc = createService();
+    await expect(svc.syncProject({ projectId, scope, input }, {})).rejects.toThrow(
+      /project user API keys without creating replacements/
+    );
+    expect(apiKeys.deleteApiKey).not.toHaveBeenCalled();
   });
 });

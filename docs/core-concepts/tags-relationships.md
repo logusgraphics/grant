@@ -64,7 +64,7 @@ Tag colors are defined in `@grantjs/constants` and must be **perceptually distin
 
 ## CDM lifecycle for tags
 
-Project permission CDM (canonical data model) sync supports tags as a first-class section. When a CDM artifact is imported into a project (`POST /api/projects/:id/permissions/sync-jobs`) or exported from one (`GET /api/projects/:id/permissions/export?sections=tags,…`), the platform round-trips:
+Project permission CDM (canonical data model) sync supports tags as a first-class section. When a CDM artifact is imported into a project (`POST /api/projects/:id/sync/jobs`) or exported from one (`GET /api/projects/:id/sync/export?sections=tags,…`), the platform round-trips:
 
 - the `tags` section — project-visible tag definitions plus `project_tags` membership rows,
 - `tagKeys` / `groupTagKeys` on each `roleTemplates[i]` — `role_tags` and `group_tags` associations for the role's auto-created CDM group,

@@ -6,7 +6,7 @@ import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 
 import { useScopeFromParams } from '@/hooks/common';
-import { useProjectPermissionsSyncJobs } from '@/hooks/projects';
+import { useProjectSyncJobs } from '@/hooks/projects';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 import { PermissionSyncJobCards } from './permission-sync-job-cards';
@@ -30,7 +30,7 @@ export function PermissionSyncJobViewer() {
   const setLoading = usePermissionSyncJobsStore((state) => state.setLoading);
   const setRefetch = usePermissionSyncJobsStore((state) => state.setRefetch);
 
-  const { jobs, totalCount, loading, refetch } = useProjectPermissionsSyncJobs({
+  const { jobs, totalCount, loading, refetch } = useProjectSyncJobs({
     id: projectId,
     scope: scope ?? undefined,
     page,

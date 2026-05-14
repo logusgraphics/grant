@@ -1,27 +1,27 @@
 import type {
   IAuditLogger,
-  IProjectPermissionsSyncJobService,
-  ProjectPermissionsSyncJobExecutionData,
+  IProjectSyncJobService,
+  ProjectSyncJobExecutionData,
 } from '@grantjs/core';
 import {
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobPage,
-  ProjectPermissionsSyncJobSortInput,
-  ProjectPermissionsSyncJobStatus,
+  ProjectSyncJob,
+  ProjectSyncJobPage,
+  ProjectSyncJobSortInput,
+  ProjectSyncJobStatus,
   Scope,
-  SyncProjectPermissionsInput,
-  SyncProjectPermissionsResult,
+  SyncProjectInput,
+  SyncProjectResult,
   Tenant,
 } from '@grantjs/schema';
 
 import { BadRequestError, ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
-import { ProjectPermissionSyncJobRepository } from '@/repositories/project-permission-sync-job.repository';
+import { ProjectSyncJobRepository } from '@/repositories/project-sync-job.repository';
 
 const ALLOWED_SCOPES: readonly string[] = [Tenant.AccountProject, Tenant.OrganizationProject];
 
 /** Compact job fields for audit rows (varchar limits); never store full CDM payload. */
-function compactJobSummary(job: ProjectPermissionsSyncJob): Record<string, unknown> {
+function compactJobSummary(job: ProjectSyncJob): Record<string, unknown> {
   return {
     status: job.status,
     projectId: job.projectId,
@@ -30,7 +30,7 @@ function compactJobSummary(job: ProjectPermissionsSyncJob): Record<string, unkno
   };
 }
 
-function compactResultSummary(result: SyncProjectPermissionsResult): Record<string, unknown> {
+function compactResultSummary(result: SyncProjectResult): Record<string, unknown> {
   return {
     rolesCreated: result.rolesCreated,
     groupsCreated: result.groupsCreated,
@@ -51,16 +51,16 @@ function compactResultSummary(result: SyncProjectPermissionsResult): Record<stri
 /**
  * State-machine service for the asynchronous CDM permission sync job tracking
  * row. Owns persistence + lifecycle transitions only; the actual import is
- * performed by `IProjectPermissionSyncService` (called by the worker).
+ * performed by `IProjectSyncService` (called by the worker).
  *
  * Allowed transitions:
  *   pending   -> running | cancelled
  *   running   -> completed | failed | cancelled
  *   (terminal: completed, failed, cancelled)
  */
-export class ProjectPermissionsSyncJobService implements IProjectPermissionsSyncJobService {
+export class ProjectSyncJobService implements IProjectSyncJobService {
   constructor(
-    private readonly repo: ProjectPermissionSyncJobRepository,
+    private readonly repo: ProjectSyncJobRepository,
     private readonly audit: IAuditLogger
   ) {}
 
@@ -70,11 +70,11 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       scope: Scope;
       cdmVersion: number;
       importId: string | null;
-      payload: SyncProjectPermissionsInput;
+      payload: SyncProjectInput;
       enqueuedById: string;
     },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     if (!ALLOWED_SCOPES.includes(params.scope.tenant)) {
       throw new BadRequestError(
         `Project permissions sync requires accountProject or organizationProject scope, got: ${params.scope.tenant}`
@@ -108,10 +108,10 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
   public async getById(
     params: { projectId: string; jobId: string },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     const row = await this.repo.getById(params.jobId, transaction);
     if (!row || row.projectId !== params.projectId) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
     return row;
   }
@@ -123,11 +123,11 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       page?: number | null;
       limit?: number | null;
       search?: string | null;
-      sort?: ProjectPermissionsSyncJobSortInput | null;
-      status?: ProjectPermissionsSyncJobStatus | null;
+      sort?: ProjectSyncJobSortInput | null;
+      status?: ProjectSyncJobStatus | null;
     },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJobPage> {
+  ): Promise<ProjectSyncJobPage> {
     if (!ALLOWED_SCOPES.includes(params.scope.tenant)) {
       throw new BadRequestError(
         `Project permissions sync requires accountProject or organizationProject scope, got: ${params.scope.tenant}`
@@ -165,13 +165,13 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
     params: { projectId: string; jobId: string },
     transaction?: Transaction
   ): Promise<{
-    payload: SyncProjectPermissionsInput;
+    payload: SyncProjectInput;
     importId: string | null;
     cdmVersion: number;
   }> {
     const row = await this.repo.getPayloadById(params.jobId, transaction);
     if (!row || row.projectId !== params.projectId) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
     return {
       payload: row.payload,
@@ -183,10 +183,10 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
   public async loadForExecution(
     params: { jobId: string },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJobExecutionData> {
+  ): Promise<ProjectSyncJobExecutionData> {
     const full = await this.repo.getFullById(params.jobId, transaction);
     if (!full) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
     return {
       job: full.job,
@@ -199,19 +199,19 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
   public async findActiveByImportId(
     params: { projectId: string; importId: string },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob | null> {
+  ): Promise<ProjectSyncJob | null> {
     return this.repo.findActiveByImportId(params, transaction);
   }
 
   public async transitionToRunning(
     params: { jobId: string },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     const current = await this.repo.getById(params.jobId, transaction);
     if (!current) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
-    if (current.status !== ProjectPermissionsSyncJobStatus.Pending) {
+    if (current.status !== ProjectSyncJobStatus.Pending) {
       throw new ConflictError(
         `Cannot transition job ${params.jobId} to RUNNING from status ${current.status}`
       );
@@ -219,7 +219,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
     const updated = await this.repo.updateStatus(
       {
         jobId: params.jobId,
-        status: ProjectPermissionsSyncJobStatus.Running,
+        status: ProjectSyncJobStatus.Running,
         startedAt: new Date(),
       },
       transaction
@@ -235,14 +235,14 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
   }
 
   public async markCompleted(
-    params: { jobId: string; result: SyncProjectPermissionsResult; warnings: string[] },
+    params: { jobId: string; result: SyncProjectResult; warnings: string[] },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     const current = await this.repo.getById(params.jobId, transaction);
     if (!current) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
-    if (current.status !== ProjectPermissionsSyncJobStatus.Running) {
+    if (current.status !== ProjectSyncJobStatus.Running) {
       throw new ConflictError(
         `Cannot mark job ${params.jobId} COMPLETED from status ${current.status}`
       );
@@ -250,7 +250,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
     const updated = await this.repo.updateStatus(
       {
         jobId: params.jobId,
-        status: ProjectPermissionsSyncJobStatus.Completed,
+        status: ProjectSyncJobStatus.Completed,
         completedAt: new Date(),
         result: params.result,
         warnings: params.warnings,
@@ -273,14 +273,14 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
   public async markFailed(
     params: { jobId: string; errorMessage: string; errorDetails?: Record<string, unknown> | null },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     const current = await this.repo.getById(params.jobId, transaction);
     if (!current) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
     if (
-      current.status !== ProjectPermissionsSyncJobStatus.Running &&
-      current.status !== ProjectPermissionsSyncJobStatus.Pending
+      current.status !== ProjectSyncJobStatus.Running &&
+      current.status !== ProjectSyncJobStatus.Pending
     ) {
       throw new ConflictError(
         `Cannot mark job ${params.jobId} FAILED from status ${current.status}`
@@ -289,7 +289,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
     const updated = await this.repo.updateStatus(
       {
         jobId: params.jobId,
-        status: ProjectPermissionsSyncJobStatus.Failed,
+        status: ProjectSyncJobStatus.Failed,
         completedAt: new Date(),
         errorMessage: params.errorMessage,
         errorDetails: params.errorDetails ?? null,
@@ -313,7 +313,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
   }
 
   public async saveSnapshot(
-    params: { jobId: string; snapshot: SyncProjectPermissionsInput; takenAt: Date },
+    params: { jobId: string; snapshot: SyncProjectInput; takenAt: Date },
     transaction?: Transaction
   ): Promise<void> {
     /**
@@ -349,7 +349,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
     params: { projectId: string; jobId: string },
     transaction?: Transaction
   ): Promise<{
-    snapshot: SyncProjectPermissionsInput;
+    snapshot: SyncProjectInput;
     takenAt: Date;
     sizeBytes: number;
   } | null> {
@@ -371,17 +371,17 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
   public async cancel(
     params: { projectId: string; jobId: string },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     const current = await this.repo.getById(params.jobId, transaction);
     if (!current || current.projectId !== params.projectId) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
-    if (current.status === ProjectPermissionsSyncJobStatus.Pending) {
+    if (current.status === ProjectSyncJobStatus.Pending) {
       // Hard cancel — the worker hasn't started yet, so we move to terminal.
       const updated = await this.repo.updateStatus(
         {
           jobId: params.jobId,
-          status: ProjectPermissionsSyncJobStatus.Cancelled,
+          status: ProjectSyncJobStatus.Cancelled,
           cancelledAt: new Date(),
           cancelRequested: new Date(),
         },
@@ -396,7 +396,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       );
       return updated;
     }
-    if (current.status === ProjectPermissionsSyncJobStatus.Running) {
+    if (current.status === ProjectSyncJobStatus.Running) {
       // Soft cancel — record the intent; the worker checks `cancelRequested`
       // between phases and finalises the cancellation. The status stays
       // RUNNING until the worker exits cooperatively.
@@ -404,7 +404,7 @@ export class ProjectPermissionsSyncJobService implements IProjectPermissionsSync
       const updated = await this.repo.updateStatus(
         {
           jobId: params.jobId,
-          status: ProjectPermissionsSyncJobStatus.Running,
+          status: ProjectSyncJobStatus.Running,
           cancelRequested: requestedAt,
         },
         transaction

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { ProjectPermissionsSyncJob } from '@grantjs/schema';
+import { ProjectSyncJob } from '@grantjs/schema';
 import { History } from 'lucide-react';
 
 import {
@@ -25,7 +25,7 @@ export function PermissionSyncJobTable() {
   const status = usePermissionSyncJobsStore((state) => state.status);
   const jobs = usePermissionSyncJobsStore((state) => state.jobs);
   const loading = usePermissionSyncJobsStore((state) => state.loading);
-  const columns: DataTableColumnConfig<ProjectPermissionsSyncJob>[] = [
+  const columns: DataTableColumnConfig<ProjectSyncJob>[] = [
     {
       key: 'status',
       header: t('table.status'),

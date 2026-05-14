@@ -24,11 +24,11 @@ import type {
   ProjectGroup,
   ProjectPage,
   ProjectPermission,
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobSortInput,
-  ProjectPermissionsSyncJobStatus,
   ProjectResource,
   ProjectRole,
+  ProjectSyncJob,
+  ProjectSyncJobSortInput,
+  ProjectSyncJobStatus,
   ProjectTag,
   ProjectUser,
   ProjectUserApiKey,
@@ -50,8 +50,8 @@ import type {
   RemoveProjectTagInput,
   RemoveProjectUserApiKeyInput,
   RemoveProjectUserInput,
-  SyncProjectPermissionsInput,
-  SyncProjectPermissionsResult,
+  SyncProjectInput,
+  SyncProjectResult,
   UpdateProjectAppInput,
   UpdateProjectAppTagInput,
   UpdateProjectTagInput,
@@ -324,9 +324,9 @@ export interface IProjectUserApiKeyRepository {
 }
 
 /** Worker-internal view of a sync job, including the persisted payload + scope. */
-export interface ProjectPermissionsSyncJobFull {
-  job: ProjectPermissionsSyncJob;
-  payload: SyncProjectPermissionsInput;
+export interface ProjectSyncJobFull {
+  job: ProjectSyncJob;
+  payload: SyncProjectInput;
   scopeTenant: string;
   scopeId: string;
   /** True when `cancel()` was invoked while the job was already running. */
@@ -334,34 +334,34 @@ export interface ProjectPermissionsSyncJobFull {
 }
 
 /** Filters for paginated lookup of sync jobs scoped to a single project. */
-export interface ListProjectPermissionsSyncJobsParams {
+export interface ListProjectSyncJobsParams {
   projectId: string;
   scopeTenant: string;
   scopeId: string;
   page?: number | null;
   limit?: number | null;
   search?: string | null;
-  sort?: ProjectPermissionsSyncJobSortInput | null;
-  status?: ProjectPermissionsSyncJobStatus | null;
+  sort?: ProjectSyncJobSortInput | null;
+  status?: ProjectSyncJobStatus | null;
 }
 
 /** Result row for the payload endpoint: stored CDM body + lightweight identifiers. */
-export interface ProjectPermissionsSyncJobPayloadRow {
-  payload: SyncProjectPermissionsInput;
+export interface ProjectSyncJobPayloadRow {
+  payload: SyncProjectInput;
   importId: string | null;
   cdmVersion: number;
   projectId: string;
 }
 
 /** Result row for the snapshot endpoint: pre-sync rollback artifact + metadata. */
-export interface ProjectPermissionsSyncJobSnapshotRow {
-  snapshot: SyncProjectPermissionsInput;
+export interface ProjectSyncJobSnapshotRow {
+  snapshot: SyncProjectInput;
   takenAt: Date;
   sizeBytes: number;
   projectId: string;
 }
 
-export interface IProjectPermissionSyncJobRepository {
+export interface IProjectSyncJobRepository {
   insert(
     params: {
       projectId: string;
@@ -369,52 +369,49 @@ export interface IProjectPermissionSyncJobRepository {
       scopeId: string;
       cdmVersion: number;
       importId: string | null;
-      payload: SyncProjectPermissionsInput;
+      payload: SyncProjectInput;
       enqueuedById: string;
     },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  ): Promise<ProjectSyncJob>;
 
-  getById(jobId: string, transaction?: unknown): Promise<ProjectPermissionsSyncJob | null>;
+  getById(jobId: string, transaction?: unknown): Promise<ProjectSyncJob | null>;
 
   /** Worker-only: load the full row (payload, scope, cancel flag) for execution. */
-  getFullById(jobId: string, transaction?: unknown): Promise<ProjectPermissionsSyncJobFull | null>;
+  getFullById(jobId: string, transaction?: unknown): Promise<ProjectSyncJobFull | null>;
 
   /**
    * Read just the persisted CDM payload + lightweight identifiers for the
    * download endpoint. Returns null when the job does not exist.
    */
-  getPayloadById(
-    jobId: string,
-    transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJobPayloadRow | null>;
+  getPayloadById(jobId: string, transaction?: unknown): Promise<ProjectSyncJobPayloadRow | null>;
 
   /** Paginated list of jobs filtered by project + scope, optional status/search/sort. */
   listByProject(
-    params: ListProjectPermissionsSyncJobsParams,
+    params: ListProjectSyncJobsParams,
     transaction?: unknown
-  ): Promise<{ items: ProjectPermissionsSyncJob[]; totalCount: number }>;
+  ): Promise<{ items: ProjectSyncJob[]; totalCount: number }>;
 
   findActiveByImportId(
     params: { projectId: string; importId: string },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob | null>;
+  ): Promise<ProjectSyncJob | null>;
 
   updateStatus(
     params: {
       jobId: string;
-      status: ProjectPermissionsSyncJobStatus;
+      status: ProjectSyncJobStatus;
       startedAt?: Date | null;
       completedAt?: Date | null;
       cancelledAt?: Date | null;
       cancelRequested?: Date | null;
-      result?: SyncProjectPermissionsResult | null;
+      result?: SyncProjectResult | null;
       warnings?: string[] | null;
       errorMessage?: string | null;
       errorDetails?: Record<string, unknown> | null;
     },
     transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJob>;
+  ): Promise<ProjectSyncJob>;
 
   /**
    * Persist a pre-sync rollback snapshot for an existing job row. Throws
@@ -424,7 +421,7 @@ export interface IProjectPermissionSyncJobRepository {
   updateSnapshot(
     params: {
       jobId: string;
-      snapshot: SyncProjectPermissionsInput;
+      snapshot: SyncProjectInput;
       takenAt: Date;
       sizeBytes: number;
     },
@@ -436,8 +433,5 @@ export interface IProjectPermissionSyncJobRepository {
    * persisted for this job. The job row itself is queried by `jobId` only;
    * callers enforce the `(projectId === row.projectId)` invariant.
    */
-  getSnapshotById(
-    jobId: string,
-    transaction?: unknown
-  ): Promise<ProjectPermissionsSyncJobSnapshotRow | null>;
+  getSnapshotById(jobId: string, transaction?: unknown): Promise<ProjectSyncJobSnapshotRow | null>;
 }

@@ -14,13 +14,13 @@ import { Scope } from '@grantjs/schema';
 import { buildCdmImportMetadata, mergeCdmImporterMetadata } from '@/constants/cdm-import.constants';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import {
-  ProjectPermissionSyncRepository,
+  ProjectSyncRepository,
   ResolvedCdmPermission,
-} from '@/repositories/project-permission-sync.repository';
+} from '@/repositories/project-sync.repository';
 
 /**
  * Counters for one role+group creation pass. CDM handlers fold these into the
- * shared `SyncProjectPermissionsResult` after calling the builder.
+ * shared `SyncProjectResult` after calling the builder.
  */
 export interface CdmRoleCreationCounts {
   roleGroups: number;
@@ -48,13 +48,13 @@ export interface CdmRoleWithGroupNaming {
  * roles/groups. Owned by the orchestrator; injected into handlers so the
  * "create role + paired group + project links" recipe lives in one place.
  *
- * The recipe was previously private to {@link ProjectPermissionSyncService};
+ * The recipe was previously private to {@link ProjectSyncService};
  * extracting it here lets future handlers (API keys, project apps, …) reuse
  * it without forking the orchestrator.
  */
 export class CdmEntityBuilder {
   constructor(
-    private readonly syncRepo: ProjectPermissionSyncRepository,
+    private readonly syncRepo: ProjectSyncRepository,
     private readonly roles: IRoleService,
     private readonly groups: IGroupService,
     private readonly roleGroups: IRoleGroupService,

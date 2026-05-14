@@ -143,7 +143,7 @@ export interface ProjectCdmPermissionRow {
 
 /**
  * Read-only joins for the project permission export pipeline. Mirrors the
- * write-side {@link ProjectPermissionSyncRepository}: kept narrow on purpose
+ * write-side {@link ProjectSyncRepository}: kept narrow on purpose
  * so the export service stays handler-agnostic.
  *
  * The export reads every project role + every project user; we expect

@@ -1,7 +1,7 @@
 import {
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobSortableField,
-  ProjectPermissionsSyncJobStatus,
+  ProjectSyncJob,
+  ProjectSyncJobSortableField,
+  ProjectSyncJobStatus,
   SortOrder,
 } from '@grantjs/schema';
 import { create } from 'zustand';
@@ -17,12 +17,12 @@ interface PermissionSyncJobsState {
   page: number;
   limit: number;
   search: string;
-  sort: { field: ProjectPermissionsSyncJobSortableField; order: SortOrder };
+  sort: { field: ProjectSyncJobSortableField; order: SortOrder };
   status: PermissionSyncJobStatusFilterValue;
   view: PermissionSyncJobView;
 
   // Data
-  jobs: ProjectPermissionsSyncJob[];
+  jobs: ProjectSyncJob[];
   totalCount: number;
   loading: boolean;
   refetch: (() => void) | null;
@@ -30,31 +30,31 @@ interface PermissionSyncJobsState {
   // Dialog state
   isStartDialogOpen: boolean;
   isExportDialogOpen: boolean;
-  jobToView: ProjectPermissionsSyncJob | null;
-  jobToCancel: ProjectPermissionsSyncJob | null;
+  jobToView: ProjectSyncJob | null;
+  jobToCancel: ProjectSyncJob | null;
 
   // Actions
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
   setSearch: (search: string) => void;
-  setSort: (field: ProjectPermissionsSyncJobSortableField, order: SortOrder) => void;
+  setSort: (field: ProjectSyncJobSortableField, order: SortOrder) => void;
   setStatus: (status: PermissionSyncJobStatusFilterValue) => void;
   setView: (view: PermissionSyncJobView) => void;
-  setJobs: (jobs: ProjectPermissionsSyncJob[]) => void;
+  setJobs: (jobs: ProjectSyncJob[]) => void;
   setTotalCount: (count: number) => void;
   setLoading: (loading: boolean) => void;
   setRefetch: (refetch: (() => void) | null) => void;
 
   setStartDialogOpen: (open: boolean) => void;
   setExportDialogOpen: (open: boolean) => void;
-  setJobToView: (job: ProjectPermissionsSyncJob | null) => void;
-  setJobToCancel: (job: ProjectPermissionsSyncJob | null) => void;
+  setJobToView: (job: ProjectSyncJob | null) => void;
+  setJobToCancel: (job: ProjectSyncJob | null) => void;
 
   resetToDefaults: () => void;
 }
 
 const defaultSort = {
-  field: ProjectPermissionsSyncJobSortableField.EnqueuedAt,
+  field: ProjectSyncJobSortableField.EnqueuedAt,
   order: SortOrder.Desc,
 };
 
@@ -65,14 +65,14 @@ const initialState = {
   sort: defaultSort,
   status: null as PermissionSyncJobStatusFilterValue,
   view: PermissionSyncJobView.TABLE,
-  jobs: [] as ProjectPermissionsSyncJob[],
+  jobs: [] as ProjectSyncJob[],
   totalCount: 0,
   loading: false,
   refetch: null as (() => void) | null,
   isStartDialogOpen: false,
   isExportDialogOpen: false,
-  jobToView: null as ProjectPermissionsSyncJob | null,
-  jobToCancel: null as ProjectPermissionsSyncJob | null,
+  jobToView: null as ProjectSyncJob | null,
+  jobToCancel: null as ProjectSyncJob | null,
 };
 
 export const usePermissionSyncJobsStore = create<PermissionSyncJobsState>()(
@@ -107,9 +107,9 @@ export const PERMISSION_SYNC_JOB_STATUS_FILTERS: ReadonlyArray<{
   labelKey: string;
 }> = [
   { value: null, labelKey: 'status.all' },
-  { value: ProjectPermissionsSyncJobStatus.Pending, labelKey: 'status.pending' },
-  { value: ProjectPermissionsSyncJobStatus.Running, labelKey: 'status.running' },
-  { value: ProjectPermissionsSyncJobStatus.Completed, labelKey: 'status.completed' },
-  { value: ProjectPermissionsSyncJobStatus.Failed, labelKey: 'status.failed' },
-  { value: ProjectPermissionsSyncJobStatus.Cancelled, labelKey: 'status.cancelled' },
+  { value: ProjectSyncJobStatus.Pending, labelKey: 'status.pending' },
+  { value: ProjectSyncJobStatus.Running, labelKey: 'status.running' },
+  { value: ProjectSyncJobStatus.Completed, labelKey: 'status.completed' },
+  { value: ProjectSyncJobStatus.Failed, labelKey: 'status.failed' },
+  { value: ProjectSyncJobStatus.Cancelled, labelKey: 'status.cancelled' },
 ];

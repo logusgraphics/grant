@@ -1,14 +1,14 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { ProjectPermissionsSyncJob } from '@grantjs/schema';
+import { ProjectSyncJob } from '@grantjs/schema';
 import { Calendar, CalendarClock, Clock } from 'lucide-react';
 
 import { Audit, type AuditField } from '@/components/common';
 import { formatTimestamp } from '@/lib/utils';
 
 interface PermissionSyncJobAuditProps {
-  job: ProjectPermissionsSyncJob;
+  job: ProjectSyncJob;
   className?: string;
 }
 
@@ -23,7 +23,7 @@ export function PermissionSyncJobAudit({ job, className }: PermissionSyncJobAudi
       key: 'enqueued',
       icon: <Calendar className="h-3 w-3" />,
       label: t('sort.enqueuedAt'),
-      getValue: (j: ProjectPermissionsSyncJob) => formatTimestamp(j.enqueuedAt),
+      getValue: (j: ProjectSyncJob) => formatTimestamp(j.enqueuedAt),
     },
   ];
 
@@ -32,7 +32,7 @@ export function PermissionSyncJobAudit({ job, className }: PermissionSyncJobAudi
       key: 'started',
       icon: <Clock className="h-3 w-3" />,
       label: t('sort.startedAt'),
-      getValue: (j: ProjectPermissionsSyncJob) => (j.startedAt ? formatTimestamp(j.startedAt) : ''),
+      getValue: (j: ProjectSyncJob) => (j.startedAt ? formatTimestamp(j.startedAt) : ''),
     });
   }
 
@@ -41,16 +41,14 @@ export function PermissionSyncJobAudit({ job, className }: PermissionSyncJobAudi
       key: 'completed',
       icon: <CalendarClock className="h-3 w-3" />,
       label: t('sort.completedAt'),
-      getValue: (j: ProjectPermissionsSyncJob) =>
-        j.completedAt ? formatTimestamp(j.completedAt) : '',
+      getValue: (j: ProjectSyncJob) => (j.completedAt ? formatTimestamp(j.completedAt) : ''),
     });
   } else if (job.cancelledAt) {
     auditFields.push({
       key: 'cancelled',
       icon: <CalendarClock className="h-3 w-3" />,
       label: t('audit.cancelled'),
-      getValue: (j: ProjectPermissionsSyncJob) =>
-        j.cancelledAt ? formatTimestamp(j.cancelledAt) : '',
+      getValue: (j: ProjectSyncJob) => (j.cancelledAt ? formatTimestamp(j.cancelledAt) : ''),
     });
   }
 

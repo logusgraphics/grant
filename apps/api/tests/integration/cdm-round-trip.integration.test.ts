@@ -17,16 +17,11 @@
  *      ref errors, and the resulting fresh ids are different from project A's.
  */
 import type { CdmExportContext, ICdmEntityHandler } from '@grantjs/core';
-import {
-  CdmModeStrategy,
-  type Scope,
-  type SyncProjectPermissionsInput,
-  Tenant,
-} from '@grantjs/schema';
+import { CdmModeStrategy, type Scope, type SyncProjectInput, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CDM_IMPORT_METADATA_KEY } from '@/constants/cdm-import.constants';
-import { assembleExportedSyncProjectPermissionsInput } from '@/services/cdm';
+import { assembleExportedSyncProjectInput } from '@/services/cdm';
 import { expandCdmSyncInput } from '@/services/cdm/expand-cdm-sync-input';
 import { PermissionHandler } from '@/services/cdm/permission.handler';
 import { ResourceHandler } from '@/services/cdm/resource.handler';
@@ -182,7 +177,7 @@ function buildHandlers(exportRepo: ReturnType<typeof buildExportRepoForProjectA>
 
 async function exportProjectA(
   handlers: ReturnType<typeof buildHandlers>
-): Promise<SyncProjectPermissionsInput> {
+): Promise<SyncProjectInput> {
   const ctx: CdmExportContext = { projectId: projectAId, scope: scopeA };
   const [resources, permissions, tags, roleTemplates, userAssignments] = await Promise.all([
     handlers.resource.export(ctx),
@@ -192,7 +187,7 @@ async function exportProjectA(
     handlers.userAssignment.export(ctx),
   ]);
 
-  const assembled = assembleExportedSyncProjectPermissionsInput({
+  const assembled = assembleExportedSyncProjectInput({
     roleTemplates,
     userAssignments,
     projectUserApiKeys: [],

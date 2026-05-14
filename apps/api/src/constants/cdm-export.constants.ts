@@ -1,5 +1,5 @@
-import type { CdmExportSection } from '@grantjs/core';
-import { CDM_EXPORT_SECTIONS } from '@grantjs/core';
+import type { CdmExportSection } from '@grantjs/schema';
+import { CDM_EXPORT_SECTIONS } from '@grantjs/schema';
 
 import { ValidationError } from '@/lib/errors';
 

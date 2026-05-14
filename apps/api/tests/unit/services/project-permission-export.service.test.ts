@@ -1,16 +1,11 @@
 /**
  * Unit tests for ProjectPermissionExportService.
  *
- * Mocks handlers to pin orchestration: canonical `SyncProjectPermissionsInput`
+ * Mocks handlers to pin orchestration: canonical `SyncProjectInput`
  * is assembled from internal handler slices (`roleTemplates`, `userAssignments`, …).
  */
-import type {
-  CdmExportContext,
-  CdmHandlerInputKey,
-  CdmPermissionRefSpec,
-  ICdmEntityHandler,
-} from '@grantjs/core';
-import { CdmFindBy, type Scope, Tenant } from '@grantjs/schema';
+import type { CdmExportContext, CdmPermissionRefSpec, ICdmEntityHandler } from '@grantjs/core';
+import { CdmFindBy, type CdmHandlerInputKey, type Scope, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ProjectPermissionExportService } from '@/services/project-permission-export.service';

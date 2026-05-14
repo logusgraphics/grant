@@ -1,9 +1,9 @@
 import type {
-  IProjectPermissionSyncJobRepository,
-  ListProjectPermissionsSyncJobsParams,
-  ProjectPermissionsSyncJobFull,
-  ProjectPermissionsSyncJobPayloadRow,
-  ProjectPermissionsSyncJobSnapshotRow,
+  IProjectSyncJobRepository,
+  ListProjectSyncJobsParams,
+  ProjectSyncJobFull,
+  ProjectSyncJobPayloadRow,
+  ProjectSyncJobSnapshotRow,
 } from '@grantjs/core';
 import {
   type DbSchema,
@@ -12,12 +12,12 @@ import {
   projectPermissionSyncJobs,
 } from '@grantjs/database';
 import {
-  ProjectPermissionsSyncJob,
-  ProjectPermissionsSyncJobSortableField,
-  ProjectPermissionsSyncJobStatus,
+  ProjectSyncJob,
+  ProjectSyncJobSortableField,
+  ProjectSyncJobStatus,
   SortOrder,
-  SyncProjectPermissionsInput,
-  SyncProjectPermissionsResult,
+  SyncProjectInput,
+  SyncProjectResult,
 } from '@grantjs/schema';
 import { and, asc, count as drizzleCount, desc, eq, ilike, inArray, isNull } from 'drizzle-orm';
 import type { PgColumn } from 'drizzle-orm/pg-core';
@@ -25,25 +25,25 @@ import type { PgColumn } from 'drizzle-orm/pg-core';
 import { NotFoundError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 
-const STATUS_DB_TO_GQL: Record<string, ProjectPermissionsSyncJobStatus> = {
-  pending: ProjectPermissionsSyncJobStatus.Pending,
-  running: ProjectPermissionsSyncJobStatus.Running,
-  completed: ProjectPermissionsSyncJobStatus.Completed,
-  failed: ProjectPermissionsSyncJobStatus.Failed,
-  cancelled: ProjectPermissionsSyncJobStatus.Cancelled,
+const STATUS_DB_TO_GQL: Record<string, ProjectSyncJobStatus> = {
+  pending: ProjectSyncJobStatus.Pending,
+  running: ProjectSyncJobStatus.Running,
+  completed: ProjectSyncJobStatus.Completed,
+  failed: ProjectSyncJobStatus.Failed,
+  cancelled: ProjectSyncJobStatus.Cancelled,
 };
 
-const STATUS_GQL_TO_DB: Record<ProjectPermissionsSyncJobStatus, string> = {
-  [ProjectPermissionsSyncJobStatus.Pending]: 'pending',
-  [ProjectPermissionsSyncJobStatus.Running]: 'running',
-  [ProjectPermissionsSyncJobStatus.Completed]: 'completed',
-  [ProjectPermissionsSyncJobStatus.Failed]: 'failed',
-  [ProjectPermissionsSyncJobStatus.Cancelled]: 'cancelled',
+const STATUS_GQL_TO_DB: Record<ProjectSyncJobStatus, string> = {
+  [ProjectSyncJobStatus.Pending]: 'pending',
+  [ProjectSyncJobStatus.Running]: 'running',
+  [ProjectSyncJobStatus.Completed]: 'completed',
+  [ProjectSyncJobStatus.Failed]: 'failed',
+  [ProjectSyncJobStatus.Cancelled]: 'cancelled',
 };
 
 const ACTIVE_DB_STATUSES = ['pending', 'running', 'completed'];
 
-function normalizeSyncJobResult(raw: unknown): SyncProjectPermissionsResult | null {
+function normalizeSyncJobResult(raw: unknown): SyncProjectResult | null {
   if (raw == null || typeof raw !== 'object') {
     return null;
   }
@@ -74,8 +74,8 @@ function normalizeSyncJobResult(raw: unknown): SyncProjectPermissionsResult | nu
   };
 }
 
-function toEntity(row: ProjectPermissionSyncJobModel): ProjectPermissionsSyncJob {
-  const status = STATUS_DB_TO_GQL[row.status] ?? ProjectPermissionsSyncJobStatus.Pending;
+function toEntity(row: ProjectPermissionSyncJobModel): ProjectSyncJob {
+  const status = STATUS_DB_TO_GQL[row.status] ?? ProjectSyncJobStatus.Pending;
   return {
     id: row.id,
     projectId: row.projectId,
@@ -106,7 +106,7 @@ function toEntity(row: ProjectPermissionSyncJobModel): ProjectPermissionsSyncJob
  * Uses Drizzle directly (rather than the EntityRepository base) since this entity
  * doesn't need GraphQL pagination/relations.
  */
-export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyncJobRepository {
+export class ProjectSyncJobRepository implements IProjectSyncJobRepository {
   constructor(private readonly db: DbSchema) {}
 
   public async insert(
@@ -116,11 +116,11 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
       scopeId: string;
       cdmVersion: number;
       importId: string | null;
-      payload: SyncProjectPermissionsInput;
+      payload: SyncProjectInput;
       enqueuedById: string;
     },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     const dbInstance = transaction ?? this.db;
     const values: NewProjectPermissionSyncJobModel = {
       projectId: params.projectId,
@@ -140,10 +140,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
     return toEntity(row);
   }
 
-  public async getById(
-    jobId: string,
-    transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob | null> {
+  public async getById(jobId: string, transaction?: Transaction): Promise<ProjectSyncJob | null> {
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
       .select()
@@ -158,7 +155,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
   public async getFullById(
     jobId: string,
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJobFull | null> {
+  ): Promise<ProjectSyncJobFull | null> {
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
       .select()
@@ -171,7 +168,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
     if (!row) return null;
     return {
       job: toEntity(row),
-      payload: row.payload as unknown as SyncProjectPermissionsInput,
+      payload: row.payload as unknown as SyncProjectInput,
       scopeTenant: row.scopeTenant,
       scopeId: row.scopeId,
       cancelRequested: row.cancelRequested != null,
@@ -181,7 +178,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
   public async findActiveByImportId(
     params: { projectId: string; importId: string },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob | null> {
+  ): Promise<ProjectSyncJob | null> {
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
       .select()
@@ -202,7 +199,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
   public async getPayloadById(
     jobId: string,
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJobPayloadRow | null> {
+  ): Promise<ProjectSyncJobPayloadRow | null> {
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
       .select({
@@ -219,7 +216,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
     const row = rows[0];
     if (!row) return null;
     return {
-      payload: row.payload as unknown as SyncProjectPermissionsInput,
+      payload: row.payload as unknown as SyncProjectInput,
       importId: row.importId ?? null,
       cdmVersion: row.cdmVersion,
       projectId: row.projectId,
@@ -227,9 +224,9 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
   }
 
   public async listByProject(
-    params: ListProjectPermissionsSyncJobsParams,
+    params: ListProjectSyncJobsParams,
     transaction?: Transaction
-  ): Promise<{ items: ProjectPermissionsSyncJob[]; totalCount: number }> {
+  ): Promise<{ items: ProjectSyncJob[]; totalCount: number }> {
     const dbInstance = transaction ?? this.db;
 
     const page = Math.max(1, params.page ?? 1);
@@ -258,14 +255,14 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
 
     const whereClause = and(...filters);
 
-    const sortField = params.sort?.field ?? ProjectPermissionsSyncJobSortableField.EnqueuedAt;
+    const sortField = params.sort?.field ?? ProjectSyncJobSortableField.EnqueuedAt;
     const sortOrder = params.sort?.order ?? SortOrder.Desc;
-    const sortColumnMap: Record<ProjectPermissionsSyncJobSortableField, PgColumn> = {
-      [ProjectPermissionsSyncJobSortableField.EnqueuedAt]: projectPermissionSyncJobs.createdAt,
-      [ProjectPermissionsSyncJobSortableField.StartedAt]: projectPermissionSyncJobs.startedAt,
-      [ProjectPermissionsSyncJobSortableField.CompletedAt]: projectPermissionSyncJobs.completedAt,
-      [ProjectPermissionsSyncJobSortableField.Status]: projectPermissionSyncJobs.status,
-      [ProjectPermissionsSyncJobSortableField.ImportId]: projectPermissionSyncJobs.importId,
+    const sortColumnMap: Record<ProjectSyncJobSortableField, PgColumn> = {
+      [ProjectSyncJobSortableField.EnqueuedAt]: projectPermissionSyncJobs.createdAt,
+      [ProjectSyncJobSortableField.StartedAt]: projectPermissionSyncJobs.startedAt,
+      [ProjectSyncJobSortableField.CompletedAt]: projectPermissionSyncJobs.completedAt,
+      [ProjectSyncJobSortableField.Status]: projectPermissionSyncJobs.status,
+      [ProjectSyncJobSortableField.ImportId]: projectPermissionSyncJobs.importId,
     };
     const sortColumn = sortColumnMap[sortField] ?? projectPermissionSyncJobs.createdAt;
     const orderBy = sortOrder === SortOrder.Asc ? asc(sortColumn) : desc(sortColumn);
@@ -299,18 +296,18 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
   public async updateStatus(
     params: {
       jobId: string;
-      status: ProjectPermissionsSyncJobStatus;
+      status: ProjectSyncJobStatus;
       startedAt?: Date | null;
       completedAt?: Date | null;
       cancelledAt?: Date | null;
       cancelRequested?: Date | null;
-      result?: SyncProjectPermissionsResult | null;
+      result?: SyncProjectResult | null;
       warnings?: string[] | null;
       errorMessage?: string | null;
       errorDetails?: Record<string, unknown> | null;
     },
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJob> {
+  ): Promise<ProjectSyncJob> {
     const dbInstance = transaction ?? this.db;
     const update: Partial<NewProjectPermissionSyncJobModel> = {
       status: STATUS_GQL_TO_DB[params.status],
@@ -344,7 +341,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
       .returning();
 
     if (!row) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
     return toEntity(row);
   }
@@ -352,7 +349,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
   public async updateSnapshot(
     params: {
       jobId: string;
-      snapshot: SyncProjectPermissionsInput;
+      snapshot: SyncProjectInput;
       takenAt: Date;
       sizeBytes: number;
     },
@@ -377,14 +374,14 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
       .returning({ id: projectPermissionSyncJobs.id });
 
     if (!row) {
-      throw new NotFoundError('ProjectPermissionsSyncJob', params.jobId);
+      throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
   }
 
   public async getSnapshotById(
     jobId: string,
     transaction?: Transaction
-  ): Promise<ProjectPermissionsSyncJobSnapshotRow | null> {
+  ): Promise<ProjectSyncJobSnapshotRow | null> {
     const dbInstance = transaction ?? this.db;
     const rows = await dbInstance
       .select({
@@ -402,7 +399,7 @@ export class ProjectPermissionSyncJobRepository implements IProjectPermissionSyn
     if (!row) return null;
     if (row.snapshot == null) return null;
     return {
-      snapshot: row.snapshot as unknown as SyncProjectPermissionsInput,
+      snapshot: row.snapshot as unknown as SyncProjectInput,
       takenAt: row.snapshotTakenAt ?? new Date(0),
       sizeBytes: row.snapshotSizeBytes ?? 0,
       projectId: row.projectId,

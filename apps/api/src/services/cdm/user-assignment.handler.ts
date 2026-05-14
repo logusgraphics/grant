@@ -13,7 +13,7 @@ import { extractProjectUserMetadataForCdmExport } from '@/constants/cdm-import.c
 import { ConflictError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
-import type { ResolvedCdmPermission } from '@/repositories/project-permission-sync.repository';
+import type { ResolvedCdmPermission } from '@/repositories/project-sync.repository';
 
 import type { CdmEntityBuilder } from './cdm-entity-builder';
 import type { CdmUserAssignmentInternal } from './cdm-internal.types';

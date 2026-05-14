@@ -86,11 +86,11 @@ import { ProjectAppTagService } from './project-app-tags.service';
 import { ProjectAppService } from './project-apps.service';
 import { ProjectGroupService } from './project-groups.service';
 import { ProjectPermissionExportService } from './project-permission-export.service';
-import { ProjectPermissionSyncService } from './project-permission-sync.service';
 import { ProjectPermissionService } from './project-permissions.service';
-import { ProjectPermissionsSyncJobService } from './project-permissions-sync-job.service';
 import { ProjectResourceService } from './project-resources.service';
 import { ProjectRoleService } from './project-roles.service';
+import { ProjectSyncService } from './project-sync.service';
+import { ProjectSyncJobService } from './project-sync-job.service';
 import { ProjectTagService } from './project-tags.service';
 import { ProjectUserApiKeyService } from './project-user-api-keys.service';
 import { ProjectUserService } from './project-users.service';
@@ -401,8 +401,8 @@ export function createServices(
 
   return {
     ...servicesBase,
-    projectPermissionSync: new ProjectPermissionSyncService(
-      repositories.projectPermissionSyncRepository,
+    projectSync: new ProjectSyncService(
+      repositories.projectSyncRepository,
       servicesBase.roles,
       servicesBase.groups,
       servicesBase.roleGroups,
@@ -430,7 +430,7 @@ export function createServices(
       repositories.projectPermissionExportRepository
     ),
     projectPermissionExport: new ProjectPermissionExportService(
-      repositories.projectPermissionSyncRepository,
+      repositories.projectSyncRepository,
       repositories.projectPermissionExportRepository,
       servicesBase.roles,
       servicesBase.groups,
@@ -454,8 +454,8 @@ export function createServices(
       servicesBase.users,
       repositories.userRepository
     ),
-    projectPermissionsSyncJobs: new ProjectPermissionsSyncJobService(
-      repositories.projectPermissionSyncJobRepository,
+    projectSyncJobs: new ProjectSyncJobService(
+      repositories.projectSyncJobRepository,
       audit(projectPermissionSyncJobAuditLogs, 'projectPermissionSyncJobId', user, db)
     ),
   };

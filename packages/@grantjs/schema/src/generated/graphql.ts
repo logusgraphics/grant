@@ -889,12 +889,12 @@ export type Mutation = {
   _empty?: Maybe<Scalars['String']['output']>;
   acceptInvitation: AcceptInvitationResult;
   /**
-   * Cancel a pending or running project permissions sync job. Cancellation is
+   * Cancel a pending or running project CDM sync job. Cancellation is
    * immediate when the job is still PENDING; if the job is already RUNNING, the
    * cancellation is recorded and the worker stops at the next checkpoint
    * (best-effort).
    */
-  cancelProjectPermissionsSync: ProjectPermissionsSyncJob;
+  cancelProjectSync: ProjectSyncJob;
   changeMyPassword: ChangeMyPasswordResult;
   createApiKey: CreateApiKeyResult;
   createGroup: Group;
@@ -949,17 +949,17 @@ export type Mutation = {
   setMyPrimaryMfaDevice: MfaDevice;
   setupMfa: MfaSetupResponse;
   /**
-   * Enqueue an asynchronous CDM permission sync job for the given project.
-   * Replace-imports project RBAC from a canonical data model: roles, groups,
-   * project pivots, and user role assignments tagged for this project.
+   * Enqueue an asynchronous project CDM import job for the given project.
+   * Applies a canonical data model document: roles, groups, resources, permissions,
+   * tags, project pivots, and user assignments scoped to the project.
    * Requires Project:update in the given project scope.
    *
    * Returns immediately with a job descriptor in the PENDING status; the actual
-   * import runs in the background. Poll `projectPermissionsSyncJob` for status.
+   * import runs in the background. Poll `projectSyncJob` for status.
    * Pass `input.importId` for idempotency: if an active job already exists for
    * the same (project, importId), that job is returned instead of creating a new one.
    */
-  startProjectPermissionsSync: ProjectPermissionsSyncJob;
+  startProjectSync: ProjectSyncJob;
   updateGroup: Group;
   updateMyUser: User;
   updateOrganization: Organization;
@@ -984,7 +984,7 @@ export type MutationAcceptInvitationArgs = {
   input: AcceptInvitationInput;
 };
 
-export type MutationCancelProjectPermissionsSyncArgs = {
+export type MutationCancelProjectSyncArgs = {
   id: Scalars['ID']['input'];
   jobId: Scalars['ID']['input'];
   scope: Scope;
@@ -1171,9 +1171,9 @@ export type MutationSetMyPrimaryMfaDeviceArgs = {
   input: SetMyPrimaryMfaDeviceInput;
 };
 
-export type MutationStartProjectPermissionsSyncArgs = {
+export type MutationStartProjectSyncArgs = {
   id: Scalars['ID']['input'];
-  input: SyncProjectPermissionsInput;
+  input: SyncProjectInput;
   scope: Scope;
 };
 
@@ -1706,74 +1706,6 @@ export type ProjectPermissionProjectArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-/**
- * A row in `project_permission_sync_jobs` representing one queued or completed
- * CDM permission sync. The actual import runs in the background via the jobs
- * adapter; clients enqueue a job and poll this resource for status.
- */
-export type ProjectPermissionsSyncJob = {
-  __typename?: 'ProjectPermissionsSyncJob';
-  cancelledAt?: Maybe<Scalars['Date']['output']>;
-  cdmVersion: Scalars['Int']['output'];
-  completedAt?: Maybe<Scalars['Date']['output']>;
-  enqueuedAt: Scalars['Date']['output'];
-  errorMessage?: Maybe<Scalars['String']['output']>;
-  /**
-   * True when the worker captured a pre-sync rollback snapshot of the project's
-   * CDM state inside the import transaction. The snapshot itself is downloaded
-   * via the REST endpoint, mirroring the original-payload pattern.
-   */
-  hasSnapshot: Scalars['Boolean']['output'];
-  id: Scalars['ID']['output'];
-  importId?: Maybe<Scalars['String']['output']>;
-  projectId: Scalars['ID']['output'];
-  /** Counts and warnings populated when the job reaches COMPLETED. */
-  result?: Maybe<SyncProjectPermissionsResult>;
-  /**
-   * Serialised byte length of the snapshot JSON; useful for list-page rendering
-   * without round-tripping the full JSONB column.
-   */
-  snapshotSizeBytes?: Maybe<Scalars['Int']['output']>;
-  snapshotTakenAt?: Maybe<Scalars['Date']['output']>;
-  startedAt?: Maybe<Scalars['Date']['output']>;
-  status: ProjectPermissionsSyncJobStatus;
-  /**
-   * Warnings produced during execution (also surfaced inside `result.warnings`
-   * on completion; exposed at the top level for incremental visibility).
-   */
-  warnings: Array<Scalars['String']['output']>;
-};
-
-/** Paginated list of project permission sync jobs. */
-export type ProjectPermissionsSyncJobPage = PaginatedResults & {
-  __typename?: 'ProjectPermissionsSyncJobPage';
-  hasNextPage: Scalars['Boolean']['output'];
-  jobs: Array<ProjectPermissionsSyncJob>;
-  totalCount: Scalars['Int']['output'];
-};
-
-export type ProjectPermissionsSyncJobSortInput = {
-  field: ProjectPermissionsSyncJobSortableField;
-  order: SortOrder;
-};
-
-export enum ProjectPermissionsSyncJobSortableField {
-  CompletedAt = 'completedAt',
-  EnqueuedAt = 'enqueuedAt',
-  ImportId = 'importId',
-  StartedAt = 'startedAt',
-  Status = 'status',
-}
-
-/** Lifecycle status of an asynchronous project permissions sync job. */
-export enum ProjectPermissionsSyncJobStatus {
-  Cancelled = 'CANCELLED',
-  Completed = 'COMPLETED',
-  Failed = 'FAILED',
-  Pending = 'PENDING',
-  Running = 'RUNNING',
-}
-
 export type ProjectResource = Auditable & {
   __typename?: 'ProjectResource';
   createdAt: Scalars['Date']['output'];
@@ -1817,6 +1749,74 @@ export enum ProjectSortableField {
   CreatedAt = 'createdAt',
   Name = 'name',
   UpdatedAt = 'updatedAt',
+}
+
+/**
+ * A row in `project_permission_sync_jobs` representing one queued or completed
+ * project CDM import. The actual import runs in the background via the jobs
+ * adapter; clients enqueue a job and poll this resource for status.
+ */
+export type ProjectSyncJob = {
+  __typename?: 'ProjectSyncJob';
+  cancelledAt?: Maybe<Scalars['Date']['output']>;
+  cdmVersion: Scalars['Int']['output'];
+  completedAt?: Maybe<Scalars['Date']['output']>;
+  enqueuedAt: Scalars['Date']['output'];
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /**
+   * True when the worker captured a pre-sync rollback snapshot of the project's
+   * CDM state inside the import transaction. The snapshot itself is downloaded
+   * via the REST endpoint, mirroring the original-payload pattern.
+   */
+  hasSnapshot: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  importId?: Maybe<Scalars['String']['output']>;
+  projectId: Scalars['ID']['output'];
+  /** Counts and warnings populated when the job reaches COMPLETED. */
+  result?: Maybe<SyncProjectResult>;
+  /**
+   * Serialised byte length of the snapshot JSON; useful for list-page rendering
+   * without round-tripping the full JSONB column.
+   */
+  snapshotSizeBytes?: Maybe<Scalars['Int']['output']>;
+  snapshotTakenAt?: Maybe<Scalars['Date']['output']>;
+  startedAt?: Maybe<Scalars['Date']['output']>;
+  status: ProjectSyncJobStatus;
+  /**
+   * Warnings produced during execution (also surfaced inside `result.warnings`
+   * on completion; exposed at the top level for incremental visibility).
+   */
+  warnings: Array<Scalars['String']['output']>;
+};
+
+/** Paginated list of project CDM sync jobs. */
+export type ProjectSyncJobPage = PaginatedResults & {
+  __typename?: 'ProjectSyncJobPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  jobs: Array<ProjectSyncJob>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type ProjectSyncJobSortInput = {
+  field: ProjectSyncJobSortableField;
+  order: SortOrder;
+};
+
+export enum ProjectSyncJobSortableField {
+  CompletedAt = 'completedAt',
+  EnqueuedAt = 'enqueuedAt',
+  ImportId = 'importId',
+  StartedAt = 'startedAt',
+  Status = 'status',
+}
+
+/** Lifecycle status of an asynchronous project CDM sync job. */
+export enum ProjectSyncJobStatus {
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+  Running = 'RUNNING',
 }
 
 export type ProjectTag = Auditable & {
@@ -1889,17 +1889,17 @@ export type Query = {
   /** List OAuth apps for the given project scope. Allowed scopes: accountProject, organizationProject. */
   projectApps: ProjectAppPage;
   /**
-   * Read the current state of a project permissions sync job. Use this to poll
-   * the lifecycle of a job started via `startProjectPermissionsSync`.
+   * Read the current state of a project CDM sync job. Use this to poll
+   * the lifecycle of a job started via `startProjectSync`.
    */
-  projectPermissionsSyncJob: ProjectPermissionsSyncJob;
+  projectSyncJob: ProjectSyncJob;
   /**
-   * List project permissions sync jobs for a project, with optional pagination,
+   * List project CDM sync jobs for a project, with optional pagination,
    * search (matches importId), status filter, and sort. Use this to populate the
-   * job history view. Use `projectPermissionsSyncJob` to read a single job's
+   * job history view. Use `projectSyncJob` to read a single job's
    * current state for polling.
    */
-  projectPermissionsSyncJobs: ProjectPermissionsSyncJobPage;
+  projectSyncJobs: ProjectSyncJobPage;
   projects: ProjectPage;
   resources: ResourcePage;
   roles: RolePage;
@@ -1991,20 +1991,20 @@ export type QueryProjectAppsArgs = {
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
-export type QueryProjectPermissionsSyncJobArgs = {
+export type QueryProjectSyncJobArgs = {
   id: Scalars['ID']['input'];
   jobId: Scalars['ID']['input'];
   scope: Scope;
 };
 
-export type QueryProjectPermissionsSyncJobsArgs = {
+export type QueryProjectSyncJobsArgs = {
   id: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
   scope: Scope;
   search?: InputMaybe<Scalars['String']['input']>;
-  sort?: InputMaybe<ProjectPermissionsSyncJobSortInput>;
-  status?: InputMaybe<ProjectPermissionsSyncJobStatus>;
+  sort?: InputMaybe<ProjectSyncJobSortInput>;
+  status?: InputMaybe<ProjectSyncJobStatus>;
 };
 
 export type QueryProjectsArgs = {
@@ -2651,7 +2651,11 @@ export enum SortOrder {
   Desc = 'DESC',
 }
 
-export type SyncProjectPermissionsInput = {
+/**
+ * Versioned canonical project document (CDM) for export/import: roles, users,
+ * resources, permissions, groups, and tags scoped to one project.
+ */
+export type SyncProjectInput = {
   groups?: InputMaybe<Array<GroupCdmInput>>;
   id?: InputMaybe<Scalars['String']['input']>;
   mode: CdmModeInput;
@@ -2663,8 +2667,8 @@ export type SyncProjectPermissionsInput = {
   version: Scalars['Int']['input'];
 };
 
-export type SyncProjectPermissionsResult = {
-  __typename?: 'SyncProjectPermissionsResult';
+export type SyncProjectResult = {
+  __typename?: 'SyncProjectResult';
   groupPermissionsLinked: Scalars['Int']['output'];
   /** Number of `group_tags` pivot rows created during this sync (sum across all role templates). */
   groupTagsLinked: Scalars['Int']['output'];
@@ -4490,19 +4494,19 @@ export type UpdateProjectAppMutation = {
   };
 };
 
-export type CancelProjectPermissionsSyncMutationVariables = Exact<{
+export type CancelProjectSyncMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   scope: Scope;
   jobId: Scalars['ID']['input'];
 }>;
 
-export type CancelProjectPermissionsSyncMutation = {
+export type CancelProjectSyncMutation = {
   __typename?: 'Mutation';
-  cancelProjectPermissionsSync: {
-    __typename?: 'ProjectPermissionsSyncJob';
+  cancelProjectSync: {
+    __typename?: 'ProjectSyncJob';
     id: string;
     projectId: string;
-    status: ProjectPermissionsSyncJobStatus;
+    status: ProjectSyncJobStatus;
     cdmVersion: number;
     importId?: string | null;
     warnings: Array<string>;
@@ -4623,19 +4627,19 @@ export type GetProjectsQuery = {
   };
 };
 
-export type ProjectPermissionsSyncJobQueryVariables = Exact<{
+export type ProjectSyncJobQueryVariables = Exact<{
   id: Scalars['ID']['input'];
   scope: Scope;
   jobId: Scalars['ID']['input'];
 }>;
 
-export type ProjectPermissionsSyncJobQuery = {
+export type ProjectSyncJobQuery = {
   __typename?: 'Query';
-  projectPermissionsSyncJob: {
-    __typename?: 'ProjectPermissionsSyncJob';
+  projectSyncJob: {
+    __typename?: 'ProjectSyncJob';
     id: string;
     projectId: string;
-    status: ProjectPermissionsSyncJobStatus;
+    status: ProjectSyncJobStatus;
     cdmVersion: number;
     importId?: string | null;
     warnings: Array<string>;
@@ -4648,7 +4652,7 @@ export type ProjectPermissionsSyncJobQuery = {
     snapshotTakenAt?: Date | null;
     snapshotSizeBytes?: number | null;
     result?: {
-      __typename?: 'SyncProjectPermissionsResult';
+      __typename?: 'SyncProjectResult';
       projectId: string;
       importId?: string | null;
       rolesCreated: number;
@@ -4668,27 +4672,27 @@ export type ProjectPermissionsSyncJobQuery = {
   };
 };
 
-export type ProjectPermissionsSyncJobsQueryVariables = Exact<{
+export type ProjectSyncJobsQueryVariables = Exact<{
   id: Scalars['ID']['input'];
   scope: Scope;
   page?: InputMaybe<Scalars['Int']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sort?: InputMaybe<ProjectPermissionsSyncJobSortInput>;
-  status?: InputMaybe<ProjectPermissionsSyncJobStatus>;
+  sort?: InputMaybe<ProjectSyncJobSortInput>;
+  status?: InputMaybe<ProjectSyncJobStatus>;
 }>;
 
-export type ProjectPermissionsSyncJobsQuery = {
+export type ProjectSyncJobsQuery = {
   __typename?: 'Query';
-  projectPermissionsSyncJobs: {
-    __typename?: 'ProjectPermissionsSyncJobPage';
+  projectSyncJobs: {
+    __typename?: 'ProjectSyncJobPage';
     totalCount: number;
     hasNextPage: boolean;
     jobs: Array<{
-      __typename?: 'ProjectPermissionsSyncJob';
+      __typename?: 'ProjectSyncJob';
       id: string;
       projectId: string;
-      status: ProjectPermissionsSyncJobStatus;
+      status: ProjectSyncJobStatus;
       cdmVersion: number;
       importId?: string | null;
       warnings: Array<string>;
@@ -4704,19 +4708,19 @@ export type ProjectPermissionsSyncJobsQuery = {
   };
 };
 
-export type StartProjectPermissionsSyncMutationVariables = Exact<{
+export type StartProjectSyncMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   scope: Scope;
-  input: SyncProjectPermissionsInput;
+  input: SyncProjectInput;
 }>;
 
-export type StartProjectPermissionsSyncMutation = {
+export type StartProjectSyncMutation = {
   __typename?: 'Mutation';
-  startProjectPermissionsSync: {
-    __typename?: 'ProjectPermissionsSyncJob';
+  startProjectSync: {
+    __typename?: 'ProjectSyncJob';
     id: string;
     projectId: string;
-    status: ProjectPermissionsSyncJobStatus;
+    status: ProjectSyncJobStatus;
     cdmVersion: number;
     importId?: string | null;
     warnings: Array<string>;
@@ -9171,13 +9175,13 @@ export const UpdateProjectAppDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdateProjectAppMutation, UpdateProjectAppMutationVariables>;
-export const CancelProjectPermissionsSyncDocument = {
+export const CancelProjectSyncDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'mutation',
-      name: { kind: 'Name', value: 'CancelProjectPermissionsSync' },
+      name: { kind: 'Name', value: 'CancelProjectSync' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
@@ -9209,7 +9213,7 @@ export const CancelProjectPermissionsSyncDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'cancelProjectPermissionsSync' },
+            name: { kind: 'Name', value: 'cancelProjectSync' },
             arguments: [
               {
                 kind: 'Argument',
@@ -9248,10 +9252,7 @@ export const CancelProjectPermissionsSyncDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<
-  CancelProjectPermissionsSyncMutation,
-  CancelProjectPermissionsSyncMutationVariables
->;
+} as unknown as DocumentNode<CancelProjectSyncMutation, CancelProjectSyncMutationVariables>;
 export const CreateProjectDocument = {
   kind: 'Document',
   definitions: [
@@ -9635,13 +9636,13 @@ export const GetProjectsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetProjectsQuery, GetProjectsQueryVariables>;
-export const ProjectPermissionsSyncJobDocument = {
+export const ProjectSyncJobDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'query',
-      name: { kind: 'Name', value: 'ProjectPermissionsSyncJob' },
+      name: { kind: 'Name', value: 'ProjectSyncJob' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
@@ -9673,7 +9674,7 @@ export const ProjectPermissionsSyncJobDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'projectPermissionsSyncJob' },
+            name: { kind: 'Name', value: 'projectSyncJob' },
             arguments: [
               {
                 kind: 'Argument',
@@ -9739,17 +9740,14 @@ export const ProjectPermissionsSyncJobDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<
-  ProjectPermissionsSyncJobQuery,
-  ProjectPermissionsSyncJobQueryVariables
->;
-export const ProjectPermissionsSyncJobsDocument = {
+} as unknown as DocumentNode<ProjectSyncJobQuery, ProjectSyncJobQueryVariables>;
+export const ProjectSyncJobsDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'query',
-      name: { kind: 'Name', value: 'ProjectPermissionsSyncJobs' },
+      name: { kind: 'Name', value: 'ProjectSyncJobs' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
@@ -9785,18 +9783,12 @@ export const ProjectPermissionsSyncJobsDocument = {
         {
           kind: 'VariableDefinition',
           variable: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
-          type: {
-            kind: 'NamedType',
-            name: { kind: 'Name', value: 'ProjectPermissionsSyncJobSortInput' },
-          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ProjectSyncJobSortInput' } },
         },
         {
           kind: 'VariableDefinition',
           variable: { kind: 'Variable', name: { kind: 'Name', value: 'status' } },
-          type: {
-            kind: 'NamedType',
-            name: { kind: 'Name', value: 'ProjectPermissionsSyncJobStatus' },
-          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ProjectSyncJobStatus' } },
         },
       ],
       selectionSet: {
@@ -9804,7 +9796,7 @@ export const ProjectPermissionsSyncJobsDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'projectPermissionsSyncJobs' },
+            name: { kind: 'Name', value: 'projectSyncJobs' },
             arguments: [
               {
                 kind: 'Argument',
@@ -9877,17 +9869,14 @@ export const ProjectPermissionsSyncJobsDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<
-  ProjectPermissionsSyncJobsQuery,
-  ProjectPermissionsSyncJobsQueryVariables
->;
-export const StartProjectPermissionsSyncDocument = {
+} as unknown as DocumentNode<ProjectSyncJobsQuery, ProjectSyncJobsQueryVariables>;
+export const StartProjectSyncDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'mutation',
-      name: { kind: 'Name', value: 'StartProjectPermissionsSync' },
+      name: { kind: 'Name', value: 'StartProjectSync' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
@@ -9910,10 +9899,7 @@ export const StartProjectPermissionsSyncDocument = {
           variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
           type: {
             kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'SyncProjectPermissionsInput' },
-            },
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'SyncProjectInput' } },
           },
         },
       ],
@@ -9922,7 +9908,7 @@ export const StartProjectPermissionsSyncDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'startProjectPermissionsSync' },
+            name: { kind: 'Name', value: 'startProjectSync' },
             arguments: [
               {
                 kind: 'Argument',
@@ -9961,10 +9947,7 @@ export const StartProjectPermissionsSyncDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<
-  StartProjectPermissionsSyncMutation,
-  StartProjectPermissionsSyncMutationVariables
->;
+} as unknown as DocumentNode<StartProjectSyncMutation, StartProjectSyncMutationVariables>;
 export const UpdateProjectDocument = {
   kind: 'Document',
   definitions: [

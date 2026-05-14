@@ -24,7 +24,7 @@ import type {
 } from '@grantjs/core';
 
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
-import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
+import type { ProjectSyncRepository } from '@/repositories/project-sync.repository';
 
 import { CdmEntityBuilder } from './cdm-entity-builder';
 import { PermissionHandler } from './permission.handler';
@@ -37,7 +37,7 @@ import { UserProvisionHandler } from './user-provision.handler';
 
 export type { CdmRoleWithGroupNaming } from './cdm-entity-builder';
 export { CdmEntityBuilder } from './cdm-entity-builder';
-export { assembleExportedSyncProjectPermissionsInput } from './cdm-export-assemble';
+export { assembleExportedSyncProjectInput } from './cdm-export-assemble';
 export {
   addPermissionRefDeduped,
   canonicalPermissionDocumentString,
@@ -64,7 +64,7 @@ export { UserProvisionHandler } from './user-provision.handler';
  * registry construction and we don't drift in handler ordering.
  */
 export interface CdmHandlerRegistryDeps {
-  syncRepo: ProjectPermissionSyncRepository;
+  syncRepo: ProjectSyncRepository;
   exportRepo: ProjectPermissionExportRepository;
   roles: IRoleService;
   groups: IGroupService;

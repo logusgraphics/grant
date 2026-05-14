@@ -1,5 +1,5 @@
-mutation CancelProjectPermissionsSync($id: ID!, $scope: Scope!, $jobId: ID!) {
-  cancelProjectPermissionsSync(id: $id, scope: $scope, jobId: $jobId) {
+mutation StartProjectSync($id: ID!, $scope: Scope!, $input: SyncProjectInput!) {
+  startProjectSync(id: $id, scope: $scope, input: $input) {
     id
     projectId
     status

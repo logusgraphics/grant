@@ -1,4 +1,4 @@
-import { CdmFindBy, CdmModeStrategy, type SyncProjectPermissionsInput } from '@grantjs/schema';
+import { CdmFindBy, CdmModeStrategy, type SyncProjectInput } from '@grantjs/schema';
 import { describe, expect, it } from 'vitest';
 
 import { ValidationError } from '@/lib/errors';
@@ -87,7 +87,7 @@ describe('cdm-permission-document-ref', () => {
 
 describe('expandCdmSyncInput catalog permission strings', () => {
   it('expands role.permissions catalog refs into internal slug+action refs', () => {
-    const input: SyncProjectPermissionsInput = {
+    const input: SyncProjectInput = {
       version: 1,
       id: null,
       mode,
@@ -126,7 +126,7 @@ describe('expandCdmSyncInput catalog permission strings', () => {
   });
 
   it('expands document permission keys alongside catalog refs', () => {
-    const input: SyncProjectPermissionsInput = {
+    const input: SyncProjectInput = {
       version: 1,
       id: null,
       mode,
@@ -169,7 +169,7 @@ describe('expandCdmSyncInput catalog permission strings', () => {
   });
 
   it('dedupes equivalent catalog refs', () => {
-    const input: SyncProjectPermissionsInput = {
+    const input: SyncProjectInput = {
       version: 1,
       id: null,
       mode,
@@ -196,7 +196,7 @@ describe('expandCdmSyncInput catalog permission strings', () => {
   });
 
   it('user.permissions direct synthetic role uses catalog strings', () => {
-    const input: SyncProjectPermissionsInput = {
+    const input: SyncProjectInput = {
       version: 1,
       id: null,
       mode,
@@ -228,9 +228,91 @@ describe('expandCdmSyncInput catalog permission strings', () => {
   });
 });
 
+describe('expandCdmSyncInput nested api keys', () => {
+  it('preserves clientId and clientSecret on projectUserApiKeys slice', () => {
+    const uid = '30000000-0000-4000-8000-000000000099';
+    const clientId = 'bd92d4e7-eb30-4c6b-8a49-9c32d89ccf3a';
+    const secret = 'x'.repeat(32);
+    const input: SyncProjectInput = {
+      version: 1,
+      id: null,
+      mode,
+      roles: [
+        {
+          key: 'r1',
+          name: 'R',
+          description: null,
+          groups: [],
+          permissions: ['perm1'],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      users: [
+        {
+          key: { value: uid, findBy: CdmFindBy.Id },
+          name: 'Demo',
+          roles: ['r1'],
+          groups: [],
+          permissions: [],
+          tags: [],
+          primaryTag: null,
+          apiKeys: [
+            {
+              key: 'cdm-apikey-1',
+              clientId,
+              clientSecret: secret,
+              name: 'Demo User Key',
+              description: null,
+              metadata: null,
+            },
+          ],
+          metadata: null,
+        },
+      ],
+      resources: [
+        {
+          key: 'res1',
+          slug: 'res1',
+          name: 'Res',
+          description: null,
+          actions: ['read'],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      permissions: [
+        {
+          key: 'perm1',
+          resource: 'res1',
+          action: 'read',
+          name: 'P',
+          description: null,
+          condition: null,
+          groups: [],
+          tags: [],
+          primaryTag: null,
+          metadata: null,
+        },
+      ],
+      groups: [],
+      tags: [],
+    };
+    const expanded = expandCdmSyncInput(input);
+    expect(expanded.projectUserApiKeys).toHaveLength(1);
+    const row = expanded.projectUserApiKeys[0];
+    expect(row.clientId).toBe(clientId);
+    expect(row.clientSecret).toBe(secret);
+    expect(row.userId).toBe(uid);
+    expect(row.externalKey).toBe('cdm-apikey-1');
+  });
+});
+
 describe('expandCdmSyncInput role ↔ group document fields', () => {
   it('maps first linked group name/description and group tag keys onto roleTemplates', () => {
-    const input: SyncProjectPermissionsInput = {
+    const input: SyncProjectInput = {
       version: 1,
       id: null,
       mode,

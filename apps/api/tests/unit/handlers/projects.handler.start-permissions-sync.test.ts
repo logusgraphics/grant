@@ -1,15 +1,10 @@
 /**
- * Unit tests for ProjectHandler.startProjectPermissionsSync. Focused on the
+ * Unit tests for ProjectHandler.startProjectSync. Focused on the
  * orchestration concerns the handler owns: input validation, idempotency on
  * `input.id`, and dispatching the worker. The actual import work belongs to
- * `ProjectPermissionSyncService` and is exercised separately.
+ * `ProjectSyncService` and is exercised separately.
  */
-import {
-  CdmFindBy,
-  CdmModeStrategy,
-  ProjectPermissionsSyncJobStatus,
-  Tenant,
-} from '@grantjs/schema';
+import { CdmFindBy, CdmModeStrategy, ProjectSyncJobStatus, Tenant } from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProjectHandler } from '@/handlers/projects.handler';
@@ -22,7 +17,7 @@ function buildJob(importId: string | null) {
   return {
     id: '40000000-0000-4000-8000-000000000077',
     projectId,
-    status: ProjectPermissionsSyncJobStatus.Pending,
+    status: ProjectSyncJobStatus.Pending,
     cdmVersion: 1,
     importId,
     result: null,
@@ -107,7 +102,7 @@ function createHandler(opts: {
   );
 }
 
-describe('ProjectHandler.startProjectPermissionsSync', () => {
+describe('ProjectHandler.startProjectSync', () => {
   let create: ReturnType<typeof vi.fn>;
   let findActiveByImportId: ReturnType<typeof vi.fn>;
   let enqueue: ReturnType<typeof vi.fn>;
@@ -134,7 +129,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
       scheduleAfterCommit,
     });
 
-    await handler.startProjectPermissionsSync({
+    await handler.startProjectSync({
       id: projectId,
       scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
       input: buildInput(),
@@ -145,7 +140,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     expect(deferred).toHaveLength(1);
     await Promise.resolve(deferred[0]?.());
     expect(enqueue).toHaveBeenCalledTimes(1);
-    expect(enqueue).toHaveBeenCalledWith('project-permissions-sync', {
+    expect(enqueue).toHaveBeenCalledWith('project-sync', {
       scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
       payload: { jobRecordId: job.id },
     });
@@ -160,7 +155,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
       syncJobs: { create, findActiveByImportId },
     });
 
-    const result = await handler.startProjectPermissionsSync({
+    const result = await handler.startProjectSync({
       id: projectId,
       scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
       input: buildInput(),
@@ -171,7 +166,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     expect(findActiveByImportId).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledTimes(1);
     expect(enqueue).toHaveBeenCalledTimes(1);
-    expect(enqueue).toHaveBeenCalledWith('project-permissions-sync', {
+    expect(enqueue).toHaveBeenCalledWith('project-sync', {
       scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
       payload: { jobRecordId: job.id },
     });
@@ -187,7 +182,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
       syncJobs: { create, findActiveByImportId },
     });
 
-    const result = await handler.startProjectPermissionsSync({
+    const result = await handler.startProjectSync({
       id: projectId,
       scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
       input: { ...buildInput(), id: importId },
@@ -207,7 +202,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     });
 
     await expect(
-      handler.startProjectPermissionsSync({
+      handler.startProjectSync({
         id: projectId,
         scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
         input: buildInput(),
@@ -224,7 +219,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     });
 
     await expect(
-      handler.startProjectPermissionsSync({
+      handler.startProjectSync({
         id: projectId,
         scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
         input: { ...buildInput(), version: 999 },
@@ -242,7 +237,7 @@ describe('ProjectHandler.startProjectPermissionsSync', () => {
     });
 
     await expect(
-      handler.startProjectPermissionsSync({
+      handler.startProjectSync({
         id: projectId,
         scope: {
           tenant: Tenant.AccountProject,

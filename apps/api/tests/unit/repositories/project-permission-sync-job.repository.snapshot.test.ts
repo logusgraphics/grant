@@ -1,5 +1,5 @@
 /**
- * Unit tests for ProjectPermissionSyncJobRepository snapshot read/write paths.
+ * Unit tests for ProjectSyncJobRepository snapshot read/write paths.
  *
  *   - `updateSnapshot` writes the JSONB snapshot, takenAt, and sizeBytes
  *     columns and surfaces a NotFoundError when the job row is missing.
@@ -11,11 +11,11 @@
  *     getById/listByProject.
  */
 import type { DbSchema } from '@grantjs/database';
-import { CdmModeStrategy, type SyncProjectPermissionsInput } from '@grantjs/schema';
+import { CdmModeStrategy, type SyncProjectInput } from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { NotFoundError } from '@/lib/errors';
-import { ProjectPermissionSyncJobRepository } from '@/repositories/project-permission-sync-job.repository';
+import { ProjectSyncJobRepository } from '@/repositories/project-sync-job.repository';
 
 const jobId = '40000000-0000-4000-8000-000000000077';
 const projectId = '00000000-0000-4000-8000-000000000011';
@@ -42,7 +42,7 @@ function buildChainable<T = unknown>(resolveTo: T) {
   return { chain: proxy as never, calls };
 }
 
-const sampleSnapshot: SyncProjectPermissionsInput = {
+const sampleSnapshot: SyncProjectInput = {
   version: 1,
   id: null,
   mode: {
@@ -69,10 +69,10 @@ const sampleSnapshot: SyncProjectPermissionsInput = {
   tags: [],
 };
 
-describe('ProjectPermissionSyncJobRepository.updateSnapshot', () => {
+describe('ProjectSyncJobRepository.updateSnapshot', () => {
   let updateChain: ReturnType<typeof buildChainable>;
   let db: DbSchema;
-  let repo: ProjectPermissionSyncJobRepository;
+  let repo: ProjectSyncJobRepository;
 
   function setup(returnedRows: unknown[]) {
     updateChain = buildChainable(returnedRows);
@@ -82,7 +82,7 @@ describe('ProjectPermissionSyncJobRepository.updateSnapshot', () => {
         return updateChain.chain;
       }),
     } as unknown as DbSchema;
-    repo = new ProjectPermissionSyncJobRepository(db);
+    repo = new ProjectSyncJobRepository(db);
   }
 
   beforeEach(() => {
@@ -120,10 +120,10 @@ describe('ProjectPermissionSyncJobRepository.updateSnapshot', () => {
   });
 });
 
-describe('ProjectPermissionSyncJobRepository.getSnapshotById', () => {
+describe('ProjectSyncJobRepository.getSnapshotById', () => {
   let selectChain: ReturnType<typeof buildChainable>;
   let db: DbSchema;
-  let repo: ProjectPermissionSyncJobRepository;
+  let repo: ProjectSyncJobRepository;
 
   function setup(rows: unknown[]) {
     selectChain = buildChainable(rows);
@@ -133,10 +133,10 @@ describe('ProjectPermissionSyncJobRepository.getSnapshotById', () => {
         return selectChain.chain;
       }),
     } as unknown as DbSchema;
-    repo = new ProjectPermissionSyncJobRepository(db);
+    repo = new ProjectSyncJobRepository(db);
   }
 
-  it('returns the stored snapshot row mapped to ProjectPermissionsSyncJobSnapshotRow shape', async () => {
+  it('returns the stored snapshot row mapped to ProjectSyncJobSnapshotRow shape', async () => {
     const takenAt = new Date('2026-05-02T10:00:00.000Z');
     setup([
       {

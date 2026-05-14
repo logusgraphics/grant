@@ -22,7 +22,7 @@ import {
 import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
-import type { ProjectPermissionSyncRepository } from '@/repositories/project-permission-sync.repository';
+import type { ProjectSyncRepository } from '@/repositories/project-sync.repository';
 
 import { buildExternalKey } from './identity.helper';
 import { mapOwnerIdToExportedTagFields } from './pivot-tag-export.helper';
@@ -53,7 +53,7 @@ export class ResourceHandler implements ICdmEntityHandler<ResourceCdmInput, Reso
   public readonly order = 2;
 
   constructor(
-    private readonly syncRepo: ProjectPermissionSyncRepository,
+    private readonly syncRepo: ProjectSyncRepository,
     private readonly exportRepo: ProjectPermissionExportRepository,
     private readonly resources: IResourceService,
     private readonly projectResources: IProjectResourceService
@@ -106,7 +106,18 @@ export class ResourceHandler implements ICdmEntityHandler<ResourceCdmInput, Reso
             `resources[${key}]: catalog snapshot rows require metadata.grantResourceId`
           );
         }
-        const existing = await this.resources.getResourceById(grantResourceId, tx);
+        let existing = await this.resources.getResourceById(grantResourceId, tx);
+        if (!existing) {
+          const revivedFromTombstone =
+            await this.syncRepo.reviveCdmResourceAndProjectLinkForProject(
+              grantResourceId,
+              ctx.projectId,
+              tx
+            );
+          if (revivedFromTombstone) {
+            existing = await this.resources.getResourceById(grantResourceId, tx);
+          }
+        }
         if (!existing) {
           throw new NotFoundError('Resource');
         }

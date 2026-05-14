@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { CdmModeStrategy, CdmOnConflict, type SyncProjectPermissionsInput } from '@grantjs/schema';
+import { CdmModeStrategy, CdmOnConflict, type SyncProjectInput } from '@grantjs/schema';
 import { AlertCircle, FileJson, Loader2, ShieldAlert, X } from 'lucide-react';
 import { type FileRejection, useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
-import { useStartProjectPermissionsSync } from '@/hooks/projects';
+import { useStartProjectSync } from '@/hooks/projects';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
@@ -35,10 +35,10 @@ const ACCEPT_JSON = {
 interface ParsedPayload {
   filename: string;
   size: number;
-  payload: SyncProjectPermissionsInput;
+  payload: SyncProjectInput;
 }
 
-function isParsedPayload(value: unknown): value is SyncProjectPermissionsInput {
+function isParsedPayload(value: unknown): value is SyncProjectInput {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Record<string, unknown>;
   if (typeof candidate.version !== 'number') return false;
@@ -88,7 +88,7 @@ export function PermissionSyncJobStartDialog() {
   const [parseError, setParseError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { startSync } = useStartProjectPermissionsSync();
+  const { startSync } = useStartProjectSync();
   const { isGranted: canStart, isLoading: grantLoading } = useGrant(
     ResourceSlug.Project,
     ResourceAction.Update,
@@ -211,7 +211,7 @@ export function PermissionSyncJobStartDialog() {
         typeof existingId === 'string' && existingId.trim() !== ''
           ? existingId.trim()
           : generateImportId();
-      const input: SyncProjectPermissionsInput = {
+      const input: SyncProjectInput = {
         ...parsed.payload,
         id,
       };

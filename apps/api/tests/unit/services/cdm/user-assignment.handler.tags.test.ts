@@ -8,7 +8,7 @@
  *   - export() projects user_tags back to the CDM input shape.
  */
 import type { CdmApplyContext, CdmExportContext } from '@grantjs/core';
-import { Scope, SyncProjectPermissionsResult, Tenant } from '@grantjs/schema';
+import { Scope, SyncProjectResult, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { UserAssignmentHandler } from '@/services/cdm/user-assignment.handler';
@@ -18,7 +18,7 @@ const accountId = '20000000-0000-4000-8000-000000000020';
 const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` };
 const userId = '30000000-0000-4000-8000-000000000099';
 
-function baseResult(): SyncProjectPermissionsResult {
+function baseResult(): SyncProjectResult {
   return {
     projectId,
     importId: null,

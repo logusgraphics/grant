@@ -36,7 +36,7 @@ Each entry is either (1) an **opaque key** equal to `permissions[].key` in the s
 
 Optional **`users`** entries define **new** Grant users for inbound porting;
 assignments may reference them via **`userKey`**. Existing users continue to be
-referenced by **`userId`**. See [`SyncProjectPermissionsInput`](https://github.com/logusgraphics/grant-platform/blob/main/packages/@grantjs/schema/src/schema/projects/inputs/sync-project-permissions-cdm.graphql)
+referenced by **`userId`**. See [`SyncProjectInput`](https://github.com/logusgraphics/grant-platform/blob/main/packages/@grantjs/schema/src/schema/projects/inputs/sync-project-cdm.graphql)
 in the schema package.
 Operators use the dashboard's **Import/Export** screen under each project
 (cards/table of jobs, import dialog, export action) for ad-hoc clones,
@@ -44,7 +44,7 @@ backups, and testing imports in isolation.
 
 ## Canonical payload shape
 
-Imports and exports use **`SyncProjectPermissionsInput`** (GraphQL / codegen name): a versioned object with at least:
+Imports and exports use **`SyncProjectInput`** (GraphQL / codegen name): a versioned object with at least:
 
 | Field         | Purpose                                                                                          |
 | ------------- | ------------------------------------------------------------------------------------------------ |
@@ -114,15 +114,15 @@ sequenceDiagram
 
 Each import is a **row** in `project_permission_sync_jobs`, executed by the background job adapter ([Job scheduling](/advanced-topics/job-scheduling)). Lifecycle states include pending, running, completed, failed, and cancelled.
 
-- **Query / poll** — GraphQL `projectPermissionsSyncJobs` / `projectPermissionsSyncJob`, or REST equivalents (see below).
-- **Payload download** — REST returns the **submitted** CDM JSON for auditing (`GET …/sync-jobs/{jobId}/payload`).
+- **Query / poll** — GraphQL `projectSyncJobs` / `projectSyncJob`, or REST equivalents (see below).
+- **Payload download** — REST returns the **submitted** CDM JSON for auditing (`GET …/sync/jobs/{jobId}/payload`).
 
 ## Pre-sync rollback snapshot
 
 Before applying an import, the worker captures a **full CDM export** of the project **inside the same database transaction** as the import, then persists it on the job row. If the import fails, that snapshot is rolled back with the transaction.
 
 - **Metadata** on the job (`hasSnapshot`, `snapshotTakenAt`, `snapshotSizeBytes`) is exposed via GraphQL for list/detail UIs.
-- **Bytes** are downloaded via REST (`GET …/sync-jobs/{jobId}/snapshot`), not inlined in GraphQL (same pattern as payload).
+- **Bytes** are downloaded via REST (`GET …/sync/jobs/{jobId}/snapshot`), not inlined in GraphQL (same pattern as payload).
 
 ::: tip
 Automated “rollback” as a one-click replay is not part of the product UI yet; the artifact is there for operators who download JSON and start a new import. Future **BYOK**-style secrets in CDM would require re-supplying secrets when replaying a snapshot — see the extension README linked below.
@@ -132,15 +132,15 @@ Automated “rollback” as a one-click replay is not part of the product UI yet
 
 All routes are under **`/api/projects/{id}/…`** with authenticated access and project scope query params (`scopeId`, `tenant`) as documented in OpenAPI.
 
-| Method   | Path                                       | Role                                                       |
-| -------- | ------------------------------------------ | ---------------------------------------------------------- |
-| `GET`    | `…/permissions/export`                     | Download current project CDM (`cdmVersion` query optional) |
-| `GET`    | `…/permissions/sync-jobs`                  | List jobs (if exposed for your client)                     |
-| `POST`   | `…/permissions/sync-jobs`                  | Enqueue import (body = CDM JSON)                           |
-| `GET`    | `…/permissions/sync-jobs/{jobId}`          | Single job status                                          |
-| `GET`    | `…/permissions/sync-jobs/{jobId}/payload`  | Submitted CDM JSON                                         |
-| `GET`    | `…/permissions/sync-jobs/{jobId}/snapshot` | Pre-sync rollback JSON (404 if none)                       |
-| `DELETE` | `…/permissions/sync-jobs/{jobId}`          | Cancel job                                                 |
+| Method   | Path                           | Role                                                       |
+| -------- | ------------------------------ | ---------------------------------------------------------- |
+| `GET`    | `…/sync/export`                | Download current project CDM (`cdmVersion` query optional) |
+| `GET`    | `…/sync/jobs`                  | List jobs (if exposed for your client)                     |
+| `POST`   | `…/sync/jobs`                  | Enqueue import (body = CDM JSON)                           |
+| `GET`    | `…/sync/jobs/{jobId}`          | Single job status                                          |
+| `GET`    | `…/sync/jobs/{jobId}/payload`  | Submitted CDM JSON                                         |
+| `GET`    | `…/sync/jobs/{jobId}/snapshot` | Pre-sync rollback JSON (404 if none)                       |
+| `DELETE` | `…/sync/jobs/{jobId}`          | Cancel job                                                 |
 
 Authoritative request/response shapes live in **OpenAPI** ([REST API](/api-reference/rest-api)) and `@grantjs/schema` codegen.
 
@@ -148,10 +148,10 @@ Authoritative request/response shapes live in **OpenAPI** ([REST API](/api-refer
 
 Typical operations:
 
-- **`startProjectPermissionsSync`** — enqueue import (input includes project scope + CDM payload).
-- **`cancelProjectPermissionsSync`** — cancel a job.
-- **`projectPermissionsSyncJobs`** — paginated list (sort, filter, search).
-- **`projectPermissionsSyncJob`** — single job by id.
+- **`startProjectSync`** — enqueue import (input includes project scope + CDM payload).
+- **`cancelProjectSync`** — cancel a job.
+- **`projectSyncJobs`** — paginated list (sort, filter, search).
+- **`projectSyncJob`** — single job by id.
 
 Full operation documents are in `packages/@grantjs/schema` for client code generation.
 

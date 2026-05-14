@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ProjectPermissionsSyncJob, ProjectPermissionsSyncJobStatus } from '@grantjs/schema';
+import { ProjectSyncJob, ProjectSyncJobStatus } from '@grantjs/schema';
 import { AlertCircle, ArrowLeftRight, Download, Info, Loader2, RefreshCw } from 'lucide-react';
 
 import { CopyToClipboard, JsonEditor } from '@/components/common';
@@ -18,9 +18,9 @@ import {
 } from '@/components/ui/dialog';
 import { useScopeFromParams } from '@/hooks/common';
 import {
-  useProjectPermissionsSyncJob,
-  useProjectPermissionsSyncJobPayload,
-  useProjectPermissionsSyncJobSnapshot,
+  useProjectSyncJob,
+  useProjectSyncJobPayload,
+  useProjectSyncJobSnapshot,
 } from '@/hooks/projects';
 import { formatTimestamp } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -67,15 +67,15 @@ export function PermissionSyncJobViewDialog() {
 
   const [tab, setTab] = useState<ViewTab>('status');
 
-  const { job, polling } = useProjectPermissionsSyncJob({
+  const { job, polling } = useProjectSyncJob({
     id: jobToView?.projectId ?? '',
     scope: scope ?? undefined,
     jobId: jobToView?.id,
     skip: !jobToView,
   });
 
-  const currentJob: ProjectPermissionsSyncJob | undefined = job ?? jobToView ?? undefined;
-  const isCompleted = currentJob?.status === ProjectPermissionsSyncJobStatus.Completed;
+  const currentJob: ProjectSyncJob | undefined = job ?? jobToView ?? undefined;
+  const isCompleted = currentJob?.status === ProjectSyncJobStatus.Completed;
 
   const {
     payload,
@@ -83,7 +83,7 @@ export function PermissionSyncJobViewDialog() {
     error: payloadError,
     download,
     reload,
-  } = useProjectPermissionsSyncJobPayload({
+  } = useProjectSyncJobPayload({
     id: currentJob?.projectId ?? '',
     scope: scope ?? null,
     jobId: tab === 'payload' ? currentJob?.id : null,
@@ -102,7 +102,7 @@ export function PermissionSyncJobViewDialog() {
     error: snapshotError,
     download: downloadSnapshot,
     reload: reloadSnapshot,
-  } = useProjectPermissionsSyncJobSnapshot({
+  } = useProjectSyncJobSnapshot({
     id: currentJob?.projectId ?? '',
     scope: scope ?? null,
     jobId: snapshotEligible ? (currentJob?.id ?? null) : null,

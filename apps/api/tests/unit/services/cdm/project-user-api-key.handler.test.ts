@@ -1,5 +1,5 @@
 import type { CdmApplyContext, CdmExportContext, CdmTeardownContext } from '@grantjs/core';
-import { Scope, SyncProjectPermissionsResult, Tenant } from '@grantjs/schema';
+import { Scope, SyncProjectResult, Tenant } from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CDM_IMPORT_METADATA_KEY } from '@/constants/cdm-import.constants';
@@ -12,7 +12,7 @@ const scope: Scope = { tenant: Tenant.AccountProject, id: `${accountId}:${projec
 
 const BYOK_SECRET = 'x'.repeat(32);
 
-function baseResult(): SyncProjectPermissionsResult {
+function baseResult(): SyncProjectResult {
   return {
     projectId,
     importId: null,
