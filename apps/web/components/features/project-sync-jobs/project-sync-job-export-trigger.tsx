@@ -41,7 +41,7 @@ export function ProjectSyncJobExportTrigger({
     [projectId]
   );
 
-  const { isGranted, isLoading } = useGrant(ResourceSlug.Project, ResourceAction.Update, {
+  const { isGranted, isLoading } = useGrant(ResourceSlug.ProjectSyncJob, ResourceAction.Update, {
     scope,
     context: projectGrantContext,
     returnLoading: true,

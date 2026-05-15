@@ -58,7 +58,7 @@ export const Query = {
   ),
   projectSyncJob: authorizeGraphQLResolver(
     {
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Query,
       resourceResolver: 'project',
     },
@@ -66,7 +66,7 @@ export const Query = {
   ),
   projectSyncJobs: authorizeGraphQLResolver(
     {
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Query,
       resourceResolver: 'project',
     },

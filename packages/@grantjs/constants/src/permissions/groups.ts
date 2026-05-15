@@ -24,6 +24,7 @@ export const GroupKey = {
   AccountProjectTagOwner: 'AccountProjectTagOwner',
   AccountProjectApiKeyOwner: 'AccountProjectApiKeyOwner',
   AccountProjectAppOwner: 'AccountProjectAppOwner',
+  AccountProjectSyncJobOwner: 'AccountProjectSyncJobOwner',
   ResourceCommon: 'ResourceCommon',
   RoleCommon: 'RoleCommon',
   GroupCommon: 'GroupCommon',
@@ -52,6 +53,10 @@ export const GroupKey = {
   ProjectAppOwner: 'ProjectAppOwner',
   ProjectAppAdmin: 'ProjectAppAdmin',
   ProjectAppDev: 'ProjectAppDev',
+  ProjectSyncJobOwner: 'ProjectSyncJobOwner',
+  ProjectSyncJobAdmin: 'ProjectSyncJobAdmin',
+  ProjectSyncJobDev: 'ProjectSyncJobDev',
+  ProjectSyncJobViewer: 'ProjectSyncJobViewer',
   ResourceOwner: 'ResourceOwner',
   ResourceAdmin: 'ResourceAdmin',
   ResourceDev: 'ResourceDev',
@@ -209,6 +214,11 @@ const GROUPS: Record<GroupKey, GroupTemplate> = {
       ResourceAction.Delete,
       ResourceAction.Query,
     ],
+    assignedRoles: [RoleKey.PersonalAccountOwner, RoleKey.OrganizationAccountOwner],
+  },
+  [GroupKey.AccountProjectSyncJobOwner]: {
+    resource: ResourceSlug.ProjectSyncJob,
+    permissions: [ResourceAction.Query, ResourceAction.Update],
     assignedRoles: [RoleKey.PersonalAccountOwner, RoleKey.OrganizationAccountOwner],
   },
   [GroupKey.ResourceCommon]: {
@@ -385,6 +395,27 @@ const GROUPS: Record<GroupKey, GroupTemplate> = {
       ResourceAction.Query,
     ],
     assignedRoles: [RoleKey.OrganizationDev],
+  },
+
+  [GroupKey.ProjectSyncJobOwner]: {
+    resource: ResourceSlug.ProjectSyncJob,
+    permissions: [ResourceAction.Query, ResourceAction.Update],
+    assignedRoles: [RoleKey.OrganizationOwner],
+  },
+  [GroupKey.ProjectSyncJobAdmin]: {
+    resource: ResourceSlug.ProjectSyncJob,
+    permissions: [ResourceAction.Query, ResourceAction.Update],
+    assignedRoles: [RoleKey.OrganizationAdmin],
+  },
+  [GroupKey.ProjectSyncJobDev]: {
+    resource: ResourceSlug.ProjectSyncJob,
+    permissions: [ResourceAction.Query, ResourceAction.Update],
+    assignedRoles: [RoleKey.OrganizationDev],
+  },
+  [GroupKey.ProjectSyncJobViewer]: {
+    resource: ResourceSlug.ProjectSyncJob,
+    permissions: [],
+    assignedRoles: [],
   },
 
   [GroupKey.ResourceOwner]: {

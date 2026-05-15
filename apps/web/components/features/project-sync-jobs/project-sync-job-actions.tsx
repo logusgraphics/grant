@@ -37,10 +37,30 @@ export function ProjectSyncJobActions({ job }: ProjectSyncJobActionsProps) {
     [hasBeenOpened]
   );
 
+  const projectGrantContext = {
+    resource: { id: job.projectId, scope: { projects: [job.projectId] } },
+  };
+
+  const { isGranted: canQuery, isLoading: isQueryLoading } = useGrant(
+    ResourceSlug.ProjectSyncJob,
+    ResourceAction.Query,
+    {
+      scope: scope!,
+      context: projectGrantContext,
+      enabled: hasBeenOpened,
+      returnLoading: true,
+    }
+  ) as UseGrantResult;
+
   const { isGranted: canUpdate, isLoading: isUpdateLoading } = useGrant(
-    ResourceSlug.Project,
+    ResourceSlug.ProjectSyncJob,
     ResourceAction.Update,
-    { scope: scope!, enabled: hasBeenOpened, returnLoading: true }
+    {
+      scope: scope!,
+      context: projectGrantContext,
+      enabled: hasBeenOpened,
+      returnLoading: true,
+    }
   ) as UseGrantResult;
 
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
@@ -76,26 +96,28 @@ export function ProjectSyncJobActions({ job }: ProjectSyncJobActionsProps) {
     },
   ];
 
-  if (isExportJob) {
-    if (isCompleted && job.hasSnapshot) {
+  if (canQuery) {
+    if (isExportJob) {
+      if (isCompleted && job.hasSnapshot) {
+        actions.push({
+          key: 'downloadExport',
+          label: t('downloadExport'),
+          icon: <Download className="mr-2 h-4 w-4" />,
+          onClick: () => {
+            void downloadExport();
+          },
+        });
+      }
+    } else {
       actions.push({
-        key: 'downloadExport',
-        label: t('downloadExport'),
+        key: 'download',
+        label: t('downloadPayload'),
         icon: <Download className="mr-2 h-4 w-4" />,
         onClick: () => {
-          void downloadExport();
+          void downloadPayload();
         },
       });
     }
-  } else {
-    actions.push({
-      key: 'download',
-      label: t('downloadPayload'),
-      icon: <Download className="mr-2 h-4 w-4" />,
-      onClick: () => {
-        void downloadPayload();
-      },
-    });
   }
 
   if (canCancel) {
@@ -108,7 +130,10 @@ export function ProjectSyncJobActions({ job }: ProjectSyncJobActionsProps) {
     });
   }
 
-  const isLoading = (hasBeenOpened && isUpdateLoading) || downloadingPayload || downloadingExport;
+  const isLoading =
+    (hasBeenOpened && (isQueryLoading || isUpdateLoading)) ||
+    downloadingPayload ||
+    downloadingExport;
 
   return (
     <Actions entity={job} actions={actions} onOpenChange={handleOpenChange} isLoading={isLoading} />

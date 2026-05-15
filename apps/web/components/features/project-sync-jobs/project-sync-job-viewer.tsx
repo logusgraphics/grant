@@ -59,7 +59,7 @@ export function ProjectSyncJobViewer() {
     setTotalCount(totalCount);
   }, [totalCount, setTotalCount]);
 
-  const canQuery = useGrant(ResourceSlug.Project, ResourceAction.Query, {
+  const canQuery = useGrant(ResourceSlug.ProjectSyncJob, ResourceAction.Query, {
     scope: scope!,
   });
 

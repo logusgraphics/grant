@@ -1405,6 +1405,7 @@
       "account": "Account",
       "organization": "Organization",
       "project": "Project",
+      "projectSyncJob": "Import/Export Job",
       "resource": "Resource",
       "role": "Role",
       "group": "Group",
@@ -1423,6 +1424,7 @@
       "account": "A workspace account",
       "organization": "An organization workspace",
       "project": "A project within an organization",
+      "projectSyncJob": "An async CDM import or export job for a project",
       "resource": "A resource definition",
       "role": "A role definition",
       "group": "A permission group",
@@ -1577,6 +1579,7 @@
       "accountProjectGroupOwner": "Account Project Group Owner",
       "accountProjectPermissionOwner": "Account Project Permission Owner",
       "accountProjectTagOwner": "Account Project Tag Owner",
+      "accountProjectSyncJobOwner": "Account Project Import/Export Owner",
       "resourceCommon": "Resource Common",
       "roleCommon": "Role Common",
       "groupCommon": "Group Common",
@@ -1604,6 +1607,10 @@
       "projectAdmin": "Project Admin",
       "projectDev": "Project Dev",
       "projectViewer": "Project Viewer",
+      "projectSyncJobOwner": "Import/Export Owner",
+      "projectSyncJobAdmin": "Import/Export Admin",
+      "projectSyncJobDev": "Import/Export Dev",
+      "projectSyncJobViewer": "Import/Export Viewer",
       "resourceOwner": "Resource Owner",
       "resourceAdmin": "Resource Admin",
       "resourceDev": "Resource Dev",
@@ -1661,6 +1668,7 @@
       "accountProjectGroupOwner": "Owner permissions for account-level project group management",
       "accountProjectPermissionOwner": "Owner permissions for account-level project permission management",
       "accountProjectTagOwner": "Owner permissions for account-level project tag management",
+      "accountProjectSyncJobOwner": "Owner permissions for account-level CDM import and export jobs",
       "resourceCommon": "Common permissions for resource access",
       "roleCommon": "Common permissions for role access",
       "groupCommon": "Common permissions for group access",
@@ -1688,6 +1696,10 @@
       "projectAdmin": "Admin permissions for project management",
       "projectDev": "Developer permissions for project management",
       "projectViewer": "Viewer permissions for project access",
+      "projectSyncJobOwner": "Owner permissions for CDM import and export jobs",
+      "projectSyncJobAdmin": "Admin permissions for CDM import and export jobs",
+      "projectSyncJobDev": "Developer permissions for CDM import and export jobs",
+      "projectSyncJobViewer": "Viewer permissions for CDM import and export jobs",
       "resourceOwner": "Owner permissions for resource management",
       "resourceAdmin": "Admin permissions for resource management",
       "resourceDev": "Developer permissions for resource management",
@@ -1902,6 +1914,10 @@
         "delete": "Delete Tag",
         "query": "Query Tag"
       },
+      "projectSyncJob": {
+        "query": "Query Import/Export Job",
+        "update": "Update Import/Export Job"
+      },
       "apiKey": {
         "create": "Create API Key",
         "delete": "Delete API Key",
@@ -2010,6 +2026,10 @@
         "update": "Permission to update a tag",
         "delete": "Permission to delete a tag",
         "query": "Permission to query tags"
+      },
+      "projectSyncJob": {
+        "query": "Permission to query CDM import and export jobs",
+        "update": "Permission to start or cancel CDM import and export jobs"
       },
       "apiKey": {
         "create": "Permission to create an API key",

@@ -1405,6 +1405,7 @@
       "account": "Konto",
       "organization": "Organisation",
       "project": "Projekt",
+      "projectSyncJob": "Import/Export-Job",
       "resource": "Ressource",
       "role": "Rolle",
       "group": "Gruppe",
@@ -1423,6 +1424,7 @@
       "account": "Ein Arbeitsbereichskonto",
       "organization": "Ein Organisationsarbeitsbereich",
       "project": "Ein Projekt innerhalb einer Organisation",
+      "projectSyncJob": "Ein asynchroner CDM-Import- oder Export-Job für ein Projekt",
       "resource": "Eine Ressourcendefinition",
       "role": "Eine Rollendefinition",
       "group": "Eine Berechtigungsgruppe",
@@ -1577,6 +1579,7 @@
       "accountProjectGroupOwner": "Konto Projekt Gruppe Eigentümer",
       "accountProjectPermissionOwner": "Konto Projekt Berechtigung Eigentümer",
       "accountProjectTagOwner": "Konto Projekt Tag Eigentümer",
+      "accountProjectSyncJobOwner": "Konto Projekt Import/Export Eigentümer",
       "resourceCommon": "Ressource Allgemein",
       "roleCommon": "Rolle Allgemein",
       "groupCommon": "Gruppe Allgemein",
@@ -1604,6 +1607,10 @@
       "projectAdmin": "Projekt Administrator",
       "projectDev": "Projekt Entwickler",
       "projectViewer": "Projekt Betrachter",
+      "projectSyncJobOwner": "Import/Export Eigentümer",
+      "projectSyncJobAdmin": "Import/Export Administrator",
+      "projectSyncJobDev": "Import/Export Entwickler",
+      "projectSyncJobViewer": "Import/Export Betrachter",
       "resourceOwner": "Ressource Eigentümer",
       "resourceAdmin": "Ressource Administrator",
       "resourceDev": "Ressource Entwickler",
@@ -1661,6 +1668,7 @@
       "accountProjectGroupOwner": "Eigentümerberechtigungen für Kontoebene Projekt-Gruppenverwaltung",
       "accountProjectPermissionOwner": "Eigentümerberechtigungen für Kontoebene Projekt-Berechtigungsverwaltung",
       "accountProjectTagOwner": "Eigentümerberechtigungen für Kontoebene Projekt-Tagverwaltung",
+      "accountProjectSyncJobOwner": "Eigentümerberechtigungen für CDM-Import- und Export-Jobs auf Kontoebene",
       "resourceCommon": "Allgemeine Berechtigungen für Ressourcenzugriff",
       "roleCommon": "Allgemeine Berechtigungen für Rollenzugriff",
       "groupCommon": "Allgemeine Berechtigungen für Gruppenzugriff",
@@ -1688,6 +1696,10 @@
       "projectAdmin": "Administratorberechtigungen für Projektverwaltung",
       "projectDev": "Entwicklerberechtigungen für Projektverwaltung",
       "projectViewer": "Betrachterberechtigungen für Projektzugriff",
+      "projectSyncJobOwner": "Eigentümerberechtigungen für CDM-Import- und Export-Jobs",
+      "projectSyncJobAdmin": "Administratorberechtigungen für CDM-Import- und Export-Jobs",
+      "projectSyncJobDev": "Entwicklerberechtigungen für CDM-Import- und Export-Jobs",
+      "projectSyncJobViewer": "Betrachterberechtigungen für CDM-Import- und Export-Jobs",
       "resourceOwner": "Eigentümerberechtigungen für Ressourcenverwaltung",
       "resourceAdmin": "Administratorberechtigungen für Ressourcenverwaltung",
       "resourceDev": "Entwicklerberechtigungen für Ressourcenverwaltung",
@@ -1902,6 +1914,10 @@
         "delete": "Tag löschen",
         "query": "Tag abfragen"
       },
+      "projectSyncJob": {
+        "query": "Import/Export-Job abfragen",
+        "update": "Import/Export-Job aktualisieren"
+      },
       "apiKey": {
         "create": "API-Schlüssel erstellen",
         "delete": "API-Schlüssel löschen",
@@ -2010,6 +2026,10 @@
         "update": "Berechtigung zum Aktualisieren eines Tags",
         "delete": "Berechtigung zum Löschen eines Tags",
         "query": "Berechtigung zum Abfragen von Tags"
+      },
+      "projectSyncJob": {
+        "query": "Berechtigung zum Abfragen von CDM-Import- und Export-Jobs",
+        "update": "Berechtigung zum Starten oder Abbrechen von CDM-Import- und Export-Jobs"
       },
       "apiKey": {
         "create": "Berechtigung zum Erstellen eines API-Schlüssels",

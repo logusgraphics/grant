@@ -326,6 +326,19 @@ const PERMISSION_MAPPING_TEMPLATES: Partial<Record<GroupKey, PermissionMappingTe
     },
   ],
 
+  [GroupKey.AccountProjectSyncJobOwner]: [
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectSyncJob,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectSyncJob,
+      condition: null,
+    },
+  ],
+
   [GroupKey.ResourceCommon]: [
     {
       action: ResourceAction.Query,
@@ -659,6 +672,45 @@ const PERMISSION_MAPPING_TEMPLATES: Partial<Record<GroupKey, PermissionMappingTe
     {
       action: ResourceAction.Query,
       resource: ResourceSlug.ProjectApp,
+      condition: null,
+    },
+  ],
+
+  [GroupKey.ProjectSyncJobOwner]: [
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectSyncJob,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectSyncJob,
+      condition: null,
+    },
+  ],
+
+  [GroupKey.ProjectSyncJobAdmin]: [
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectSyncJob,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectSyncJob,
+      condition: null,
+    },
+  ],
+
+  [GroupKey.ProjectSyncJobDev]: [
+    {
+      action: ResourceAction.Query,
+      resource: ResourceSlug.ProjectSyncJob,
+      condition: null,
+    },
+    {
+      action: ResourceAction.Update,
+      resource: ResourceSlug.ProjectSyncJob,
       condition: null,
     },
   ],

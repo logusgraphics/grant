@@ -34,8 +34,18 @@ export function ProjectSyncJobCancelDialog() {
   const { cancelSync } = useCancelProjectSync();
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const canUpdate = useGrant(ResourceSlug.Project, ResourceAction.Update, {
+  const projectGrantContext = jobToCancel
+    ? {
+        resource: {
+          id: jobToCancel.projectId,
+          scope: { projects: [jobToCancel.projectId] },
+        },
+      }
+    : undefined;
+
+  const canUpdate = useGrant(ResourceSlug.ProjectSyncJob, ResourceAction.Update, {
     scope: scope!,
+    context: projectGrantContext,
   });
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 

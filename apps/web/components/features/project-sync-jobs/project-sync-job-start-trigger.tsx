@@ -21,7 +21,7 @@ export interface ProjectSyncJobStartTriggerProps {
 }
 
 /**
- * Opens the start-sync dialog. Respects project `Update` grant and loading state
+ * Opens the start-sync dialog. Respects `ProjectSyncJob` `Update` grant and loading state
  * (useGrant defaults to false while the check is in flight — see start dialog).
  */
 export function ProjectSyncJobStartTrigger({ layout = 'empty' }: ProjectSyncJobStartTriggerProps) {
@@ -37,7 +37,7 @@ export function ProjectSyncJobStartTrigger({ layout = 'empty' }: ProjectSyncJobS
     [projectId]
   );
 
-  const { isGranted, isLoading } = useGrant(ResourceSlug.Project, ResourceAction.Update, {
+  const { isGranted, isLoading } = useGrant(ResourceSlug.ProjectSyncJob, ResourceAction.Update, {
     scope,
     context: projectGrantContext,
     returnLoading: true,

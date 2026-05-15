@@ -90,7 +90,7 @@ export function ProjectSyncJobStartDialog() {
 
   const { startSync } = useStartProjectSync();
   const { isGranted: canStart, isLoading: grantLoading } = useGrant(
-    ResourceSlug.Project,
+    ResourceSlug.ProjectSyncJob,
     ResourceAction.Update,
     { scope, context: projectGrantContext, returnLoading: true }
   ) as UseGrantResult;

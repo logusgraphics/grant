@@ -92,7 +92,7 @@ export function createProjectsRouter(context: RequestContext): Router {
     validate({ params: projectParamsSchema, body: startProjectSyncRequestSchema }),
     requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Update,
       resourceResolver: 'project',
     }),
@@ -134,7 +134,7 @@ export function createProjectsRouter(context: RequestContext): Router {
     validate({ params: projectParamsSchema, body: startProjectExportJobRequestSchema }),
     requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Update,
       resourceResolver: 'project',
     }),
@@ -177,7 +177,7 @@ export function createProjectsRouter(context: RequestContext): Router {
       query: listProjectSyncJobsQuerySchema,
     }),
     authorizeRestRoute({
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Query,
       resourceResolver: 'project',
     }),
@@ -214,7 +214,7 @@ export function createProjectsRouter(context: RequestContext): Router {
       query: projectSyncJobScopeQuerySchema,
     }),
     authorizeRestRoute({
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Query,
       resourceResolver: 'project',
     }),
@@ -248,7 +248,7 @@ export function createProjectsRouter(context: RequestContext): Router {
       query: projectSyncJobScopeQuerySchema,
     }),
     authorizeRestRoute({
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Query,
       resourceResolver: 'project',
     }),
@@ -282,7 +282,7 @@ export function createProjectsRouter(context: RequestContext): Router {
       query: projectSyncJobScopeQuerySchema,
     }),
     authorizeRestRoute({
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Query,
       resourceResolver: 'project',
     }),
@@ -314,7 +314,7 @@ export function createProjectsRouter(context: RequestContext): Router {
     }),
     requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
     authorizeRestRoute({
-      resource: ResourceSlug.Project,
+      resource: ResourceSlug.ProjectSyncJob,
       action: ResourceAction.Update,
       resourceResolver: 'project',
     }),

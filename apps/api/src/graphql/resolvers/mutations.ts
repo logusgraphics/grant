@@ -264,7 +264,7 @@ export const Mutation = {
     ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
-        resource: ResourceSlug.Project,
+        resource: ResourceSlug.ProjectSyncJob,
         action: ResourceAction.Update,
         resourceResolver: 'project',
       },
@@ -276,7 +276,7 @@ export const Mutation = {
     ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
-        resource: ResourceSlug.Project,
+        resource: ResourceSlug.ProjectSyncJob,
         action: ResourceAction.Update,
         resourceResolver: 'project',
       },
@@ -288,7 +288,7 @@ export const Mutation = {
     ALLOW_PERSONAL_MFA,
     authorizeGraphQLResolver(
       {
-        resource: ResourceSlug.Project,
+        resource: ResourceSlug.ProjectSyncJob,
         action: ResourceAction.Update,
         resourceResolver: 'project',
       },
