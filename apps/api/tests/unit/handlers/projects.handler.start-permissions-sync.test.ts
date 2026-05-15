@@ -4,7 +4,13 @@
  * `input.id`, and dispatching the worker. The actual import work belongs to
  * `ProjectSyncService` and is exercised separately.
  */
-import { CdmFindBy, CdmModeStrategy, ProjectSyncJobStatus, Tenant } from '@grantjs/schema';
+import {
+  CdmFindBy,
+  CdmModeStrategy,
+  ProjectSyncJobOperation,
+  ProjectSyncJobStatus,
+  Tenant,
+} from '@grantjs/schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProjectHandler } from '@/handlers/projects.handler';
@@ -13,13 +19,15 @@ const projectId = '00000000-0000-4000-8000-000000000011';
 const accountId = '00000000-0000-4000-8000-000000000020';
 const userId = '30000000-0000-4000-8000-000000000099';
 
-function buildJob(importId: string | null) {
+function buildJob(jobName: string | null) {
   return {
     id: '40000000-0000-4000-8000-000000000077',
     projectId,
     status: ProjectSyncJobStatus.Pending,
     cdmVersion: 1,
-    importId,
+    jobName,
+    operation: ProjectSyncJobOperation.Import,
+    modeStrategy: CdmModeStrategy.Merge,
     result: null,
     warnings: [],
     errorMessage: null,
@@ -27,6 +35,9 @@ function buildJob(importId: string | null) {
     startedAt: null,
     completedAt: null,
     cancelledAt: null,
+    hasSnapshot: false,
+    snapshotTakenAt: null,
+    snapshotSizeBytes: null,
   };
 }
 
@@ -74,14 +85,13 @@ function createHandler(opts: {
   jobsAdapter?: { enqueue: ReturnType<typeof vi.fn> } | null;
   syncJobs: {
     create: ReturnType<typeof vi.fn>;
-    findActiveByImportId: ReturnType<typeof vi.fn>;
+    findActiveByJobKey: ReturnType<typeof vi.fn>;
     getById?: ReturnType<typeof vi.fn>;
     cancel?: ReturnType<typeof vi.fn>;
   };
   scheduleAfterCommit?: (fn: () => void | Promise<void>) => void;
 }) {
   return new ProjectHandler(
-    {} as never,
     {} as never,
     {} as never,
     {} as never,
@@ -104,13 +114,13 @@ function createHandler(opts: {
 
 describe('ProjectHandler.startProjectSync', () => {
   let create: ReturnType<typeof vi.fn>;
-  let findActiveByImportId: ReturnType<typeof vi.fn>;
+  let findActiveByJobKey: ReturnType<typeof vi.fn>;
   let enqueue: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     create = vi.fn();
-    findActiveByImportId = vi.fn();
+    findActiveByJobKey = vi.fn();
     enqueue = vi.fn().mockResolvedValue(undefined);
   });
 
@@ -125,7 +135,7 @@ describe('ProjectHandler.startProjectSync', () => {
 
     const handler = createHandler({
       jobsAdapter: { enqueue },
-      syncJobs: { create, findActiveByImportId },
+      syncJobs: { create, findActiveByJobKey },
       scheduleAfterCommit,
     });
 
@@ -152,7 +162,7 @@ describe('ProjectHandler.startProjectSync', () => {
 
     const handler = createHandler({
       jobsAdapter: { enqueue },
-      syncJobs: { create, findActiveByImportId },
+      syncJobs: { create, findActiveByJobKey },
     });
 
     const result = await handler.startProjectSync({
@@ -163,7 +173,7 @@ describe('ProjectHandler.startProjectSync', () => {
     });
 
     expect(result).toBe(job);
-    expect(findActiveByImportId).not.toHaveBeenCalled();
+    expect(findActiveByJobKey).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledTimes(1);
     expect(enqueue).toHaveBeenCalledTimes(1);
     expect(enqueue).toHaveBeenCalledWith('project-sync', {
@@ -173,24 +183,29 @@ describe('ProjectHandler.startProjectSync', () => {
   });
 
   it('returns the existing in-flight job and does not re-enqueue when id is already pending', async () => {
-    const importId = 'import-123';
-    const inflight = buildJob(importId);
-    findActiveByImportId.mockResolvedValue(inflight);
+    const jobName = 'import-123';
+    const inflight = buildJob(jobName);
+    findActiveByJobKey.mockResolvedValue(inflight);
 
     const handler = createHandler({
       jobsAdapter: { enqueue },
-      syncJobs: { create, findActiveByImportId },
+      syncJobs: { create, findActiveByJobKey },
     });
 
     const result = await handler.startProjectSync({
       id: projectId,
       scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
-      input: { ...buildInput(), id: importId },
+      input: { ...buildInput(), id: jobName },
       enqueuedById: userId,
     });
 
     expect(result).toBe(inflight);
-    expect(findActiveByImportId).toHaveBeenCalledWith({ projectId, importId });
+    expect(findActiveByJobKey).toHaveBeenCalledWith({
+      projectId,
+      operation: 'import',
+      jobName,
+      statuses: ['pending', 'running'],
+    });
     expect(create).not.toHaveBeenCalled();
     expect(enqueue).not.toHaveBeenCalled();
   });
@@ -198,7 +213,7 @@ describe('ProjectHandler.startProjectSync', () => {
   it('throws ConfigurationError when the job adapter is not configured', async () => {
     const handler = createHandler({
       jobsAdapter: null,
-      syncJobs: { create, findActiveByImportId },
+      syncJobs: { create, findActiveByJobKey },
     });
 
     await expect(
@@ -215,7 +230,7 @@ describe('ProjectHandler.startProjectSync', () => {
   it('rejects validation errors before persisting or enqueueing', async () => {
     const handler = createHandler({
       jobsAdapter: { enqueue },
-      syncJobs: { create, findActiveByImportId },
+      syncJobs: { create, findActiveByJobKey },
     });
 
     await expect(
@@ -233,7 +248,7 @@ describe('ProjectHandler.startProjectSync', () => {
   it('rejects when scope id does not contain the projectId', async () => {
     const handler = createHandler({
       jobsAdapter: { enqueue },
-      syncJobs: { create, findActiveByImportId },
+      syncJobs: { create, findActiveByJobKey },
     });
 
     await expect(
@@ -247,7 +262,7 @@ describe('ProjectHandler.startProjectSync', () => {
         enqueuedById: userId,
       })
     ).rejects.toThrow(/same projectId/);
-    expect(findActiveByImportId).not.toHaveBeenCalled();
+    expect(findActiveByJobKey).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
   });
 });

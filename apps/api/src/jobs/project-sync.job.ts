@@ -1,13 +1,20 @@
-import type { ProjectSyncJobExecutionData } from '@grantjs/core';
+import type {
+  IProjectPermissionExportService,
+  IProjectSyncJobService,
+  ProjectSyncJobExecutionData,
+  ProjectSyncJobExportPayload,
+} from '@grantjs/core';
 import { ConflictError } from '@grantjs/core';
 import {
   CdmFindBy,
+  ProjectSyncJobOperation,
   ProjectSyncJobStatus,
   type Scope,
   type SyncProjectInput,
   type SyncProjectResult,
 } from '@grantjs/schema';
 
+import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
 import {
   assertTenantActive,
   type JobExecutionContext,
@@ -20,16 +27,14 @@ import { scopeToRlsContext, setRlsContext } from '@/lib/rls';
 import { DrizzleTransactionalConnection, type Transaction } from '@/lib/transaction-manager.lib';
 
 /**
- * Async worker for CDM permission sync. The handler in `ProjectHandler.startProjectSync`
- * persists a job tracking row and enqueues this worker with `{ scope, payload: { jobRecordId } }`.
+ * Async worker for CDM permission **import** and **export** jobs. Handlers persist
+ * a job row and enqueue this worker with `{ scope, payload: { jobRecordId } }`.
  *
- * Flow:
- *   1. Validate tenant scope from the enqueue context.
- *   2. Load the persisted payload + scope from the tracking row (worker-only `loadForExecution`).
- *   3. Transition to RUNNING (raises ConflictError if the row is already non-pending).
- *   4. Run `syncProject` inside a Drizzle transaction.
- *   5. On success: mark COMPLETED and invalidate scope/user caches.
- *   6. On failure: mark FAILED and rethrow so the queue applies retry/backoff policy.
+ * Import path: pre-import snapshot + `syncProject` in one transaction, then
+ * `markCompleted` with counters outside that transaction.
+ *
+ * Export path: materialise CDM via `exportProjectPermissions`, persist as job
+ * `snapshot`, and `markCompleted` with `result: null` inside the same transaction.
  *
  * Every query touching `project_permission_sync_jobs` (and project-scoped sync data)
  * runs inside a transaction after {@link setRlsContext} for the enqueue scope.
@@ -84,6 +89,17 @@ export default class ProjectSyncJob extends Job {
       jobService.transitionToRunning({ jobId: jobRecordId }, tx)
     );
 
+    if (execData.job.operation === ProjectSyncJobOperation.Export) {
+      return this.executeExportJob({
+        enqueueScope,
+        jobRecordId,
+        execData,
+        jobService,
+        projectPermissionExport,
+      });
+    }
+
+    const importPayload = execData.payload as SyncProjectInput;
     let result: SyncProjectResult;
     try {
       const txConn = new DrizzleTransactionalConnection(this.appContext.db);
@@ -111,7 +127,7 @@ export default class ProjectSyncJob extends Job {
           {
             projectId: execData.job.projectId,
             scope: execData.scope,
-            version: execData.payload.version,
+            version: importPayload.version,
           },
           tx
         );
@@ -120,7 +136,7 @@ export default class ProjectSyncJob extends Job {
           {
             projectId: execData.job.projectId,
             scope: execData.scope,
-            input: execData.payload,
+            input: importPayload,
           },
           tx
         );
@@ -188,6 +204,94 @@ export default class ProjectSyncJob extends Job {
     };
   }
 
+  private async executeExportJob(params: {
+    enqueueScope: Scope;
+    jobRecordId: string;
+    execData: ProjectSyncJobExecutionData;
+    jobService: IProjectSyncJobService;
+    projectPermissionExport: IProjectPermissionExportService;
+  }): Promise<JobResult> {
+    const { enqueueScope, jobRecordId, execData, jobService, projectPermissionExport } = params;
+    const raw = execData.payload as ProjectSyncJobExportPayload;
+    if (raw == null || typeof raw !== 'object' || typeof raw.version !== 'number') {
+      const err = new Error('Invalid export job payload: expected { version: number, ... }');
+      await this.markJobFailedSafe(enqueueScope, jobRecordId, jobService, err);
+      throw err;
+    }
+    const sections =
+      Array.isArray(raw.sections) && raw.sections.length > 0
+        ? assertValidCdmExportSections(raw.sections)
+        : undefined;
+
+    try {
+      const txConn = new DrizzleTransactionalConnection(this.appContext.db);
+      await txConn.withTransaction(async (tx: Transaction) => {
+        await setRlsContext(tx, scopeToRlsContext(execData.scope));
+        const takenAt = new Date();
+        const snapshot = await projectPermissionExport.exportProjectPermissions(
+          {
+            projectId: execData.job.projectId,
+            scope: execData.scope,
+            version: raw.version,
+            sections,
+            includeUserApiKeys: raw.includeUserApiKeys,
+            mode: raw.mode,
+          },
+          tx
+        );
+        await jobService.saveSnapshot({ jobId: jobRecordId, snapshot, takenAt }, tx);
+        await jobService.markCompleted(
+          {
+            jobId: jobRecordId,
+            result: null,
+            warnings: [],
+          },
+          tx
+        );
+      });
+    } catch (error) {
+      await this.markJobFailedSafe(enqueueScope, jobRecordId, jobService, error);
+      throw error;
+    }
+
+    return {
+      success: true,
+      data: {
+        jobRecordId,
+        projectId: execData.job.projectId,
+        operation: 'export',
+      },
+    };
+  }
+
+  private async markJobFailedSafe(
+    enqueueScope: Scope,
+    jobRecordId: string,
+    jobService: IProjectSyncJobService,
+    error: unknown
+  ): Promise<void> {
+    const message = error instanceof Error ? error.message : String(error);
+    const details = this.serializeErrorDetails(error);
+    try {
+      await this.withEnqueueScopeRls(enqueueScope, (tx) =>
+        jobService.markFailed(
+          {
+            jobId: jobRecordId,
+            errorMessage: message,
+            errorDetails: details,
+          },
+          tx
+        )
+      );
+    } catch (markErr) {
+      this.logger.error({
+        jobRecordId,
+        err: markErr,
+        msg: 'Failed to mark project-sync job as failed; original error will still be rethrown',
+      });
+    }
+  }
+
   /**
    * Apply the same RLS session variables as a scoped HTTP request for this job's tenant,
    * so worker queries see project-scoped rows (see `project_permission_sync_jobs` policies).
@@ -224,6 +328,9 @@ export default class ProjectSyncJob extends Job {
   }
 
   private collectUserIds(execData: ProjectSyncJobExecutionData): string[] {
+    if (execData.job.operation !== ProjectSyncJobOperation.Import) {
+      return [];
+    }
     const ids = new Set<string>();
     const payload = execData.payload as SyncProjectInput;
     for (const u of payload.users ?? []) {

@@ -8,6 +8,7 @@ alwaysApply: false
 
 - Define **Drizzle schemas and relationships** here; repositories in `apps/api` use these schemas.
 - **Generate migrations** programmatically: `pnpm --filter @grantjs/database db:generate`. If nothing changed, no file is created or modified.
+- **Drizzle Kit renames** — changing the PostgreSQL identifier passed to `pgTable('…')` or renaming a physical column often triggers **interactive** prompts (TTY required). To keep `db:generate` non-interactive (e.g. CI), either keep the legacy physical table/column name in `pgTable` / `text('…')` while using a clearer TypeScript field name, or run generate locally in a terminal and resolve the rename prompts once.
 - **Run migrations** after changes: `pnpm --filter @grantjs/database db:migrate` (chains `db:grant-rls-role` so `SECURITY_RLS_ROLE` is granted to the login user from `DB_URL` / `POSTGRES_*`).
 - **Seed** (standard roles, groups, permissions, system user, signing-key): `pnpm --filter @grantjs/database db:seed`.
 

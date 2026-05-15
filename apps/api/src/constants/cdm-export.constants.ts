@@ -45,3 +45,17 @@ export function assertValidCdmExportSections(raw: readonly string[] | string): C
 
   return out;
 }
+
+/**
+ * Coerces `includeUserApiKeys` from REST query (string/boolean/omitted) to a boolean.
+ * Default true when omitted (full export / rollback snapshot).
+ */
+export function coerceIncludeUserApiKeysQueryParam(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  const s = String(value).trim().toLowerCase();
+  if (s === 'false' || s === '0' || s === 'no') return false;
+  if (s === 'true' || s === '1' || s === 'yes') return true;
+  return true;
+}

@@ -10,18 +10,37 @@ enum ProjectSyncJobStatus {
 }
 
 """
-A row in `project_permission_sync_jobs` representing one queued or completed
-project CDM import. The actual import runs in the background via the jobs
-adapter; clients enqueue a job and poll this resource for status.
+Kind of asynchronous work tracked for a project (CDM import today; async export next).
+Persisted in PostgreSQL as `project_permission_sync_jobs`.
+"""
+enum ProjectSyncJobOperation {
+  IMPORT
+  EXPORT
+}
+
+"""
+A row representing one queued or completed asynchronous project CDM job (table
+`project_permission_sync_jobs`). Imports run in the background via the jobs adapter;
+clients enqueue a job and poll this resource for status. Export jobs will use the same
+table with `operation: EXPORT`.
 """
 type ProjectSyncJob {
   id: ID!
   projectId: ID!
   status: ProjectSyncJobStatus!
   cdmVersion: Int!
-  importId: String
   """
-  Counts and warnings populated when the job reaches COMPLETED.
+  Optional client idempotency / display name (from `SyncProjectInput.id` on import).
+  """
+  jobName: String
+  operation: ProjectSyncJobOperation!
+  """
+  CDM mode strategy for import jobs (`merge` / `replace`); null for export and other operations.
+  """
+  modeStrategy: CdmModeStrategy
+  """
+  Import counts and warnings when the job reaches COMPLETED. Null for completed
+  **export** jobs (the generated CDM is available via the job `snapshot` REST download).
   """
   result: SyncProjectResult
   """
@@ -35,9 +54,10 @@ type ProjectSyncJob {
   completedAt: Date
   cancelledAt: Date
   """
-  True when the worker captured a pre-sync rollback snapshot of the project's
-  CDM state inside the import transaction. The snapshot itself is downloaded
-  via the REST endpoint, mirroring the original-payload pattern.
+  True when the job row has a `snapshot` JSON document. For **import** jobs this is
+  the pre-sync rollback capture (when the worker reached that step). For **export**
+  jobs it is the generated CDM artifact after successful completion. Download via
+  `GET .../sync/jobs/{jobId}/snapshot` (REST).
   """
   hasSnapshot: Boolean!
   snapshotTakenAt: Date

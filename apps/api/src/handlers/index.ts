@@ -188,7 +188,6 @@ export function createHandlers(
       services.projectRoles,
       services.projectUsers,
       services.projectSync,
-      services.projectPermissionExport,
       services.projectSyncJobs,
       getJobAdapter(),
       cache,

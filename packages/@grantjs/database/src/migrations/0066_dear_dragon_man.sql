@@ -1,0 +1,6 @@
+DROP INDEX "project_permission_sync_jobs_project_import_id_unique";--> statement-breakpoint
+ALTER TABLE "project_permission_sync_jobs" ADD COLUMN "operation" varchar(20) DEFAULT 'import' NOT NULL;--> statement-breakpoint
+ALTER TABLE "project_permission_sync_jobs" ADD COLUMN "mode_strategy" varchar(20);--> statement-breakpoint
+CREATE UNIQUE INDEX "project_permission_sync_jobs_project_operation_job_name_unique" ON "project_permission_sync_jobs" USING btree ("project_id","operation","import_id") WHERE "project_permission_sync_jobs"."import_id" IS NOT NULL AND "project_permission_sync_jobs"."deleted_at" IS NULL AND "project_permission_sync_jobs"."status" IN ('pending', 'running', 'completed');--> statement-breakpoint
+ALTER TABLE "project_permission_sync_jobs" ADD CONSTRAINT "project_sync_jobs_operation_check" CHECK (("operation" IN ('import', 'export')));--> statement-breakpoint
+ALTER TABLE "project_permission_sync_jobs" ADD CONSTRAINT "project_sync_jobs_mode_strategy_check" CHECK (("mode_strategy" IS NULL OR "mode_strategy" IN ('merge', 'replace')));

@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApolloClient, NetworkStatus } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import type { CdmExportSection } from '@grantjs/schema';
-import { CDM_EXPORT_SECTIONS } from '@grantjs/schema';
 import {
   ProjectSyncJob,
   ProjectSyncJobPage,
@@ -122,7 +120,7 @@ interface UseProjectSyncJobPayloadParams {
 }
 
 interface UseProjectSyncJobPayloadResult {
-  payload: SyncProjectInput | null;
+  payload: Record<string, unknown> | null;
   loading: boolean;
   error: Error | null;
   /** Triggers a browser download of the original CDM JSON payload. */
@@ -141,7 +139,7 @@ export function useProjectSyncJobPayload(
   params: UseProjectSyncJobPayloadParams
 ): UseProjectSyncJobPayloadResult {
   const { id, scope, jobId } = params;
-  const [payload, setPayload] = useState<SyncProjectInput | null>(null);
+  const [payload, setPayload] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -152,7 +150,7 @@ export function useProjectSyncJobPayload(
     return `${apiBase}/api/projects/${id}/sync/jobs/${jobId}/payload?${search.toString()}`;
   }, [id, scope, jobId]);
 
-  const fetchPayload = useCallback(async (): Promise<SyncProjectInput | null> => {
+  const fetchPayload = useCallback(async (): Promise<Record<string, unknown> | null> => {
     const url = buildUrl();
     if (!url) return null;
     setLoading(true);
@@ -175,7 +173,7 @@ export function useProjectSyncJobPayload(
         }
         throw new Error(bodyText || `Failed to load payload (${res.status})`);
       }
-      const data = (await res.json()) as SyncProjectInput;
+      const data = (await res.json()) as Record<string, unknown>;
       setPayload(data);
       return data;
     } catch (err) {
@@ -203,8 +201,8 @@ export function useProjectSyncJobPayload(
     if (typeof window === 'undefined') return;
     const blob = new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const importId = (content as { importId?: string | null }).importId ?? null;
-    const filename = `cdm-${importId ?? jobId ?? 'payload'}.json`;
+    const jobName = (content as { jobName?: string | null }).jobName ?? null;
+    const filename = `cdm-${jobName ?? jobId ?? 'payload'}.json`;
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
@@ -330,127 +328,4 @@ export function useProjectSyncJobSnapshot(
   }, [fetchSnapshot]);
 
   return { snapshot, loading, error, download, reload };
-}
-
-interface UseExportProjectSyncParams {
-  id: string;
-  scope: Scope | null | undefined;
-  /** Optional CDM version override; defaults to the only currently-supported value (1). */
-  version?: number;
-}
-
-interface UseExportProjectSyncResult {
-  loading: boolean;
-  error: Error | null;
-  /**
-   * Snapshot the project's current state and trigger a browser save of the resulting CDM JSON.
-   * Pass `undefined` or all sections for a full export (same as sync rollback snapshot).
-   */
-  exportProject: (
-    sections?: readonly CdmExportSection[] | string
-  ) => Promise<SyncProjectInput | null>;
-  reset: () => void;
-}
-
-/** `for...of` on a string iterates code units — never append query params that way. */
-function coerceExportSectionsParam(
-  sections?: readonly CdmExportSection[] | string | null
-): readonly CdmExportSection[] | undefined {
-  if (sections == null) return undefined;
-  if (typeof sections === 'string') {
-    const trimmed = sections.trim();
-    if (trimmed === '') return undefined;
-    return [trimmed as CdmExportSection];
-  }
-  return sections;
-}
-
-/**
- * Inverse operation of CDM permission sync: snapshots the project's current
- * permission/role/group/user-assignment state and packages it as a
- * download-friendly CDM JSON artifact via the REST export endpoint.
- *
- * Used by the toolbar / empty state to let an operator clone a project's
- * permission model or take a manual backup outside the worker's automatic
- * pre-sync snapshot.
- */
-export function useExportProjectSync(
-  params: UseExportProjectSyncParams
-): UseExportProjectSyncResult {
-  const { id, scope, version } = params;
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const exportProject = useCallback(
-    async (sections?: readonly CdmExportSection[] | string): Promise<SyncProjectInput | null> => {
-      if (!id || !scope || !scope.id || !scope.tenant) return null;
-      setLoading(true);
-      setError(null);
-      try {
-        const apiBase = getApiBaseUrl();
-        const search = new URLSearchParams({ scopeId: scope.id, tenant: scope.tenant });
-        if (version != null) {
-          search.set('version', String(version));
-        }
-        const normalized = coerceExportSectionsParam(sections);
-        const isFullExport =
-          normalized == null ||
-          normalized.length === 0 ||
-          (normalized.length === CDM_EXPORT_SECTIONS.length &&
-            CDM_EXPORT_SECTIONS.every((s) => normalized.includes(s)));
-        if (!isFullExport && normalized != null) {
-          for (const s of normalized) {
-            search.append('sections', s);
-          }
-        }
-        const url = `${apiBase}/api/projects/${id}/sync/export?${search.toString()}`;
-        const accessToken = useAuthStore.getState().accessToken;
-        const res = await fetch(url, {
-          credentials: 'include',
-          headers: {
-            accept: 'application/json',
-            ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
-          },
-        });
-        if (!res.ok) {
-          let bodyText = '';
-          try {
-            bodyText = await res.text();
-          } catch {
-            bodyText = res.statusText;
-          }
-          throw new Error(bodyText || `Failed to export project (${res.status})`);
-        }
-        const data = (await res.json()) as SyncProjectInput;
-        if (typeof window !== 'undefined') {
-          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-          const objectUrl = URL.createObjectURL(blob);
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-          const filename = `cdm-export-${id}-${timestamp}.json`;
-          const link = document.createElement('a');
-          link.href = objectUrl;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(objectUrl);
-        }
-        return data;
-      } catch (err) {
-        const wrapped = err instanceof Error ? err : new Error(String(err));
-        setError(wrapped);
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [id, scope, version]
-  );
-
-  const reset = useCallback(() => {
-    setError(null);
-    setLoading(false);
-  }, []);
-
-  return { loading, error, exportProject, reset };
 }

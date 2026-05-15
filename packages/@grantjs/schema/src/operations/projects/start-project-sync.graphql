@@ -4,7 +4,9 @@ mutation StartProjectSync($id: ID!, $scope: Scope!, $input: SyncProjectInput!) {
     projectId
     status
     cdmVersion
-    importId
+    jobName
+    operation
+    modeStrategy
     warnings
     errorMessage
     enqueuedAt

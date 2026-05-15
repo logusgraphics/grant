@@ -9,6 +9,7 @@ import {
   projectPermissions,
   projectResources,
   projectRoles,
+  projects,
   projectTags,
   projectUserApiKeys,
   projectUsers,
@@ -152,6 +153,23 @@ export interface ProjectCdmPermissionRow {
  */
 export class ProjectPermissionExportRepository {
   constructor(private readonly db: DbSchema) {}
+
+  /**
+   * Project display name for CDM document `id` (maps to sync job `jobName` / `job_name` on import).
+   */
+  public async getProjectNameForCdmDocument(
+    projectId: string,
+    transaction?: Transaction
+  ): Promise<string | null> {
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({ name: projects.name })
+      .from(projects)
+      .where(and(eq(projects.id, projectId), isNull(projects.deletedAt)))
+      .limit(1);
+    const name = rows[0]?.name?.trim();
+    return name && name.length > 0 ? name : null;
+  }
 
   /**
    * Fetch every project role with its effective permissions (resolved through

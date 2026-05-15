@@ -294,6 +294,10 @@ export interface IProjectSyncService {
  * Used both by the standalone export endpoint (clone-a-project, manual
  * backups) and by the sync worker to capture a pre-import rollback snapshot
  * inside the import transaction.
+ *
+ * The returned `SyncProjectInput.id` is the project's display **name** (trimmed),
+ * matching CDM `id` / sync **jobName** when re-importing. If the name is missing or
+ * blank, `id` is `null`.
  */
 export interface IProjectPermissionExportService {
   exportProjectPermissions(
@@ -307,6 +311,17 @@ export interface IProjectPermissionExportService {
        * empty arrays. Omit or pass empty for a full snapshot (sync worker).
        */
       sections?: readonly CdmExportSection[];
+      /**
+       * When `users` is exported, whether to run the project user API keys slice.
+       * Default true when omitted (full rollback snapshot includes key identities).
+       */
+      includeUserApiKeys?: boolean;
+      /** Embedded in exported CDM `mode` for re-import; defaults to merge when omitted. */
+      mode?: {
+        strategy: 'merge' | 'replace';
+        onConflict?: 'fail' | 'skip' | 'update' | null;
+        confirmDestructive?: boolean;
+      };
     },
     transaction?: unknown
   ): Promise<SyncProjectInput>;
@@ -317,13 +332,31 @@ export interface IProjectPermissionExportService {
 // ---------------------------------------------------------------------------
 
 /**
+ * Persisted JSON for `operation: export` jobs (stored in the job row `payload` column).
+ * Not a full `SyncProjectInput`; the worker produces that document and stores it in `snapshot`.
+ */
+export interface ProjectSyncJobExportPayload {
+  version: number;
+  sections?: readonly string[];
+  /** Default true when omitted (matches export service defaults). */
+  includeUserApiKeys?: boolean;
+  /** Embedded in exported CDM `mode` for re-import; does not affect snapshot execution. */
+  mode?: {
+    strategy: 'merge' | 'replace';
+    onConflict?: 'fail' | 'skip' | 'update' | null;
+    confirmDestructive?: boolean;
+  };
+}
+
+/**
  * Worker-internal view of a sync job, including the request payload + scope
  * preserved at enqueue time. Returned only by `loadForExecution` so the
  * payload + scope never leak through the public `getById` (GraphQL) path.
  */
 export interface ProjectSyncJobExecutionData {
   job: ProjectSyncJob;
-  payload: SyncProjectInput;
+  /** Import: `SyncProjectInput`. Export: {@link ProjectSyncJobExportPayload}. */
+  payload: unknown;
   scope: Scope;
   /** Whether `cancel()` has been invoked while the job was RUNNING. */
   cancelRequested: boolean;
@@ -340,8 +373,10 @@ export interface IProjectSyncJobService {
       projectId: string;
       scope: Scope;
       cdmVersion: number;
-      importId: string | null;
-      payload: SyncProjectInput;
+      jobName: string | null;
+      operation: 'import' | 'export';
+      modeStrategy: 'merge' | 'replace' | null;
+      payload: unknown;
       enqueuedById: string;
     },
     transaction?: unknown
@@ -381,8 +416,8 @@ export interface IProjectSyncJobService {
     params: { projectId: string; jobId: string },
     transaction?: unknown
   ): Promise<{
-    payload: SyncProjectInput;
-    importId: string | null;
+    payload: unknown;
+    jobName: string | null;
     cdmVersion: number;
   }>;
 
@@ -397,16 +432,26 @@ export interface IProjectSyncJobService {
     transaction?: unknown
   ): Promise<ProjectSyncJobExecutionData>;
 
-  /** Idempotency: returns an active job for (projectId, importId) when importId is set. */
-  findActiveByImportId(
-    params: { projectId: string; importId: string },
+  /** Idempotency lookup for `(projectId, operation, jobName)`; statuses default to import semantics. */
+  findActiveByJobKey(
+    params: {
+      projectId: string;
+      operation: 'import' | 'export';
+      jobName: string;
+      statuses?: readonly string[];
+    },
     transaction?: unknown
   ): Promise<ProjectSyncJob | null>;
 
   transitionToRunning(params: { jobId: string }, transaction?: unknown): Promise<ProjectSyncJob>;
 
   markCompleted(
-    params: { jobId: string; result: SyncProjectResult; warnings: string[] },
+    params: {
+      jobId: string;
+      /** Null for completed export jobs (artifact is in `snapshot` only). */
+      result: SyncProjectResult | null;
+      warnings: string[];
+    },
     transaction?: unknown
   ): Promise<ProjectSyncJob>;
 

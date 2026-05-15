@@ -21,7 +21,9 @@ query ProjectSyncJobs(
       projectId
       status
       cdmVersion
-      importId
+      jobName
+      operation
+      modeStrategy
       warnings
       errorMessage
       enqueuedAt

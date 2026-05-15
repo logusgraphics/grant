@@ -29,6 +29,7 @@ import {
   type CdmExportSection,
   type CdmHandlerInputKey,
   CdmModeStrategy,
+  CdmOnConflict,
   Scope,
   SyncProjectInput,
   Tenant,
@@ -50,8 +51,13 @@ import type {
 function exportHandlerIncluded(
   includeAll: boolean,
   include: Set<string>,
-  key: CdmHandlerInputKey
+  key: CdmHandlerInputKey,
+  includeUserApiKeys: boolean
 ): boolean {
+  if (key === 'projectUserApiKeys') {
+    if (includeAll) return includeUserApiKeys;
+    return include.has('users') && includeUserApiKeys;
+  }
   if (includeAll) return true;
   switch (key) {
     case 'resources':
@@ -64,7 +70,6 @@ function exportHandlerIncluded(
       return include.has('roles') || include.has('groups');
     case 'provisionedUsers':
     case 'userAssignments':
-    case 'projectUserApiKeys':
       return include.has('users');
     default:
       return false;
@@ -88,6 +93,7 @@ function exportHandlerIncluded(
  */
 export class ProjectPermissionExportService implements IProjectPermissionExportService {
   private readonly handlers: ReadonlyArray<ICdmEntityHandler>;
+  private readonly exportRepo: ProjectPermissionExportRepository;
 
   constructor(
     syncRepo: ProjectSyncRepository,
@@ -115,6 +121,7 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
     userRepository: IUserRepository,
     handlers?: ReadonlyArray<ICdmEntityHandler>
   ) {
+    this.exportRepo = exportRepo;
     this.handlers =
       handlers ??
       createDefaultCdmHandlers({
@@ -151,6 +158,13 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       version?: number;
       cdmVersion?: number;
       sections?: readonly CdmExportSection[];
+      /** Default true when omitted (sync rollback snapshot). */
+      includeUserApiKeys?: boolean;
+      mode?: {
+        strategy: 'merge' | 'replace';
+        onConflict?: 'fail' | 'skip' | 'update' | null;
+        confirmDestructive?: boolean;
+      };
     },
     transaction?: unknown
   ): Promise<SyncProjectInput> {
@@ -168,19 +182,25 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
 
     const tx = transaction as Transaction | undefined;
 
+    const documentId = await this.exportRepo.getProjectNameForCdmDocument(params.projectId, tx);
+
     const exportCtx: CdmExportContext = {
       projectId: params.projectId,
       scope: params.scope,
       tx,
     };
 
+    const modeStrategy =
+      params.mode?.strategy === 'replace' ? CdmModeStrategy.Replace : CdmModeStrategy.Merge;
+    const onConflict = this.resolveExportOnConflict(params.mode?.onConflict);
+
     const result: SyncProjectInput = {
       version,
-      id: null,
+      id: documentId,
       mode: {
-        strategy: CdmModeStrategy.Merge,
-        onConflict: null,
-        confirmDestructive: false,
+        strategy: modeStrategy,
+        onConflict,
+        confirmDestructive: params.mode?.confirmDestructive ?? false,
       },
       roles: [],
       users: [],
@@ -195,10 +215,12 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
       ? new Set<string>(CDM_EXPORT_SECTIONS)
       : new Set<string>(params.sections);
 
+    const includeUserApiKeys = params.includeUserApiKeys ?? true;
+
     const slices: Partial<Record<CdmHandlerInputKey, readonly unknown[]>> = {};
 
     for (const handler of this.handlers) {
-      if (!exportHandlerIncluded(includeAll, include, handler.inputKey)) {
+      if (!exportHandlerIncluded(includeAll, include, handler.inputKey, includeUserApiKeys)) {
         continue;
       }
       slices[handler.inputKey] = await handler.export(exportCtx);
@@ -227,6 +249,16 @@ export class ProjectPermissionExportService implements IProjectPermissionExportS
     result.tags = assembled.tags;
 
     return result;
+  }
+
+  private resolveExportOnConflict(
+    value: 'fail' | 'skip' | 'update' | null | undefined
+  ): CdmOnConflict | null {
+    if (value == null) return null;
+    if (value === 'fail') return CdmOnConflict.Fail;
+    if (value === 'skip') return CdmOnConflict.Skip;
+    if (value === 'update') return CdmOnConflict.Update;
+    return null;
   }
 
   private assertProjectScope(scope: Scope): void {

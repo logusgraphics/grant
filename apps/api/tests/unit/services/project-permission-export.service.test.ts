@@ -5,9 +5,17 @@
  * is assembled from internal handler slices (`roleTemplates`, `userAssignments`, …).
  */
 import type { CdmExportContext, CdmPermissionRefSpec, ICdmEntityHandler } from '@grantjs/core';
-import { CdmFindBy, type CdmHandlerInputKey, type Scope, Tenant } from '@grantjs/schema';
+import {
+  CdmFindBy,
+  type CdmHandlerInputKey,
+  CdmModeStrategy,
+  CdmOnConflict,
+  type Scope,
+  Tenant,
+} from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { ProjectPermissionExportRepository } from '@/repositories/project-permission-export.repository';
 import { ProjectPermissionExportService } from '@/services/project-permission-export.service';
 
 const accountId = '10000000-0000-4000-8000-000000000020';
@@ -30,10 +38,17 @@ function stubHandler(
   };
 }
 
-function buildService(handlers: ReadonlyArray<ICdmEntityHandler>) {
+function buildService(
+  handlers: ReadonlyArray<ICdmEntityHandler>,
+  options?: {
+    getProjectNameForCdmDocument?: ProjectPermissionExportRepository['getProjectNameForCdmDocument'];
+  }
+) {
+  const getProjectNameForCdmDocument =
+    options?.getProjectNameForCdmDocument ?? vi.fn().mockResolvedValue('Test project');
   return new ProjectPermissionExportService(
     {} as never,
-    {} as never,
+    { getProjectNameForCdmDocument } as unknown as ProjectPermissionExportRepository,
     {} as never,
     {} as never,
     {} as never,
@@ -89,6 +104,7 @@ describe('ProjectPermissionExportService', () => {
     });
 
     expect(out.version).toBe(1);
+    expect(out.id).toBe('Test project');
     expect(out.roles).toEqual([
       expect.objectContaining({ key: 'role-1', name: 'Existing role', permissions: ['tag:query'] }),
     ]);
@@ -105,16 +121,54 @@ describe('ProjectPermissionExportService', () => {
     );
   });
 
+  it('embeds custom mode in the exported SyncProjectInput', async () => {
+    const svc = buildService([stubHandler('roleTemplates', [])]);
+    const out = await svc.exportProjectPermissions({
+      projectId,
+      scope,
+      version: 1,
+      mode: {
+        strategy: 'replace',
+        onConflict: 'fail',
+        confirmDestructive: true,
+      },
+    });
+    expect(out.mode).toEqual({
+      strategy: CdmModeStrategy.Replace,
+      onConflict: CdmOnConflict.Fail,
+      confirmDestructive: true,
+    });
+  });
+
+  it('sets SyncProjectInput.id to the project display name (CDM id / sync jobName)', async () => {
+    const getProjectNameForCdmDocument = vi.fn().mockResolvedValue('Acme rollout');
+    const svc = buildService([stubHandler('roleTemplates', [])], { getProjectNameForCdmDocument });
+    const out = await svc.exportProjectPermissions({ projectId, scope, version: 1 });
+    expect(getProjectNameForCdmDocument).toHaveBeenCalledWith(projectId, undefined);
+    expect(out.id).toBe('Acme rollout');
+  });
+
+  it('sets id to null when the project has no usable display name', async () => {
+    const getProjectNameForCdmDocument = vi.fn().mockResolvedValue(null);
+    const svc = buildService([stubHandler('roleTemplates', [])], { getProjectNameForCdmDocument });
+    const out = await svc.exportProjectPermissions({ projectId, scope, version: 1 });
+    expect(out.id).toBeNull();
+  });
+
   it('passes the supplied transaction through to each handler.export', async () => {
     const roleTemplate = stubHandler('roleTemplates', []);
     const userAssignment = stubHandler('userAssignments', []);
     const provisioned = stubHandler('provisionedUsers', []);
     const keys = stubHandler('projectUserApiKeys', []);
 
-    const svc = buildService([roleTemplate, userAssignment, provisioned, keys]);
+    const getProjectNameForCdmDocument = vi.fn().mockResolvedValue('Tx project');
+    const svc = buildService([roleTemplate, userAssignment, provisioned, keys], {
+      getProjectNameForCdmDocument,
+    });
     const tx = { __mockTx: true };
     await svc.exportProjectPermissions({ projectId, scope, version: 1 }, tx);
 
+    expect(getProjectNameForCdmDocument).toHaveBeenCalledWith(projectId, tx);
     expect(roleTemplate.export).toHaveBeenCalledWith(expect.objectContaining({ tx }));
     expect(userAssignment.export).toHaveBeenCalledWith(expect.objectContaining({ tx }));
   });
@@ -146,6 +200,34 @@ describe('ProjectPermissionExportService', () => {
     await expect(svc.exportProjectPermissions({ projectId, scope, version: 2 })).rejects.toThrow(
       /Unsupported version/
     );
+  });
+
+  it('skips projectUserApiKeys handler when includeUserApiKeys is false but users section is included', async () => {
+    const userAssignment = stubHandler('userAssignments', [
+      { userId: 'u-1', roleTemplateKeys: ['r1'], directPermissionRefs: [], metadata: null },
+    ]);
+    const provisioned = stubHandler('provisionedUsers', []);
+    const keys = stubHandler('projectUserApiKeys', [{ userId: 'u-1', clientId: 'c1' }]);
+
+    const svc = buildService([userAssignment, provisioned, keys]);
+    const out = await svc.exportProjectPermissions({
+      projectId,
+      scope,
+      version: 1,
+      sections: ['users'],
+      includeUserApiKeys: false,
+    });
+
+    expect(userAssignment.export).toHaveBeenCalledTimes(1);
+    expect(provisioned.export).toHaveBeenCalledTimes(1);
+    expect(keys.export).not.toHaveBeenCalled();
+    expect(out.users).toEqual([
+      expect.objectContaining({
+        key: { value: 'u-1', findBy: CdmFindBy.Id },
+        roles: ['r1'],
+        apiKeys: [],
+      }),
+    ]);
   });
 
   it('when sections is set, only matching handlers run export', async () => {

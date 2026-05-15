@@ -11,13 +11,13 @@ import {
   KeyRound,
   LayoutGrid,
   Package,
-  RefreshCw,
   Shield,
   Tag,
   Users,
 } from 'lucide-react';
 
 import { WorkspaceSwitcher } from '@/components/common';
+import { PermissionSyncJobsModuleIcon } from '@/components/features/permission-sync-jobs/permission-sync-jobs-icon';
 import { ProjectSwitcher } from '@/components/features/projects';
 import { Sidebar } from '@/components/ui/sidebar';
 
@@ -96,7 +96,7 @@ export function PersonalProjectSidebar({ ...props }: ComponentProps<typeof Sideb
         {
           title: t('permissionSyncJobs'),
           url: `/dashboard/accounts/${accountId}/projects/${projectId}/import-export`,
-          icon: RefreshCw,
+          icon: PermissionSyncJobsModuleIcon,
         },
       ],
       checkActive: true,

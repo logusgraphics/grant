@@ -25,7 +25,7 @@ interface PermissionSyncJobsState {
   jobs: ProjectSyncJob[];
   totalCount: number;
   loading: boolean;
-  refetch: (() => void) | null;
+  refetch: (() => void | Promise<unknown>) | null;
 
   // Dialog state
   isStartDialogOpen: boolean;
@@ -41,9 +41,11 @@ interface PermissionSyncJobsState {
   setStatus: (status: PermissionSyncJobStatusFilterValue) => void;
   setView: (view: PermissionSyncJobView) => void;
   setJobs: (jobs: ProjectSyncJob[]) => void;
+  /** Prepends a job when absent (e.g. right after enqueue, before list refetch settles). */
+  prependJob: (job: ProjectSyncJob) => void;
   setTotalCount: (count: number) => void;
   setLoading: (loading: boolean) => void;
-  setRefetch: (refetch: (() => void) | null) => void;
+  setRefetch: (refetch: (() => void | Promise<unknown>) | null) => void;
 
   setStartDialogOpen: (open: boolean) => void;
   setExportDialogOpen: (open: boolean) => void;
@@ -87,6 +89,13 @@ export const usePermissionSyncJobsStore = create<PermissionSyncJobsState>()(
       setStatus: (status) => set({ status, page: 1 }),
       setView: (view) => set({ view }),
       setJobs: (jobs) => set({ jobs }),
+      prependJob: (job) =>
+        set((state) => {
+          if (state.jobs.some((existing) => existing.id === job.id)) {
+            return state;
+          }
+          return { jobs: [job, ...state.jobs], totalCount: state.totalCount + 1 };
+        }),
       setTotalCount: (totalCount) => set({ totalCount }),
       setLoading: (loading) => set({ loading }),
       setRefetch: (refetch) => set({ refetch }),

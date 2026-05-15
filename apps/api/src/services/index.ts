@@ -28,9 +28,9 @@ import {
   projectAuditLogs,
   projectGroupAuditLogs,
   projectPermissionsAuditLogs,
-  projectPermissionSyncJobAuditLogs,
   projectResourceAuditLogs,
   projectRoleAuditLogs,
+  projectSyncJobAuditLogs,
   projectTagAuditLogs,
   projectUserApiKeyAuditLogs,
   projectUserAuditLogs,
@@ -456,7 +456,7 @@ export function createServices(
     ),
     projectSyncJobs: new ProjectSyncJobService(
       repositories.projectSyncJobRepository,
-      audit(projectPermissionSyncJobAuditLogs, 'projectPermissionSyncJobId', user, db)
+      audit(projectSyncJobAuditLogs, 'projectSyncJobId', user, db)
     ),
   };
 }

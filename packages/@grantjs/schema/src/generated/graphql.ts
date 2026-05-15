@@ -949,6 +949,16 @@ export type Mutation = {
   setMyPrimaryMfaDevice: MfaDevice;
   setupMfa: MfaSetupResponse;
   /**
+   * Enqueue an asynchronous CDM **export** job for the given project. The worker
+   * snapshots current permission state into a replay-ready `SyncProjectInput` and
+   * stores it on the job row (`snapshot`); poll `projectSyncJob` for status.
+   *
+   * Requires Project:update in the given project scope (same as starting import jobs).
+   *
+   * Pass optional `input.jobName` for idempotency with the same rules as import `input.id`.
+   */
+  startProjectExport: ProjectSyncJob;
+  /**
    * Enqueue an asynchronous project CDM import job for the given project.
    * Applies a canonical data model document: roles, groups, resources, permissions,
    * tags, project pivots, and user assignments scoped to the project.
@@ -956,8 +966,9 @@ export type Mutation = {
    *
    * Returns immediately with a job descriptor in the PENDING status; the actual
    * import runs in the background. Poll `projectSyncJob` for status.
-   * Pass `input.importId` for idempotency: if an active job already exists for
-   * the same (project, importId), that job is returned instead of creating a new one.
+   * Pass optional `input.id` as a stable **job name** for idempotency: if an active job
+   * already exists for the same `(project, operation=IMPORT, jobName)`, that job is
+   * returned instead of creating a new one.
    */
   startProjectSync: ProjectSyncJob;
   updateGroup: Group;
@@ -1169,6 +1180,12 @@ export type MutationSetMyPrimaryAuthenticationMethodArgs = {
 
 export type MutationSetMyPrimaryMfaDeviceArgs = {
   input: SetMyPrimaryMfaDeviceInput;
+};
+
+export type MutationStartProjectExportArgs = {
+  id: Scalars['ID']['input'];
+  input: StartProjectExportInput;
+  scope: Scope;
 };
 
 export type MutationStartProjectSyncArgs = {
@@ -1752,9 +1769,10 @@ export enum ProjectSortableField {
 }
 
 /**
- * A row in `project_permission_sync_jobs` representing one queued or completed
- * project CDM import. The actual import runs in the background via the jobs
- * adapter; clients enqueue a job and poll this resource for status.
+ * A row representing one queued or completed asynchronous project CDM job (table
+ * `project_permission_sync_jobs`). Imports run in the background via the jobs adapter;
+ * clients enqueue a job and poll this resource for status. Export jobs will use the same
+ * table with `operation: EXPORT`.
  */
 export type ProjectSyncJob = {
   __typename?: 'ProjectSyncJob';
@@ -1764,15 +1782,23 @@ export type ProjectSyncJob = {
   enqueuedAt: Scalars['Date']['output'];
   errorMessage?: Maybe<Scalars['String']['output']>;
   /**
-   * True when the worker captured a pre-sync rollback snapshot of the project's
-   * CDM state inside the import transaction. The snapshot itself is downloaded
-   * via the REST endpoint, mirroring the original-payload pattern.
+   * True when the job row has a `snapshot` JSON document. For **import** jobs this is
+   * the pre-sync rollback capture (when the worker reached that step). For **export**
+   * jobs it is the generated CDM artifact after successful completion. Download via
+   * `GET .../sync/jobs/{jobId}/snapshot` (REST).
    */
   hasSnapshot: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
-  importId?: Maybe<Scalars['String']['output']>;
+  /** Optional client idempotency / display name (from `SyncProjectInput.id` on import). */
+  jobName?: Maybe<Scalars['String']['output']>;
+  /** CDM mode strategy for import jobs (`merge` / `replace`); null for export and other operations. */
+  modeStrategy?: Maybe<CdmModeStrategy>;
+  operation: ProjectSyncJobOperation;
   projectId: Scalars['ID']['output'];
-  /** Counts and warnings populated when the job reaches COMPLETED. */
+  /**
+   * Import counts and warnings when the job reaches COMPLETED. Null for completed
+   * **export** jobs (the generated CDM is available via the job `snapshot` REST download).
+   */
   result?: Maybe<SyncProjectResult>;
   /**
    * Serialised byte length of the snapshot JSON; useful for list-page rendering
@@ -1788,6 +1814,15 @@ export type ProjectSyncJob = {
    */
   warnings: Array<Scalars['String']['output']>;
 };
+
+/**
+ * Kind of asynchronous work tracked for a project (CDM import today; async export next).
+ * Persisted in PostgreSQL as `project_permission_sync_jobs`.
+ */
+export enum ProjectSyncJobOperation {
+  Export = 'EXPORT',
+  Import = 'IMPORT',
+}
 
 /** Paginated list of project CDM sync jobs. */
 export type ProjectSyncJobPage = PaginatedResults & {
@@ -1805,7 +1840,7 @@ export type ProjectSyncJobSortInput = {
 export enum ProjectSyncJobSortableField {
   CompletedAt = 'completedAt',
   EnqueuedAt = 'enqueuedAt',
-  ImportId = 'importId',
+  JobName = 'jobName',
   StartedAt = 'startedAt',
   Status = 'status',
 }
@@ -1895,7 +1930,7 @@ export type Query = {
   projectSyncJob: ProjectSyncJob;
   /**
    * List project CDM sync jobs for a project, with optional pagination,
-   * search (matches importId), status filter, and sort. Use this to populate the
+   * search (matches jobName), status filter, and sort. Use this to populate the
    * job history view. Use `projectSyncJob` to read a single job's
    * current state for polling.
    */
@@ -2650,6 +2685,34 @@ export enum SortOrder {
   Asc = 'ASC',
   Desc = 'DESC',
 }
+
+/**
+ * Parameters for enqueueing an asynchronous CDM **export** job. The worker
+ * materialises a `SyncProjectInput` document and stores it in the job `snapshot`
+ * column; this input is persisted as the job `payload` (export options only).
+ */
+export type StartProjectExportInput = {
+  /**
+   * When `users` are exported, whether to emit CDM-managed project user API key rows
+   * (identity only). Omit = default true (full export behaviour).
+   */
+  includeUserApiKeys?: InputMaybe<Scalars['Boolean']['input']>;
+  /**
+   * Optional stable idempotency / display name (same column as import `SyncProjectInput.id`).
+   * When set, an active job for the same `(project, operation=EXPORT, jobName)` is returned
+   * instead of creating a new one.
+   */
+  jobName?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Embedded in the exported CDM document `mode` block for re-import.
+   * Does not change export execution (snapshot is always read-only).
+   */
+  mode?: InputMaybe<CdmModeInput>;
+  /** Subset of CDM slices to export; omit or empty for a full project export. */
+  sections?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** CDM document version (only `1` is supported). */
+  version: Scalars['Int']['input'];
+};
 
 /**
  * Versioned canonical project document (CDM) for export/import: roles, users,
@@ -4508,7 +4571,9 @@ export type CancelProjectSyncMutation = {
     projectId: string;
     status: ProjectSyncJobStatus;
     cdmVersion: number;
-    importId?: string | null;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
     warnings: Array<string>;
     errorMessage?: string | null;
     enqueuedAt: Date;
@@ -4641,7 +4706,9 @@ export type ProjectSyncJobQuery = {
     projectId: string;
     status: ProjectSyncJobStatus;
     cdmVersion: number;
-    importId?: string | null;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
     warnings: Array<string>;
     errorMessage?: string | null;
     enqueuedAt: Date;
@@ -4694,7 +4761,9 @@ export type ProjectSyncJobsQuery = {
       projectId: string;
       status: ProjectSyncJobStatus;
       cdmVersion: number;
-      importId?: string | null;
+      jobName?: string | null;
+      operation: ProjectSyncJobOperation;
+      modeStrategy?: CdmModeStrategy | null;
       warnings: Array<string>;
       errorMessage?: string | null;
       enqueuedAt: Date;
@@ -4705,6 +4774,35 @@ export type ProjectSyncJobsQuery = {
       snapshotTakenAt?: Date | null;
       snapshotSizeBytes?: number | null;
     }>;
+  };
+};
+
+export type StartProjectExportMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  scope: Scope;
+  input: StartProjectExportInput;
+}>;
+
+export type StartProjectExportMutation = {
+  __typename?: 'Mutation';
+  startProjectExport: {
+    __typename?: 'ProjectSyncJob';
+    id: string;
+    projectId: string;
+    status: ProjectSyncJobStatus;
+    cdmVersion: number;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
+    warnings: Array<string>;
+    errorMessage?: string | null;
+    enqueuedAt: Date;
+    startedAt?: Date | null;
+    completedAt?: Date | null;
+    cancelledAt?: Date | null;
+    hasSnapshot: boolean;
+    snapshotTakenAt?: Date | null;
+    snapshotSizeBytes?: number | null;
   };
 };
 
@@ -4722,7 +4820,9 @@ export type StartProjectSyncMutation = {
     projectId: string;
     status: ProjectSyncJobStatus;
     cdmVersion: number;
-    importId?: string | null;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
     warnings: Array<string>;
     errorMessage?: string | null;
     enqueuedAt: Date;
@@ -9238,7 +9338,9 @@ export const CancelProjectSyncDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'importId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
@@ -9699,7 +9801,9 @@ export const ProjectSyncJobDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'importId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'result' },
@@ -9847,7 +9951,9 @@ export const ProjectSyncJobsDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'importId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
@@ -9870,6 +9976,89 @@ export const ProjectSyncJobsDocument = {
     },
   ],
 } as unknown as DocumentNode<ProjectSyncJobsQuery, ProjectSyncJobsQueryVariables>;
+export const StartProjectExportDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'StartProjectExport' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'StartProjectExportInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'startProjectExport' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cancelledAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasSnapshot' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'snapshotTakenAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'snapshotSizeBytes' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<StartProjectExportMutation, StartProjectExportMutationVariables>;
 export const StartProjectSyncDocument = {
   kind: 'Document',
   definitions: [
@@ -9933,7 +10122,9 @@ export const StartProjectSyncDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'importId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },

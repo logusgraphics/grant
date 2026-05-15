@@ -12,7 +12,6 @@ import {
   KeyRound,
   LayoutGrid,
   Package,
-  RefreshCw,
   Shield,
   Tag,
   Users,
@@ -20,6 +19,7 @@ import {
 
 import { WorkspaceSwitcher } from '@/components/common';
 import { OrganizationSwitcher } from '@/components/features/organizations';
+import { PermissionSyncJobsModuleIcon } from '@/components/features/permission-sync-jobs/permission-sync-jobs-icon';
 import { ProjectSwitcher } from '@/components/features/projects';
 import { Sidebar } from '@/components/ui/sidebar';
 
@@ -113,7 +113,7 @@ export function ProjectSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         {
           title: t('permissionSyncJobs'),
           url: `/dashboard/organizations/${organizationId}/projects/${projectId}/import-export`,
-          icon: RefreshCw,
+          icon: PermissionSyncJobsModuleIcon,
         },
       ],
       checkActive: true,

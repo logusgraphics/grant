@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
+import {
+  assertValidCdmExportSections,
+  coerceIncludeUserApiKeysQueryParam,
+} from '@/constants/cdm-export.constants';
 
 describe('assertValidCdmExportSections', () => {
   it('accepts a single comma-separated string (REST query shape)', () => {
@@ -33,5 +36,19 @@ describe('assertValidCdmExportSections', () => {
     expect(() => assertValidCdmExportSections(['roles', 'permissions'])).toThrow(
       /permissions requires resources/
     );
+  });
+});
+
+describe('coerceIncludeUserApiKeysQueryParam', () => {
+  it('defaults to true when omitted', () => {
+    expect(coerceIncludeUserApiKeysQueryParam(undefined)).toBe(true);
+    expect(coerceIncludeUserApiKeysQueryParam(null)).toBe(true);
+  });
+
+  it('coerces string and boolean forms', () => {
+    expect(coerceIncludeUserApiKeysQueryParam('false')).toBe(false);
+    expect(coerceIncludeUserApiKeysQueryParam('true')).toBe(true);
+    expect(coerceIncludeUserApiKeysQueryParam(false)).toBe(false);
+    expect(coerceIncludeUserApiKeysQueryParam(true)).toBe(true);
   });
 });

@@ -4,13 +4,13 @@ import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { ProjectSyncJob, ProjectSyncJobStatus } from '@grantjs/schema';
+import { ProjectSyncJob, ProjectSyncJobOperation, ProjectSyncJobStatus } from '@grantjs/schema';
 import { Ban, Download, Eye } from 'lucide-react';
 
 import { type ActionItem, Actions } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
-import { useProjectSyncJobPayload } from '@/hooks/projects';
+import { useProjectSyncJobPayload, useProjectSyncJobSnapshot } from '@/hooks/projects';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
 
 interface PermissionSyncJobActionsProps {
@@ -45,10 +45,21 @@ export function PermissionSyncJobActions({ job }: PermissionSyncJobActionsProps)
 
   const requiresEmailVerification = useRequiresEmailVerificationForMutation(scope);
 
-  const { download, loading: downloading } = useProjectSyncJobPayload({
+  const isExportJob = job.operation === ProjectSyncJobOperation.Export;
+  const isCompleted = job.status === ProjectSyncJobStatus.Completed;
+  const lazyJobId = hasBeenOpened ? job.id : null;
+
+  const { download: downloadPayload, loading: downloadingPayload } = useProjectSyncJobPayload({
     id: job.projectId,
     scope: scope ?? null,
-    jobId: hasBeenOpened ? job.id : null,
+    jobId: !isExportJob ? lazyJobId : null,
+  });
+
+  const { download: downloadExport, loading: downloadingExport } = useProjectSyncJobSnapshot({
+    id: job.projectId,
+    scope: scope ?? null,
+    jobId: isExportJob && isCompleted && job.hasSnapshot ? lazyJobId : null,
+    skip: true,
   });
 
   if (!scope) return null;
@@ -63,15 +74,29 @@ export function PermissionSyncJobActions({ job }: PermissionSyncJobActionsProps)
       icon: <Eye className="mr-2 h-4 w-4" />,
       onClick: () => setJobToView(job),
     },
-    {
+  ];
+
+  if (isExportJob) {
+    if (isCompleted && job.hasSnapshot) {
+      actions.push({
+        key: 'downloadExport',
+        label: t('downloadExport'),
+        icon: <Download className="mr-2 h-4 w-4" />,
+        onClick: () => {
+          void downloadExport();
+        },
+      });
+    }
+  } else {
+    actions.push({
       key: 'download',
       label: t('downloadPayload'),
       icon: <Download className="mr-2 h-4 w-4" />,
       onClick: () => {
-        void download();
+        void downloadPayload();
       },
-    },
-  ];
+    });
+  }
 
   if (canCancel) {
     actions.push({
@@ -83,7 +108,7 @@ export function PermissionSyncJobActions({ job }: PermissionSyncJobActionsProps)
     });
   }
 
-  const isLoading = (hasBeenOpened && isUpdateLoading) || downloading;
+  const isLoading = (hasBeenOpened && isUpdateLoading) || downloadingPayload || downloadingExport;
 
   return (
     <Actions entity={job} actions={actions} onOpenChange={handleOpenChange} isLoading={isLoading} />

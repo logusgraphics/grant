@@ -81,12 +81,12 @@ Permission references inside `roleTemplates[].permissionRefs[]` and `userAssignm
 
 ## Permissions (dashboard)
 
-| Action                         | Grant permission       | Notes                          |
-| ------------------------------ | ---------------------- | ------------------------------ |
-| Start import (upload CDM JSON) | `Project` **`Update`** | Enqueues an async job          |
-| Export current project         | `Project` **`Query`**  | Immediate download; no job row |
-| View job list & job details    | `Project` **`Query`**  | GraphQL / REST read APIs       |
-| Cancel a queued job            | `Project` **`Update`** | Best-effort if already running |
+| Action                         | Grant permission       | Notes                                                   |
+| ------------------------------ | ---------------------- | ------------------------------------------------------- |
+| Start import (upload CDM JSON) | `Project` **`Update`** | Enqueues an async job                                   |
+| Export project (enqueue job)   | `Project` **`Update`** | Async job; download CDM from job snapshot when complete |
+| View job list & job details    | `Project` **`Query`**  | GraphQL / REST read APIs                                |
+| Cancel a queued job            | `Project` **`Update`** | Best-effort if already running                          |
 
 Scoped context must match the project (organization or personal account project), consistent with other project-scoped screens.
 
@@ -94,9 +94,57 @@ Scoped context must match the project (organization or personal account project)
 
 1. Open **Project → Import/Export** (`…/projects/{projectId}/import-export`).
 2. **Import** — choose a `.json` file; the app validates shape, then enqueues a job via GraphQL. The **original payload** is stored on the job for later review.
-3. **Export** — downloads the **current** project state as CDM JSON (filename includes project id and timestamp).
+3. **Export** — opens a dialog with **Contents** and **Options** tabs (see [Export dialog](#export-dialog-web) below). The job runs in the background; download the generated CDM from the job row when it completes.
 4. The list **polls** while any visible job is `PENDING` or `RUNNING`, then shows terminal status and counts when completed.
 5. **Job details** — status fields, **Result** counters after success, **Payload** (submitted JSON), **Rollback snapshot** when present (see below).
+
+## Export dialog (web) {#export-dialog-web}
+
+The export dialog enqueues an **async job**. It does **not** read or change live data beyond what the worker snapshots from the database when the job runs. Two tabs separate **what to include** from **how a future import should behave**.
+
+### Contents tab {#export-dialog-contents}
+
+Use checkboxes to include or omit CDM sections (`users`, `roles`, `groups`, `resources`, `permissions`, `tags`). Rules:
+
+- **Permissions** requires **Resources** (permissions reference resource rows in the same document).
+- **User API keys** is nested under **Users**; disabling users clears the nested option. Secrets are never exported—only CDM-managed key identities.
+- Omitting a section excludes it from the generated JSON. Selecting every section is equivalent to omitting the `sections` filter (full export).
+- Exporting **users** without **roles** can produce a file that is hard to re-import alone; you may need to merge with another export that includes roles.
+
+The worker always snapshots **current database state** for the selected sections. Nothing on this tab alters import `mode` behavior.
+
+### Options tab — re-import defaults {#export-reimport-defaults}
+
+Fields on this tab are stored in the job **payload** and copied into the exported artifact’s **`mode`** block. They are **hints for a later import** of this file. They do **not** change which rows are read during export and they do **not** run merge/replace while exporting.
+
+The job list **Strategy** column reflects the chosen **mode** (merge or replace) for quick scanning.
+
+#### Job name {#export-job-name}
+
+Optional label for the jobs table and **idempotency** key (`StartProjectExportInput.jobName` / REST `jobName`). When empty, the API defaults to the project’s display name.
+
+At most one **in-flight** export (pending or running) may exist per `(project, jobName)` when the name is set; a second request with the same name returns that job. You may enqueue another export with the same name after the previous one has completed. Failed or cancelled jobs can be retried with the same name.
+
+#### CDM version {#export-cdm-version}
+
+Schema version written into the export (`version`, currently only **`1`**). Must match what the importer supports.
+
+#### Mode (strategy) {#export-reimport-mode}
+
+Embedded as `mode.strategy`:
+
+| Value     | Meaning on **import**                                                                                             |
+| --------- | ----------------------------------------------------------------------------------------------------------------- |
+| `merge`   | Apply payload alongside existing CDM-managed rows (default).                                                      |
+| `replace` | Remove existing CDM-managed rows for the project, then apply the payload. Requires **confirm destructive** below. |
+
+#### On conflict {#export-on-conflict}
+
+Embedded as `mode.onConflict` when set. Controls importer behavior when an entity key already exists (`fail`, `skip`, `update`). Leave as **importer default** to omit the field from the artifact (importer uses its default, typically `fail` for merge).
+
+#### Confirm destructive {#export-confirm-destructive}
+
+Required when **mode** is `replace` (`mode.confirmDestructive: true` in the exported JSON). Acknowledges that a **future import** of this file with replace mode can delete CDM-managed data. Checking this box during export does **not** delete anything—it only records consent in the artifact.
 
 ```bmermaid diagram-narrow
 sequenceDiagram
@@ -112,7 +160,9 @@ sequenceDiagram
 
 ## Async jobs
 
-Each import is a **row** in `project_permission_sync_jobs`, executed by the background job adapter ([Job scheduling](/advanced-topics/job-scheduling)). Lifecycle states include pending, running, completed, failed, and cancelled.
+Each import or export is a **row** in **`project_sync_jobs`** (`operation` = `import` or `export`; `mode_strategy` = merge/replace from the CDM `mode` when set for imports, or from export **Options** / embedded re-import defaults for exports), executed by the background job adapter ([Job scheduling](/advanced-topics/job-scheduling)). Lifecycle states include pending, running, completed, failed, and cancelled.
+
+- **Idempotency** — optional **`jobName`** / CDM `id` (`SyncProjectInput.id` on import, `StartProjectExportInput.jobName` on export). When set, at most one **in-flight** job (pending or running) may exist per `(project_id, operation, job_name)`; a duplicate request returns that job. After completion you may enqueue again with the same name. **Imports** often omit CDM `id`, so `job_name` is null and every upload is a separate row (shown as “no job name” in the UI). **Exports** default `job_name` to the project display name when the dialog field is empty. Failed or cancelled jobs can be retried with the same key.
 
 - **Query / poll** — GraphQL `projectSyncJobs` / `projectSyncJob`, or REST equivalents (see below).
 - **Payload download** — REST returns the **submitted** CDM JSON for auditing (`GET …/sync/jobs/{jobId}/payload`).
@@ -132,15 +182,15 @@ Automated “rollback” as a one-click replay is not part of the product UI yet
 
 All routes are under **`/api/projects/{id}/…`** with authenticated access and project scope query params (`scopeId`, `tenant`) as documented in OpenAPI.
 
-| Method   | Path                           | Role                                                       |
-| -------- | ------------------------------ | ---------------------------------------------------------- |
-| `GET`    | `…/sync/export`                | Download current project CDM (`cdmVersion` query optional) |
-| `GET`    | `…/sync/jobs`                  | List jobs (if exposed for your client)                     |
-| `POST`   | `…/sync/jobs`                  | Enqueue import (body = CDM JSON)                           |
-| `GET`    | `…/sync/jobs/{jobId}`          | Single job status                                          |
-| `GET`    | `…/sync/jobs/{jobId}/payload`  | Submitted CDM JSON                                         |
-| `GET`    | `…/sync/jobs/{jobId}/snapshot` | Pre-sync rollback JSON (404 if none)                       |
-| `DELETE` | `…/sync/jobs/{jobId}`          | Cancel job                                                 |
+| Method   | Path                           | Role                                                                                                                  |
+| -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `…/sync/jobs`                  | List jobs (if exposed for your client)                                                                                |
+| `POST`   | `…/sync/jobs`                  | Enqueue import (body = CDM JSON)                                                                                      |
+| `POST`   | `…/sync/jobs/export`           | Enqueue async export (`version`, optional `sections`, `includeUserApiKeys`, `jobName`, `mode` for re-import defaults) |
+| `GET`    | `…/sync/jobs/{jobId}`          | Single job status                                                                                                     |
+| `GET`    | `…/sync/jobs/{jobId}/payload`  | Enqueued request JSON (import CDM or export options)                                                                  |
+| `GET`    | `…/sync/jobs/{jobId}/snapshot` | Import: pre-sync rollback JSON; export: generated CDM when `COMPLETED` (404 if none)                                  |
+| `DELETE` | `…/sync/jobs/{jobId}`          | Cancel job                                                                                                            |
 
 Authoritative request/response shapes live in **OpenAPI** ([REST API](/api-reference/rest-api)) and `@grantjs/schema` codegen.
 
@@ -149,6 +199,7 @@ Authoritative request/response shapes live in **OpenAPI** ([REST API](/api-refer
 Typical operations:
 
 - **`startProjectSync`** — enqueue import (input includes project scope + CDM payload).
+- **`startProjectExport`** — enqueue async export (`StartProjectExportInput`: version, optional sections, `includeUserApiKeys`, `jobName` for idempotency, optional `mode` embedded as re-import defaults in the artifact).
 - **`cancelProjectSync`** — cancel a job.
 - **`projectSyncJobs`** — paginated list (sort, filter, search).
 - **`projectSyncJob`** — single job by id.

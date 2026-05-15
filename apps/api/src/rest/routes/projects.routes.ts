@@ -10,7 +10,7 @@ import {
   UpdateProjectMutationVariables,
 } from '@grantjs/schema';
 import { ProjectSortInput } from '@grantjs/schema';
-import { NextFunction, Response, Router } from 'express';
+import { Response, Router } from 'express';
 
 import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
 import { AuthenticationError } from '@/lib/errors';
@@ -18,12 +18,12 @@ import { validate } from '@/middleware/validation.middleware';
 import {
   createProjectRequestSchema,
   deleteProjectQuerySchema,
-  exportProjectPermissionsQuerySchema,
   getProjectsQuerySchema,
   listProjectSyncJobsQuerySchema,
   projectParamsSchema,
   projectSyncJobParamsSchema,
   projectSyncJobScopeQuerySchema,
+  startProjectExportJobRequestSchema,
   startProjectSyncRequestSchema,
   updateProjectRequestSchema,
 } from '@/rest/schemas';
@@ -129,6 +129,47 @@ export function createProjectsRouter(context: RequestContext): Router {
     }
   );
 
+  router.post(
+    '/:id/sync/jobs/export',
+    validate({ params: projectParamsSchema, body: startProjectExportJobRequestSchema }),
+    requireEmailThenMfaRest({ allowPersonalContext: true }, { allowPersonalContext: true }),
+    authorizeRestRoute({
+      resource: ResourceSlug.Project,
+      action: ResourceAction.Update,
+      resourceResolver: 'project',
+    }),
+    async (
+      req: TypedRequest<{
+        params: typeof projectParamsSchema;
+        body: typeof startProjectExportJobRequestSchema;
+      }>,
+      res: Response
+    ) => {
+      const { id } = req.params;
+      const { scope, version, jobName, sections, includeUserApiKeys, mode } = req.body;
+
+      const enqueuedById = context.user?.userId;
+      if (!enqueuedById) {
+        throw new AuthenticationError('Authenticated user required to start an export job');
+      }
+
+      const job: ProjectSyncJob = await context.handlers.projects.startProjectExport({
+        id,
+        scope,
+        input: {
+          version,
+          jobName: jobName ?? undefined,
+          sections: sections ?? undefined,
+          includeUserApiKeys: includeUserApiKeys ?? undefined,
+          mode: mode ?? undefined,
+        },
+        enqueuedById,
+      });
+
+      sendSuccessResponse(res, job, 202);
+    }
+  );
+
   router.get(
     '/:id/sync/jobs',
     validate({
@@ -187,13 +228,13 @@ export function createProjectsRouter(context: RequestContext): Router {
       const { id, jobId } = req.params;
       const { scopeId, tenant } = req.query;
 
-      const { payload, importId } = await context.handlers.projects.getProjectSyncJobPayload({
+      const { payload, jobName } = await context.handlers.projects.getProjectSyncJobPayload({
         id,
         jobId,
         scope: { id: scopeId, tenant },
       });
 
-      const filename = `cdm-${importId ?? jobId}.json`;
+      const filename = `cdm-${jobName ?? jobId}.json`;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.status(200).send(JSON.stringify(payload));
@@ -231,55 +272,6 @@ export function createProjectsRouter(context: RequestContext): Router {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.status(200).send(JSON.stringify(snapshot));
-    }
-  );
-
-  router.get(
-    '/:id/sync/export',
-    validate({
-      params: projectParamsSchema,
-      query: exportProjectPermissionsQuerySchema,
-    }),
-    authorizeRestRoute({
-      resource: ResourceSlug.Project,
-      action: ResourceAction.Query,
-      resourceResolver: 'project',
-    }),
-    async (
-      req: TypedRequest<{
-        params: typeof projectParamsSchema;
-        query: typeof exportProjectPermissionsQuerySchema;
-      }>,
-      res: Response,
-      next: NextFunction
-    ) => {
-      try {
-        const { id } = req.params;
-        const { scopeId, tenant, version, sections } = req.query;
-        const parsedVersion =
-          typeof version === 'number'
-            ? version
-            : typeof version === 'string'
-              ? Number(version)
-              : Array.isArray(version)
-                ? Number(version[0])
-                : null;
-
-        const snapshot = await context.handlers.projects.exportProjectPermissions({
-          id,
-          scope: { id: scopeId, tenant },
-          version: parsedVersion != null && Number.isFinite(parsedVersion) ? parsedVersion : null,
-          sections,
-        });
-
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `cdm-export-${id}-${timestamp}.json`;
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.status(200).send(JSON.stringify(snapshot));
-      } catch (err) {
-        next(err);
-      }
     }
   );
 

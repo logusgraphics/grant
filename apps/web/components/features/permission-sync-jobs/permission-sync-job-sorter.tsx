@@ -29,8 +29,8 @@ export function PermissionSyncJobSorter() {
       label: t('sort.status'),
     },
     {
-      value: ProjectSyncJobSortableField.ImportId,
-      label: t('sort.importId'),
+      value: ProjectSyncJobSortableField.JobName,
+      label: t('sort.jobName'),
     },
   ];
 

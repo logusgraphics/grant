@@ -263,7 +263,7 @@
         },
         "confirmDestructiveLabel": "Zerstörerische Änderung",
         "confirmDestructiveYes": "Bestätigt",
-        "importId": "Import-ID",
+        "jobName": "Jobname (Idempotenz)",
         "roles": "Rollen",
         "users": "Benutzer",
         "apiKeys": "Benutzer-API-Schlüssel",

@@ -21,15 +21,10 @@ export interface PermissionSyncJobExportTriggerProps {
 }
 
 /**
- * Trigger for the standalone "export current state to CDM" REST endpoint.
+ * Opens the export dialog to enqueue an async CDM export job (same lifecycle as import).
  *
- * Gated by `Project:Query` (read-only): an operator who can view the project
- * is allowed to back up its permission graph. Hidden entirely when the
- * permission check resolves to `false`. While the grant check is in-flight
- * the button is rendered disabled with a spinner so layout does not jump.
- *
- * On click, opens the export dialog so the operator can choose CDM sections
- * before downloading JSON from `GET /api/projects/:id/sync/export`.
+ * Gated by `Project:Update`. Download the generated CDM from the jobs list or job details
+ * once the export completes.
  */
 export function PermissionSyncJobExportTrigger({
   layout = 'empty',
@@ -46,7 +41,7 @@ export function PermissionSyncJobExportTrigger({
     [projectId]
   );
 
-  const { isGranted, isLoading } = useGrant(ResourceSlug.Project, ResourceAction.Query, {
+  const { isGranted, isLoading } = useGrant(ResourceSlug.Project, ResourceAction.Update, {
     scope,
     context: projectGrantContext,
     returnLoading: true,

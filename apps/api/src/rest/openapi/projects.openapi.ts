@@ -8,7 +8,6 @@ import {
   deleteProjectQuerySchema,
   deleteProjectResponseSchema,
   errorResponseSchema,
-  exportProjectPermissionsQuerySchema,
   getProjectsQuerySchema,
   getProjectsResponseSchema,
   listProjectSyncJobsQuerySchema,
@@ -21,6 +20,7 @@ import {
   projectSyncJobSchema,
   projectSyncJobScopeQuerySchema,
   projectWithRelationsSchema,
+  startProjectExportJobRequestSchema,
   startProjectSyncRequestSchema,
   updateProjectRequestSchema,
   updateProjectResponseSchema,
@@ -40,7 +40,7 @@ export function registerProjectsOpenApi(registry: OpenAPIRegistry) {
   registry.register('ProjectSyncJobResponse', projectSyncJobResponseSchema);
   registry.register('ListProjectSyncJobsQuery', listProjectSyncJobsQuerySchema);
   registry.register('ListProjectSyncJobsResponse', listProjectSyncJobsResponseSchema);
-  registry.register('ExportProjectPermissionsQuery', exportProjectPermissionsQuerySchema);
+  registry.register('StartProjectExportJobRequest', startProjectExportJobRequestSchema);
   registry.register('ProjectSyncJobParams', projectSyncJobParamsSchema);
   registry.register('ProjectSyncJobScopeQuery', projectSyncJobScopeQuerySchema);
   registry.register('CdmJsonArtifact', cdmJsonArtifactSchema);
@@ -240,8 +240,8 @@ This operation is intended for migrating external permission models into Grant's
 
 ### Idempotency
 
-Pass \`importId\` in the body for idempotent retries: if an active job (\`PENDING\`,
-\`RUNNING\`, or \`COMPLETED\`) already exists for the same \`(project, importId)\`, the
+Pass optional \`id\` on the CDM body as a stable **job name** for idempotent retries: if an active job (\`PENDING\`,
+\`RUNNING\`, or \`COMPLETED\`) already exists for the same \`(project, operation=IMPORT, jobName)\`, the
 existing job is returned instead of creating a new one.
 
 ### Metadata
@@ -353,6 +353,87 @@ the global catalog.
   });
 
   /**
+   * POST /api/projects/:id/sync/jobs/export
+   */
+  registry.registerPath({
+    method: 'post',
+    path: '/api/projects/{id}/sync/jobs/export',
+    tags: ['Projects'],
+    summary: 'Enqueue an asynchronous CDM export job',
+    description: `
+Enqueue an asynchronous CDM **export** job. Returns \`202\` with a \`ProjectSyncJob\`
+descriptor (\`operation: EXPORT\`). Poll \`GET .../sync/jobs/{jobId}\` until \`COMPLETED\`,
+then download the generated CDM JSON from \`GET .../sync/jobs/{jobId}/snapshot\`.
+
+Same MFA and \`Project:update\` authorization as \`POST .../sync/jobs\` (import).
+
+Optional \`jobName\` provides idempotency: an active job with the same
+\`(project, operation=EXPORT, jobName)\` is returned instead of creating a duplicate.
+    `.trim(),
+    request: {
+      params: projectParamsSchema,
+      body: {
+        content: {
+          'application/json': {
+            schema: startProjectExportJobRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      202: {
+        description: 'Export job enqueued',
+        content: {
+          'application/json': {
+            schema: projectSyncJobResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: 'Invalid request body',
+        content: {
+          'application/json': {
+            schema: validationErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: 'Forbidden - insufficient permissions for this resource or scope',
+        content: {
+          'application/json': {
+            schema: authenticationErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: 'Project not found',
+        content: {
+          'application/json': {
+            schema: notFoundErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description:
+          'Internal server error (may include misconfiguration such as jobs adapter disabled)',
+        content: {
+          'application/json': {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  /**
    * GET /api/projects/:id/sync/jobs
    */
   registry.registerPath({
@@ -362,8 +443,8 @@ the global catalog.
     summary: 'List project permissions sync jobs',
     description: `
 List asynchronous CDM permission sync jobs for a project. Supports pagination, status filtering,
-search by \`importId\`, and sorting by \`enqueuedAt\`, \`startedAt\`, \`completedAt\`, \`status\`,
-or \`importId\`.
+search by \`jobName\`, and sorting by \`enqueuedAt\`, \`startedAt\`, \`completedAt\`, \`status\`,
+or \`jobName\`.
 
 Each job row includes snapshot metadata (\`hasSnapshot\`, \`snapshotTakenAt\`, \`snapshotSizeBytes\`).
 
@@ -502,16 +583,15 @@ sync job was enqueued. The response uses \`Content-Type: application/json\` and 
     method: 'get',
     path: '/api/projects/{id}/sync/jobs/{jobId}/snapshot',
     tags: ['Projects'],
-    summary: 'Download the rollback snapshot captured before a sync job ran',
+    summary: 'Download the CDM JSON snapshot attached to a sync job',
     description: `
-Download the pre-sync rollback snapshot captured by the worker inside the import
-transaction, just before the project's permissions were modified. The snapshot has
-the same shape as \`SyncProjectInput\`, so it can be replayed via
-\`POST .../sync/jobs\` to roll the project back to the state it had right before the
-selected job ran.
+For **import** jobs: download the pre-sync rollback snapshot captured by the worker
+inside the import transaction, just before the project's permissions were modified.
 
-Returns 404 when the job has no snapshot (e.g. it failed before the worker reached
-the snapshot step, or it was enqueued before this feature shipped).
+For **export** jobs (\`operation: EXPORT\`): download the generated CDM artifact after
+the job reaches \`COMPLETED\` (returns 404 while the job is still running or if it failed).
+
+The body has the same \`SyncProjectInput\` shape in both cases.
 
 The response uses \`Content-Type: application/json\` and a \`Content-Disposition:
 attachment\` header so browsers prompt for a save.
@@ -573,99 +653,6 @@ attachment\` header so browsers prompt for a save.
   });
 
   /**
-   * GET /api/projects/:id/sync/export
-   */
-  registry.registerPath({
-    method: 'get',
-    path: '/api/projects/{id}/sync/export',
-    tags: ['Projects'],
-    summary: 'Export the project as a CDM JSON artifact',
-    description: `
-Snapshot the project's current permission/role/group/user state and
-download it as a CDM JSON artifact. The body is shaped like
-\`SyncProjectInput\` so it can be replayed against this project (to
-reset it to the exported state) or against a different project (to clone its
-permission model).
-
-Pass \`version\` to pin the artifact format; the only currently supported value
-is \`1\` (the default when omitted).
-
-### Partial export (\`sections\`)
-
-Omit \`sections\` or leave it empty for a **full** CDM snapshot (same shape as the
-async sync worker's rollback snapshot). To export only parts of the model, pass
-\`sections\` as repeated query params and/or a comma-separated list. Allowed
-values: \`tags\`, \`resources\`, \`permissions\`, \`groups\`, \`roles\`, \`users\`.
-Omitted slices appear as empty arrays in the JSON; partial files may need to be
-merged or re-imported together with other artifacts.
-
-### Tags
-
-When \`tags\` is included, the export emits all \`project_tags\` definitions plus
-role/user tag references needed by the canonical \`roles[]\` and \`users[]\`
-sections so a re-import can fully reconstruct tag pivots. \`user_tags\` are
-global rows; documenting cross-project effect.
-
-The response uses \`Content-Type: application/json\` and a \`Content-Disposition:
-attachment\` header so browsers prompt for a save.
-    `.trim(),
-    request: {
-      params: projectParamsSchema,
-      query: exportProjectPermissionsQuerySchema,
-    },
-    responses: {
-      200: {
-        description: 'Project CDM export as a downloadable JSON file',
-        content: {
-          'application/json': {
-            schema: cdmJsonArtifactSchema,
-          },
-        },
-      },
-      400: {
-        description: 'Invalid request parameters',
-        content: {
-          'application/json': {
-            schema: validationErrorResponseSchema,
-          },
-        },
-      },
-      401: {
-        description: 'Unauthorized - Authentication required',
-        content: {
-          'application/json': {
-            schema: authenticationErrorResponseSchema,
-          },
-        },
-      },
-      403: {
-        description: 'Forbidden - insufficient permissions for this resource or scope',
-        content: {
-          'application/json': {
-            schema: authenticationErrorResponseSchema,
-          },
-        },
-      },
-      404: {
-        description: 'Project not found',
-        content: {
-          'application/json': {
-            schema: notFoundErrorResponseSchema,
-          },
-        },
-      },
-      500: {
-        description: 'Internal server error',
-        content: {
-          'application/json': {
-            schema: errorResponseSchema,
-          },
-        },
-      },
-    },
-  });
-
-  /**
    * GET /api/projects/:id/sync/jobs/:jobId
    */
   registry.registerPath({
@@ -674,17 +661,19 @@ attachment\` header so browsers prompt for a save.
     tags: ['Projects'],
     summary: 'Get the status of a project permissions sync job',
     description: `
-Read the current state of an asynchronous CDM permission sync job. Use this endpoint
-to poll the lifecycle of a job started via \`POST .../sync/jobs\`.
+Read the current state of an asynchronous CDM permission sync or export job. Use this endpoint
+to poll the lifecycle of a job started via \`POST .../sync/jobs\` (import) or
+\`POST .../sync/jobs/export\` (export).
 
 Snapshot metadata (\`hasSnapshot\`, \`snapshotTakenAt\`, \`snapshotSizeBytes\`) indicates whether
-\`GET .../sync/jobs/{jobId}/snapshot\` will return a pre-sync rollback artifact.
+\`GET .../sync/jobs/{jobId}/snapshot\` will return a CDM JSON artifact (rollback snapshot for imports;
+generated export for export jobs once \`COMPLETED\`).
 
 Statuses:
 - \`PENDING\`  — enqueued, not started yet
 - \`RUNNING\`  — worker has picked up the job
-- \`COMPLETED\` — successful import (\`result\` populated)
-- \`FAILED\`    — import errored (\`errorMessage\` populated)
+- \`COMPLETED\` — successful run (\`result\` populated for imports; null for exports)
+- \`FAILED\`    — worker errored (\`errorMessage\` populated)
 - \`CANCELLED\` — cancelled before or during execution
     `.trim(),
     request: {

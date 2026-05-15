@@ -263,7 +263,7 @@
         },
         "confirmDestructiveLabel": "Destructive change",
         "confirmDestructiveYes": "Confirmed",
-        "importId": "Import ID",
+        "jobName": "Job name (idempotency)",
         "roles": "Roles",
         "users": "Users",
         "apiKeys": "User API keys",

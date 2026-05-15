@@ -1,17 +1,23 @@
 /**
  * Integration: REST routes for the async CDM permission sync flow:
- *   POST   /api/projects/:id/sync/jobs                  — enqueue a job
+ *   POST   /api/projects/:id/sync/jobs                  — enqueue import job
+ *   POST   /api/projects/:id/sync/jobs/export           — enqueue export job
  *   GET    /api/projects/:id/sync/jobs                  — paginated list
  *   GET    /api/projects/:id/sync/jobs/:jobId           — poll status
  *   GET    /api/projects/:id/sync/jobs/:jobId/payload   — download original CDM JSON
+ *   GET    /api/projects/:id/sync/jobs/:jobId/snapshot  — download rollback or export artifact
  *   DELETE /api/projects/:id/sync/jobs/:jobId           — cancel
  */
-import { CdmFindBy, CdmModeStrategy, type SyncProjectInput } from '@grantjs/schema';
+import {
+  CdmFindBy,
+  CdmModeStrategy,
+  ProjectSyncJobOperation,
+  type SyncProjectInput,
+} from '@grantjs/schema';
 import express from 'express';
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
 import { errorHandler } from '@/middleware/error.middleware';
 import { createProjectsRouter } from '@/rest/routes/projects.routes';
 import type { RequestContext } from '@/types';
@@ -72,7 +78,9 @@ function buildJobResponse(status: 'PENDING' | 'COMPLETED' | 'CANCELLED' = 'PENDI
     projectId,
     status,
     cdmVersion: 1,
-    importId: null,
+    jobName: null,
+    operation: ProjectSyncJobOperation.Import,
+    modeStrategy: CdmModeStrategy.Merge,
     result: null,
     warnings: [],
     errorMessage: null,
@@ -93,7 +101,7 @@ describe('project CDM sync REST (async jobs)', () => {
   let listProjectSyncJobs: ReturnType<typeof vi.fn>;
   let getProjectSyncJobPayload: ReturnType<typeof vi.fn>;
   let getProjectSyncJobSnapshot: ReturnType<typeof vi.fn>;
-  let exportProjectPermissions: ReturnType<typeof vi.fn>;
+  let startProjectExport: ReturnType<typeof vi.fn>;
   let cancelProjectSync: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -108,7 +116,7 @@ describe('project CDM sync REST (async jobs)', () => {
     });
     getProjectSyncJobPayload = vi.fn().mockResolvedValue({
       payload: emptyCdm({ id: 'imp-1' }),
-      importId: 'imp-1',
+      jobName: 'imp-1',
       cdmVersion: 1,
     });
     getProjectSyncJobSnapshot = vi.fn().mockResolvedValue({
@@ -129,21 +137,11 @@ describe('project CDM sync REST (async jobs)', () => {
       takenAt: new Date('2026-05-02T10:05:00.000Z'),
       sizeBytes: 1234,
     });
-    /** Mirrors {@link ProjectsHandler.exportProjectPermissions} section validation so REST tests exercise real rules (mock replaces the full handler). */
-    exportProjectPermissions = vi.fn(
-      async (args: {
-        id: string;
-        scope: { tenant: string; id: string };
-        version?: number | null;
-        sections?: readonly string[] | string;
-      }) => {
-        const raw = args.sections;
-        if (raw != null && (typeof raw === 'string' ? raw.trim().length > 0 : raw.length > 0)) {
-          assertValidCdmExportSections(raw);
-        }
-        return emptyCdm();
-      }
-    );
+    startProjectExport = vi.fn().mockResolvedValue({
+      ...buildJobResponse('PENDING'),
+      operation: ProjectSyncJobOperation.Export,
+      modeStrategy: null,
+    });
     cancelProjectSync = vi.fn().mockResolvedValue(buildJobResponse('CANCELLED'));
 
     const context = {
@@ -155,7 +153,7 @@ describe('project CDM sync REST (async jobs)', () => {
           listProjectSyncJobs,
           getProjectSyncJobPayload,
           getProjectSyncJobSnapshot,
-          exportProjectPermissions,
+          startProjectExport,
           cancelProjectSync,
         },
       },
@@ -304,20 +302,22 @@ describe('project CDM sync REST (async jobs)', () => {
     });
   });
 
-  it('GET /sync/export accepts `tags` as an exportable section', async () => {
+  it('POST /sync/jobs/export accepts `tags` as an exportable section', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/sync/export`)
-      .query({
-        scopeId: `${accountId}:${projectId}`,
-        tenant: 'accountProject',
+      .post(`/api/projects/${projectId}/sync/jobs/export`)
+      .send({
+        scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
+        version: 1,
         sections: ['tags', 'roles'],
       });
 
-    expect(res.status).toBe(200);
-    expect(exportProjectPermissions).toHaveBeenCalledWith(
+    expect(res.status).toBe(202);
+    expect(startProjectExport).toHaveBeenCalledWith(
       expect.objectContaining({
         id: projectId,
-        sections: ['tags', 'roles'],
+        input: expect.objectContaining({
+          sections: ['tags', 'roles'],
+        }),
       })
     );
   });
@@ -414,7 +414,7 @@ describe('project CDM sync REST (async jobs)', () => {
   it('GET /sync/jobs/:jobId/payload falls back to jobId in filename when payload id is null', async () => {
     getProjectSyncJobPayload.mockResolvedValueOnce({
       payload: emptyCdm(),
-      importId: null,
+      jobName: null,
       cdmVersion: 1,
     });
 
@@ -452,95 +452,39 @@ describe('project CDM sync REST (async jobs)', () => {
     });
   });
 
-  it('GET /sync/export streams the project CDM export with attachment headers', async () => {
+  it('POST /sync/jobs/export returns 202 and forwards body to startProjectExport', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/sync/export`)
-      .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
-
-    expect(res.status).toBe(200);
-    expect(res.headers['content-type']).toMatch(/application\/json/);
-    expect(res.headers['content-disposition']).toMatch(
-      new RegExp(`^attachment; filename="cdm-export-${projectId}-.+\\.json"$`)
-    );
-    expect(res.body).toMatchObject({
-      version: 1,
-      roles: [],
-      users: [],
-    });
-    expect(exportProjectPermissions).toHaveBeenCalledWith({
-      id: projectId,
-      scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
-      version: null,
-      sections: undefined,
-    });
-  });
-
-  it('GET /sync/export forwards a numeric version query param to the handler', async () => {
-    const res = await request(app)
-      .get(`/api/projects/${projectId}/sync/export`)
-      .query({
-        scopeId: `${accountId}:${projectId}`,
-        tenant: 'accountProject',
-        version: '1',
+      .post(`/api/projects/${projectId}/sync/jobs/export`)
+      .send({
+        scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
+        version: 1,
+        sections: ['roles', 'users'],
+        includeUserApiKeys: false,
       });
 
-    expect(res.status).toBe(200);
-    expect(exportProjectPermissions).toHaveBeenCalledTimes(1);
-    const args = exportProjectPermissions.mock.calls[0][0];
-    expect(args).toMatchObject({
+    expect(res.status).toBe(202);
+    expect(startProjectExport).toHaveBeenCalledWith({
       id: projectId,
-      scope: { id: `${accountId}:${projectId}`, tenant: 'accountProject' },
+      scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
+      input: {
+        version: 1,
+        sections: ['roles', 'users'],
+        includeUserApiKeys: false,
+      },
+      enqueuedById: userId,
     });
-    /**
-     * `version` may arrive as a string or a number depending on whether
-     * zod transforms propagated through Express 5's `req.query` mutation
-     * (same caveat as the pagination test above). Either way the handler
-     * coerces and the route accepts the value, so assert numerically.
-     */
-    expect(Number(args.version)).toBe(1);
   });
 
-  it('GET /sync/export passes sections to the handler when provided', async () => {
+  it('POST /sync/jobs/export returns 400 when permissions is requested without resources', async () => {
     const res = await request(app)
-      .get(`/api/projects/${projectId}/sync/export`)
-      .query({
-        scopeId: `${accountId}:${projectId}`,
-        tenant: 'accountProject',
-        sections: ['roles', 'users'],
-      });
-
-    expect(res.status).toBe(200);
-    expect(exportProjectPermissions).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: projectId,
-        sections: ['roles', 'users'],
-      })
-    );
-  });
-
-  it('GET /sync/export returns 400 when permissions is requested without resources', async () => {
-    const res = await request(app)
-      .get(`/api/projects/${projectId}/sync/export`)
-      .query({
-        scopeId: `${accountId}:${projectId}`,
-        tenant: 'accountProject',
-        /** Repeat `sections=` so both tokens are present (comma-only string can collapse in query parsing). */
+      .post(`/api/projects/${projectId}/sync/jobs/export`)
+      .send({
+        scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
+        version: 1,
         sections: ['permissions'],
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.code).toBe('BAD_USER_INPUT');
-    /** Handler runs and fails inside section validation — vi.fn still records the invocation. */
-    expect(exportProjectPermissions).toHaveBeenCalledTimes(1);
-    const exportArg = exportProjectPermissions.mock.calls[0][0] as {
-      sections?: string | readonly string[];
-    };
-    const normalized =
-      exportArg.sections == null
-        ? []
-        : Array.isArray(exportArg.sections)
-          ? [...exportArg.sections]
-          : [exportArg.sections];
-    expect(normalized).toEqual(['permissions']);
+    expect(startProjectExport).not.toHaveBeenCalled();
   });
 });

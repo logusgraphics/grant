@@ -1,7 +1,7 @@
 extend type Query {
   """
   List project CDM sync jobs for a project, with optional pagination,
-  search (matches importId), status filter, and sort. Use this to populate the
+  search (matches jobName), status filter, and sort. Use this to populate the
   job history view. Use `projectSyncJob` to read a single job's
   current state for polling.
   """

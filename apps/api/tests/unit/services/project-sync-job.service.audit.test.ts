@@ -2,7 +2,12 @@
  * Ensures permission sync job lifecycle writes append-only audit rows.
  */
 import type { IAuditLogger } from '@grantjs/core';
-import { CdmModeStrategy, ProjectSyncJobStatus, Tenant } from '@grantjs/schema';
+import {
+  CdmModeStrategy,
+  ProjectSyncJobOperation,
+  ProjectSyncJobStatus,
+  Tenant,
+} from '@grantjs/schema';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ProjectSyncJobService } from '@/services/project-sync-job.service';
@@ -16,7 +21,9 @@ function buildJob(overrides: Partial<{ status: ProjectSyncJobStatus }> = {}) {
     projectId,
     status: overrides.status ?? ProjectSyncJobStatus.Pending,
     cdmVersion: 1,
-    importId: null as string | null,
+    jobName: null as string | null,
+    operation: ProjectSyncJobOperation.Import,
+    modeStrategy: CdmModeStrategy.Merge,
     result: null,
     warnings: [] as string[],
     errorMessage: null as string | null,
@@ -25,7 +32,7 @@ function buildJob(overrides: Partial<{ status: ProjectSyncJobStatus }> = {}) {
     completedAt: null as Date | null,
     cancelledAt: null as Date | null,
     hasSnapshot: false,
-    snapshotTakenAt: null as string | null,
+    snapshotTakenAt: null as Date | null,
     snapshotSizeBytes: null as number | null,
   };
 }
@@ -53,7 +60,9 @@ describe('ProjectSyncJobService audit', () => {
       projectId,
       scope: { tenant: Tenant.AccountProject, id: `acct:${projectId}` },
       cdmVersion: 1,
-      importId: null,
+      jobName: null,
+      operation: 'import',
+      modeStrategy: 'merge',
       payload: {
         version: 1,
         id: null,

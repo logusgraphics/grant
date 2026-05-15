@@ -244,7 +244,7 @@
       "idx": 34,
       "version": "7",
       "when": 1770828351818,
-      "tag": "0034_mighty_exodus",
+      "tag": "0033_mighty_exodus",
       "breakpoints": true
     },
     {
@@ -462,6 +462,27 @@
       "version": "7",
       "when": 1777906310391,
       "tag": "0065_wooden_alex_wilder",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1778763830068,
+      "tag": "0066_dear_dragon_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1778764617646,
+      "tag": "0067_blue_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1778840266857,
+      "tag": "0068_aberrant_leper_queen",
       "breakpoints": true
     }
   ]

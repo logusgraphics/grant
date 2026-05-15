@@ -9,6 +9,7 @@ import {
   SortOrder,
 } from '@grantjs/schema';
 
+import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
 import { z } from '@/lib/zod-openapi.lib';
 import {
   createSuccessResponseSchema,
@@ -319,7 +320,61 @@ function normalizeCdmExportSectionsQueryInput(val: unknown): unknown {
 }
 
 /**
- * Query for `GET /:id/sync/export`. Reuses the same scope shape as the
+ * Body for POST /api/projects/:id/sync/jobs/export — enqueue async CDM export.
+ */
+export const startProjectExportJobRequestSchema = z
+  .object({
+    scope: scopeSchema,
+    version: z.number().int().openapi({ example: 1 }),
+    jobName: z.string().min(1).optional().nullable().openapi({
+      description: 'Optional idempotency key; same as GraphQL `StartProjectExportInput.jobName`.',
+    }),
+    sections: z
+      .preprocess(
+        normalizeCdmExportSectionsQueryInput,
+        z.union([z.string(), z.array(z.string())]).optional()
+      )
+      .transform((val) => {
+        if (val === undefined || val === '') return undefined;
+        if (typeof val === 'string') {
+          return val
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+        return val.map((s) => s.trim()).filter(Boolean);
+      })
+      .optional()
+      .openapi({
+        description:
+          'CDM slices to include. Omit or empty for full export. Keep `permissions` paired with `resources`.',
+        example: ['roles', 'users'],
+      }),
+    includeUserApiKeys: z.boolean().optional().openapi({
+      description:
+        'When users are exported, include `users[].apiKeys` rows (identity only). Default true when omitted.',
+    }),
+    mode: cdmModeSchema.optional().openapi({
+      description:
+        'Re-import defaults embedded in the exported CDM `mode` block; does not affect export execution.',
+    }),
+  })
+  .superRefine((data, ctx) => {
+    const sections = data.sections;
+    if (sections == null || sections.length === 0) return;
+    try {
+      assertValidCdmExportSections(sections);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message,
+      });
+    }
+  });
+
+/**
+ * Query for legacy tests of export `sections` query parsing (standalone GET export removed).
  * sync-job endpoints; `version` defaults to 1 — the only supported version
  * — so existing callers can omit it.
  */
@@ -359,6 +414,27 @@ export const exportProjectPermissionsQuerySchema = z.object({
         'CDM slices to include (repeat `sections` query param or comma-separated). Omit or empty = full export.',
       example: 'roles,users',
     }),
+  /**
+   * When `users` is included, whether to emit CDM-managed project user API key
+   * rows (identity only; never secrets). Omit or `true` = include; `false` =
+   * omit keys while still exporting user assignments. Ignored when `users` is not exported.
+   */
+  includeUserApiKeys: z
+    .preprocess((val: unknown) => {
+      if (val === undefined || val === null || val === '') return undefined;
+      const v = Array.isArray(val) ? val[0] : val;
+      if (typeof v === 'boolean') return v;
+      if (typeof v === 'number') return v !== 0;
+      const s = String(v).trim().toLowerCase();
+      if (s === 'true' || s === '1' || s === 'yes') return true;
+      if (s === 'false' || s === '0' || s === 'no') return false;
+      return val;
+    }, z.boolean().optional())
+    .openapi({
+      description:
+        'Include project user API keys in `users[].apiKeys` when the `users` section is exported. Default true.',
+      example: true,
+    }),
 });
 
 const syncProjectResultSchema = z.object({
@@ -394,12 +470,16 @@ export const projectSyncJobStatusEnum = z.enum([
   'CANCELLED',
 ]);
 
+export const projectSyncJobOperationEnum = z.enum(['IMPORT', 'EXPORT']);
+
 export const projectSyncJobSchema = z.object({
   id: z.string(),
   projectId: z.string(),
   status: projectSyncJobStatusEnum,
   cdmVersion: z.number().int(),
-  importId: z.string().nullable(),
+  jobName: z.string().nullable(),
+  operation: projectSyncJobOperationEnum,
+  modeStrategy: z.enum(['merge', 'replace']).nullable(),
   result: syncProjectResultSchema.nullable(),
   warnings: z.array(z.string()),
   errorMessage: z.string().nullable(),
@@ -409,13 +489,14 @@ export const projectSyncJobSchema = z.object({
   cancelledAt: z.string().nullable(),
   hasSnapshot: z.boolean().openapi({
     description:
-      'Whether a pre-sync rollback snapshot was captured before this job modified the project.',
+      'Whether a CDM JSON snapshot exists on this job (pre-import rollback for IMPORT; generated export artifact for EXPORT when completed).',
   }),
   snapshotTakenAt: z.string().nullable().openapi({
-    description: 'ISO timestamp when the snapshot was captured, if any.',
+    description:
+      'ISO timestamp when the snapshot was captured (imports) or when the export artifact was written (exports).',
   }),
   snapshotSizeBytes: z.number().int().nullable().openapi({
-    description: 'Serialized snapshot size in bytes, if a snapshot exists.',
+    description: 'Serialized snapshot JSON size in bytes, if a snapshot exists.',
   }),
 });
 

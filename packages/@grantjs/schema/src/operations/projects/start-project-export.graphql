@@ -1,0 +1,20 @@
+mutation StartProjectExport($id: ID!, $scope: Scope!, $input: StartProjectExportInput!) {
+  startProjectExport(id: $id, scope: $scope, input: $input) {
+    id
+    projectId
+    status
+    cdmVersion
+    jobName
+    operation
+    modeStrategy
+    warnings
+    errorMessage
+    enqueuedAt
+    startedAt
+    completedAt
+    cancelledAt
+    hasSnapshot
+    snapshotTakenAt
+    snapshotSizeBytes
+  }
+}

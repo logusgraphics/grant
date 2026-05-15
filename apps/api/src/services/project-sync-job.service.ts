@@ -20,13 +20,14 @@ import { ProjectSyncJobRepository } from '@/repositories/project-sync-job.reposi
 
 const ALLOWED_SCOPES: readonly string[] = [Tenant.AccountProject, Tenant.OrganizationProject];
 
-/** Compact job fields for audit rows (varchar limits); never store full CDM payload. */
 function compactJobSummary(job: ProjectSyncJob): Record<string, unknown> {
   return {
     status: job.status,
     projectId: job.projectId,
     cdmVersion: job.cdmVersion,
-    importId: job.importId,
+    jobName: job.jobName,
+    operation: job.operation,
+    modeStrategy: job.modeStrategy,
   };
 }
 
@@ -49,14 +50,9 @@ function compactResultSummary(result: SyncProjectResult): Record<string, unknown
 }
 
 /**
- * State-machine service for the asynchronous CDM permission sync job tracking
+ * State-machine service for the asynchronous CDM project sync job tracking
  * row. Owns persistence + lifecycle transitions only; the actual import is
  * performed by `IProjectSyncService` (called by the worker).
- *
- * Allowed transitions:
- *   pending   -> running | cancelled
- *   running   -> completed | failed | cancelled
- *   (terminal: completed, failed, cancelled)
  */
 export class ProjectSyncJobService implements IProjectSyncJobService {
   constructor(
@@ -69,8 +65,10 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
       projectId: string;
       scope: Scope;
       cdmVersion: number;
-      importId: string | null;
-      payload: SyncProjectInput;
+      jobName: string | null;
+      operation: 'import' | 'export';
+      modeStrategy: 'merge' | 'replace' | null;
+      payload: unknown;
       enqueuedById: string;
     },
     transaction?: Transaction
@@ -90,7 +88,9 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
         scopeTenant: params.scope.tenant,
         scopeId: params.scope.id,
         cdmVersion: params.cdmVersion,
-        importId: params.importId,
+        jobName: params.jobName,
+        operation: params.operation,
+        modeStrategy: params.modeStrategy,
         payload: params.payload,
         enqueuedById: params.enqueuedById,
       },
@@ -165,8 +165,8 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
     params: { projectId: string; jobId: string },
     transaction?: Transaction
   ): Promise<{
-    payload: SyncProjectInput;
-    importId: string | null;
+    payload: unknown;
+    jobName: string | null;
     cdmVersion: number;
   }> {
     const row = await this.repo.getPayloadById(params.jobId, transaction);
@@ -175,7 +175,7 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
     }
     return {
       payload: row.payload,
-      importId: row.importId,
+      jobName: row.jobName,
       cdmVersion: row.cdmVersion,
     };
   }
@@ -196,11 +196,16 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
     };
   }
 
-  public async findActiveByImportId(
-    params: { projectId: string; importId: string },
+  public async findActiveByJobKey(
+    params: {
+      projectId: string;
+      operation: 'import' | 'export';
+      jobName: string;
+      statuses?: readonly string[];
+    },
     transaction?: Transaction
   ): Promise<ProjectSyncJob | null> {
-    return this.repo.findActiveByImportId(params, transaction);
+    return this.repo.findActiveByJobKey(params, transaction);
   }
 
   public async transitionToRunning(
@@ -235,7 +240,11 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
   }
 
   public async markCompleted(
-    params: { jobId: string; result: SyncProjectResult; warnings: string[] },
+    params: {
+      jobId: string;
+      result: SyncProjectResult | null;
+      warnings: string[];
+    },
     transaction?: Transaction
   ): Promise<ProjectSyncJob> {
     const current = await this.repo.getById(params.jobId, transaction);
@@ -262,7 +271,7 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
       compactJobSummary(current),
       {
         ...compactJobSummary(updated),
-        ...compactResultSummary(params.result),
+        ...(params.result ? compactResultSummary(params.result) : { exportCompleted: true }),
       },
       { transition: 'RUNNING_TO_COMPLETED' },
       transaction
@@ -316,13 +325,6 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
     params: { jobId: string; snapshot: SyncProjectInput; takenAt: Date },
     transaction?: Transaction
   ): Promise<void> {
-    /**
-     * Compute byte length up front so the repository write is a single UPDATE.
-     * Buffer is the canonical Node API for this; avoids allocating a Blob just
-     * to read `.size`. Snapshots are JSON-serialisable by construction (we
-     * just produced them via the export pipeline), so `JSON.stringify` here
-     * cannot throw on circular refs.
-     */
     const sizeBytes = Buffer.byteLength(JSON.stringify(params.snapshot), 'utf8');
     await this.repo.updateSnapshot(
       {
@@ -356,9 +358,6 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
     const row = await this.repo.getSnapshotById(params.jobId, transaction);
     if (!row) return null;
     if (row.projectId !== params.projectId) {
-      // Treat a project-id mismatch as not-found rather than leaking the
-      // existence of a job belonging to a different project. Mirrors the
-      // approach in `getById` / `getPayload`.
       return null;
     }
     return {
@@ -377,7 +376,6 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
       throw new NotFoundError('ProjectSyncJob', params.jobId);
     }
     if (current.status === ProjectSyncJobStatus.Pending) {
-      // Hard cancel — the worker hasn't started yet, so we move to terminal.
       const updated = await this.repo.updateStatus(
         {
           jobId: params.jobId,
@@ -397,9 +395,6 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
       return updated;
     }
     if (current.status === ProjectSyncJobStatus.Running) {
-      // Soft cancel — record the intent; the worker checks `cancelRequested`
-      // between phases and finalises the cancellation. The status stays
-      // RUNNING until the worker exits cooperatively.
       const requestedAt = new Date();
       const updated = await this.repo.updateStatus(
         {

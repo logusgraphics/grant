@@ -8,6 +8,7 @@ import { ConflictError } from '@grantjs/core';
 import {
   CdmFindBy,
   CdmModeStrategy,
+  ProjectSyncJobOperation,
   ProjectSyncJobStatus,
   type Scope,
   type SyncProjectInput,
@@ -76,7 +77,9 @@ function buildJobRow(status: ProjectSyncJobStatus = ProjectSyncJobStatus.Pending
     projectId,
     status,
     cdmVersion: 1,
-    importId: null,
+    jobName: null,
+    operation: ProjectSyncJobOperation.Import,
+    modeStrategy: CdmModeStrategy.Merge,
     result: null,
     warnings: [],
     errorMessage: null,
@@ -84,6 +87,42 @@ function buildJobRow(status: ProjectSyncJobStatus = ProjectSyncJobStatus.Pending
     startedAt: null,
     completedAt: null,
     cancelledAt: null,
+    hasSnapshot: false,
+    snapshotTakenAt: null,
+    snapshotSizeBytes: null,
+  };
+}
+
+function buildExportExecData(
+  overrides: Partial<{
+    status: ProjectSyncJobStatus;
+    cancelRequested: boolean;
+    sections?: string[];
+    includeUserApiKeys?: boolean;
+    mode?: {
+      strategy: 'merge' | 'replace';
+      onConflict?: string | null;
+      confirmDestructive?: boolean;
+    };
+  }> = {}
+) {
+  const status = overrides.status ?? ProjectSyncJobStatus.Pending;
+  return {
+    job: {
+      ...buildJobRow(status),
+      operation: ProjectSyncJobOperation.Export,
+      modeStrategy: null,
+    },
+    payload: {
+      version: 1,
+      ...(overrides.sections != null ? { sections: overrides.sections } : {}),
+      ...(overrides.includeUserApiKeys !== undefined
+        ? { includeUserApiKeys: overrides.includeUserApiKeys }
+        : {}),
+      ...(overrides.mode != null ? { mode: overrides.mode } : {}),
+    },
+    scope: enqueueScope,
+    cancelRequested: overrides.cancelRequested ?? false,
   };
 }
 
@@ -242,6 +281,77 @@ describe('ProjectSyncJob worker', () => {
       userIds: [userId],
     });
     expect(mocks.markFailed).not.toHaveBeenCalled();
+  });
+
+  it('export job: materialises CDM, saves snapshot, marks completed with null result', async () => {
+    mocks.loadForExecution.mockResolvedValue(
+      buildExportExecData({ sections: ['roles'], includeUserApiKeys: false })
+    );
+    const exported = emptyCanonicalPayload({ id: 'my-project' });
+    mocks.exportProjectPermissions.mockResolvedValue(exported);
+
+    const job = buildJobInstance(mocks);
+    const outcome = await job.execute({
+      jobId: 'queue-export-1',
+      scheduledAt: new Date(),
+      startedAt: new Date(),
+      scope: enqueueScope,
+      payload: { jobRecordId },
+    });
+
+    expect(outcome.success).toBe(true);
+    expect(mocks.syncProject).not.toHaveBeenCalled();
+    expect(mocks.exportProjectPermissions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId,
+        scope: enqueueScope,
+        version: 1,
+        sections: ['roles'],
+        includeUserApiKeys: false,
+        mode: undefined,
+      }),
+      expect.objectContaining({ __mockTx: true })
+    );
+    expect(mocks.saveSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobId: jobRecordId,
+        snapshot: exported,
+      }),
+      expect.objectContaining({ __mockTx: true })
+    );
+    expect(mocks.markCompleted).toHaveBeenCalledWith(
+      {
+        jobId: jobRecordId,
+        result: null,
+        warnings: [],
+      },
+      expect.objectContaining({ __mockTx: true })
+    );
+    expect(mocks.invalidateCachesForSyncResult).not.toHaveBeenCalled();
+  });
+
+  it('export job forwards mode from payload to export service', async () => {
+    const exportMode = {
+      strategy: 'replace' as const,
+      onConflict: 'fail' as const,
+      confirmDestructive: true,
+    };
+    mocks.loadForExecution.mockResolvedValue(buildExportExecData({ mode: exportMode }));
+    mocks.exportProjectPermissions.mockResolvedValue(emptyCanonicalPayload());
+
+    const job = buildJobInstance(mocks);
+    await job.execute({
+      jobId: 'queue-export-mode',
+      scheduledAt: new Date(),
+      startedAt: new Date(),
+      scope: enqueueScope,
+      payload: { jobRecordId },
+    });
+
+    expect(mocks.exportProjectPermissions).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: exportMode }),
+      expect.objectContaining({ __mockTx: true })
+    );
   });
 
   it('captures a pre-sync snapshot inside the same transaction, before syncProject runs', async () => {

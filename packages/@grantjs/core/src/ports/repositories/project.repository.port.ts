@@ -326,7 +326,8 @@ export interface IProjectUserApiKeyRepository {
 /** Worker-internal view of a sync job, including the persisted payload + scope. */
 export interface ProjectSyncJobFull {
   job: ProjectSyncJob;
-  payload: SyncProjectInput;
+  /** Import: full `SyncProjectInput`. Export: `ProjectSyncJobExportPayload` JSON. */
+  payload: unknown;
   scopeTenant: string;
   scopeId: string;
   /** True when `cancel()` was invoked while the job was already running. */
@@ -347,8 +348,9 @@ export interface ListProjectSyncJobsParams {
 
 /** Result row for the payload endpoint: stored CDM body + lightweight identifiers. */
 export interface ProjectSyncJobPayloadRow {
-  payload: SyncProjectInput;
-  importId: string | null;
+  /** Import: `SyncProjectInput`. Export: `ProjectSyncJobExportPayload`. */
+  payload: unknown;
+  jobName: string | null;
   cdmVersion: number;
   projectId: string;
 }
@@ -368,8 +370,10 @@ export interface IProjectSyncJobRepository {
       scopeTenant: string;
       scopeId: string;
       cdmVersion: number;
-      importId: string | null;
-      payload: SyncProjectInput;
+      jobName: string | null;
+      operation: 'import' | 'export';
+      modeStrategy: 'merge' | 'replace' | null;
+      payload: unknown;
       enqueuedById: string;
     },
     transaction?: unknown
@@ -392,8 +396,14 @@ export interface IProjectSyncJobRepository {
     transaction?: unknown
   ): Promise<{ items: ProjectSyncJob[]; totalCount: number }>;
 
-  findActiveByImportId(
-    params: { projectId: string; importId: string },
+  findActiveByJobKey(
+    params: {
+      projectId: string;
+      operation: 'import' | 'export';
+      jobName: string;
+      /** DB status values; defaults to pending, running, and completed (import idempotency). */
+      statuses?: readonly string[];
+    },
     transaction?: unknown
   ): Promise<ProjectSyncJob | null>;
 

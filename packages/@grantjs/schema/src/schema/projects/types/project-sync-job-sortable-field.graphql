@@ -3,5 +3,5 @@ enum ProjectSyncJobSortableField {
   startedAt
   completedAt
   status
-  importId
+  jobName
 }

@@ -1,8 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ProjectSyncJob, ProjectSyncJobStatus } from '@grantjs/schema';
+import {
+  CdmModeStrategy,
+  ProjectSyncJob,
+  ProjectSyncJobOperation,
+  ProjectSyncJobStatus,
+} from '@grantjs/schema';
 import { AlertCircle, ArrowLeftRight, Download, Info, Loader2, RefreshCw } from 'lucide-react';
 
 import { CopyToClipboard, JsonEditor } from '@/components/common';
@@ -60,6 +65,7 @@ function SectionRow({ label, value, copy }: SectionRowProps) {
 
 export function PermissionSyncJobViewDialog() {
   const t = useTranslations('permissionSyncJobs.viewDialog');
+  const tStart = useTranslations('permissionSyncJobs.startDialog');
   const scope = useScopeFromParams();
 
   const jobToView = usePermissionSyncJobsStore((state) => state.jobToView);
@@ -114,15 +120,26 @@ export function PermissionSyncJobViewDialog() {
     setTab('status');
   };
 
-  const tabs: ReadonlyArray<{ id: ViewTab; label: string }> = useMemo(
-    () => [
+  const isExportJob = currentJob?.operation === ProjectSyncJobOperation.Export;
+
+  const tabs: ReadonlyArray<{ id: ViewTab; label: string }> = useMemo(() => {
+    const all: ReadonlyArray<{ id: ViewTab; label: string }> = [
       { id: 'status', label: t('tabs.status') },
       { id: 'result', label: t('tabs.result') },
-      { id: 'payload', label: t('tabs.payload') },
-      { id: 'snapshot', label: t('tabs.snapshot') },
-    ],
-    [t]
-  );
+      { id: 'payload', label: isExportJob ? t('tabs.exportRequest') : t('tabs.payload') },
+      {
+        id: 'snapshot',
+        label: isExportJob ? t('tabs.exportArtifact') : t('tabs.snapshot'),
+      },
+    ];
+    return isExportJob ? all.filter((entry) => entry.id !== 'result') : all;
+  }, [t, isExportJob]);
+
+  useEffect(() => {
+    if (isExportJob && tab === 'result') {
+      setTab('status');
+    }
+  }, [isExportJob, tab]);
 
   const result = currentJob?.result;
 
@@ -135,8 +152,8 @@ export function PermissionSyncJobViewDialog() {
             {currentJob && <PermissionSyncJobStatusBadge status={currentJob.status} />}
           </DialogTitle>
           <DialogDescription>
-            {currentJob?.importId ? (
-              <>{t('descriptionWithImport', { importId: currentJob.importId })}</>
+            {currentJob?.jobName ? (
+              <>{t('descriptionWithJobName', { jobName: currentJob.jobName })}</>
             ) : (
               t('description')
             )}
@@ -180,13 +197,35 @@ export function PermissionSyncJobViewDialog() {
             <div className="space-y-1">
               <SectionRow label={t('fields.jobId')} value={currentJob.id} copy={currentJob.id} />
               <SectionRow
-                label={t('fields.importId')}
+                label={t('fields.jobName')}
                 value={
-                  currentJob.importId ?? (
+                  currentJob.jobName ?? (
                     <span className="text-muted-foreground">{t('fields.notSet')}</span>
                   )
                 }
-                copy={currentJob.importId ?? undefined}
+                copy={currentJob.jobName ?? undefined}
+              />
+              <SectionRow
+                label={t('fields.operation')}
+                value={
+                  currentJob.operation === ProjectSyncJobOperation.Import
+                    ? 'IMPORT'
+                    : currentJob.operation === ProjectSyncJobOperation.Export
+                      ? 'EXPORT'
+                      : String(currentJob.operation)
+                }
+              />
+              <SectionRow
+                label={t('fields.strategy')}
+                value={
+                  isExportJob || currentJob.modeStrategy === CdmModeStrategy.Merge ? (
+                    tStart('summary.strategy.merge')
+                  ) : currentJob.modeStrategy === CdmModeStrategy.Replace ? (
+                    tStart('summary.strategy.replace')
+                  ) : (
+                    <span className="text-muted-foreground">{t('fields.notSet')}</span>
+                  )
+                }
               />
               <SectionRow label={t('fields.cdmVersion')} value={`v${currentJob.cdmVersion}`} />
               <SectionRow
@@ -319,11 +358,17 @@ export function PermissionSyncJobViewDialog() {
                   >
                     <Info className="size-4 shrink-0 self-center" aria-hidden />
                     <AlertDescription>
-                      {currentJob.snapshotTakenAt
-                        ? t('snapshot.takenAt', {
-                            time: formatTimestamp(currentJob.snapshotTakenAt),
-                          })
-                        : t('snapshot.summary')}
+                      {isExportJob
+                        ? currentJob.snapshotTakenAt
+                          ? t('snapshot.exportTakenAt', {
+                              time: formatTimestamp(currentJob.snapshotTakenAt),
+                            })
+                          : t('snapshot.exportSummary')
+                        : currentJob.snapshotTakenAt
+                          ? t('snapshot.takenAt', {
+                              time: formatTimestamp(currentJob.snapshotTakenAt),
+                            })
+                          : t('snapshot.summary')}
                     </AlertDescription>
                   </Alert>
                   {snapshotError ? (

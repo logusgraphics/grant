@@ -82,7 +82,7 @@ export function PermissionSyncJobStartDialog() {
 
   const isOpen = usePermissionSyncJobsStore((state) => state.isStartDialogOpen);
   const setOpen = usePermissionSyncJobsStore((state) => state.setStartDialogOpen);
-  const refetch = usePermissionSyncJobsStore((state) => state.refetch);
+  const prependJob = usePermissionSyncJobsStore((state) => state.prependJob);
 
   const [parsed, setParsed] = useState<ParsedPayload | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -167,7 +167,7 @@ export function PermissionSyncJobStartDialog() {
     if (!parsed) return null;
     const p = parsed.payload;
     const apiKeyCount = p.users?.reduce((n, u) => n + (u.apiKeys?.length ?? 0), 0) ?? 0;
-    const importId = typeof p.id === 'string' && p.id.trim() !== '' ? p.id.trim() : null;
+    const jobName = typeof p.id === 'string' && p.id.trim() !== '' ? p.id.trim() : null;
     const strategy = p.mode?.strategy;
     const onConflict = p.mode?.onConflict ?? null;
     const confirmDestructive = Boolean(p.mode?.confirmDestructive);
@@ -176,7 +176,7 @@ export function PermissionSyncJobStartDialog() {
       strategy,
       onConflict,
       confirmDestructive,
-      importId,
+      jobName,
       roles: p.roles?.length ?? 0,
       users: p.users?.length ?? 0,
       apiKeys: apiKeyCount,
@@ -215,11 +215,18 @@ export function PermissionSyncJobStartDialog() {
         ...parsed.payload,
         id,
       };
-      await startSync({ id: projectId, scope, input });
-      toast.success(tNotifications('startSuccess'));
-      refetch?.();
+      const job = await startSync({ id: projectId, scope, input });
       setOpen(false);
       reset();
+      toast.success(tNotifications('startSuccess'));
+      if (job) {
+        try {
+          await usePermissionSyncJobsStore.getState().refetch?.();
+        } catch {
+          // Best-effort; prepend below still surfaces the new row.
+        }
+        prependJob(job);
+      }
     } catch (error) {
       toast.error(tNotifications('startError'), {
         description: error instanceof Error ? error.message : undefined,
@@ -227,7 +234,7 @@ export function PermissionSyncJobStartDialog() {
     } finally {
       setSubmitting(false);
     }
-  }, [parsed, scope, projectId, startSync, tNotifications, refetch, setOpen, reset]);
+  }, [parsed, scope, projectId, prependJob, startSync, tNotifications, setOpen, reset]);
 
   if (!scope) {
     return null;
@@ -326,12 +333,10 @@ export function PermissionSyncJobStartDialog() {
                         <dd className="font-medium">{t('summary.confirmDestructiveYes')}</dd>
                       </div>
                     ) : null}
-                    {stats.importId ? (
+                    {stats.jobName ? (
                       <div className="min-w-0 sm:col-span-2">
-                        <dt className="text-xs text-muted-foreground">{t('summary.importId')}</dt>
-                        <dd className="break-all font-mono text-xs font-medium">
-                          {stats.importId}
-                        </dd>
+                        <dt className="text-xs text-muted-foreground">{t('summary.jobName')}</dt>
+                        <dd className="break-all font-mono text-xs font-medium">{stats.jobName}</dd>
                       </div>
                     ) : null}
                   </dl>

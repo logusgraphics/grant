@@ -75,7 +75,7 @@ export function PermissionSyncJobCancelDialog() {
           </AlertDialogTitle>
           <AlertDialogDescription>
             {t('description', {
-              importId: jobToCancel?.importId ?? jobToCancel?.id ?? '',
+              jobName: jobToCancel?.jobName ?? jobToCancel?.id ?? '',
             })}
           </AlertDialogDescription>
         </AlertDialogHeader>

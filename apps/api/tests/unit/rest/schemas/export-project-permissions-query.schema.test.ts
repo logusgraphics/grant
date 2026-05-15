@@ -21,4 +21,35 @@ describe('exportProjectPermissionsQuerySchema sections', () => {
     });
     expect(q.sections).toEqual(['roles']);
   });
+
+  it('parses includeUserApiKeys from string and boolean', async () => {
+    const off = await exportProjectPermissionsQuerySchema.parseAsync({
+      scopeId: 'a:b',
+      tenant: 'accountProject',
+      includeUserApiKeys: 'false',
+    });
+    expect(off.includeUserApiKeys).toBe(false);
+
+    const on = await exportProjectPermissionsQuerySchema.parseAsync({
+      scopeId: 'a:b',
+      tenant: 'accountProject',
+      includeUserApiKeys: 'true',
+    });
+    expect(on.includeUserApiKeys).toBe(true);
+
+    const bool = await exportProjectPermissionsQuerySchema.parseAsync({
+      scopeId: 'a:b',
+      tenant: 'accountProject',
+      includeUserApiKeys: false,
+    });
+    expect(bool.includeUserApiKeys).toBe(false);
+  });
+
+  it('omits includeUserApiKeys when not provided', async () => {
+    const q = await exportProjectPermissionsQuerySchema.parseAsync({
+      scopeId: 'a:b',
+      tenant: 'accountProject',
+    });
+    expect(q.includeUserApiKeys).toBeUndefined();
+  });
 });

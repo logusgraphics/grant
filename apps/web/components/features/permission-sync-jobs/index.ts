@@ -19,3 +19,4 @@ export * from './permission-sync-job-types';
 export * from './permission-sync-job-view-dialog';
 export * from './permission-sync-job-view-switcher';
 export * from './permission-sync-job-viewer';
+export * from './permission-sync-jobs-icon';

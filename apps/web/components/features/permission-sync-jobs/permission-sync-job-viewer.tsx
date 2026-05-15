@@ -40,9 +40,7 @@ export function PermissionSyncJobViewer() {
     status: status ?? undefined,
   });
 
-  const handleRefetch = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+  const handleRefetch = useCallback(() => refetch(), [refetch]);
 
   useEffect(() => {
     setRefetch(handleRefetch);

@@ -1,0 +1,31 @@
+"""
+Parameters for enqueueing an asynchronous CDM **export** job. The worker
+materialises a `SyncProjectInput` document and stores it in the job `snapshot`
+column; this input is persisted as the job `payload` (export options only).
+"""
+input StartProjectExportInput {
+  """
+  CDM document version (only `1` is supported).
+  """
+  version: Int!
+  """
+  Optional stable idempotency / display name (same column as import `SyncProjectInput.id`).
+  When set, an active job for the same `(project, operation=EXPORT, jobName)` is returned
+  instead of creating a new one.
+  """
+  jobName: String
+  """
+  Subset of CDM slices to export; omit or empty for a full project export.
+  """
+  sections: [String!]
+  """
+  When `users` are exported, whether to emit CDM-managed project user API key rows
+  (identity only). Omit = default true (full export behaviour).
+  """
+  includeUserApiKeys: Boolean
+  """
+  Embedded in the exported CDM document `mode` block for re-import.
+  Does not change export execution (snapshot is always read-only).
+  """
+  mode: CdmModeInput
+}

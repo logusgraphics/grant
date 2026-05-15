@@ -4,7 +4,9 @@ mutation CancelProjectSync($id: ID!, $scope: Scope!, $jobId: ID!) {
     projectId
     status
     cdmVersion
-    importId
+    jobName
+    operation
+    modeStrategy
     warnings
     errorMessage
     enqueuedAt

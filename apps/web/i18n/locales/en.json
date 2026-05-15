@@ -3193,7 +3193,7 @@
       "table": "Table"
     },
     "search": {
-      "placeholder": "Search by import id"
+      "placeholder": "Search by job name"
     },
     "sort": {
       "label": "Sort",
@@ -3201,7 +3201,7 @@
       "startedAt": "Started",
       "completedAt": "Completed",
       "status": "Status",
-      "importId": "Import ID"
+      "jobName": "Job name"
     },
     "filter": {
       "status": "Status"
@@ -3214,24 +3214,50 @@
       "export": "Export"
     },
     "exportDialog": {
-      "title": "Export CDM",
-      "description": "Choose which parts of the permission model to include. Unchecked sections appear as empty arrays in the downloaded JSON. Top-level `resources` / `permissions` only list rows CDM imported for this project; catalog grants still appear under `roles.permissions` (permission keys or slug/action where applicable).",
+      "title": "Export Project",
+      "contentsInfo": "Choose which data to include in the export. The job runs in the background; download the CDM from the jobs list when it completes.",
+      "readMore": "Read more",
+      "readMoreAria": "Read more about CDM export (opens in a new tab)",
       "sections": {
-        "resources": "Resources (custom project resources and project links)",
-        "permissions": "Permissions (custom project permissions and project links)",
-        "permissionsNeedResources": "Requires resources — permissions reference resources in the export.",
-        "catalogResourcesMayBeEmpty": "May be empty if this project only uses the global catalog—custom resource rows are listed when CDM created them for this project.",
-        "catalogPermissionsMayBeEmpty": "May be empty if grants use only catalog permissions—see `roles` for permission keys and catalog references.",
-        "tags": "Tags (project tags and role/group/user tag associations)",
-        "groups": "Groups (group rows linked from roles and group permission keys)",
-        "roles": "Roles (role rows, tag links, and permission keys for this project)",
-        "users": "Users (members, roles, and user API keys in this document)",
-        "usersIncludeApiKeys": "When included, user rows carry `apiKeys` (identity only; no secrets on export)."
+        "users": "Users",
+        "usersHint": "Members and role assignments for this project.",
+        "userApiKeys": "User API keys",
+        "userApiKeysHint": "CDM-managed key identities in this export. Secrets are never included.",
+        "roles": "Roles",
+        "rolesHint": "Definitions and permission keys for this project (including catalog references).",
+        "groups": "Groups",
+        "groupsHint": "Rows referenced by roles and group-level grants.",
+        "resources": "Resources",
+        "resourcesHint": "Project resources and links. Often empty when you use only the global catalog.",
+        "permissions": "Permissions",
+        "permissionsHint": "Custom rows tied to resources. Selecting this also includes Resources.",
+        "tags": "Tags",
+        "tagsHint": "Definitions and assignments for users, roles, and groups."
       },
       "helperReimport": "Importing users without roles may require merging this file with another export that includes roles.",
+      "tabs": {
+        "contents": "Contents",
+        "options": "Options"
+      },
+      "options": {
+        "jobNameLabel": "Job name",
+        "jobNameHint": "Optional label for the job list and idempotency key",
+        "versionOption": "v{version}",
+        "onConflictDefault": "Default",
+        "confirmDestructiveHint": "When checked, CDM-managed entities are deleted and recreated on a replace import.",
+        "replaceRequiresConfirm": "Confirm destructive change on the Options tab before exporting with replace mode.",
+        "reimportDefaultsInfo": "These options are written into the exported CDM mode block for a future import. They do not change what is exported from the database.",
+        "docsAria": {
+          "jobName": "Documentation: export job name (opens in a new tab)",
+          "version": "Documentation: CDM version on export (opens in a new tab)",
+          "mode": "Documentation: re-import mode strategy (opens in a new tab)",
+          "onConflict": "Documentation: on conflict during re-import (opens in a new tab)",
+          "confirmDestructive": "Documentation: confirm destructive re-import (opens in a new tab)"
+        }
+      },
       "cancel": "Cancel",
-      "export": "Download JSON",
-      "exporting": "Exporting…"
+      "export": "Export",
+      "submitting": "Enqueueing…"
     },
     "status": {
       "all": "All",
@@ -3241,11 +3267,17 @@
       "failed": "Failed",
       "cancelled": "Cancelled"
     },
+    "operation": {
+      "import": "Import",
+      "export": "Export"
+    },
     "table": {
       "status": "Status",
-      "importId": "Import ID",
-      "noImportId": "(no import id)",
-      "cdmVersion": "CDM",
+      "jobName": "Job name",
+      "noJobName": "(no job name)",
+      "operation": "Operation",
+      "strategy": "Strategy",
+      "cdmVersion": "CDM version",
       "enqueuedAt": "Enqueued",
       "startedAt": "Started",
       "completedAt": "Completed",
@@ -3260,11 +3292,12 @@
     },
     "noResults": {
       "title": "No matching jobs",
-      "description": "Try clearing filters or searching for a different import id."
+      "description": "Try clearing filters or searching for a different job name."
     },
     "actions": {
       "view": "View details",
       "downloadPayload": "Download payload",
+      "downloadExport": "Download export",
       "cancel": "Cancel job"
     },
     "startDialog": {
@@ -3300,7 +3333,7 @@
         },
         "confirmDestructiveLabel": "Destructive change",
         "confirmDestructiveYes": "Confirmed",
-        "importId": "Import ID",
+        "jobName": "Job name (idempotency)",
         "roles": "Roles",
         "users": "Users",
         "apiKeys": "User API keys",
@@ -3323,19 +3356,23 @@
     "viewDialog": {
       "title": "Sync job",
       "description": "Inspect this job's lifecycle, results, and original payload.",
-      "descriptionWithImport": "Import {importId}",
+      "descriptionWithJobName": "Job name: {jobName}",
       "tabs": {
         "status": "Status",
         "result": "Result",
         "payload": "Payload",
-        "snapshot": "Rollback snapshot"
+        "exportRequest": "Export options",
+        "snapshot": "Rollback snapshot",
+        "exportArtifact": "Exported CDM"
       },
       "polling": "Updating…",
       "loading": "Loading job details…",
       "close": "Close",
       "fields": {
         "jobId": "Job ID",
-        "importId": "Import ID",
+        "jobName": "Job name",
+        "operation": "Operation",
+        "strategy": "Strategy",
         "cdmVersion": "CDM version",
         "enqueuedAt": "Enqueued",
         "startedAt": "Started",
@@ -3346,6 +3383,7 @@
         "warnings": "{count, plural, =1 {# warning} other {# warnings}}"
       },
       "result": {
+        "exportNotApplicable": "Export jobs do not produce import counters. Download the generated CDM from the Exported CDM tab once the job completes.",
         "notAvailable": "Results are available once the job has completed.",
         "rolesCreated": "Roles created",
         "groupsCreated": "Groups created",
@@ -3385,6 +3423,8 @@
         "download": "Download JSON"
       },
       "snapshot": {
+        "exportSummary": "This is the generated CDM export produced when the job completed. Download it to clone or back up the project's permission model.",
+        "exportTakenAt": "Generated {time} when the export completed.",
         "summary": "This snapshot was captured automatically before the sync ran, inside the same transaction as the import. Replay it as a CDM payload to roll the project back to the state it had before this job.",
         "takenAt": "Captured {time}, just before this sync ran.",
         "loading": "Loading snapshot…",
@@ -3395,7 +3435,7 @@
     },
     "cancelDialog": {
       "title": "Cancel sync job",
-      "description": "Cancel job {importId}? Pending jobs are removed from the queue. Running jobs are stopped on a best-effort basis at the next safe checkpoint.",
+      "description": "Cancel job {jobName}? Pending jobs are removed from the queue. Running jobs are stopped on a best-effort basis at the next safe checkpoint.",
       "cancel": "Keep job",
       "confirm": "Cancel job",
       "confirming": "Cancelling…"
@@ -3403,6 +3443,8 @@
     "notifications": {
       "startSuccess": "Sync job enqueued",
       "startError": "Failed to start sync",
+      "exportSuccess": "Export job enqueued",
+      "exportError": "Failed to start export",
       "cancelSuccess": "Sync job cancelled",
       "cancelError": "Failed to cancel sync"
     }

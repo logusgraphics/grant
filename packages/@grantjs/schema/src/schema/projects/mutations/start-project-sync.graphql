@@ -7,8 +7,9 @@ extend type Mutation {
 
   Returns immediately with a job descriptor in the PENDING status; the actual
   import runs in the background. Poll `projectSyncJob` for status.
-  Pass `input.importId` for idempotency: if an active job already exists for
-  the same (project, importId), that job is returned instead of creating a new one.
+  Pass optional `input.id` as a stable **job name** for idempotency: if an active job
+  already exists for the same `(project, operation=IMPORT, jobName)`, that job is
+  returned instead of creating a new one.
   """
   startProjectSync(id: ID!, scope: Scope!, input: SyncProjectInput!): ProjectSyncJob!
 }

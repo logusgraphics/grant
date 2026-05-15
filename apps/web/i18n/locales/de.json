@@ -3192,7 +3192,7 @@
       "table": "Tabelle"
     },
     "search": {
-      "placeholder": "Suche nach Import-ID"
+      "placeholder": "Suche nach Jobnamen"
     },
     "sort": {
       "label": "Sortieren",
@@ -3200,7 +3200,7 @@
       "startedAt": "Gestartet",
       "completedAt": "Abgeschlossen",
       "status": "Status",
-      "importId": "Import-ID"
+      "jobName": "Jobname"
     },
     "filter": {
       "status": "Status"
@@ -3213,24 +3213,50 @@
       "export": "Export"
     },
     "exportDialog": {
-      "title": "CDM exportieren",
-      "description": "Wähle, welche Teile des Berechtigungsmodells enthalten sein sollen. Nicht ausgewählte Abschnitte erscheinen im heruntergeladenen JSON als leere Arrays. Die obersten Felder `resources` / `permissions` listen nur Zeilen, die CDM für dieses Projekt importiert hat; Katalogzuweisungen stehen weiterhin unter `roles.permissions` (Berechtigungsschlüssel bzw. Slug/Aktion).",
+      "title": "Projekt exportieren",
+      "contentsInfo": "Wähle, welche Daten der Export enthalten soll. Der Job läuft im Hintergrund; lade das CDM aus der Jobliste herunter, sobald er abgeschlossen ist.",
+      "readMore": "Mehr erfahren",
+      "readMoreAria": "Mehr über CDM-Export (öffnet in neuem Tab)",
       "sections": {
-        "resources": "Ressourcen (benutzerdefinierte Projektressourcen und Projektverknüpfungen)",
-        "permissions": "Berechtigungen (benutzerdefinierte Projektberechtigungen und Projektverknüpfungen)",
-        "permissionsNeedResources": "Benötigt Ressourcen — Berechtigungen verweisen auf Ressourcen im Export.",
-        "catalogResourcesMayBeEmpty": "Kann leer sein, wenn das Projekt nur den globalen Katalog nutzt — benutzerdefinierte Ressourcenzeilen erscheinen, wenn CDM sie für dieses Projekt erstellt hat.",
-        "catalogPermissionsMayBeEmpty": "Kann leer sein, wenn Zuweisungen nur Katalogberechtigungen nutzen — siehe `roles` für Berechtigungsschlüssel und Katalogreferenzen.",
-        "tags": "Tags (Projekt-Tags und Rollen-/Gruppen-/Benutzer-Tag-Zuordnungen)",
-        "groups": "Gruppen (Gruppenzeilen, die über Rollen verknüpft sind, und Gruppen-Berechtigungsschlüssel)",
-        "roles": "Rollen (Rollenzeilen, Tag-Verknüpfungen und Berechtigungsschlüssel für dieses Projekt)",
-        "users": "Benutzer (Mitglieder, Rollen und Benutzer-API-Schlüssel in diesem Dokument)",
-        "usersIncludeApiKeys": "Wenn enthalten, tragen Benutzerzeilen `apiKeys` (nur Identität; keine Geheimnisse im Export)."
+        "users": "Benutzer",
+        "usersHint": "Mitglieder und Rollenzuweisungen für dieses Projekt.",
+        "userApiKeys": "Benutzer-API-Schlüssel",
+        "userApiKeysHint": "CDM-verwaltete Schlüssel-Identitäten in diesem Export. Geheimnisse sind nie enthalten.",
+        "roles": "Rollen",
+        "rolesHint": "Definitionen und Berechtigungsschlüssel (inkl. Katalogreferenzen).",
+        "groups": "Gruppen",
+        "groupsHint": "Zeilen, auf die Rollen und Gruppenzuweisungen verweisen.",
+        "resources": "Ressourcen",
+        "resourcesHint": "Projektressourcen und Verknüpfungen. Oft leer bei ausschließlichem Katalog.",
+        "permissions": "Berechtigungen",
+        "permissionsHint": "Benutzerdefinierte Zeilen zu Ressourcen. Schaltet Ressourcen mit ein.",
+        "tags": "Tags",
+        "tagsHint": "Definitionen und Zuweisungen für Benutzer, Rollen und Gruppen."
       },
       "helperReimport": "Beim Import von Benutzern ohne Rollen musst du diese Datei ggf. mit einem anderen Export zusammenführen, der Rollen enthält.",
+      "tabs": {
+        "contents": "Inhalt",
+        "options": "Optionen"
+      },
+      "options": {
+        "jobNameLabel": "Jobname",
+        "jobNameHint": "Optionale Bezeichnung für die Jobliste und Idempotenzschlüssel",
+        "versionOption": "v{version}",
+        "onConflictDefault": "Standard",
+        "confirmDestructiveHint": "Wenn aktiviert, werden CDM-verwaltete Entitäten beim Replace-Import gelöscht und neu erstellt.",
+        "replaceRequiresConfirm": "Bestätige die zerstörerische Änderung auf dem Tab „Optionen“, bevor du mit Replace-Modus exportierst.",
+        "reimportDefaultsInfo": "Diese Optionen werden in den exportierten CDM-mode-Block für einen späteren Import geschrieben. Sie ändern nicht, was aus der Datenbank exportiert wird.",
+        "docsAria": {
+          "jobName": "Dokumentation: Export-Jobname (öffnet in neuem Tab)",
+          "version": "Dokumentation: CDM-Version beim Export (öffnet in neuem Tab)",
+          "mode": "Dokumentation: Re-Import-Modus (öffnet in neuem Tab)",
+          "onConflict": "Dokumentation: Verhalten bei Konflikten beim Re-Import (öffnet in neuem Tab)",
+          "confirmDestructive": "Dokumentation: Zerstörerischen Re-Import bestätigen (öffnet in neuem Tab)"
+        }
+      },
       "cancel": "Abbrechen",
-      "export": "JSON herunterladen",
-      "exporting": "Export läuft…"
+      "export": "Export",
+      "submitting": "Wird eingereiht…"
     },
     "status": {
       "all": "Alle",
@@ -3240,11 +3266,17 @@
       "failed": "Fehlgeschlagen",
       "cancelled": "Abgebrochen"
     },
+    "operation": {
+      "import": "Import",
+      "export": "Export"
+    },
     "table": {
       "status": "Status",
-      "importId": "Import-ID",
-      "noImportId": "(keine Import-ID)",
-      "cdmVersion": "CDM",
+      "jobName": "Jobname",
+      "noJobName": "(kein Jobname)",
+      "operation": "Vorgang",
+      "strategy": "Strategie",
+      "cdmVersion": "CDM-Version",
       "enqueuedAt": "Eingereiht",
       "startedAt": "Gestartet",
       "completedAt": "Abgeschlossen",
@@ -3259,11 +3291,12 @@
     },
     "noResults": {
       "title": "Keine passenden Jobs",
-      "description": "Filter zurücksetzen oder nach einer anderen Import-ID suchen."
+      "description": "Filter zurücksetzen oder nach einem anderen Jobnamen suchen."
     },
     "actions": {
       "view": "Details anzeigen",
       "downloadPayload": "Payload herunterladen",
+      "downloadExport": "Export herunterladen",
       "cancel": "Job abbrechen"
     },
     "startDialog": {
@@ -3299,7 +3332,7 @@
         },
         "confirmDestructiveLabel": "Zerstörerische Änderung",
         "confirmDestructiveYes": "Bestätigt",
-        "importId": "Import-ID",
+        "jobName": "Jobname (Idempotenz)",
         "roles": "Rollen",
         "users": "Benutzer",
         "apiKeys": "Benutzer-API-Schlüssel",
@@ -3322,19 +3355,23 @@
     "viewDialog": {
       "title": "Sync-Job",
       "description": "Inspiziere den Lebenszyklus, das Ergebnis und die Originaldaten dieses Jobs.",
-      "descriptionWithImport": "Import {importId}",
+      "descriptionWithJobName": "Jobname: {jobName}",
       "tabs": {
         "status": "Status",
         "result": "Ergebnis",
         "payload": "Payload",
-        "snapshot": "Rollback-Snapshot"
+        "exportRequest": "Export-Optionen",
+        "snapshot": "Rollback-Snapshot",
+        "exportArtifact": "Exportiertes CDM"
       },
       "polling": "Aktualisiere…",
       "loading": "Lade Job-Details…",
       "close": "Schließen",
       "fields": {
         "jobId": "Job-ID",
-        "importId": "Import-ID",
+        "jobName": "Jobname",
+        "operation": "Vorgang",
+        "strategy": "Strategie",
         "cdmVersion": "CDM-Version",
         "enqueuedAt": "Eingereiht",
         "startedAt": "Gestartet",
@@ -3345,6 +3382,7 @@
         "warnings": "{count, plural, =1 {# Warnung} other {# Warnungen}}"
       },
       "result": {
+        "exportNotApplicable": "Export-Jobs liefern keine Import-Zähler. Laden Sie das generierte CDM nach Abschluss über den Tab „Exportiertes CDM“ herunter.",
         "notAvailable": "Ergebnisse sind verfügbar, sobald der Job abgeschlossen ist.",
         "rolesCreated": "Rollen erstellt",
         "groupsCreated": "Gruppen erstellt",
@@ -3384,6 +3422,8 @@
         "download": "JSON herunterladen"
       },
       "snapshot": {
+        "exportSummary": "Dies ist das generierte CDM-Exportdokument nach Abschluss des Jobs. Laden Sie es herunter, um das Berechtigungsmodell zu sichern oder zu klonen.",
+        "exportTakenAt": "Generiert am {time}, als der Export abgeschlossen wurde.",
         "summary": "Dieser Snapshot wurde automatisch vor dem Sync in derselben Transaktion wie der Import erstellt. Er kann als CDM-Payload erneut abgespielt werden, um das Projekt auf den Stand vor diesem Job zurückzusetzen.",
         "takenAt": "Aufgenommen am {time}, kurz bevor dieser Sync ausgeführt wurde.",
         "loading": "Lade Snapshot…",
@@ -3394,7 +3434,7 @@
     },
     "cancelDialog": {
       "title": "Sync-Job abbrechen",
-      "description": "Job {importId} abbrechen? Ausstehende Jobs werden aus der Warteschlange entfernt. Laufende Jobs werden beim nächsten sicheren Punkt nach bestem Bemühen gestoppt.",
+      "description": "Job {jobName} abbrechen? Ausstehende Jobs werden aus der Warteschlange entfernt. Laufende Jobs werden beim nächsten sicheren Punkt nach bestem Bemühen gestoppt.",
       "cancel": "Job behalten",
       "confirm": "Job abbrechen",
       "confirming": "Wird abgebrochen…"
@@ -3402,6 +3442,8 @@
     "notifications": {
       "startSuccess": "Sync-Job eingereiht",
       "startError": "Sync konnte nicht gestartet werden",
+      "exportSuccess": "Export-Job eingereiht",
+      "exportError": "Export konnte nicht gestartet werden",
       "cancelSuccess": "Sync-Job abgebrochen",
       "cancelError": "Sync-Job konnte nicht abgebrochen werden"
     }

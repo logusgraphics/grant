@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { ApolloCache, NetworkStatus } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
+import type { CdmExportSection, CdmModeInput } from '@grantjs/schema';
 import {
   CancelProjectSyncDocument,
   ProjectSyncJob,
   ProjectSyncJobDocument,
+  ProjectSyncJobOperation,
   ProjectSyncJobStatus,
   Scope,
+  StartProjectExportDocument,
   StartProjectSyncDocument,
   SyncProjectInput,
 } from '@grantjs/schema';
@@ -73,6 +76,40 @@ export function useStartProjectSync() {
   };
 }
 
+/** Enqueue an async CDM export job (same pipeline as import; artifact in job snapshot). */
+export function useStartProjectExport() {
+  const [start, state] = useMutation<{ startProjectExport: ProjectSyncJob }>(
+    StartProjectExportDocument
+  );
+
+  const startExport = useCallback(
+    async (params: {
+      id: string;
+      scope: Scope;
+      input: {
+        version: number;
+        jobName?: string | null;
+        sections?: readonly CdmExportSection[];
+        includeUserApiKeys?: boolean | null;
+        mode?: CdmModeInput | null;
+      };
+    }) => {
+      const { id, scope, input } = params;
+      const result = await start({ variables: { id, scope, input } });
+      return result.data?.startProjectExport;
+    },
+    [start]
+  );
+
+  return {
+    startExport,
+    loading: state.loading,
+    error: state.error,
+    job: state.data?.startProjectExport,
+    reset: state.reset,
+  };
+}
+
 export interface UseProjectSyncJobParams {
   id: string;
   scope: Scope | undefined;
@@ -117,7 +154,10 @@ export function useProjectSyncJob(params: UseProjectSyncJobParams) {
 
   useEffect(() => {
     if (!job) return;
-    if (status === ProjectSyncJobStatus.Completed) {
+    if (
+      status === ProjectSyncJobStatus.Completed &&
+      job.operation === ProjectSyncJobOperation.Import
+    ) {
       // Defer past the current commit; eviction + gc touches all watchers.
       queueMicrotask(() => {
         evictAffectedCaches(client.cache, job.id);

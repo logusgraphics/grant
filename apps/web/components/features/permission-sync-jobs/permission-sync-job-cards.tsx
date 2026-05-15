@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { ProjectSyncJob } from '@grantjs/schema';
-import { Activity, Fingerprint, History } from 'lucide-react';
+import { Activity, FileJson } from 'lucide-react';
 
 import { CardBody, CardGrid, CardHeader } from '@/components/common';
 import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
@@ -10,12 +10,22 @@ import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store'
 import { PermissionSyncJobActions } from './permission-sync-job-actions';
 import { PermissionSyncJobAudit } from './permission-sync-job-audit';
 import { PermissionSyncJobCardSkeleton } from './permission-sync-job-card-skeleton';
+import {
+  formatModeStrategy,
+  getJobAvatarInitial,
+  getOperationLabelKey,
+} from './permission-sync-job-display';
 import { PermissionSyncJobExportTrigger } from './permission-sync-job-export-trigger';
 import { PermissionSyncJobStartTrigger } from './permission-sync-job-start-trigger';
 import { PermissionSyncJobStatusBadge } from './permission-sync-job-status-badge';
+import {
+  PermissionSyncJobsModuleIcon,
+  PermissionSyncJobsModuleIconElement,
+} from './permission-sync-jobs-icon';
 
 export function PermissionSyncJobCards() {
   const t = useTranslations('permissionSyncJobs');
+  const tStart = useTranslations('permissionSyncJobs.startDialog');
 
   const limit = usePermissionSyncJobsStore((state) => state.limit);
   const search = usePermissionSyncJobsStore((state) => state.search);
@@ -29,7 +39,7 @@ export function PermissionSyncJobCards() {
       entities={jobs}
       loading={loading}
       emptyState={{
-        icon: <History />,
+        icon: <PermissionSyncJobsModuleIconElement />,
         title: isFiltered ? t('noResults.title') : t('empty.title'),
         description: isFiltered ? t('noResults.description') : t('empty.description'),
         action: isFiltered ? undefined : (
@@ -45,9 +55,9 @@ export function PermissionSyncJobCards() {
       }}
       renderHeader={(job) => (
         <CardHeader
-          avatar={{ initial: '#', size: 'lg' }}
-          title={job.importId ?? t('table.noImportId')}
-          description={`v${job.cdmVersion}`}
+          avatar={{ initial: getJobAvatarInitial(job), size: 'lg' }}
+          title={job.jobName ?? t('table.noJobName')}
+          description={t(getOperationLabelKey(job.operation))}
           actions={<PermissionSyncJobActions job={job} />}
         />
       )}
@@ -63,10 +73,21 @@ export function PermissionSyncJobCards() {
             },
             {
               label: {
-                icon: <Fingerprint className="h-3 w-3" />,
-                text: t('table.jobId'),
+                icon: <PermissionSyncJobsModuleIcon className="h-3 w-3" />,
+                text: t('table.strategy'),
               },
-              value: <span className="text-xs font-mono break-all">{job.id}</span>,
+              value: (
+                <span className="text-sm text-muted-foreground">
+                  {formatModeStrategy(job, tStart)}
+                </span>
+              ),
+            },
+            {
+              label: {
+                icon: <FileJson className="h-3 w-3" />,
+                text: t('table.cdmVersion'),
+              },
+              value: <span className="text-sm">v{job.cdmVersion}</span>,
             },
           ]}
         />
