@@ -2,6 +2,6 @@
 
 import { CardSkeleton } from '@/components/common';
 
-export function PermissionSyncJobCardSkeleton() {
+export function ProjectSyncJobCardSkeleton() {
   return <CardSkeleton />;
 }

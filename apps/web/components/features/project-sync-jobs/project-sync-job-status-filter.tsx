@@ -14,16 +14,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  PERMISSION_SYNC_JOB_STATUS_FILTERS,
-  usePermissionSyncJobsStore,
-} from '@/stores/permission-sync-jobs.store';
+  PROJECT_SYNC_JOB_STATUS_FILTERS,
+  useProjectSyncJobsStore,
+} from '@/stores/project-sync-jobs.store';
 
-export function PermissionSyncJobStatusFilter() {
-  const t = useTranslations('permissionSyncJobs');
-  const status = usePermissionSyncJobsStore((state) => state.status);
-  const setStatus = usePermissionSyncJobsStore((state) => state.setStatus);
+export function ProjectSyncJobStatusFilter() {
+  const t = useTranslations('projectSyncJobs');
+  const status = useProjectSyncJobsStore((state) => state.status);
+  const setStatus = useProjectSyncJobsStore((state) => state.setStatus);
 
-  const activeOption = PERMISSION_SYNC_JOB_STATUS_FILTERS.find((opt) => opt.value === status);
+  const activeOption = PROJECT_SYNC_JOB_STATUS_FILTERS.find((opt) => opt.value === status);
   const activeLabel = activeOption ? t(activeOption.labelKey) : t('status.all');
   const tooltipText = `${t('filter.status')}: ${activeLabel}`;
 
@@ -54,7 +54,7 @@ export function PermissionSyncJobStatusFilter() {
           <DropdownMenuContent align="end" className="w-48" fullWidthOnMobile>
             <DropdownMenuLabel>{t('filter.status')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {PERMISSION_SYNC_JOB_STATUS_FILTERS.map((option) => (
+            {PROJECT_SYNC_JOB_STATUS_FILTERS.map((option) => (
               <DropdownMenuCheckboxItem
                 key={option.value ?? 'all'}
                 checked={status === option.value}

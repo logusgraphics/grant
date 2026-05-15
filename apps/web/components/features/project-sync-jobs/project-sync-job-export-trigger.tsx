@@ -11,12 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useScopeFromParams } from '@/hooks/common';
 import { cn } from '@/lib/utils';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
 type ExportTriggerLayout = 'empty' | 'toolbar';
 
-export interface PermissionSyncJobExportTriggerProps {
-  /** `toolbar` matches responsive icon + label layout in `PermissionSyncJobToolbar`. */
+export interface ProjectSyncJobExportTriggerProps {
+  /** `toolbar` matches responsive icon + label layout in `ProjectSyncJobToolbar`. */
   layout?: ExportTriggerLayout;
 }
 
@@ -26,14 +26,14 @@ export interface PermissionSyncJobExportTriggerProps {
  * Gated by `Project:Update`. Download the generated CDM from the jobs list or job details
  * once the export completes.
  */
-export function PermissionSyncJobExportTrigger({
+export function ProjectSyncJobExportTrigger({
   layout = 'empty',
-}: PermissionSyncJobExportTriggerProps) {
-  const t = useTranslations('permissionSyncJobs');
+}: ProjectSyncJobExportTriggerProps) {
+  const t = useTranslations('projectSyncJobs');
   const scope = useScopeFromParams();
   const params = useParams();
   const projectId = params.projectId as string | undefined;
-  const setExportDialogOpen = usePermissionSyncJobsStore((s) => s.setExportDialogOpen);
+  const setExportDialogOpen = useProjectSyncJobsStore((s) => s.setExportDialogOpen);
 
   const projectGrantContext = useMemo(
     () =>

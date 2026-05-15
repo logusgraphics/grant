@@ -2,7 +2,7 @@ import { CdmModeStrategy, ProjectSyncJob, ProjectSyncJobOperation } from '@grant
 
 import { getInitials } from '@/lib/utils';
 
-export type PermissionSyncJobOperationLabelKey = 'operation.import' | 'operation.export';
+export type ProjectSyncJobOperationLabelKey = 'operation.import' | 'operation.export';
 
 export function getJobAvatarInitial(job: Pick<ProjectSyncJob, 'jobName'>): string {
   return getInitials(job.jobName, 2, '?');
@@ -10,7 +10,7 @@ export function getJobAvatarInitial(job: Pick<ProjectSyncJob, 'jobName'>): strin
 
 export function getOperationLabelKey(
   operation: ProjectSyncJobOperation
-): PermissionSyncJobOperationLabelKey {
+): ProjectSyncJobOperationLabelKey {
   if (operation === ProjectSyncJobOperation.Import) {
     return 'operation.import';
   }

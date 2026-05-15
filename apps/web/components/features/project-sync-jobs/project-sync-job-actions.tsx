@@ -11,9 +11,9 @@ import { type ActionItem, Actions } from '@/components/common';
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useProjectSyncJobPayload, useProjectSyncJobSnapshot } from '@/hooks/projects';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
-interface PermissionSyncJobActionsProps {
+interface ProjectSyncJobActionsProps {
   job: ProjectSyncJob;
 }
 
@@ -22,12 +22,12 @@ const ACTIVE_STATUSES: ReadonlyArray<ProjectSyncJobStatus> = [
   ProjectSyncJobStatus.Running,
 ];
 
-export function PermissionSyncJobActions({ job }: PermissionSyncJobActionsProps) {
-  const t = useTranslations('permissionSyncJobs.actions');
+export function ProjectSyncJobActions({ job }: ProjectSyncJobActionsProps) {
+  const t = useTranslations('projectSyncJobs.actions');
   const scope = useScopeFromParams();
 
-  const setJobToView = usePermissionSyncJobsStore((state) => state.setJobToView);
-  const setJobToCancel = usePermissionSyncJobsStore((state) => state.setJobToCancel);
+  const setJobToView = useProjectSyncJobsStore((state) => state.setJobToView);
+  const setJobToCancel = useProjectSyncJobsStore((state) => state.setJobToCancel);
 
   const [hasBeenOpened, setHasBeenOpened] = useState(false);
   const handleOpenChange = useCallback(

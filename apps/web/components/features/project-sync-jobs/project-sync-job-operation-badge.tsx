@@ -7,18 +7,18 @@ import { valueBadgeClassName } from '@/components/common/scroll-badges';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-import { getOperationLabelKey } from './permission-sync-job-display';
+import { getOperationLabelKey } from './project-sync-job-display';
 
-interface PermissionSyncJobOperationBadgeProps {
+interface ProjectSyncJobOperationBadgeProps {
   operation: ProjectSyncJobOperation;
   className?: string;
 }
 
-export function PermissionSyncJobOperationBadge({
+export function ProjectSyncJobOperationBadge({
   operation,
   className,
-}: PermissionSyncJobOperationBadgeProps) {
-  const t = useTranslations('permissionSyncJobs');
+}: ProjectSyncJobOperationBadgeProps) {
+  const t = useTranslations('projectSyncJobs');
 
   return (
     <Badge variant="outline" className={cn(valueBadgeClassName, className)}>

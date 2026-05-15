@@ -7,7 +7,7 @@ import { Calendar, CalendarClock, Clock } from 'lucide-react';
 import { Audit, type AuditField } from '@/components/common';
 import { formatTimestamp } from '@/lib/utils';
 
-interface PermissionSyncJobAuditProps {
+interface ProjectSyncJobAuditProps {
   job: ProjectSyncJob;
   className?: string;
 }
@@ -15,8 +15,8 @@ interface PermissionSyncJobAuditProps {
 /**
  * Card-footer lifecycle timestamps, aligned with {@link SigningKeyAudit} / {@link ApiKeyAudit}.
  */
-export function PermissionSyncJobAudit({ job, className }: PermissionSyncJobAuditProps) {
-  const t = useTranslations('permissionSyncJobs');
+export function ProjectSyncJobAudit({ job, className }: ProjectSyncJobAuditProps) {
+  const t = useTranslations('projectSyncJobs');
 
   const auditFields: AuditField[] = [
     {

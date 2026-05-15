@@ -19,7 +19,7 @@ import {
 
 import { WorkspaceSwitcher } from '@/components/common';
 import { OrganizationSwitcher } from '@/components/features/organizations';
-import { PermissionSyncJobsModuleIcon } from '@/components/features/permission-sync-jobs/permission-sync-jobs-icon';
+import { ProjectSyncJobsModuleIcon } from '@/components/features/project-sync-jobs/project-sync-jobs-icon';
 import { ProjectSwitcher } from '@/components/features/projects';
 import { Sidebar } from '@/components/ui/sidebar';
 
@@ -111,9 +111,9 @@ export function ProjectSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
           icon: Tag,
         },
         {
-          title: t('permissionSyncJobs'),
+          title: t('projectSyncJobs'),
           url: `/dashboard/organizations/${organizationId}/projects/${projectId}/import-export`,
-          icon: PermissionSyncJobsModuleIcon,
+          icon: ProjectSyncJobsModuleIcon,
         },
       ],
       checkActive: true,

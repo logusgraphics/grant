@@ -29,9 +29,9 @@ import {
 } from '@/hooks/projects';
 import { formatTimestamp } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
-import { PermissionSyncJobStatusBadge } from './permission-sync-job-status-badge';
+import { ProjectSyncJobStatusBadge } from './project-sync-job-status-badge';
 
 type ViewTab = 'status' | 'result' | 'payload' | 'snapshot';
 
@@ -63,13 +63,13 @@ function SectionRow({ label, value, copy }: SectionRowProps) {
   );
 }
 
-export function PermissionSyncJobViewDialog() {
-  const t = useTranslations('permissionSyncJobs.viewDialog');
-  const tStart = useTranslations('permissionSyncJobs.startDialog');
+export function ProjectSyncJobViewDialog() {
+  const t = useTranslations('projectSyncJobs.viewDialog');
+  const tStart = useTranslations('projectSyncJobs.startDialog');
   const scope = useScopeFromParams();
 
-  const jobToView = usePermissionSyncJobsStore((state) => state.jobToView);
-  const setJobToView = usePermissionSyncJobsStore((state) => state.setJobToView);
+  const jobToView = useProjectSyncJobsStore((state) => state.jobToView);
+  const setJobToView = useProjectSyncJobsStore((state) => state.setJobToView);
 
   const [tab, setTab] = useState<ViewTab>('status');
 
@@ -149,7 +149,7 @@ export function PermissionSyncJobViewDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {t('title')}
-            {currentJob && <PermissionSyncJobStatusBadge status={currentJob.status} />}
+            {currentJob && <ProjectSyncJobStatusBadge status={currentJob.status} />}
           </DialogTitle>
           <DialogDescription>
             {currentJob?.jobName ? (

@@ -3,35 +3,35 @@
 import { useTranslations } from 'next-intl';
 
 import {
-  PermissionSyncJobCancelDialog,
-  PermissionSyncJobExportDialog,
-  PermissionSyncJobPagination,
-  PermissionSyncJobStartDialog,
-  PermissionSyncJobToolbar,
-  PermissionSyncJobViewDialog,
-  PermissionSyncJobViewer,
-} from '@/components/features/permission-sync-jobs';
+  ProjectSyncJobCancelDialog,
+  ProjectSyncJobExportDialog,
+  ProjectSyncJobPagination,
+  ProjectSyncJobStartDialog,
+  ProjectSyncJobToolbar,
+  ProjectSyncJobViewDialog,
+  ProjectSyncJobViewer,
+} from '@/components/features/project-sync-jobs';
 import { DashboardLayout } from '@/components/layout';
 import { ProjectSidebar } from '@/components/navigation';
 import { usePageTitle } from '@/hooks';
 
-export default function ProjectPermissionSyncJobsPage() {
-  const t = useTranslations('permissionSyncJobs');
-  usePageTitle('permissionSyncJobs');
+export default function OrganizationProjectImportExportPage() {
+  const t = useTranslations('projectSyncJobs');
+  usePageTitle('projectSyncJobs');
 
   return (
     <DashboardLayout
       title={t('title')}
       sidebar={<ProjectSidebar />}
-      actions={<PermissionSyncJobToolbar />}
-      footer={<PermissionSyncJobPagination />}
+      actions={<ProjectSyncJobToolbar />}
+      footer={<ProjectSyncJobPagination />}
     >
       <>
-        <PermissionSyncJobViewer />
-        <PermissionSyncJobStartDialog />
-        <PermissionSyncJobExportDialog />
-        <PermissionSyncJobViewDialog />
-        <PermissionSyncJobCancelDialog />
+        <ProjectSyncJobViewer />
+        <ProjectSyncJobStartDialog />
+        <ProjectSyncJobExportDialog />
+        <ProjectSyncJobViewDialog />
+        <ProjectSyncJobCancelDialog />
       </>
     </DashboardLayout>
   );

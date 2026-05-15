@@ -5,33 +5,33 @@ import { ProjectSyncJob } from '@grantjs/schema';
 import { Activity, FileJson } from 'lucide-react';
 
 import { CardBody, CardGrid, CardHeader } from '@/components/common';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
-import { PermissionSyncJobActions } from './permission-sync-job-actions';
-import { PermissionSyncJobAudit } from './permission-sync-job-audit';
-import { PermissionSyncJobCardSkeleton } from './permission-sync-job-card-skeleton';
+import { ProjectSyncJobActions } from './project-sync-job-actions';
+import { ProjectSyncJobAudit } from './project-sync-job-audit';
+import { ProjectSyncJobCardSkeleton } from './project-sync-job-card-skeleton';
 import {
   formatModeStrategy,
   getJobAvatarInitial,
   getOperationLabelKey,
-} from './permission-sync-job-display';
-import { PermissionSyncJobExportTrigger } from './permission-sync-job-export-trigger';
-import { PermissionSyncJobStartTrigger } from './permission-sync-job-start-trigger';
-import { PermissionSyncJobStatusBadge } from './permission-sync-job-status-badge';
+} from './project-sync-job-display';
+import { ProjectSyncJobExportTrigger } from './project-sync-job-export-trigger';
+import { ProjectSyncJobStartTrigger } from './project-sync-job-start-trigger';
+import { ProjectSyncJobStatusBadge } from './project-sync-job-status-badge';
 import {
-  PermissionSyncJobsModuleIcon,
-  PermissionSyncJobsModuleIconElement,
-} from './permission-sync-jobs-icon';
+  ProjectSyncJobsModuleIcon,
+  ProjectSyncJobsModuleIconElement,
+} from './project-sync-jobs-icon';
 
-export function PermissionSyncJobCards() {
-  const t = useTranslations('permissionSyncJobs');
-  const tStart = useTranslations('permissionSyncJobs.startDialog');
+export function ProjectSyncJobCards() {
+  const t = useTranslations('projectSyncJobs');
+  const tStart = useTranslations('projectSyncJobs.startDialog');
 
-  const limit = usePermissionSyncJobsStore((state) => state.limit);
-  const search = usePermissionSyncJobsStore((state) => state.search);
-  const status = usePermissionSyncJobsStore((state) => state.status);
-  const jobs = usePermissionSyncJobsStore((state) => state.jobs);
-  const loading = usePermissionSyncJobsStore((state) => state.loading);
+  const limit = useProjectSyncJobsStore((state) => state.limit);
+  const search = useProjectSyncJobsStore((state) => state.search);
+  const status = useProjectSyncJobsStore((state) => state.status);
+  const jobs = useProjectSyncJobsStore((state) => state.jobs);
+  const loading = useProjectSyncJobsStore((state) => state.loading);
   const isFiltered = !!search || status !== null;
 
   return (
@@ -39,18 +39,18 @@ export function PermissionSyncJobCards() {
       entities={jobs}
       loading={loading}
       emptyState={{
-        icon: <PermissionSyncJobsModuleIconElement />,
+        icon: <ProjectSyncJobsModuleIconElement />,
         title: isFiltered ? t('noResults.title') : t('empty.title'),
         description: isFiltered ? t('noResults.description') : t('empty.description'),
         action: isFiltered ? undefined : (
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <PermissionSyncJobStartTrigger />
-            <PermissionSyncJobExportTrigger />
+            <ProjectSyncJobStartTrigger />
+            <ProjectSyncJobExportTrigger />
           </div>
         ),
       }}
       skeleton={{
-        component: <PermissionSyncJobCardSkeleton />,
+        component: <ProjectSyncJobCardSkeleton />,
         count: limit,
       }}
       renderHeader={(job) => (
@@ -58,7 +58,7 @@ export function PermissionSyncJobCards() {
           avatar={{ initial: getJobAvatarInitial(job), size: 'lg' }}
           title={job.jobName ?? t('table.noJobName')}
           description={t(getOperationLabelKey(job.operation))}
-          actions={<PermissionSyncJobActions job={job} />}
+          actions={<ProjectSyncJobActions job={job} />}
         />
       )}
       renderBody={(job) => (
@@ -69,11 +69,11 @@ export function PermissionSyncJobCards() {
                 icon: <Activity className="h-3 w-3" />,
                 text: t('table.status'),
               },
-              value: <PermissionSyncJobStatusBadge status={job.status} />,
+              value: <ProjectSyncJobStatusBadge status={job.status} />,
             },
             {
               label: {
-                icon: <PermissionSyncJobsModuleIcon className="h-3 w-3" />,
+                icon: <ProjectSyncJobsModuleIcon className="h-3 w-3" />,
                 text: t('table.strategy'),
               },
               value: (
@@ -92,7 +92,7 @@ export function PermissionSyncJobCards() {
           ]}
         />
       )}
-      renderFooter={(job) => <PermissionSyncJobAudit job={job} />}
+      renderFooter={(job) => <ProjectSyncJobAudit job={job} />}
     />
   );
 }

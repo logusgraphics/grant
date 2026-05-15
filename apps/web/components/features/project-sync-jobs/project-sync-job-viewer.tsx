@@ -7,28 +7,28 @@ import { ResourceAction, ResourceSlug } from '@grantjs/constants';
 
 import { useScopeFromParams } from '@/hooks/common';
 import { useProjectSyncJobs } from '@/hooks/projects';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
-import { PermissionSyncJobCards } from './permission-sync-job-cards';
-import { PermissionSyncJobTable } from './permission-sync-job-table';
-import { PermissionSyncJobView } from './permission-sync-job-types';
+import { ProjectSyncJobCards } from './project-sync-job-cards';
+import { ProjectSyncJobTable } from './project-sync-job-table';
+import { ProjectSyncJobView } from './project-sync-job-types';
 
-export function PermissionSyncJobViewer() {
+export function ProjectSyncJobViewer() {
   const scope = useScopeFromParams();
   const params = useParams();
   const projectId = params.projectId as string;
 
-  const view = usePermissionSyncJobsStore((state) => state.view);
-  const page = usePermissionSyncJobsStore((state) => state.page);
-  const limit = usePermissionSyncJobsStore((state) => state.limit);
-  const search = usePermissionSyncJobsStore((state) => state.search);
-  const sort = usePermissionSyncJobsStore((state) => state.sort);
-  const status = usePermissionSyncJobsStore((state) => state.status);
+  const view = useProjectSyncJobsStore((state) => state.view);
+  const page = useProjectSyncJobsStore((state) => state.page);
+  const limit = useProjectSyncJobsStore((state) => state.limit);
+  const search = useProjectSyncJobsStore((state) => state.search);
+  const sort = useProjectSyncJobsStore((state) => state.sort);
+  const status = useProjectSyncJobsStore((state) => state.status);
 
-  const setJobs = usePermissionSyncJobsStore((state) => state.setJobs);
-  const setTotalCount = usePermissionSyncJobsStore((state) => state.setTotalCount);
-  const setLoading = usePermissionSyncJobsStore((state) => state.setLoading);
-  const setRefetch = usePermissionSyncJobsStore((state) => state.setRefetch);
+  const setJobs = useProjectSyncJobsStore((state) => state.setJobs);
+  const setTotalCount = useProjectSyncJobsStore((state) => state.setTotalCount);
+  const setLoading = useProjectSyncJobsStore((state) => state.setLoading);
+  const setRefetch = useProjectSyncJobsStore((state) => state.setRefetch);
 
   const { jobs, totalCount, loading, refetch } = useProjectSyncJobs({
     id: projectId,
@@ -68,10 +68,10 @@ export function PermissionSyncJobViewer() {
   }
 
   switch (view) {
-    case PermissionSyncJobView.CARDS:
-      return <PermissionSyncJobCards />;
-    case PermissionSyncJobView.TABLE:
+    case ProjectSyncJobView.CARDS:
+      return <ProjectSyncJobCards />;
+    case ProjectSyncJobView.TABLE:
     default:
-      return <PermissionSyncJobTable />;
+      return <ProjectSyncJobTable />;
   }
 }

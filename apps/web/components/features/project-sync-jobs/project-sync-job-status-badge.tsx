@@ -5,7 +5,7 @@ import { ProjectSyncJobStatus } from '@grantjs/schema';
 
 import { cn } from '@/lib/utils';
 
-interface PermissionSyncJobStatusBadgeProps {
+interface ProjectSyncJobStatusBadgeProps {
   status: ProjectSyncJobStatus;
   className?: string;
 }
@@ -33,11 +33,8 @@ const STATUS_VISUALS: Record<ProjectSyncJobStatus, { className: string; labelKey
   },
 };
 
-export function PermissionSyncJobStatusBadge({
-  status,
-  className,
-}: PermissionSyncJobStatusBadgeProps) {
-  const t = useTranslations('permissionSyncJobs');
+export function ProjectSyncJobStatusBadge({ status, className }: ProjectSyncJobStatusBadgeProps) {
+  const t = useTranslations('projectSyncJobs');
   const visuals = STATUS_VISUALS[status];
 
   return <span className={cn('text-sm', visuals.className, className)}>{t(visuals.labelKey)}</span>;

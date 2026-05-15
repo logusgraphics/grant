@@ -191,7 +191,7 @@
       "backToOrganization": "Zurück zur Organisation",
       "signingKeys": "Signierungsschlüssel",
       "projectApps": "Apps",
-      "permissionSyncJobs": "Import/Export"
+      "projectSyncJobs": "Import/Export"
     }
   },
   "theme": {
@@ -3185,8 +3185,8 @@
       "rotateError": "Fehler beim Rotieren des Signaturschlüssels"
     }
   },
-  "permissionSyncJobs": {
-    "title": "Berechtigungs-Sync",
+  "projectSyncJobs": {
+    "title": "Import/Export",
     "view": {
       "cards": "Karten",
       "table": "Tabelle"

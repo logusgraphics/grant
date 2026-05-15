@@ -44,7 +44,7 @@ import { useScopeFromParams } from '@/hooks/common';
 import { useStartProjectExport } from '@/hooks/projects';
 import { getDocsUrl } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
 type ExportDialogTab = 'contents' | 'options';
 
@@ -208,17 +208,17 @@ function CdmExportSectionRow({
   return row;
 }
 
-export function PermissionSyncJobExportDialog() {
-  const t = useTranslations('permissionSyncJobs.exportDialog');
-  const tStart = useTranslations('permissionSyncJobs.startDialog.summary');
-  const tNotifications = useTranslations('permissionSyncJobs.notifications');
+export function ProjectSyncJobExportDialog() {
+  const t = useTranslations('projectSyncJobs.exportDialog');
+  const tStart = useTranslations('projectSyncJobs.startDialog.summary');
+  const tNotifications = useTranslations('projectSyncJobs.notifications');
   const scope = useScopeFromParams();
   const params = useParams();
   const projectId = params.projectId as string | undefined;
 
-  const open = usePermissionSyncJobsStore((s) => s.isExportDialogOpen);
-  const setOpen = usePermissionSyncJobsStore((s) => s.setExportDialogOpen);
-  const prependJob = usePermissionSyncJobsStore((s) => s.prependJob);
+  const open = useProjectSyncJobsStore((s) => s.isExportDialogOpen);
+  const setOpen = useProjectSyncJobsStore((s) => s.setExportDialogOpen);
+  const prependJob = useProjectSyncJobsStore((s) => s.prependJob);
 
   const [tab, setTab] = useState<ExportDialogTab>('contents');
   const [cdmVersion, setCdmVersion] = useState<(typeof CDM_EXPORT_VERSIONS)[number]>(1);
@@ -333,7 +333,7 @@ export function PermissionSyncJobExportDialog() {
       setOpen(false);
       toast.success(tNotifications('exportSuccess'));
       try {
-        await usePermissionSyncJobsStore.getState().refetch?.();
+        await useProjectSyncJobsStore.getState().refetch?.();
       } catch {
         // Best-effort; prepend below still surfaces the new row.
       }

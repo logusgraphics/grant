@@ -20,16 +20,16 @@ import {
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useCancelProjectSync } from '@/hooks/projects';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
-export function PermissionSyncJobCancelDialog() {
-  const t = useTranslations('permissionSyncJobs.cancelDialog');
-  const tNotifications = useTranslations('permissionSyncJobs.notifications');
+export function ProjectSyncJobCancelDialog() {
+  const t = useTranslations('projectSyncJobs.cancelDialog');
+  const tNotifications = useTranslations('projectSyncJobs.notifications');
   const scope = useScopeFromParams();
 
-  const jobToCancel = usePermissionSyncJobsStore((state) => state.jobToCancel);
-  const setJobToCancel = usePermissionSyncJobsStore((state) => state.setJobToCancel);
-  const refetch = usePermissionSyncJobsStore((state) => state.refetch);
+  const jobToCancel = useProjectSyncJobsStore((state) => state.jobToCancel);
+  const setJobToCancel = useProjectSyncJobsStore((state) => state.setJobToCancel);
+  const refetch = useProjectSyncJobsStore((state) => state.refetch);
 
   const { cancelSync } = useCancelProjectSync();
   const [isCancelling, setIsCancelling] = useState(false);

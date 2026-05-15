@@ -8,18 +8,18 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 import {
-  PermissionSyncJobStatusFilterValue,
-  PermissionSyncJobView,
-} from '@/components/features/permission-sync-jobs/permission-sync-job-types';
+  ProjectSyncJobStatusFilterValue,
+  ProjectSyncJobView,
+} from '@/components/features/project-sync-jobs/project-sync-job-types';
 
-interface PermissionSyncJobsState {
+interface ProjectSyncJobsState {
   // Filters / pagination
   page: number;
   limit: number;
   search: string;
   sort: { field: ProjectSyncJobSortableField; order: SortOrder };
-  status: PermissionSyncJobStatusFilterValue;
-  view: PermissionSyncJobView;
+  status: ProjectSyncJobStatusFilterValue;
+  view: ProjectSyncJobView;
 
   // Data
   jobs: ProjectSyncJob[];
@@ -38,8 +38,8 @@ interface PermissionSyncJobsState {
   setLimit: (limit: number) => void;
   setSearch: (search: string) => void;
   setSort: (field: ProjectSyncJobSortableField, order: SortOrder) => void;
-  setStatus: (status: PermissionSyncJobStatusFilterValue) => void;
-  setView: (view: PermissionSyncJobView) => void;
+  setStatus: (status: ProjectSyncJobStatusFilterValue) => void;
+  setView: (view: ProjectSyncJobView) => void;
   setJobs: (jobs: ProjectSyncJob[]) => void;
   /** Prepends a job when absent (e.g. right after enqueue, before list refetch settles). */
   prependJob: (job: ProjectSyncJob) => void;
@@ -65,8 +65,8 @@ const initialState = {
   limit: 25,
   search: '',
   sort: defaultSort,
-  status: null as PermissionSyncJobStatusFilterValue,
-  view: PermissionSyncJobView.TABLE,
+  status: null as ProjectSyncJobStatusFilterValue,
+  view: ProjectSyncJobView.TABLE,
   jobs: [] as ProjectSyncJob[],
   totalCount: 0,
   loading: false,
@@ -77,7 +77,7 @@ const initialState = {
   jobToCancel: null as ProjectSyncJob | null,
 };
 
-export const usePermissionSyncJobsStore = create<PermissionSyncJobsState>()(
+export const useProjectSyncJobsStore = create<ProjectSyncJobsState>()(
   devtools(
     (set) => ({
       ...initialState,
@@ -107,12 +107,12 @@ export const usePermissionSyncJobsStore = create<PermissionSyncJobsState>()(
 
       resetToDefaults: () => set({ ...initialState }),
     }),
-    { name: 'grant-permission-sync-jobs-store' }
+    { name: 'grant-project-sync-jobs-store' }
   )
 );
 
-export const PERMISSION_SYNC_JOB_STATUS_FILTERS: ReadonlyArray<{
-  value: PermissionSyncJobStatusFilterValue;
+export const PROJECT_SYNC_JOB_STATUS_FILTERS: ReadonlyArray<{
+  value: ProjectSyncJobStatusFilterValue;
   labelKey: string;
 }> = [
   { value: null, labelKey: 'status.all' },

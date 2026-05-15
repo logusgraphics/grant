@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 import { WorkspaceSwitcher } from '@/components/common';
-import { PermissionSyncJobsModuleIcon } from '@/components/features/permission-sync-jobs/permission-sync-jobs-icon';
+import { ProjectSyncJobsModuleIcon } from '@/components/features/project-sync-jobs/project-sync-jobs-icon';
 import { ProjectSwitcher } from '@/components/features/projects';
 import { Sidebar } from '@/components/ui/sidebar';
 
@@ -94,9 +94,9 @@ export function PersonalProjectSidebar({ ...props }: ComponentProps<typeof Sideb
           icon: Tag,
         },
         {
-          title: t('permissionSyncJobs'),
+          title: t('projectSyncJobs'),
           url: `/dashboard/accounts/${accountId}/projects/${projectId}/import-export`,
-          icon: PermissionSyncJobsModuleIcon,
+          icon: ProjectSyncJobsModuleIcon,
         },
       ],
       checkActive: true,

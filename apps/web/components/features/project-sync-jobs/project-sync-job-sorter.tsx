@@ -4,12 +4,12 @@ import { useTranslations } from 'next-intl';
 import { ProjectSyncJobSortableField, SortOrder } from '@grantjs/schema';
 
 import { Sorter, type SortInput } from '@/components/common';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
-export function PermissionSyncJobSorter() {
-  const t = useTranslations('permissionSyncJobs');
-  const sort = usePermissionSyncJobsStore((state) => state.sort);
-  const setSort = usePermissionSyncJobsStore((state) => state.setSort);
+export function ProjectSyncJobSorter() {
+  const t = useTranslations('projectSyncJobs');
+  const sort = useProjectSyncJobsStore((state) => state.sort);
+  const setSort = useProjectSyncJobsStore((state) => state.setSort);
 
   const fields = [
     {
@@ -49,7 +49,7 @@ export function PermissionSyncJobSorter() {
       onSortChange={handleSortChange}
       fields={fields}
       defaultField={ProjectSyncJobSortableField.EnqueuedAt}
-      translationNamespace="permissionSyncJobs"
+      translationNamespace="projectSyncJobs"
       showLabel={false}
     />
   );

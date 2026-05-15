@@ -24,7 +24,7 @@ import {
 import { useRequiresEmailVerificationForMutation } from '@/hooks/auth';
 import { useScopeFromParams } from '@/hooks/common';
 import { useStartProjectSync } from '@/hooks/projects';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const ACCEPT_JSON = {
@@ -67,9 +67,9 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function PermissionSyncJobStartDialog() {
-  const t = useTranslations('permissionSyncJobs.startDialog');
-  const tNotifications = useTranslations('permissionSyncJobs.notifications');
+export function ProjectSyncJobStartDialog() {
+  const t = useTranslations('projectSyncJobs.startDialog');
+  const tNotifications = useTranslations('projectSyncJobs.notifications');
   const scope = useScopeFromParams();
   const params = useParams();
   const projectId = params.projectId as string;
@@ -80,9 +80,9 @@ export function PermissionSyncJobStartDialog() {
     [projectId]
   );
 
-  const isOpen = usePermissionSyncJobsStore((state) => state.isStartDialogOpen);
-  const setOpen = usePermissionSyncJobsStore((state) => state.setStartDialogOpen);
-  const prependJob = usePermissionSyncJobsStore((state) => state.prependJob);
+  const isOpen = useProjectSyncJobsStore((state) => state.isStartDialogOpen);
+  const setOpen = useProjectSyncJobsStore((state) => state.setStartDialogOpen);
+  const prependJob = useProjectSyncJobsStore((state) => state.prependJob);
 
   const [parsed, setParsed] = useState<ParsedPayload | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -221,7 +221,7 @@ export function PermissionSyncJobStartDialog() {
       toast.success(tNotifications('startSuccess'));
       if (job) {
         try {
-          await usePermissionSyncJobsStore.getState().refetch?.();
+          await useProjectSyncJobsStore.getState().refetch?.();
         } catch {
           // Best-effort; prepend below still surfaces the new row.
         }

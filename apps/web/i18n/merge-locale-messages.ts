@@ -1,6 +1,6 @@
 /**
  * Deep-merge locale JSON roots (shared + web). Arrays are replaced by the override when present.
- * Plain objects merge recursively so nested keys (e.g. permissionSyncJobs.startDialog.summary) are
+ * Plain objects merge recursively so nested keys (e.g. projectSyncJobs.startDialog.summary) are
  * not dropped when one side only updates part of the tree.
  */
 function isPlainRecord(value: unknown): value is Record<string, unknown> {

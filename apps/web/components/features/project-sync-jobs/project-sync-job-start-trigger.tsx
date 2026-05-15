@@ -11,12 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useScopeFromParams } from '@/hooks/common';
 import { cn } from '@/lib/utils';
-import { usePermissionSyncJobsStore } from '@/stores/permission-sync-jobs.store';
+import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
 type StartTriggerLayout = 'empty' | 'toolbar';
 
-export interface PermissionSyncJobStartTriggerProps {
-  /** `toolbar` matches responsive icon + label layout in `PermissionSyncJobToolbar`. */
+export interface ProjectSyncJobStartTriggerProps {
+  /** `toolbar` matches responsive icon + label layout in `ProjectSyncJobToolbar`. */
   layout?: StartTriggerLayout;
 }
 
@@ -24,14 +24,12 @@ export interface PermissionSyncJobStartTriggerProps {
  * Opens the start-sync dialog. Respects project `Update` grant and loading state
  * (useGrant defaults to false while the check is in flight — see start dialog).
  */
-export function PermissionSyncJobStartTrigger({
-  layout = 'empty',
-}: PermissionSyncJobStartTriggerProps) {
-  const t = useTranslations('permissionSyncJobs');
+export function ProjectSyncJobStartTrigger({ layout = 'empty' }: ProjectSyncJobStartTriggerProps) {
+  const t = useTranslations('projectSyncJobs');
   const scope = useScopeFromParams();
   const params = useParams();
   const projectId = params.projectId as string | undefined;
-  const setStartDialogOpen = usePermissionSyncJobsStore((s) => s.setStartDialogOpen);
+  const setStartDialogOpen = useProjectSyncJobsStore((s) => s.setStartDialogOpen);
 
   const projectGrantContext = useMemo(
     () =>
