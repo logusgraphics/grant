@@ -61,6 +61,64 @@
   margin-inline: auto;
 }
 
+/*
+ * CDM import/export sequence diagrams: phase contrast via rect / alt blocks.
+ * Use ```bmermaid diagram-cdm-flow ``` (see cdm-import-export.md).
+ */
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg {
+  --cdm-phase-upload-fill: rgba(37, 99, 235, 0.1);
+  --cdm-phase-upload-stroke: rgba(37, 99, 235, 0.35);
+  --cdm-phase-bg-fill: rgba(99, 102, 241, 0.09);
+  --cdm-phase-bg-stroke: rgba(99, 102, 241, 0.32);
+  --cdm-phase-done-fill: rgba(16, 185, 129, 0.1);
+  --cdm-phase-done-stroke: rgba(16, 185, 129, 0.35);
+  --cdm-alt-fill: rgba(16, 185, 129, 0.06);
+  --cdm-alt-stroke: rgba(16, 185, 129, 0.28);
+}
+
+.dark .beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg {
+  --cdm-phase-upload-fill: rgba(59, 130, 246, 0.14);
+  --cdm-phase-upload-stroke: rgba(96, 165, 250, 0.4);
+  --cdm-phase-bg-fill: rgba(129, 140, 248, 0.12);
+  --cdm-phase-bg-stroke: rgba(165, 180, 252, 0.38);
+  --cdm-phase-done-fill: rgba(52, 211, 153, 0.12);
+  --cdm-phase-done-stroke: rgba(52, 211, 153, 0.38);
+  --cdm-alt-fill: rgba(52, 211, 153, 0.1);
+  --cdm-alt-stroke: rgba(52, 211, 153, 0.32);
+}
+
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg :deep(g.block[data-type='rect']:nth-of-type(1) > rect:first-child) {
+  fill: var(--cdm-phase-upload-fill);
+  stroke: var(--cdm-phase-upload-stroke);
+}
+
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg :deep(g.block[data-type='rect']:nth-of-type(2) > rect:first-child) {
+  fill: var(--cdm-phase-bg-fill);
+  stroke: var(--cdm-phase-bg-stroke);
+}
+
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg :deep(g.block[data-type='rect']:nth-of-type(3) > rect:first-child) {
+  fill: var(--cdm-phase-done-fill);
+  stroke: var(--cdm-phase-done-stroke);
+}
+
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg :deep(g.block[data-type='alt'] > rect:first-child) {
+  fill: var(--cdm-alt-fill);
+  stroke: var(--cdm-alt-stroke);
+}
+
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg :deep(rect.activation) {
+  fill: var(--vp-c-brand-soft);
+  stroke: var(--vp-c-brand-1);
+  stroke-opacity: 0.45;
+}
+
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg :deep(g.note polygon),
+.beautiful-mermaid.diagram-cdm-flow .beautiful-mermaid-svg :deep(g.note rect) {
+  fill: var(--vp-c-bg-soft);
+  stroke: var(--vp-c-divider);
+}
+
 .dark {
   --vp-c-brand-1: #3b82f6;
   --vp-c-brand-2: #2563eb;

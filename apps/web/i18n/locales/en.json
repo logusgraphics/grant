@@ -3247,6 +3247,11 @@
         "confirmDestructiveHint": "When checked, CDM-managed entities are deleted and recreated on a replace import.",
         "replaceRequiresConfirm": "Confirm destructive change on the Options tab before exporting with replace mode.",
         "reimportDefaultsInfo": "These options are written into the exported CDM mode block for a future import. They do not change what is exported from the database.",
+        "fieldInfo": {
+          "version": "CDM schema version stamped on the exported document.",
+          "mode": "Merge updates existing entities on re-import; replace removes CDM-managed rows before applying the file.",
+          "onConflict": "When merge mode finds a conflict during re-import, choose whether to fail, skip, or update the existing row."
+        },
         "docsAria": {
           "jobName": "Documentation: export job name (opens in a new tab)",
           "version": "Documentation: CDM version on export (opens in a new tab)",
@@ -3276,8 +3281,8 @@
       "jobName": "Job name",
       "noJobName": "(no job name)",
       "operation": "Operation",
-      "strategy": "Strategy",
-      "cdmVersion": "CDM version",
+      "mode": "Mode",
+      "cdmVersion": "Version",
       "enqueuedAt": "Enqueued",
       "startedAt": "Started",
       "completedAt": "Completed",
@@ -3333,6 +3338,7 @@
         },
         "confirmDestructiveLabel": "Destructive change",
         "confirmDestructiveYes": "Confirmed",
+        "confirmDestructiveNo": "Not confirmed",
         "jobName": "Job name (idempotency)",
         "roles": "Roles",
         "users": "Users",
@@ -3356,12 +3362,10 @@
     "viewDialog": {
       "title": "Sync job",
       "description": "Inspect this job's lifecycle, results, and original payload.",
-      "descriptionWithJobName": "Job name: {jobName}",
       "tabs": {
-        "status": "Status",
+        "details": "Details",
         "result": "Result",
         "payload": "Payload",
-        "exportRequest": "Export options",
         "snapshot": "Rollback snapshot",
         "exportArtifact": "Exported CDM"
       },
@@ -3369,11 +3373,14 @@
       "loading": "Loading job details…",
       "close": "Close",
       "fields": {
+        "status": "Status",
         "jobId": "Job ID",
         "jobName": "Job name",
         "operation": "Operation",
-        "strategy": "Strategy",
-        "cdmVersion": "CDM version",
+        "mode": "Mode",
+        "onConflict": "On conflict",
+        "confirmDestructive": "Destructive change",
+        "cdmVersion": "Version",
         "enqueuedAt": "Enqueued",
         "startedAt": "Started",
         "completedAt": "Completed",
@@ -3420,7 +3427,7 @@
         "loading": "Loading payload…",
         "notAvailable": "Payload could not be loaded.",
         "reload": "Reload",
-        "download": "Download JSON"
+        "download": "Download payload"
       },
       "snapshot": {
         "exportSummary": "This is the generated CDM export produced when the job completed. Download it to clone or back up the project's permission model.",
@@ -3430,7 +3437,7 @@
         "loading": "Loading snapshot…",
         "notAvailable": "No rollback snapshot is available for this job.",
         "reload": "Reload",
-        "download": "Download snapshot"
+        "download": "Download"
       }
     },
     "cancelDialog": {

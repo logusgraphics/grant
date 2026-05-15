@@ -13,8 +13,9 @@ import { formatTimestamp } from '@/lib/utils';
 import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
 import { ProjectSyncJobActions } from './project-sync-job-actions';
-import { formatModeStrategy, getJobAvatarInitial } from './project-sync-job-display';
+import { getJobAvatarInitial } from './project-sync-job-display';
 import { ProjectSyncJobExportTrigger } from './project-sync-job-export-trigger';
+import { ProjectSyncJobModeBadge } from './project-sync-job-mode-badge';
 import { ProjectSyncJobOperationBadge } from './project-sync-job-operation-badge';
 import { ProjectSyncJobStartTrigger } from './project-sync-job-start-trigger';
 import { ProjectSyncJobStatusBadge } from './project-sync-job-status-badge';
@@ -22,8 +23,6 @@ import { ProjectSyncJobsModuleIconElement } from './project-sync-jobs-icon';
 
 export function ProjectSyncJobTable() {
   const t = useTranslations('projectSyncJobs');
-  const tStart = useTranslations('projectSyncJobs.startDialog');
-
   const limit = useProjectSyncJobsStore((state) => state.limit);
   const search = useProjectSyncJobsStore((state) => state.search);
   const status = useProjectSyncJobsStore((state) => state.status);
@@ -55,11 +54,9 @@ export function ProjectSyncJobTable() {
     },
     {
       key: 'modeStrategy',
-      header: t('table.strategy'),
+      header: t('table.mode'),
       width: '110px',
-      render: (job) => (
-        <span className="text-sm text-muted-foreground">{formatModeStrategy(job, tStart)}</span>
-      ),
+      render: (job) => <ProjectSyncJobModeBadge job={job} />,
     },
     {
       key: 'cdmVersion',

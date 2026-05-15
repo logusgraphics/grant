@@ -21,6 +21,7 @@ export * from './editable-text';
 export * from './email-verification-banner';
 export * from './email-verification-features-dialog';
 export * from './empty-state';
+export * from './field-info-popover';
 export * from './form-dialog';
 export * from './full-page-loader';
 export * from './github-oauth-button';

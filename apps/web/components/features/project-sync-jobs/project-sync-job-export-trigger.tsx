@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -56,7 +56,6 @@ export function ProjectSyncJobExportTrigger({
       return (
         <Button
           type="button"
-          variant="outline"
           disabled
           className={cn(
             'w-full sm:w-auto',
@@ -73,7 +72,7 @@ export function ProjectSyncJobExportTrigger({
       );
     }
     return (
-      <Button type="button" variant="outline" disabled className="gap-2">
+      <Button type="button" disabled className="gap-2">
         <Loader2 className="size-4 shrink-0 animate-spin" />
         {t('toolbar.export')}
       </Button>
@@ -90,7 +89,6 @@ export function ProjectSyncJobExportTrigger({
         <TooltipTrigger asChild>
           <Button
             type="button"
-            variant="outline"
             onClick={onClick}
             className={cn(
               'w-full sm:w-auto',
@@ -99,7 +97,7 @@ export function ProjectSyncJobExportTrigger({
             )}
             aria-label={t('toolbar.export')}
           >
-            <Upload className="size-4 shrink-0" />
+            <LogOut className="size-4 shrink-0" />
             <span className="inline min-[640px]:max-[1199px]:hidden min-[1200px]:inline">
               {t('toolbar.export')}
             </span>
@@ -113,8 +111,8 @@ export function ProjectSyncJobExportTrigger({
   }
 
   return (
-    <Button type="button" variant="outline" onClick={onClick} className="gap-2">
-      <Upload className="size-4 shrink-0" />
+    <Button type="button" onClick={onClick} className="gap-2">
+      <LogOut className="size-4 shrink-0" />
       {t('toolbar.export')}
     </Button>
   );

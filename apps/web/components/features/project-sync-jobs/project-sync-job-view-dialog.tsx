@@ -2,13 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  CdmModeStrategy,
-  ProjectSyncJob,
-  ProjectSyncJobOperation,
-  ProjectSyncJobStatus,
-} from '@grantjs/schema';
-import { AlertCircle, ArrowLeftRight, Download, Info, Loader2, RefreshCw } from 'lucide-react';
+import { ProjectSyncJob, ProjectSyncJobOperation, ProjectSyncJobStatus } from '@grantjs/schema';
+import { AlertCircle, ArrowLeftRight, Info, Loader2 } from 'lucide-react';
 
 import { CopyToClipboard, JsonEditor } from '@/components/common';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -31,9 +26,14 @@ import { formatTimestamp } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useProjectSyncJobsStore } from '@/stores/project-sync-jobs.store';
 
+import { ProjectSyncJobConfirmDestructiveBadge } from './project-sync-job-confirm-destructive-badge';
+import { getPayloadModeDetails } from './project-sync-job-display';
+import { ProjectSyncJobModeBadge } from './project-sync-job-mode-badge';
+import { ProjectSyncJobOnConflictBadge } from './project-sync-job-on-conflict-badge';
+import { ProjectSyncJobOperationBadge } from './project-sync-job-operation-badge';
 import { ProjectSyncJobStatusBadge } from './project-sync-job-status-badge';
 
-type ViewTab = 'status' | 'result' | 'payload' | 'snapshot';
+type ViewTab = 'details' | 'result' | 'payload' | 'snapshot';
 
 /** Result counters that render `left` + ArrowLeftRight + `right` labels. */
 const RESULT_LINK_KEYS = new Set<string>([
@@ -65,13 +65,12 @@ function SectionRow({ label, value, copy }: SectionRowProps) {
 
 export function ProjectSyncJobViewDialog() {
   const t = useTranslations('projectSyncJobs.viewDialog');
-  const tStart = useTranslations('projectSyncJobs.startDialog');
   const scope = useScopeFromParams();
 
   const jobToView = useProjectSyncJobsStore((state) => state.jobToView);
   const setJobToView = useProjectSyncJobsStore((state) => state.setJobToView);
 
-  const [tab, setTab] = useState<ViewTab>('status');
+  const [tab, setTab] = useState<ViewTab>('details');
 
   const { job, polling } = useProjectSyncJob({
     id: jobToView?.projectId ?? '',
@@ -92,7 +91,7 @@ export function ProjectSyncJobViewDialog() {
   } = useProjectSyncJobPayload({
     id: currentJob?.projectId ?? '',
     scope: scope ?? null,
-    jobId: tab === 'payload' ? currentJob?.id : null,
+    jobId: jobToView ? (currentJob?.id ?? null) : null,
   });
 
   /**
@@ -117,47 +116,43 @@ export function ProjectSyncJobViewDialog() {
 
   const handleClose = () => {
     setJobToView(null);
-    setTab('status');
+    setTab('details');
   };
 
   const isExportJob = currentJob?.operation === ProjectSyncJobOperation.Export;
 
   const tabs: ReadonlyArray<{ id: ViewTab; label: string }> = useMemo(() => {
     const all: ReadonlyArray<{ id: ViewTab; label: string }> = [
-      { id: 'status', label: t('tabs.status') },
+      { id: 'details', label: t('tabs.details') },
       { id: 'result', label: t('tabs.result') },
-      { id: 'payload', label: isExportJob ? t('tabs.exportRequest') : t('tabs.payload') },
+      { id: 'payload', label: t('tabs.payload') },
       {
         id: 'snapshot',
         label: isExportJob ? t('tabs.exportArtifact') : t('tabs.snapshot'),
       },
     ];
-    return isExportJob ? all.filter((entry) => entry.id !== 'result') : all;
+    return isExportJob
+      ? all.filter((entry) => entry.id !== 'result' && entry.id !== 'payload')
+      : all;
   }, [t, isExportJob]);
 
   useEffect(() => {
-    if (isExportJob && tab === 'result') {
-      setTab('status');
+    if (isExportJob && (tab === 'result' || tab === 'payload')) {
+      setTab('details');
     }
   }, [isExportJob, tab]);
 
   const result = currentJob?.result;
+  const payloadMode = getPayloadModeDetails(payload);
+  const showFooterActions =
+    (tab === 'payload' && !!currentJob) || (tab === 'snapshot' && !!currentJob?.hasSnapshot);
 
   return (
     <Dialog open={!!jobToView} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[720px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {t('title')}
-            {currentJob && <ProjectSyncJobStatusBadge status={currentJob.status} />}
-          </DialogTitle>
-          <DialogDescription>
-            {currentJob?.jobName ? (
-              <>{t('descriptionWithJobName', { jobName: currentJob.jobName })}</>
-            ) : (
-              t('description')
-            )}
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
         <div className="border-b -mx-6 px-6">
@@ -193,8 +188,12 @@ export function ProjectSyncJobViewDialog() {
         <div className="flex-1 overflow-auto py-2">
           {!currentJob ? (
             <div className="py-8 text-center text-sm text-muted-foreground">{t('loading')}</div>
-          ) : tab === 'status' ? (
+          ) : tab === 'details' ? (
             <div className="space-y-1">
+              <SectionRow
+                label={t('fields.status')}
+                value={<ProjectSyncJobStatusBadge status={currentJob.status} />}
+              />
               <SectionRow label={t('fields.jobId')} value={currentJob.id} copy={currentJob.id} />
               <SectionRow
                 label={t('fields.jobName')}
@@ -207,26 +206,29 @@ export function ProjectSyncJobViewDialog() {
               />
               <SectionRow
                 label={t('fields.operation')}
-                value={
-                  currentJob.operation === ProjectSyncJobOperation.Import
-                    ? 'IMPORT'
-                    : currentJob.operation === ProjectSyncJobOperation.Export
-                      ? 'EXPORT'
-                      : String(currentJob.operation)
-                }
+                value={<ProjectSyncJobOperationBadge operation={currentJob.operation} />}
               />
               <SectionRow
-                label={t('fields.strategy')}
-                value={
-                  isExportJob || currentJob.modeStrategy === CdmModeStrategy.Merge ? (
-                    tStart('summary.strategy.merge')
-                  ) : currentJob.modeStrategy === CdmModeStrategy.Replace ? (
-                    tStart('summary.strategy.replace')
-                  ) : (
-                    <span className="text-muted-foreground">{t('fields.notSet')}</span>
-                  )
-                }
+                label={t('fields.mode')}
+                value={<ProjectSyncJobModeBadge job={currentJob} />}
               />
+              {payloadMode?.onConflict != null && (
+                <SectionRow
+                  label={t('fields.onConflict')}
+                  value={<ProjectSyncJobOnConflictBadge onConflict={payloadMode.onConflict} />}
+                />
+              )}
+              {payloadMode?.confirmDestructive !== undefined &&
+                payloadMode.confirmDestructive !== null && (
+                  <SectionRow
+                    label={t('fields.confirmDestructive')}
+                    value={
+                      <ProjectSyncJobConfirmDestructiveBadge
+                        confirmed={payloadMode.confirmDestructive}
+                      />
+                    }
+                  />
+                )}
               <SectionRow label={t('fields.cdmVersion')} value={`v${currentJob.cdmVersion}`} />
               <SectionRow
                 label={t('fields.enqueuedAt')}
@@ -394,53 +396,48 @@ export function ProjectSyncJobViewDialog() {
           )}
         </div>
 
-        <DialogFooter className="flex-row flex-wrap items-center justify-end">
-          {tab === 'payload' && currentJob && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void reload()}
-                disabled={payloadLoading}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {t('payload.reload')}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => void download()}
-                disabled={payloadLoading || !payload}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {t('payload.download')}
-              </Button>
-            </>
-          )}
-          {tab === 'snapshot' && currentJob?.hasSnapshot && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void reloadSnapshot()}
-                disabled={snapshotLoading}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {t('snapshot.reload')}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => void downloadSnapshot()}
-                disabled={snapshotLoading || !snapshot}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {t('snapshot.download')}
-              </Button>
-            </>
-          )}
-          <Button type="button" variant="outline" onClick={handleClose}>
-            {t('close')}
-          </Button>
-        </DialogFooter>
+        {showFooterActions && (
+          <DialogFooter>
+            {tab === 'payload' && currentJob && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void reload()}
+                  disabled={payloadLoading}
+                >
+                  {t('payload.reload')}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void download()}
+                  disabled={payloadLoading || !payload}
+                >
+                  {t('payload.download')}
+                </Button>
+              </>
+            )}
+            {tab === 'snapshot' && currentJob?.hasSnapshot && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void reloadSnapshot()}
+                  disabled={snapshotLoading}
+                >
+                  {t('snapshot.reload')}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void downloadSnapshot()}
+                  disabled={snapshotLoading || !snapshot}
+                >
+                  {t('snapshot.download')}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

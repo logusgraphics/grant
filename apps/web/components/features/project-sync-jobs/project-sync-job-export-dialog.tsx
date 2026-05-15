@@ -10,7 +10,6 @@ import {
   AlertCircle,
   CopyCheck,
   Group,
-  Info,
   KeyRound,
   Loader2,
   Package,
@@ -21,6 +20,7 @@ import {
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 
+import { FieldInfoPopover } from '@/components/common';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -55,7 +55,6 @@ const CDM_EXPORT_DOCS_BASE = `${getDocsUrl()}/core-concepts/cdm-import-export`;
 const exportDocs = {
   contents: `${CDM_EXPORT_DOCS_BASE}#export-dialog-contents`,
   reimportDefaults: `${CDM_EXPORT_DOCS_BASE}#export-reimport-defaults`,
-  jobName: `${CDM_EXPORT_DOCS_BASE}#export-job-name`,
   version: `${CDM_EXPORT_DOCS_BASE}#export-cdm-version`,
   mode: `${CDM_EXPORT_DOCS_BASE}#export-reimport-mode`,
   onConflict: `${CDM_EXPORT_DOCS_BASE}#export-on-conflict`,
@@ -98,61 +97,32 @@ function buildExportMode(params: {
   };
 }
 
-function ExportDocsAlert({
-  children,
-  docsHref,
-  readMoreLabel,
-  readMoreAria,
-}: {
-  children: ReactNode;
-  docsHref: string;
-  readMoreLabel: string;
-  readMoreAria: string;
-}) {
-  return (
-    <Alert>
-      <Info className="size-4" aria-hidden />
-      <AlertDescription className="text-xs leading-relaxed">
-        {children}{' '}
-        <a
-          href={docsHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-primary hover:underline"
-          aria-label={readMoreAria}
-        >
-          {readMoreLabel}
-        </a>
-      </AlertDescription>
-    </Alert>
-  );
-}
-
-function FieldLabelWithDocs({
+function FieldLabelWithInfo({
   htmlFor,
   children,
+  description,
   docsHref,
   docsAria,
+  readMoreLabel,
 }: {
   htmlFor?: string;
   children: ReactNode;
+  description: string;
   docsHref: string;
   docsAria: string;
+  readMoreLabel: string;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-1">
       <Label htmlFor={htmlFor} className="truncate">
         {children}
       </Label>
-      <a
-        href={docsHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-        aria-label={docsAria}
-      >
-        <Info className="size-3.5" aria-hidden />
-      </a>
+      <FieldInfoPopover
+        description={description}
+        link={{ href: docsHref, label: readMoreLabel }}
+        ariaLabel={docsAria}
+        iconClassName="size-3.5"
+      />
     </div>
   );
 }
@@ -291,9 +261,24 @@ export function ProjectSyncJobExportDialog() {
   const exportDisabled = submitting || !projectId || !scope || nothingSelected;
 
   const tabs = useMemo(
-    (): ReadonlyArray<{ id: ExportDialogTab; label: string }> => [
-      { id: 'contents', label: t('tabs.contents') },
-      { id: 'options', label: t('tabs.options') },
+    (): ReadonlyArray<{
+      id: ExportDialogTab;
+      label: string;
+      infoDescription: string;
+      infoDocsHref: string;
+    }> => [
+      {
+        id: 'contents',
+        label: t('tabs.contents'),
+        infoDescription: t('contentsInfo'),
+        infoDocsHref: exportDocs.contents,
+      },
+      {
+        id: 'options',
+        label: t('tabs.options'),
+        infoDescription: t('options.reimportDefaultsInfo'),
+        infoDocsHref: exportDocs.reimportDefaults,
+      },
     ],
     [t]
   );
@@ -384,7 +369,7 @@ export function ProjectSyncJobExportDialog() {
                   type="button"
                   onClick={() => setTab(entry.id)}
                   className={cn(
-                    'px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+                    'inline-flex items-center gap-1 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
                     active
                       ? 'border-primary text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -392,6 +377,13 @@ export function ProjectSyncJobExportDialog() {
                   aria-pressed={active}
                 >
                   {entry.label}
+                  <FieldInfoPopover
+                    description={entry.infoDescription}
+                    link={{ href: entry.infoDocsHref, label: t('readMore') }}
+                    ariaLabel={t('readMoreAria')}
+                    iconClassName="size-3.5"
+                    stopPropagation
+                  />
                 </button>
               );
             })}
@@ -401,14 +393,6 @@ export function ProjectSyncJobExportDialog() {
         <div className="flex-1 overflow-auto py-2">
           {tab === 'contents' ? (
             <div className="space-y-4">
-              <ExportDocsAlert
-                docsHref={exportDocs.contents}
-                readMoreLabel={t('readMore')}
-                readMoreAria={t('readMoreAria')}
-              >
-                {t('contentsInfo')}
-              </ExportDocsAlert>
-
               <CdmExportSectionRow
                 id="cdm-export-users"
                 checked={users}
@@ -485,22 +469,8 @@ export function ProjectSyncJobExportDialog() {
             </div>
           ) : (
             <div className="space-y-4">
-              <ExportDocsAlert
-                docsHref={exportDocs.reimportDefaults}
-                readMoreLabel={t('readMore')}
-                readMoreAria={t('readMoreAria')}
-              >
-                {t('options.reimportDefaultsInfo')}
-              </ExportDocsAlert>
-
               <div className="space-y-2">
-                <FieldLabelWithDocs
-                  htmlFor="cdm-export-job-name"
-                  docsHref={exportDocs.jobName}
-                  docsAria={t('options.docsAria.jobName')}
-                >
-                  {t('options.jobNameLabel')}
-                </FieldLabelWithDocs>
+                <Label htmlFor="cdm-export-job-name">{t('options.jobNameLabel')}</Label>
                 <Input
                   id="cdm-export-job-name"
                   value={jobName}
@@ -512,13 +482,15 @@ export function ProjectSyncJobExportDialog() {
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="min-w-0 space-y-2">
-                  <FieldLabelWithDocs
+                  <FieldLabelWithInfo
                     htmlFor="cdm-export-version"
+                    description={t('options.fieldInfo.version')}
                     docsHref={exportDocs.version}
                     docsAria={t('options.docsAria.version')}
+                    readMoreLabel={t('readMore')}
                   >
                     {tStart('version')}
-                  </FieldLabelWithDocs>
+                  </FieldLabelWithInfo>
                   <Select
                     value={String(cdmVersion)}
                     onValueChange={(value) =>
@@ -539,13 +511,15 @@ export function ProjectSyncJobExportDialog() {
                 </div>
 
                 <div className="min-w-0 space-y-2">
-                  <FieldLabelWithDocs
+                  <FieldLabelWithInfo
                     htmlFor="cdm-export-strategy"
+                    description={t('options.fieldInfo.mode')}
                     docsHref={exportDocs.mode}
                     docsAria={t('options.docsAria.mode')}
+                    readMoreLabel={t('readMore')}
                   >
                     {tStart('strategyLabel')}
-                  </FieldLabelWithDocs>
+                  </FieldLabelWithInfo>
                   <Select value={strategy} onValueChange={onStrategyChange}>
                     <SelectTrigger id="cdm-export-strategy" className="w-full">
                       <SelectValue />
@@ -562,13 +536,15 @@ export function ProjectSyncJobExportDialog() {
                 </div>
 
                 <div className="min-w-0 space-y-2">
-                  <FieldLabelWithDocs
+                  <FieldLabelWithInfo
                     htmlFor="cdm-export-on-conflict"
+                    description={t('options.fieldInfo.onConflict')}
                     docsHref={exportDocs.onConflict}
                     docsAria={t('options.docsAria.onConflict')}
+                    readMoreLabel={t('readMore')}
                   >
                     {tStart('onConflictLabel')}
-                  </FieldLabelWithDocs>
+                  </FieldLabelWithInfo>
                   <Select
                     value={onConflict ?? ON_CONFLICT_DEFAULT}
                     onValueChange={(value) =>
@@ -605,13 +581,15 @@ export function ProjectSyncJobExportDialog() {
                     className="col-start-1 row-start-1 self-center"
                   />
                   <div className="col-start-2 row-start-1 min-w-0 self-center">
-                    <FieldLabelWithDocs
+                    <FieldLabelWithInfo
                       htmlFor="cdm-export-confirm-destructive"
+                      description={t('options.confirmDestructiveHint')}
                       docsHref={exportDocs.confirmDestructive}
                       docsAria={t('options.docsAria.confirmDestructive')}
+                      readMoreLabel={t('readMore')}
                     >
                       {tStart('confirmDestructiveLabel')}
-                    </FieldLabelWithDocs>
+                    </FieldLabelWithInfo>
                   </div>
                   <p className="col-start-2 row-start-2 min-w-0 text-xs leading-snug text-muted-foreground">
                     {t('options.confirmDestructiveHint')}

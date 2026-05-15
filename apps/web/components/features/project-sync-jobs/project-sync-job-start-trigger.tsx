@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useGrant, type UseGrantResult } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { Download, Loader2 } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -91,7 +91,7 @@ export function ProjectSyncJobStartTrigger({ layout = 'empty' }: ProjectSyncJobS
             )}
             aria-label={t('toolbar.start')}
           >
-            <Download className="size-4 shrink-0" />
+            <LogIn className="size-4 shrink-0" />
             <span className="inline min-[640px]:max-[1199px]:hidden min-[1200px]:inline">
               {t('toolbar.start')}
             </span>
@@ -106,7 +106,7 @@ export function ProjectSyncJobStartTrigger({ layout = 'empty' }: ProjectSyncJobS
 
   return (
     <Button type="button" onClick={open} className="gap-2">
-      <Download className="size-4 shrink-0" />
+      <LogIn className="size-4 shrink-0" />
       {t('toolbar.start')}
     </Button>
   );

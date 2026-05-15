@@ -3246,6 +3246,11 @@
         "confirmDestructiveHint": "Wenn aktiviert, werden CDM-verwaltete Entitäten beim Replace-Import gelöscht und neu erstellt.",
         "replaceRequiresConfirm": "Bestätige die zerstörerische Änderung auf dem Tab „Optionen“, bevor du mit Replace-Modus exportierst.",
         "reimportDefaultsInfo": "Diese Optionen werden in den exportierten CDM-mode-Block für einen späteren Import geschrieben. Sie ändern nicht, was aus der Datenbank exportiert wird.",
+        "fieldInfo": {
+          "version": "CDM-Schemaversion, die im exportierten Dokument gespeichert wird.",
+          "mode": "Merge aktualisiert bestehende Entitäten beim Re-Import; Replace entfernt CDM-verwaltete Zeilen vor dem Anwenden der Datei.",
+          "onConflict": "Bei Konflikten im Merge-Modus beim Re-Import: fehlschlagen, überspringen oder bestehende Zeile aktualisieren."
+        },
         "docsAria": {
           "jobName": "Dokumentation: Export-Jobname (öffnet in neuem Tab)",
           "version": "Dokumentation: CDM-Version beim Export (öffnet in neuem Tab)",
@@ -3275,8 +3280,8 @@
       "jobName": "Jobname",
       "noJobName": "(kein Jobname)",
       "operation": "Vorgang",
-      "strategy": "Strategie",
-      "cdmVersion": "CDM-Version",
+      "mode": "Modus",
+      "cdmVersion": "Version",
       "enqueuedAt": "Eingereiht",
       "startedAt": "Gestartet",
       "completedAt": "Abgeschlossen",
@@ -3332,6 +3337,7 @@
         },
         "confirmDestructiveLabel": "Zerstörerische Änderung",
         "confirmDestructiveYes": "Bestätigt",
+        "confirmDestructiveNo": "Nicht bestätigt",
         "jobName": "Jobname (Idempotenz)",
         "roles": "Rollen",
         "users": "Benutzer",
@@ -3355,12 +3361,10 @@
     "viewDialog": {
       "title": "Sync-Job",
       "description": "Inspiziere den Lebenszyklus, das Ergebnis und die Originaldaten dieses Jobs.",
-      "descriptionWithJobName": "Jobname: {jobName}",
       "tabs": {
-        "status": "Status",
+        "details": "Details",
         "result": "Ergebnis",
         "payload": "Payload",
-        "exportRequest": "Export-Optionen",
         "snapshot": "Rollback-Snapshot",
         "exportArtifact": "Exportiertes CDM"
       },
@@ -3368,11 +3372,14 @@
       "loading": "Lade Job-Details…",
       "close": "Schließen",
       "fields": {
+        "status": "Status",
         "jobId": "Job-ID",
         "jobName": "Jobname",
         "operation": "Vorgang",
-        "strategy": "Strategie",
-        "cdmVersion": "CDM-Version",
+        "mode": "Modus",
+        "onConflict": "Bei Konflikt",
+        "confirmDestructive": "Zerstörerische Änderung",
+        "cdmVersion": "Version",
         "enqueuedAt": "Eingereiht",
         "startedAt": "Gestartet",
         "completedAt": "Abgeschlossen",
@@ -3419,7 +3426,7 @@
         "loading": "Lade Payload…",
         "notAvailable": "Payload konnte nicht geladen werden.",
         "reload": "Neu laden",
-        "download": "JSON herunterladen"
+        "download": "Payload herunterladen"
       },
       "snapshot": {
         "exportSummary": "Dies ist das generierte CDM-Exportdokument nach Abschluss des Jobs. Laden Sie es herunter, um das Berechtigungsmodell zu sichern oder zu klonen.",
@@ -3429,7 +3436,7 @@
         "loading": "Lade Snapshot…",
         "notAvailable": "Für diesen Job ist kein Rollback-Snapshot verfügbar.",
         "reload": "Neu laden",
-        "download": "Snapshot herunterladen"
+        "download": "Herunterladen"
       }
     },
     "cancelDialog": {
