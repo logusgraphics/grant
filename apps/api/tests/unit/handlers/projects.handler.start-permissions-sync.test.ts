@@ -245,6 +245,31 @@ describe('ProjectHandler.startProjectSync', () => {
     expect(enqueue).not.toHaveBeenCalled();
   });
 
+  it('rejects replace import without confirmDestructive before persisting', async () => {
+    const handler = createHandler({
+      jobsAdapter: { enqueue },
+      syncJobs: { create, findActiveByJobKey },
+    });
+
+    await expect(
+      handler.startProjectSync({
+        id: projectId,
+        scope: { tenant: Tenant.AccountProject, id: `${accountId}:${projectId}` },
+        input: {
+          ...buildInput(),
+          mode: {
+            strategy: CdmModeStrategy.Replace,
+            onConflict: null,
+            confirmDestructive: false,
+          },
+        },
+        enqueuedById: userId,
+      })
+    ).rejects.toThrow(/confirmDestructive/);
+    expect(create).not.toHaveBeenCalled();
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
   it('rejects when scope id does not contain the projectId', async () => {
     const handler = createHandler({
       jobsAdapter: { enqueue },

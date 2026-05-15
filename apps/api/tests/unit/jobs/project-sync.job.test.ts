@@ -330,6 +330,35 @@ describe('ProjectSyncJob worker', () => {
     expect(mocks.invalidateCachesForSyncResult).not.toHaveBeenCalled();
   });
 
+  it('import with replace mode forwards mode to syncProject', async () => {
+    const replaceMode = {
+      strategy: CdmModeStrategy.Replace,
+      onConflict: null,
+      confirmDestructive: true,
+    };
+    mocks.loadForExecution.mockResolvedValue({
+      ...buildExecData(),
+      payload: emptyCanonicalPayload({ mode: replaceMode }),
+    });
+    mocks.syncProject.mockResolvedValue(buildSyncResult());
+
+    const job = buildJobInstance(mocks);
+    await job.execute({
+      jobId: 'queue-replace',
+      scheduledAt: new Date(),
+      startedAt: new Date(),
+      scope: enqueueScope,
+      payload: { jobRecordId },
+    });
+
+    expect(mocks.syncProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({ mode: replaceMode }),
+      }),
+      expect.anything()
+    );
+  });
+
   it('export job forwards mode from payload to export service', async () => {
     const exportMode = {
       strategy: 'replace' as const,

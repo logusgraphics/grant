@@ -575,4 +575,53 @@ describe('CDM round-trip integration', () => {
       }),
     ]);
   });
+
+  it('partial export assembly with tags slice only omits roles', async () => {
+    const exportRepo = buildExportRepoForProjectA();
+    const handlers = buildHandlers(exportRepo);
+    const ctx: CdmExportContext = { projectId: projectAId, scope: scopeA };
+    const tagsOnly = await handlers.tag.export(ctx);
+    const assembled = assembleExportedSyncProjectInput({
+      roleTemplates: [],
+      userAssignments: [],
+      projectUserApiKeys: [],
+      provisionedUsers: [],
+      resourcesSlice: [],
+      permissionsSlice: [],
+      tagsSlice: tagsOnly ?? [],
+    });
+
+    expect(assembled.tags).toHaveLength(1);
+    expect(assembled.roles).toHaveLength(0);
+    expect(assembled.resources).toHaveLength(0);
+    expect(assembled.permissions).toHaveLength(0);
+  });
+
+  it('merge re-import validate path does not invoke handler teardown', async () => {
+    const exportRepo = buildExportRepoForProjectA();
+    const handlers = buildHandlers(exportRepo);
+    const doc = await exportProjectA(handlers);
+    const teardownSpy = vi.spyOn(handlers.roleTemplate, 'teardown');
+
+    const expanded = expandCdmSyncInput(doc);
+    expect(expanded.mode?.strategy).toBe(CdmModeStrategy.Merge);
+
+    const ordered: ICdmEntityHandler[] = [
+      handlers.resource,
+      handlers.permission,
+      handlers.tag,
+      handlers.roleTemplate,
+      handlers.userAssignment,
+    ];
+
+    for (const handler of ordered) {
+      const key = handler.inputKey as keyof typeof expanded;
+      const slice = expanded[key];
+      if (!Array.isArray(slice)) continue;
+      handler.validateInput(slice as never);
+    }
+
+    expect(teardownSpy).not.toHaveBeenCalled();
+    teardownSpy.mockRestore();
+  });
 });

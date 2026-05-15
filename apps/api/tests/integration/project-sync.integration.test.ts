@@ -8,6 +8,7 @@
  *   GET    /api/projects/:id/sync/jobs/:jobId/snapshot  — download rollback or export artifact
  *   DELETE /api/projects/:id/sync/jobs/:jobId           — cancel
  */
+import { NotFoundError } from '@grantjs/core';
 import {
   CdmFindBy,
   CdmModeStrategy,
@@ -486,5 +487,92 @@ describe('project CDM sync REST (async jobs)', () => {
 
     expect(res.status).toBe(400);
     expect(startProjectExport).not.toHaveBeenCalled();
+  });
+
+  it('POST /sync/jobs forwards replace mode with confirmDestructive to the handler', async () => {
+    const replaceMode = {
+      strategy: CdmModeStrategy.Replace,
+      onConflict: null,
+      confirmDestructive: true,
+    };
+    const res = await request(app)
+      .post(`/api/projects/${projectId}/sync/jobs`)
+      .send({
+        scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
+        version: 1,
+        mode: replaceMode,
+        roles: [],
+        users: [],
+        resources: [],
+        permissions: [],
+        groups: [],
+        tags: [],
+      });
+
+    expect(res.status).toBe(202);
+    expect(startProjectSync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({
+          mode: replaceMode,
+        }),
+      })
+    );
+  });
+
+  it('POST /sync/jobs returns 400 for replace without confirmDestructive', async () => {
+    const res = await request(app)
+      .post(`/api/projects/${projectId}/sync/jobs`)
+      .send({
+        scope: { tenant: 'accountProject', id: `${accountId}:${projectId}` },
+        version: 1,
+        mode: {
+          strategy: CdmModeStrategy.Replace,
+          onConflict: null,
+          confirmDestructive: false,
+        },
+        roles: [],
+        users: [],
+        resources: [],
+        permissions: [],
+        groups: [],
+        tags: [],
+      });
+
+    expect(res.status).toBe(400);
+    expect(startProjectSync).not.toHaveBeenCalled();
+  });
+
+  it('GET /sync/jobs/:jobId/snapshot returns 404 when handler throws NotFoundError', async () => {
+    getProjectSyncJobSnapshot.mockRejectedValueOnce(
+      new NotFoundError('ProjectSyncJobSnapshot', jobId)
+    );
+
+    const res = await request(app)
+      .get(`/api/projects/${projectId}/sync/jobs/${jobId}/snapshot`)
+      .query({ scopeId: `${accountId}:${projectId}`, tenant: 'accountProject' });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('GET /sync/jobs returns 400 for invalid status filter', async () => {
+    const res = await request(app)
+      .get(`/api/projects/${projectId}/sync/jobs`)
+      .query({
+        scopeId: `${accountId}:${projectId}`,
+        tenant: 'accountProject',
+        status: 'NOT_A_STATUS',
+      });
+
+    expect(res.status).toBe(400);
+    expect(listProjectSyncJobs).not.toHaveBeenCalled();
+  });
+
+  it('GET /sync/jobs/:jobId returns 400 when scopeId is missing', async () => {
+    const res = await request(app)
+      .get(`/api/projects/${projectId}/sync/jobs/${jobId}`)
+      .query({ tenant: 'accountProject' });
+
+    expect(res.status).toBe(400);
+    expect(getProjectSyncJob).not.toHaveBeenCalled();
   });
 });

@@ -257,27 +257,36 @@ const cdmModeSchema = z.object({
  * job already exists for the same `(project, id)` it is returned instead
  * of creating a new one.
  */
-export const startProjectSyncRequestSchema = z.object({
-  scope: scopeSchema,
-  version: z.number().int().openapi({ example: 1 }),
-  id: z.string().optional(),
-  mode: cdmModeSchema,
-  roles: z.array(roleCdmSchema),
-  users: z.array(userCdmSchema),
-  resources: z.array(resourceCdmSchema).optional().openapi({
-    description:
-      'Optional custom resources. Permissions in this document reference them by opaque `resource` keys.',
-  }),
-  permissions: z.array(permissionCdmSchema).optional().openapi({
-    description:
-      'Optional custom permissions for this project, each referencing a `resource` key from the same document.',
-  }),
-  groups: z.array(groupCdmSchema).optional(),
-  tags: z.array(tagCdmSchema).optional().openapi({
-    description:
-      'Optional CDM tags; role and user `tags` reference these keys. `user_tags` are global rows.',
-  }),
-});
+export const startProjectSyncRequestSchema = z
+  .object({
+    scope: scopeSchema,
+    version: z.number().int().openapi({ example: 1 }),
+    id: z.string().optional(),
+    mode: cdmModeSchema,
+    roles: z.array(roleCdmSchema),
+    users: z.array(userCdmSchema),
+    resources: z.array(resourceCdmSchema).optional().openapi({
+      description:
+        'Optional custom resources. Permissions in this document reference them by opaque `resource` keys.',
+    }),
+    permissions: z.array(permissionCdmSchema).optional().openapi({
+      description:
+        'Optional custom permissions for this project, each referencing a `resource` key from the same document.',
+    }),
+    groups: z.array(groupCdmSchema).optional(),
+    tags: z.array(tagCdmSchema).optional().openapi({
+      description:
+        'Optional CDM tags; role and user `tags` reference these keys. `user_tags` are global rows.',
+    }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.mode.strategy === CdmModeStrategy.Replace && data.mode.confirmDestructive !== true) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'mode.confirmDestructive must be true when mode.strategy is replace',
+      });
+    }
+  });
 
 export const projectSyncJobParamsSchema = z.object({
   id: z.uuid('errors.validation.invalidProjectId').openapi({
