@@ -4,7 +4,6 @@
   "commit": false,
   "fixed": [
     [
-      "grant",
       "grant-api",
       "grant-web",
       "grant-docs",

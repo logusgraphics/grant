@@ -1,4 +1,5 @@
 ---
+'grant-api': minor
 ---
 
 **Breaking — replace synchronous CDM project sync with async jobs.**
