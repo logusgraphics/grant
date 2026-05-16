@@ -162,6 +162,8 @@ jobs:
     name: Version and publish (@grantjs/client, server, cli)
     runs-on: self-hosted
     needs: prepare
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
     permissions:
       contents: write
       pull-requests: write
@@ -252,3 +254,40 @@ jobs:
             ghcr.io/${{ github.repository }}/${{ matrix.image }}:demo
             ghcr.io/${{ github.repository }}/${{ matrix.image }}:sha-${{ github.sha }}
           push: true
+
+  docker-semver:
+    name: Tag images with platform semver
+    runs-on: ubuntu-latest
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Read platform version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag images with semver
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE_BASE: ghcr.io/${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for image in grant-api grant-web grant-docs example-nextjs; do
+            echo "Tagging ${image}:demo -> :${VERSION} and :latest"
+            docker buildx imagetools create \
+              "${IMAGE_BASE}/${image}:demo" \
+              --tag "${IMAGE_BASE}/${image}:${VERSION}" \
+              --tag "${IMAGE_BASE}/${image}:latest"
+          done
