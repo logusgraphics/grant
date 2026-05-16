@@ -20,20 +20,27 @@ Both layers call **handlers** only; handlers never expose repositories to the tr
 - Extend base class `CacheHandler`; set cache on queries by scope (tenant); invalidate cache on mutations.
 - Orchestrate **services** from request context; start transactions (e.g. via `ITransactionalConnection.withTransaction()`) when operations must be atomic.
 - **Never access repositories directly.** Handler input args must align with API contracts from `@grantjs/schema` (e.g. `params: QueryGroupsArgs & SelectedFields<Group>`).
+- **Naming:** only `apps/api/src/handlers` uses `*Handler` classes and `*.handler.ts`. Do not use that pattern under `services/` or `lib/`.
 
 ## Services (`apps/api/src/services`)
 
 - Define business logic; orchestrate **repositories** only. Never query the database directly.
 - Extend `AuditService` and log mutations for compliance.
-- Validate input and output with zod schemas. Service input args align with schema types (e.g. `params: Omit<QueryGroupsArgs, 'scope'> & SelectedFields<Group>`).
+- Validate input and output with zod schemas in co-located `*.schemas.ts` files. Service input args align with schema types (e.g. `params: Omit<QueryGroupsArgs, 'scope'> & SelectedFields<Group>`).
 - Access only **domain-related repositories** (e.g. RoleService → RoleRepository, RoleTagRepository, RoleGroupRepository).
 - Service-specific validation helpers (`validateInput`, `validateOutput`, dynamic schemas) live in `services/common/` — import via `./common` within the services layer.
-- **Ports (`@grantjs/core`)**: Add an `I*Service` interface for each new service in `packages/@grantjs/core/src/ports/services/` (same domain file as related ports, or a new `*.service.port.ts` if needed). Export from `packages/@grantjs/core/src/ports/services/index.ts`; add to `packages/@grantjs/core/src/ports/service.port.ts` when that barrel re-exports the domain. The concrete class in `apps/api` **implements** the port; **handlers** type dependencies as the port (e.g. `IProjectPermissionSyncService`), not the implementation class.
+- **Ports (`@grantjs/core`)**: Add an `I*Service` interface for each new service in `packages/@grantjs/core/src/ports/services/`. The concrete class **implements** the port; **handlers** type dependencies as the port (e.g. `IProjectImportService`, `IProjectSyncJobService`), not the implementation class.
+- **CDM:** orchestrators live here (`project-import.service.ts`, `project-export.service.ts`). Entity sync implementations live in `lib/cdm/entities/*.cdm-entity.ts` — see `apps/api/src/lib/cdm/README.md`.
 
 ## Repositories (`apps/api/src/repositories`)
 
 - Resolve data from sources (mainly DB). Two base types: **Entity** (`EntityRepository`) and **Pivot** (`PivotRepository`) in `apps/api/src/repositories/common/`.
 - Use only **domain-related schemas** from `@grantjs/database` (e.g. OrganizationRepository → organizationGroups, organizationPermissions, organizations, etc.).
+
+## Lib (`apps/api/src/lib`)
+
+- Stateless helpers and shared utilities; prefer `*.lib.ts` suffix.
+- CDM registry, entities, and helpers: `lib/cdm/` (not under `services/cdm/`).
 
 ## Import discipline
 
@@ -46,6 +53,10 @@ These rules prevent cross-layer coupling. See AGENTS.md for the full table.
 - **Configuration**: all magic numbers and external URLs belong in `@/config/env.config.ts`; services and handlers reference config values, not hard-coded literals.
 - **No `console.*`**: use the structured logger (`createLogger`) for all runtime logging.
 - **No raw `throw new Error(...)`**: use domain-specific errors (`NotFoundError`, `ValidationError`, `ConfigurationError`, etc.).
+
+## Comments
+
+Prefer self-documenting code. Put CDM and job lifecycle detail in `lib/cdm/README.md` and `docs/core-concepts/cdm-import-export.md`, not long inline blocks. See AGENTS.md § Comments and documentation.
 
 ## Auth and context
 
@@ -62,3 +73,4 @@ Before implementing in these areas, read the referenced doc for detailed pattern
 - **Field selection**: `docs/advanced-topics/field-selection.md` — GraphQL field selection optimization.
 - **REST endpoints**: `docs/contributing/rest-api.md` — adding routes, OpenAPI integration, Swagger.
 - **Error handling**: `docs/api-reference/error-handling.md` — error types, HTTP codes, localized messages.
+- **CDM import/export**: `docs/core-concepts/cdm-import-export.md` and `apps/api/src/lib/cdm/README.md`.

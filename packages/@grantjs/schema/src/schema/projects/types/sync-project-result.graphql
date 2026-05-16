@@ -1,7 +1,7 @@
+"""
+Counters and warnings from a completed CDM import.
+"""
 type SyncProjectResult {
-  """
-  The project that was synced.
-  """
   projectId: ID!
   importId: String
   rolesCreated: Int!
@@ -13,42 +13,15 @@ type SyncProjectResult {
   projectPermissionsLinked: Int!
   projectResourcesLinked: Int!
   projectUsersEnsured: Int!
-  """
-  Number of Grant user rows created from the optional `users` section during this sync.
-  """
   usersCreated: Int!
   userRolesAssigned: Int!
-  """
-  Number of project-user API key pivots created during this sync (each with a new or supplied api_keys row).
-  """
   projectUserApiKeysCreated: Int!
-  """
-  Number of CDM resource rows created during this sync (one per `resources[]` entry in the import).
-  """
   resourcesCreated: Int!
-  """
-  Number of CDM permission rows created during this sync (one per `permissions[]` entry in the import).
-  """
   permissionsCreated: Int!
-  """
-  Number of CDM tag rows created during this sync (one per `tags[]` entry in the import).
-  """
   tagsCreated: Int!
-  """
-  Number of `project_tags` memberships created during this sync (one per imported tag).
-  """
   projectTagsLinked: Int!
-  """
-  Number of `role_tags` pivot rows created during this sync (sum across all role templates).
-  """
   roleTagsLinked: Int!
-  """
-  Number of `group_tags` pivot rows created during this sync (sum across all role templates).
-  """
   groupTagsLinked: Int!
-  """
-  Number of `user_tags` pivot rows created during this sync (sum across all user assignments).
-  """
   userTagsLinked: Int!
   warnings: [String!]!
 }

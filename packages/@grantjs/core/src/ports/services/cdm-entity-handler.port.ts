@@ -1,26 +1,6 @@
-/**
- * CDM (canonical data model) entity handler port.
- *
- * The project CDM sync orchestrator (`IProjectSyncService`)
- * delegates per-entity work — validation, permission-ref collection,
- * teardown, apply, and export — to an ordered registry of handlers
- * implementing this port. Adding a new CDM entity (API keys, project apps,
- * etc.) means implementing this port and registering it with the appropriate
- * `order`; the orchestrator does not need to change.
- */
+/** CDM entity sync port. Implemented in apps/api as `*CdmEntity` under `lib/cdm/entities/`. */
 import type { CdmHandlerInputKey, Scope, SyncProjectResult } from '@grantjs/schema';
 
-/**
- * Permission reference shape collected from CDM input. Used by the orchestrator
- * to deduplicate and resolve permissions across all handlers in a single pass
- * before any handler runs `apply`.
- *
- * Resolution order on apply:
- * 1. `permissionKey` against `CdmProducedRefs.permissionIds` (CDM-imported in
- *    the same document, preferred for full-project porting).
- * 2. `permissionId` (existing Grant permission UUID, kept for back-compat).
- * 3. `(resourceSlug, action [, condition])` against the global catalog.
- */
 export interface CdmPermissionRefSpec {
   resourceSlug?: string | null;
   action?: string | null;

@@ -1,7 +1,3 @@
-/**
- * Slices of a CDM export clients may request via REST `sections=…`.
- * These are canonical document sections (not internal handler slice names).
- */
 export const CDM_EXPORT_SECTIONS = [
   'resources',
   'permissions',
@@ -13,10 +9,6 @@ export const CDM_EXPORT_SECTIONS = [
 
 export type CdmExportSection = (typeof CDM_EXPORT_SECTIONS)[number];
 
-/**
- * Keys on the expanded CDM sync payload produced by `expandCdmSyncInput` (apps/api)
- * that each `ICdmEntityHandler` reads.
- */
 export const CDM_HANDLER_INPUT_KEYS = [
   'resources',
   'permissions',

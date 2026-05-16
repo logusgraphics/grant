@@ -23,7 +23,7 @@ The synchronous `syncProject` GraphQL mutation (formerly `syncProjectPermissions
 
 **Why**
 
-External imports can be large enough to exceed reasonable HTTP timeouts and produce ambiguous client retries. The job-based design persists the request payload for replay, runs the existing transactional `ProjectSyncService` in the background, transitions an explicit state machine (`pending → running → completed|failed|cancelled`), and surfaces post-commit cache invalidation through a new dedicated service method so the worker remains independent of the transport-layer handler.
+External imports can be large enough to exceed reasonable HTTP timeouts and produce ambiguous client retries. The job-based design persists the request payload for replay, runs the existing transactional `ProjectImportService` in the background, transitions an explicit state machine (`pending → running → completed|failed|cancelled`), and surfaces post-commit cache invalidation through a new dedicated service method so the worker remains independent of the transport-layer handler.
 
 ---
 
@@ -35,7 +35,7 @@ The same package now exposes the inverse operation of CDM project sync, plus an 
   - `GET /api/projects/{id}/sync/export` — snapshot the project's current state and download it as a CDM JSON artifact (`SyncProjectInput` shape, replay-ready). Gated by `Project:Query`.
   - `GET /api/projects/{id}/sync/jobs/{jobId}/snapshot` — download the rollback snapshot captured before the selected job ran. `404` when the job has no snapshot. Gated by `Project:Query`.
 - GraphQL: `ProjectSyncJob` gains `hasSnapshot: Boolean!`, `snapshotTakenAt: DateTime`, and `snapshotSizeBytes: Int` (the JSON itself stays REST-only, mirroring the existing payload-download endpoint).
-- Database: three new nullable columns on `project_permission_sync_jobs` — `snapshot` (jsonb), `snapshot_taken_at` (timestamp), `snapshot_size_bytes` (int). Existing rows are unaffected; `hasSnapshot` is `false` for them.
-- Worker: the snapshot is captured **inside the import transaction**, immediately before `syncProject` runs. If the import throws, the snapshot rolls back along with it — a `failed` job has no snapshot, which is correct because the project state did not change.
+- Database: three new nullable columns on `project_sync_jobs` — `snapshot` (jsonb), `snapshot_taken_at` (timestamp), `snapshot_size_bytes` (int). Existing rows are unaffected; `hasSnapshot` is `false` for them.
+- Worker: the snapshot is captured **inside the import transaction**, immediately before `importProjectCdm` runs. If the import throws, the snapshot rolls back along with it — a `failed` job has no snapshot, which is correct because the project state did not change.
 - Web: new `Export current` button next to `Start sync` in the toolbar and empty states, plus a `Rollback snapshot` tab in the sync-job view dialog (reload + download, matches the existing payload tab).
-- Internals: per-entity sync logic now lives in `ICdmEntityHandler` implementations under `apps/api/src/services/cdm/`. Adding a new CDM entity is a new handler file plus matching schema additions; the orchestrator and the export service do not need to change. See `apps/api/src/services/cdm/README.md` for the extension contract and the BYOK secret policy that future secret-bearing handlers (e.g. API keys) must follow.
+- Internals: per-entity sync logic lives in `ICdmEntityHandler` implementations (`*CdmEntity` classes under `apps/api/src/lib/cdm/entities/`). See `apps/api/src/lib/cdm/README.md` for the extension contract.

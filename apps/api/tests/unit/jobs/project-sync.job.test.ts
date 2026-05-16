@@ -202,9 +202,9 @@ interface MockServices {
   markCompleted: ReturnType<typeof vi.fn>;
   markFailed: ReturnType<typeof vi.fn>;
   saveSnapshot: ReturnType<typeof vi.fn>;
-  syncProject: ReturnType<typeof vi.fn>;
-  invalidateCachesForSyncResult: ReturnType<typeof vi.fn>;
-  exportProjectPermissions: ReturnType<typeof vi.fn>;
+  importProjectCdm: ReturnType<typeof vi.fn>;
+  invalidateCachesForImportResult: ReturnType<typeof vi.fn>;
+  exportProjectCdm: ReturnType<typeof vi.fn>;
 }
 
 function buildJobInstance(mocks: MockServices) {
@@ -220,12 +220,12 @@ function buildJobInstance(mocks: MockServices) {
         markFailed: mocks.markFailed,
         saveSnapshot: mocks.saveSnapshot,
       },
-      projectSync: {
-        syncProject: mocks.syncProject,
-        invalidateCachesForSyncResult: mocks.invalidateCachesForSyncResult,
+      projectImport: {
+        importProjectCdm: mocks.importProjectCdm,
+        invalidateCachesForImportResult: mocks.invalidateCachesForImportResult,
       },
-      projectPermissionExport: {
-        exportProjectPermissions: mocks.exportProjectPermissions,
+      projectExport: {
+        exportProjectCdm: mocks.exportProjectCdm,
       },
     },
   } as unknown as AppContext;
@@ -242,16 +242,16 @@ describe('ProjectSyncJob worker', () => {
       markCompleted: vi.fn().mockResolvedValue(undefined),
       markFailed: vi.fn().mockResolvedValue(undefined),
       saveSnapshot: vi.fn().mockResolvedValue(undefined),
-      syncProject: vi.fn(),
-      invalidateCachesForSyncResult: vi.fn().mockResolvedValue(undefined),
-      exportProjectPermissions: vi.fn().mockResolvedValue(emptyCanonicalPayload()),
+      importProjectCdm: vi.fn(),
+      invalidateCachesForImportResult: vi.fn().mockResolvedValue(undefined),
+      exportProjectCdm: vi.fn().mockResolvedValue(emptyCanonicalPayload()),
     };
   });
 
   it('runs the full happy path: pending → running → completed and invalidates caches', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
     const result = buildSyncResult();
-    mocks.syncProject.mockResolvedValue(result);
+    mocks.importProjectCdm.mockResolvedValue(result);
 
     const job = buildJobInstance(mocks);
     const ctx = {
@@ -267,7 +267,7 @@ describe('ProjectSyncJob worker', () => {
     expect(outcome.success).toBe(true);
     expect(mocks.loadForExecution).toHaveBeenCalledWith({ jobId: jobRecordId }, mockOuterTx);
     expect(mocks.transitionToRunning).toHaveBeenCalledWith({ jobId: jobRecordId }, mockOuterTx);
-    expect(mocks.syncProject).toHaveBeenCalledTimes(1);
+    expect(mocks.importProjectCdm).toHaveBeenCalledTimes(1);
     expect(mocks.markCompleted).toHaveBeenCalledWith(
       {
         jobId: jobRecordId,
@@ -276,7 +276,7 @@ describe('ProjectSyncJob worker', () => {
       },
       mockOuterTx
     );
-    expect(mocks.invalidateCachesForSyncResult).toHaveBeenCalledWith({
+    expect(mocks.invalidateCachesForImportResult).toHaveBeenCalledWith({
       scope: enqueueScope,
       userIds: [userId],
     });
@@ -288,7 +288,7 @@ describe('ProjectSyncJob worker', () => {
       buildExportExecData({ sections: ['roles'], includeUserApiKeys: false })
     );
     const exported = emptyCanonicalPayload({ id: 'my-project' });
-    mocks.exportProjectPermissions.mockResolvedValue(exported);
+    mocks.exportProjectCdm.mockResolvedValue(exported);
 
     const job = buildJobInstance(mocks);
     const outcome = await job.execute({
@@ -300,8 +300,8 @@ describe('ProjectSyncJob worker', () => {
     });
 
     expect(outcome.success).toBe(true);
-    expect(mocks.syncProject).not.toHaveBeenCalled();
-    expect(mocks.exportProjectPermissions).toHaveBeenCalledWith(
+    expect(mocks.importProjectCdm).not.toHaveBeenCalled();
+    expect(mocks.exportProjectCdm).toHaveBeenCalledWith(
       expect.objectContaining({
         projectId,
         scope: enqueueScope,
@@ -327,7 +327,7 @@ describe('ProjectSyncJob worker', () => {
       },
       expect.objectContaining({ __mockTx: true })
     );
-    expect(mocks.invalidateCachesForSyncResult).not.toHaveBeenCalled();
+    expect(mocks.invalidateCachesForImportResult).not.toHaveBeenCalled();
   });
 
   it('import with replace mode forwards mode to syncProject', async () => {
@@ -340,7 +340,7 @@ describe('ProjectSyncJob worker', () => {
       ...buildExecData(),
       payload: emptyCanonicalPayload({ mode: replaceMode }),
     });
-    mocks.syncProject.mockResolvedValue(buildSyncResult());
+    mocks.importProjectCdm.mockResolvedValue(buildSyncResult());
 
     const job = buildJobInstance(mocks);
     await job.execute({
@@ -351,7 +351,7 @@ describe('ProjectSyncJob worker', () => {
       payload: { jobRecordId },
     });
 
-    expect(mocks.syncProject).toHaveBeenCalledWith(
+    expect(mocks.importProjectCdm).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({ mode: replaceMode }),
       }),
@@ -366,7 +366,7 @@ describe('ProjectSyncJob worker', () => {
       confirmDestructive: true,
     };
     mocks.loadForExecution.mockResolvedValue(buildExportExecData({ mode: exportMode }));
-    mocks.exportProjectPermissions.mockResolvedValue(emptyCanonicalPayload());
+    mocks.exportProjectCdm.mockResolvedValue(emptyCanonicalPayload());
 
     const job = buildJobInstance(mocks);
     await job.execute({
@@ -377,7 +377,7 @@ describe('ProjectSyncJob worker', () => {
       payload: { jobRecordId },
     });
 
-    expect(mocks.exportProjectPermissions).toHaveBeenCalledWith(
+    expect(mocks.exportProjectCdm).toHaveBeenCalledWith(
       expect.objectContaining({ mode: exportMode }),
       expect.objectContaining({ __mockTx: true })
     );
@@ -385,7 +385,7 @@ describe('ProjectSyncJob worker', () => {
 
   it('captures a pre-sync snapshot inside the same transaction, before syncProject runs', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
-    mocks.syncProject.mockResolvedValue(buildSyncResult());
+    mocks.importProjectCdm.mockResolvedValue(buildSyncResult());
 
     const exportedSnapshot = emptyCanonicalPayload({
       roles: [
@@ -401,17 +401,17 @@ describe('ProjectSyncJob worker', () => {
         },
       ],
     });
-    mocks.exportProjectPermissions.mockResolvedValue(exportedSnapshot);
+    mocks.exportProjectCdm.mockResolvedValue(exportedSnapshot);
 
     const callOrder: string[] = [];
-    mocks.exportProjectPermissions.mockImplementation(async () => {
+    mocks.exportProjectCdm.mockImplementation(async () => {
       callOrder.push('export');
       return exportedSnapshot;
     });
     mocks.saveSnapshot.mockImplementation(async () => {
       callOrder.push('saveSnapshot');
     });
-    mocks.syncProject.mockImplementation(async () => {
+    mocks.importProjectCdm.mockImplementation(async () => {
       callOrder.push('sync');
       return buildSyncResult();
     });
@@ -427,8 +427,8 @@ describe('ProjectSyncJob worker', () => {
 
     expect(callOrder).toEqual(['export', 'saveSnapshot', 'sync']);
 
-    expect(mocks.exportProjectPermissions).toHaveBeenCalledTimes(1);
-    const exportArgs = mocks.exportProjectPermissions.mock.calls[0];
+    expect(mocks.exportProjectCdm).toHaveBeenCalledTimes(1);
+    const exportArgs = mocks.exportProjectCdm.mock.calls[0];
     expect(exportArgs[0]).toMatchObject({
       projectId,
       scope: enqueueScope,
@@ -445,13 +445,13 @@ describe('ProjectSyncJob worker', () => {
     expect(saveArgs[0].takenAt).toBeInstanceOf(Date);
     expect(saveArgs[1]).toMatchObject({ __mockTx: true });
 
-    const syncTx = mocks.syncProject.mock.calls[0][1];
+    const syncTx = mocks.importProjectCdm.mock.calls[0][1];
     expect(syncTx).toMatchObject({ __mockTx: true });
   });
 
   it('rolls back the snapshot when sync fails (snapshot save and sync share the same transaction)', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
-    mocks.syncProject.mockRejectedValue(new Error('sync exploded'));
+    mocks.importProjectCdm.mockRejectedValue(new Error('sync exploded'));
 
     const job = buildJobInstance(mocks);
     await expect(
@@ -473,7 +473,7 @@ describe('ProjectSyncJob worker', () => {
      * persistence happens BEFORE sync inside the same tx, which is the only
      * structural guarantee the unit test can assert.
      */
-    expect(mocks.exportProjectPermissions).toHaveBeenCalledTimes(1);
+    expect(mocks.exportProjectCdm).toHaveBeenCalledTimes(1);
     expect(mocks.saveSnapshot).toHaveBeenCalledTimes(1);
     expect(mocks.markFailed).toHaveBeenCalledWith(
       {
@@ -488,7 +488,7 @@ describe('ProjectSyncJob worker', () => {
   it('marks the job failed, rethrows, and skips cache invalidation when sync errors', async () => {
     mocks.loadForExecution.mockResolvedValue(buildExecData());
     const boom = new Error('replace failed');
-    mocks.syncProject.mockRejectedValue(boom);
+    mocks.importProjectCdm.mockRejectedValue(boom);
 
     const job = buildJobInstance(mocks);
 
@@ -512,7 +512,7 @@ describe('ProjectSyncJob worker', () => {
       mockOuterTx
     );
     expect(mocks.markCompleted).not.toHaveBeenCalled();
-    expect(mocks.invalidateCachesForSyncResult).not.toHaveBeenCalled();
+    expect(mocks.invalidateCachesForImportResult).not.toHaveBeenCalled();
   });
 
   it('throws ConflictError when the job is not in PENDING (illegal transition)', async () => {
@@ -532,7 +532,7 @@ describe('ProjectSyncJob worker', () => {
       })
     ).rejects.toBeInstanceOf(ConflictError);
     expect(mocks.transitionToRunning).not.toHaveBeenCalled();
-    expect(mocks.syncProject).not.toHaveBeenCalled();
+    expect(mocks.importProjectCdm).not.toHaveBeenCalled();
   });
 
   it('returns success without executing when the job was cancelled before pickup', async () => {
@@ -549,7 +549,7 @@ describe('ProjectSyncJob worker', () => {
 
     expect(outcome.success).toBe(true);
     expect(mocks.transitionToRunning).not.toHaveBeenCalled();
-    expect(mocks.syncProject).not.toHaveBeenCalled();
+    expect(mocks.importProjectCdm).not.toHaveBeenCalled();
     expect(mocks.markCompleted).not.toHaveBeenCalled();
   });
 

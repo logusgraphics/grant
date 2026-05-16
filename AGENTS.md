@@ -111,6 +111,34 @@ When adding or changing features, follow this order. Each step may produce outpu
 - Prefer existing patterns: search for similar handlers, services, or components before adding new ones.
 - Use `import type` for type-only imports.
 
+### Layer terminology (`apps/api`)
+
+| Term                    | Location                                        | Meaning                                                                                                |
+| ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Handler**             | `apps/api/src/handlers/`                        | Transport orchestrators extending `CacheHandler` (GraphQL/REST entry).                                 |
+| **Service**             | `apps/api/src/services/*Service`                | Business logic + audit; co-located `*.schemas.ts` for zod validation.                                  |
+| **Repository**          | `apps/api/src/repositories/`                    | Database access only.                                                                                  |
+| **Lib**                 | `apps/api/src/lib/**/*.lib.ts`                  | Stateless helpers and shared utilities (no `CacheHandler`).                                            |
+| **CDM entity**          | `apps/api/src/lib/cdm/entities/*.cdm-entity.ts` | `*CdmEntity` classes implementing `ICdmEntityHandler` — not transport handlers.                        |
+| **Project sync job**    | `ProjectSyncJobService`, `project_sync_jobs`    | Async job envelope (`startProjectSync` / `startProjectExport`); public API keeps `ProjectSync*` names. |
+| **CDM import / export** | `ProjectImportService`, `ProjectExportService`  | Apply or snapshot CDM payloads; invoked by the worker, not by transport handlers directly.             |
+
+Do **not** name files `*.handler.ts` or classes `*Handler` outside `handlers/`. The core port `ICdmEntityHandler` keeps its name; implementations use `*CdmEntity`.
+
+### Comments and documentation
+
+Prefer self-documenting names, composition, and small extractions over inline commentary.
+
+| Keep                                                                                      | Move to docs or delete                                 |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| GraphQL descriptions (tiered — see `schema.mdc`)                                          | Long orchestration narratives in `.ts` files           |
+| Brief notes for non-obvious invariants, security, or races when names cannot express them | Step-by-step phase comments inside functions           |
+| Tooling directives (`eslint-disable`, `@ts-expect-error` with reason)                     | Duplicate JSDoc that restates obvious behavior         |
+| Generated-file markers                                                                    | File banners when a README already explains the module |
+| Minimal JSDoc on exported cross-package ports when types are insufficient                 | Per-field docs on self-explanatory counters or columns |
+
+Contributor docs for CDM: `apps/api/src/lib/cdm/README.md`, `docs/core-concepts/cdm-import-export.md`.
+
 ## Where to look
 
 | Layer            | Location                                                     | Rule (when editing) |

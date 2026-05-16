@@ -41,14 +41,14 @@ export type {
 } from './services/organization.service.port';
 export type { IPermissionService, IPermissionTagService } from './services/permission.service.port';
 export type {
+  IProjectExportService,
   IProjectGroupService,
-  IProjectPermissionExportService,
+  IProjectImportService,
   IProjectPermissionService,
   IProjectResourceService,
   IProjectRoleService,
   IProjectService,
   IProjectSyncJobService,
-  IProjectSyncService,
   IProjectTagService,
   IProjectUserApiKeyService,
   IProjectUserService,

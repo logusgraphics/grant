@@ -2,7 +2,7 @@
  * Project-domain service port interfaces.
  * Covers: Project, ProjectUser, ProjectRole, ProjectGroup,
  *         ProjectPermission, ProjectResource, ProjectTag,
- *         ProjectUserApiKey, ProjectPermissionSync (CDM import).
+ *         ProjectUserApiKey, ProjectSyncJob (CDM import/export jobs).
  */
 import type {
   AddProjectGroupInput,
@@ -259,12 +259,12 @@ export interface IProjectUserApiKeyService {
 }
 
 // ---------------------------------------------------------------------------
-// IProjectSyncService
+// IProjectImportService
 // ---------------------------------------------------------------------------
 
 /** Replace-import of project RBAC from the canonical data model (CDM). */
-export interface IProjectSyncService {
-  syncProject(
+export interface IProjectImportService {
+  importProjectCdm(
     params: {
       projectId: string;
       scope: Scope;
@@ -274,33 +274,29 @@ export interface IProjectSyncService {
   ): Promise<SyncProjectResult>;
 
   /**
-   * Post-commit cache invalidation for a successful sync. Invalidates
+   * Post-commit cache invalidation after a successful CDM import. Invalidates
    * scope-keyed caches (permissions/roles/groups/users/resources) and the
    * authorization cache for every user touched by the import.
-   * Called by both the request-thread handler (legacy) and the async worker.
    */
-  invalidateCachesForSyncResult(params: { scope: Scope; userIds: string[] }): Promise<void>;
+  invalidateCachesForImportResult(params: { scope: Scope; userIds: string[] }): Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
-// IProjectPermissionExportService
+// IProjectExportService
 // ---------------------------------------------------------------------------
 
 /**
- * Inverse of {@link IProjectSyncService}: snapshot the project's
- * current permission/role/group/user-assignment state and package it as a
- * replay-ready `SyncProjectInput` (the CDM canonical artifact).
+ * CDM export: snapshot the project's current permission/role/group/user-assignment
+ * state as a replay-ready `SyncProjectInput`.
  *
- * Used both by the standalone export endpoint (clone-a-project, manual
- * backups) and by the sync worker to capture a pre-import rollback snapshot
- * inside the import transaction.
+ * Used by export jobs and by the import worker for pre-import rollback snapshots.
  *
  * The returned `SyncProjectInput.id` is the project's display **name** (trimmed),
  * matching CDM `id` / sync **jobName** when re-importing. If the name is missing or
  * blank, `id` is `null`.
  */
-export interface IProjectPermissionExportService {
-  exportProjectPermissions(
+export interface IProjectExportService {
+  exportProjectCdm(
     params: {
       projectId: string;
       scope: Scope;
@@ -365,7 +361,7 @@ export interface ProjectSyncJobExecutionData {
 /**
  * State-machine service for the async CDM sync job-tracking row.
  * Owns persistence + transitions only; never performs the import itself.
- * The actual import is delegated to {@link IProjectSyncService}.
+ * The actual import is delegated to {@link IProjectImportService}.
  */
 export interface IProjectSyncJobService {
   create(

@@ -10,8 +10,7 @@ enum ProjectSyncJobStatus {
 }
 
 """
-Kind of asynchronous work tracked for a project (CDM import today; async export next).
-Persisted in PostgreSQL as `project_permission_sync_jobs`.
+CDM import or export work for a project (`project_sync_jobs`).
 """
 enum ProjectSyncJobOperation {
   IMPORT
@@ -19,10 +18,7 @@ enum ProjectSyncJobOperation {
 }
 
 """
-A row representing one queued or completed asynchronous project CDM job (table
-`project_permission_sync_jobs`). Imports run in the background via the jobs adapter;
-clients enqueue a job and poll this resource for status. Export jobs will use the same
-table with `operation: EXPORT`.
+Asynchronous project CDM import or export job.
 """
 type ProjectSyncJob {
   id: ID!
@@ -30,23 +26,18 @@ type ProjectSyncJob {
   status: ProjectSyncJobStatus!
   cdmVersion: Int!
   """
-  Optional client idempotency / display name (from `SyncProjectInput.id` on import).
+  Client idempotency key from `SyncProjectInput.id` on import.
   """
   jobName: String
   operation: ProjectSyncJobOperation!
   """
-  CDM mode strategy for import jobs (`merge` / `replace`); null for export and other operations.
+  Import merge/replace; null for export.
   """
   modeStrategy: CdmModeStrategy
   """
-  Import counts and warnings when the job reaches COMPLETED. Null for completed
-  **export** jobs (the generated CDM is available via the job `snapshot` REST download).
+  Import counters when completed; null for export (CDM in snapshot download).
   """
   result: SyncProjectResult
-  """
-  Warnings produced during execution (also surfaced inside `result.warnings`
-  on completion; exposed at the top level for incremental visibility).
-  """
   warnings: [String!]!
   errorMessage: String
   enqueuedAt: Date!
@@ -54,16 +45,9 @@ type ProjectSyncJob {
   completedAt: Date
   cancelledAt: Date
   """
-  True when the job row has a `snapshot` JSON document. For **import** jobs this is
-  the pre-sync rollback capture (when the worker reached that step). For **export**
-  jobs it is the generated CDM artifact after successful completion. Download via
-  `GET .../sync/jobs/{jobId}/snapshot` (REST).
+  Rollback snapshot (import) or exported CDM (export); REST `.../snapshot`.
   """
   hasSnapshot: Boolean!
   snapshotTakenAt: Date
-  """
-  Serialised byte length of the snapshot JSON; useful for list-page rendering
-  without round-tripping the full JSONB column.
-  """
   snapshotSizeBytes: Int
 }

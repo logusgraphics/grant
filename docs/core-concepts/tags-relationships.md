@@ -119,4 +119,4 @@ Plain user-created tags are never affected, even if they share a name or color w
 - [Resources](/core-concepts/resources) — Taggable resource entities
 - [Data Model](/architecture/data-model) — Entity relationships and pivot tables
 - [RBAC System](/architecture/rbac) — Permission evaluation for tag operations
-- [CDM permission sync](/core-concepts/cdm-import-export) — Full CDM import/export contract
+- [CDM import/export](/core-concepts/cdm-import-export) — Full CDM import/export contract

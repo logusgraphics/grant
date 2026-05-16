@@ -251,7 +251,7 @@ const cdmModeSchema = z.object({
 /**
  * Body for POST /api/projects/:id/sync/jobs.
  *
- * Enqueues an asynchronous canonical-data-model permission sync. The request
+ * Enqueues an asynchronous CDM import job. The request
  * returns immediately with a job descriptor; clients poll the job resource
  * for status. Pass `id` to make the request idempotent — if an active
  * job already exists for the same `(project, id)` it is returned instead
@@ -295,7 +295,7 @@ export const projectSyncJobParamsSchema = z.object({
     param: { in: 'path', name: 'id' },
   }),
   jobId: z.uuid('errors.validation.invalidJobId').openapi({
-    description: 'UUID of the project permissions sync job',
+    description: 'UUID of the project sync job',
     example: '123e4567-e89b-12d3-a456-426614174099',
     param: { in: 'path', name: 'jobId' },
   }),
@@ -303,7 +303,7 @@ export const projectSyncJobParamsSchema = z.object({
 
 export const projectSyncJobScopeQuerySchema = z.object({
   /**
-   * Permission sync only operates against `accountProject` or `organizationProject`
+   * Project sync jobs only operate against `accountProject` or `organizationProject`
    * scopes whose id is a composite `${parentId}:${projectId}` — so we accept any
    * non-empty string here and let the handler enforce the precise format.
    */
@@ -512,7 +512,7 @@ export const projectSyncJobSchema = z.object({
 export const projectSyncJobResponseSchema = createSuccessResponseSchema(projectSyncJobSchema);
 
 /**
- * Query for listing project permissions sync jobs.
+ * Query for listing project sync jobs.
  * Reuses the standard pagination/search shape and adds a status filter and the
  * scope query params shared with the single-job endpoint.
  */

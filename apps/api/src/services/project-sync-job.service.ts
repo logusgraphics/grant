@@ -52,7 +52,7 @@ function compactResultSummary(result: SyncProjectResult): Record<string, unknown
 /**
  * State-machine service for the asynchronous CDM project sync job tracking
  * row. Owns persistence + lifecycle transitions only; the actual import is
- * performed by `IProjectSyncService` (called by the worker).
+ * performed by `IProjectImportService` (called by the worker).
  */
 export class ProjectSyncJobService implements IProjectSyncJobService {
   constructor(
@@ -75,7 +75,7 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
   ): Promise<ProjectSyncJob> {
     if (!ALLOWED_SCOPES.includes(params.scope.tenant)) {
       throw new BadRequestError(
-        `Project permissions sync requires accountProject or organizationProject scope, got: ${params.scope.tenant}`
+        `Project sync jobs require accountProject or organizationProject scope, got: ${params.scope.tenant}`
       );
     }
     if (params.cdmVersion !== 1) {
@@ -130,7 +130,7 @@ export class ProjectSyncJobService implements IProjectSyncJobService {
   ): Promise<ProjectSyncJobPage> {
     if (!ALLOWED_SCOPES.includes(params.scope.tenant)) {
       throw new BadRequestError(
-        `Project permissions sync requires accountProject or organizationProject scope, got: ${params.scope.tenant}`
+        `Project sync jobs require accountProject or organizationProject scope, got: ${params.scope.tenant}`
       );
     }
 

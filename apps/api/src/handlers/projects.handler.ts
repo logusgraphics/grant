@@ -9,7 +9,6 @@ import type {
   IProjectRoleService,
   IProjectService,
   IProjectSyncJobService,
-  IProjectSyncService,
   IProjectTagService,
   IProjectUserService,
   ITransactionalConnection,
@@ -34,20 +33,19 @@ import {
   QueryProjectsArgs,
   QueryProjectSyncJobArgs,
   QueryProjectSyncJobsArgs,
+  Scope,
   SyncProjectInput,
   Tenant,
 } from '@grantjs/schema';
 
 import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
+import { PROJECT_SYNC_JOB_ID } from '@/constants/project-sync.constants';
 import { IEntityCacheAdapter } from '@/lib/cache';
 import { BadRequestError, ConfigurationError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
 import { CacheHandler, type ScopeServices } from './base/cache-handler';
-
-/** Job id for the async project permissions sync worker (registered in apps/api/src/jobs). */
-const PROJECT_SYNC_JOB_ID = 'project-sync';
 
 export class ProjectHandler extends CacheHandler {
   constructor(
@@ -61,16 +59,11 @@ export class ProjectHandler extends CacheHandler {
     private readonly projectGroups: IProjectGroupService,
     private readonly projectRoles: IProjectRoleService,
     private readonly projectUsers: IProjectUserService,
-    private readonly projectSync: IProjectSyncService,
     private readonly projectSyncJobs: IProjectSyncJobService,
     private readonly jobs: IJobAdapter | null,
     cache: IEntityCacheAdapter,
     scopeServices: ScopeServices,
     private readonly db: ITransactionalConnection<Transaction>,
-    /**
-     * When provided (scoped RLS HTTP requests), runs side effects after the
-     * request transaction commits so background workers see persisted rows.
-     */
     private readonly scheduleAfterCommit?: (fn: () => void | Promise<void>) => void
   ) {
     super(cache, scopeServices);
@@ -146,20 +139,13 @@ export class ProjectHandler extends CacheHandler {
     return projectsResult;
   }
 
-  /**
-   * Enqueue an asynchronous CDM permission sync job. Performs the same fast
-   * pre-flight validation as the legacy synchronous endpoint (so callers see
-   * malformed input immediately instead of after the worker picks up the job),
-   * checks for an in-flight job with the same `id` (idempotency), then
-   * persists the job tracking row and dispatches a one-off job.
-   */
   public async startProjectSync(
     params: MutationStartProjectSyncArgs & { enqueuedById: string }
   ): Promise<ProjectSyncJob> {
     const jobs = this.jobs;
     if (!jobs || !jobs.enqueue) {
       throw new ConfigurationError(
-        'Project permissions sync is unavailable: job adapter is not configured. Set JOBS_ENABLED=true.'
+        'Project sync jobs are unavailable: job adapter is not configured. Set JOBS_ENABLED=true.'
       );
     }
     const enqueueJob = jobs.enqueue.bind(jobs);
@@ -200,27 +186,7 @@ export class ProjectHandler extends CacheHandler {
       enqueuedById: params.enqueuedById,
     });
 
-    const enqueueData = {
-      scope: params.scope,
-      payload: { jobRecordId: job.id },
-    };
-
-    /**
-     * Must run after the HTTP transaction commits. Otherwise BullMQ can pick
-     * up the job before the INSERT is visible to other connections (worker →
-     * `ProjectSyncJob not found`).
-     */
-    const runEnqueue = (): void => {
-      void enqueueJob(PROJECT_SYNC_JOB_ID, enqueueData);
-    };
-
-    const defer =
-      this.scheduleAfterCommit ??
-      ((fn: () => void | Promise<void>) => {
-        void Promise.resolve(fn());
-      });
-    defer(runEnqueue);
-
+    this.enqueueProjectSyncJobAfterCommit(enqueueJob, params.scope, job.id);
     return job;
   }
 
@@ -230,7 +196,7 @@ export class ProjectHandler extends CacheHandler {
     const jobs = this.jobs;
     if (!jobs || !jobs.enqueue) {
       throw new ConfigurationError(
-        'Project permissions sync is unavailable: job adapter is not configured. Set JOBS_ENABLED=true.'
+        'Project sync jobs are unavailable: job adapter is not configured. Set JOBS_ENABLED=true.'
       );
     }
     const enqueueJob = jobs.enqueue.bind(jobs);
@@ -299,26 +265,26 @@ export class ProjectHandler extends CacheHandler {
       enqueuedById: params.enqueuedById,
     });
 
-    const enqueueData = {
-      scope: params.scope,
-      payload: { jobRecordId: job.id },
-    };
+    this.enqueueProjectSyncJobAfterCommit(enqueueJob, params.scope, job.id);
+    return job;
+  }
 
+  private enqueueProjectSyncJobAfterCommit(
+    enqueueJob: (jobId: string, data: { scope: Scope; payload: { jobRecordId: string } }) => void,
+    scope: Scope,
+    jobRecordId: string
+  ): void {
     const runEnqueue = (): void => {
-      void enqueueJob(PROJECT_SYNC_JOB_ID, enqueueData);
+      void enqueueJob(PROJECT_SYNC_JOB_ID, { scope, payload: { jobRecordId } });
     };
-
     const defer =
       this.scheduleAfterCommit ??
       ((fn: () => void | Promise<void>) => {
         void Promise.resolve(fn());
       });
     defer(runEnqueue);
-
-    return job;
   }
 
-  /** Project display name for CDM `id` / sync job `jobName` (export default, import payload). */
   private async resolveProjectDisplayName(projectId: string): Promise<string | null> {
     const page = await this.projects.getProjects({
       ids: [projectId],
@@ -357,11 +323,6 @@ export class ProjectHandler extends CacheHandler {
     });
   }
 
-  /**
-   * Returns the original CDM JSON body that was submitted when the job was
-   * enqueued. Used by the REST download endpoint. The payload is read from
-   * the persisted JSONB column on the job row; no file storage is involved.
-   */
   public async getProjectSyncJobPayload(params: QueryProjectSyncJobArgs): Promise<{
     payload: unknown;
     jobName: string | null;
@@ -423,7 +384,7 @@ export class ProjectHandler extends CacheHandler {
   private assertProjectScope(scope: { tenant: Tenant; id: string }): void {
     if (scope.tenant !== Tenant.AccountProject && scope.tenant !== Tenant.OrganizationProject) {
       throw new ValidationError(
-        'project permissions sync requires accountProject or organizationProject scope'
+        'project sync jobs require accountProject or organizationProject scope'
       );
     }
   }
@@ -638,7 +599,6 @@ export class ProjectHandler extends CacheHandler {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { id: projectId, scope } = params;
 
-      // Query common project data (not tenant-specific)
       const [projectTags, projectPermissions, projectGroups, projectRoles, projectUsers] =
         await Promise.all([
           this.projectTags.getProjectTags({ projectId }, tx),

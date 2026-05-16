@@ -309,7 +309,7 @@ CDM-managed rows carry:
 | `metadata.cdmImport` | `projectId`, `kind`, `externalKey` — teardown, export filter, correlation |
 | `metadata.cdmSource` | Trace ids (`grantRoleId`, `grantUserId`, …) and importer-owned JSON       |
 
-Contributor details: [CDM README](https://github.com/logusgraphics/grant-platform/blob/main/apps/api/src/services/cdm/README.md) in the API tree.
+Contributor details: [CDM README](https://github.com/logusgraphics/grant-platform/blob/main/apps/api/src/lib/cdm/README.md) in the API tree.
 
 ## Future: portable catalog {#future-portable-catalog}
 
@@ -319,7 +319,7 @@ Copying global catalog permissions per project (so edits never cross projects) w
 
 New entity types register via **`ICdmEntityHandler`** (shared by sync and export). Handler order, `cdmVersion` bumps, and tests are documented in:
 
-- [`apps/api/src/services/cdm/README.md`](https://github.com/logusgraphics/grant-platform/blob/main/apps/api/src/services/cdm/README.md)
+- [`apps/api/src/lib/cdm/README.md`](https://github.com/logusgraphics/grant-platform/blob/main/apps/api/src/lib/cdm/README.md)
 
 ---
 

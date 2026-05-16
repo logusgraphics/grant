@@ -226,9 +226,9 @@ Projects are ideal for:
     method: 'post',
     path: '/api/projects/{id}/sync/jobs',
     tags: ['Projects'],
-    summary: 'Start an asynchronous CDM permission sync job',
+    summary: 'Start an asynchronous CDM import job',
     description: `
-Enqueue an asynchronous CDM permission sync job for the project. The endpoint returns
+Enqueue an asynchronous CDM import job for the project. The endpoint returns
 immediately with the created job descriptor in \`PENDING\` status; the actual import runs
 in the background. Poll \`GET /api/projects/{id}/sync/jobs/{jobId}\` for status.
 
@@ -440,9 +440,9 @@ Optional \`jobName\` provides idempotency: an active job with the same
     method: 'get',
     path: '/api/projects/{id}/sync/jobs',
     tags: ['Projects'],
-    summary: 'List project permissions sync jobs',
+    summary: 'List project sync jobs',
     description: `
-List asynchronous CDM permission sync jobs for a project. Supports pagination, status filtering,
+List asynchronous CDM import/export jobs for a project. Supports pagination, status filtering,
 search by \`jobName\`, and sorting by \`enqueuedAt\`, \`startedAt\`, \`completedAt\`, \`status\`,
 or \`jobName\`.
 
@@ -659,9 +659,9 @@ attachment\` header so browsers prompt for a save.
     method: 'get',
     path: '/api/projects/{id}/sync/jobs/{jobId}',
     tags: ['Projects'],
-    summary: 'Get the status of a project permissions sync job',
+    summary: 'Get the status of a project sync job',
     description: `
-Read the current state of an asynchronous CDM permission sync or export job. Use this endpoint
+Read the current state of an asynchronous CDM import or export job. Use this endpoint
 to poll the lifecycle of a job started via \`POST .../sync/jobs\` (import) or
 \`POST .../sync/jobs/export\` (export).
 
@@ -739,9 +739,9 @@ Statuses:
     method: 'delete',
     path: '/api/projects/{id}/sync/jobs/{jobId}',
     tags: ['Projects'],
-    summary: 'Cancel a project permissions sync job',
+    summary: 'Cancel a project sync job',
     description: `
-Cancel a pending or running project permissions sync job. Requires the same verified-email /
+Cancel a pending or running project sync job. Requires the same verified-email /
 MFA gate as \`POST .../sync/jobs\`.
 
 - If the job is \`PENDING\`, cancellation is immediate — the worker will not run.

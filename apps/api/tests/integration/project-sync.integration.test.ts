@@ -1,5 +1,5 @@
 /**
- * Integration: REST routes for the async CDM permission sync flow:
+ * Integration: REST routes for the async CDM import/export job flow:
  *   POST   /api/projects/:id/sync/jobs                  — enqueue import job
  *   POST   /api/projects/:id/sync/jobs/export           — enqueue export job
  *   GET    /api/projects/:id/sync/jobs                  — paginated list

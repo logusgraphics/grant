@@ -1541,11 +1541,7 @@ export type Permission = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
-/**
- * Custom permission definition for this project. References a resource by opaque
- * `resource` key from the same document. Tag keys come from `permission_tags` for tags
- * in `project_tags`.
- */
+/** Custom permission for this project; `resource` is an opaque key in the same document. */
 export type PermissionCdmInput = {
   action: Scalars['String']['input'];
   condition?: InputMaybe<Scalars['JSON']['input']>;
@@ -1769,12 +1765,7 @@ export enum ProjectSortableField {
   UpdatedAt = 'updatedAt',
 }
 
-/**
- * A row representing one queued or completed asynchronous project CDM job (table
- * `project_permission_sync_jobs`). Imports run in the background via the jobs adapter;
- * clients enqueue a job and poll this resource for status. Export jobs will use the same
- * table with `operation: EXPORT`.
- */
+/** Asynchronous project CDM import or export job. */
 export type ProjectSyncJob = {
   __typename?: 'ProjectSyncJob';
   cancelledAt?: Maybe<Scalars['Date']['output']>;
@@ -1782,44 +1773,25 @@ export type ProjectSyncJob = {
   completedAt?: Maybe<Scalars['Date']['output']>;
   enqueuedAt: Scalars['Date']['output'];
   errorMessage?: Maybe<Scalars['String']['output']>;
-  /**
-   * True when the job row has a `snapshot` JSON document. For **import** jobs this is
-   * the pre-sync rollback capture (when the worker reached that step). For **export**
-   * jobs it is the generated CDM artifact after successful completion. Download via
-   * `GET .../sync/jobs/{jobId}/snapshot` (REST).
-   */
+  /** Rollback snapshot (import) or exported CDM (export); REST `.../snapshot`. */
   hasSnapshot: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
-  /** Optional client idempotency / display name (from `SyncProjectInput.id` on import). */
+  /** Client idempotency key from `SyncProjectInput.id` on import. */
   jobName?: Maybe<Scalars['String']['output']>;
-  /** CDM mode strategy for import jobs (`merge` / `replace`); null for export and other operations. */
+  /** Import merge/replace; null for export. */
   modeStrategy?: Maybe<CdmModeStrategy>;
   operation: ProjectSyncJobOperation;
   projectId: Scalars['ID']['output'];
-  /**
-   * Import counts and warnings when the job reaches COMPLETED. Null for completed
-   * **export** jobs (the generated CDM is available via the job `snapshot` REST download).
-   */
+  /** Import counters when completed; null for export (CDM in snapshot download). */
   result?: Maybe<SyncProjectResult>;
-  /**
-   * Serialised byte length of the snapshot JSON; useful for list-page rendering
-   * without round-tripping the full JSONB column.
-   */
   snapshotSizeBytes?: Maybe<Scalars['Int']['output']>;
   snapshotTakenAt?: Maybe<Scalars['Date']['output']>;
   startedAt?: Maybe<Scalars['Date']['output']>;
   status: ProjectSyncJobStatus;
-  /**
-   * Warnings produced during execution (also surfaced inside `result.warnings`
-   * on completion; exposed at the top level for incremental visibility).
-   */
   warnings: Array<Scalars['String']['output']>;
 };
 
-/**
- * Kind of asynchronous work tracked for a project (CDM import today; async export next).
- * Persisted in PostgreSQL as `project_permission_sync_jobs`.
- */
+/** CDM import or export work for a project (`project_sync_jobs`). */
 export enum ProjectSyncJobOperation {
   Export = 'EXPORT',
   Import = 'IMPORT',
@@ -2471,12 +2443,7 @@ export type Resource = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
-/**
- * Resource linked to this project (`project_resources`). Export includes catalog
- * resources and CDM-created rows; catalog rows use `metadata.cdmExportCatalogSnapshot`
- * so apply binds to existing rows. Tag keys on `tags` / `primaryTag` come from
- * `resource_tags` for tags that appear in `project_tags`.
- */
+/** Project resource row for CDM import/export. */
 export type ResourceCdmInput = {
   actions: Array<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -2564,12 +2531,6 @@ export type RoleCdmInput = {
   key: Scalars['String']['input'];
   metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
-  /**
-   * Permission grants for this role template. Each entry is either an opaque key
-   * matching `permissions[].key` in this document, or a catalog reference
-   * `"{resourceSlug}:{action}"` (normalized lowercase) for global/system permissions
-   * not listed under `permissions`.
-   */
   permissions?: InputMaybe<Array<Scalars['String']['input']>>;
   primaryTag?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2731,38 +2692,29 @@ export type SyncProjectInput = {
   version: Scalars['Int']['input'];
 };
 
+/** Counters and warnings from a completed CDM import. */
 export type SyncProjectResult = {
   __typename?: 'SyncProjectResult';
   groupPermissionsLinked: Scalars['Int']['output'];
-  /** Number of `group_tags` pivot rows created during this sync (sum across all role templates). */
   groupTagsLinked: Scalars['Int']['output'];
   groupsCreated: Scalars['Int']['output'];
   importId?: Maybe<Scalars['String']['output']>;
-  /** Number of CDM permission rows created during this sync (one per `permissions[]` entry in the import). */
   permissionsCreated: Scalars['Int']['output'];
   projectGroupsLinked: Scalars['Int']['output'];
-  /** The project that was synced. */
   projectId: Scalars['ID']['output'];
   projectPermissionsLinked: Scalars['Int']['output'];
   projectResourcesLinked: Scalars['Int']['output'];
   projectRolesLinked: Scalars['Int']['output'];
-  /** Number of `project_tags` memberships created during this sync (one per imported tag). */
   projectTagsLinked: Scalars['Int']['output'];
-  /** Number of project-user API key pivots created during this sync (each with a new or supplied api_keys row). */
   projectUserApiKeysCreated: Scalars['Int']['output'];
   projectUsersEnsured: Scalars['Int']['output'];
-  /** Number of CDM resource rows created during this sync (one per `resources[]` entry in the import). */
   resourcesCreated: Scalars['Int']['output'];
   roleGroupsLinked: Scalars['Int']['output'];
-  /** Number of `role_tags` pivot rows created during this sync (sum across all role templates). */
   roleTagsLinked: Scalars['Int']['output'];
   rolesCreated: Scalars['Int']['output'];
-  /** Number of CDM tag rows created during this sync (one per `tags[]` entry in the import). */
   tagsCreated: Scalars['Int']['output'];
   userRolesAssigned: Scalars['Int']['output'];
-  /** Number of `user_tags` pivot rows created during this sync (sum across all user assignments). */
   userTagsLinked: Scalars['Int']['output'];
-  /** Number of Grant user rows created from the optional `users` section during this sync. */
   usersCreated: Scalars['Int']['output'];
   warnings: Array<Scalars['String']['output']>;
 };
@@ -3108,10 +3060,6 @@ export type UserCdmInput = {
   key: CdmKeyResolverInput;
   metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
-  /**
-   * Direct permission keys or catalog refs `"{resourceSlug}:{action}"` not already
-   * implied by the user's roles (see `RoleCdmInput.permissions`).
-   */
   permissions?: InputMaybe<Array<Scalars['String']['input']>>;
   primaryTag?: InputMaybe<Scalars['String']['input']>;
   roles?: InputMaybe<Array<Scalars['String']['input']>>;

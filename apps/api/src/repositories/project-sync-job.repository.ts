@@ -116,9 +116,6 @@ function toEntity(row: ProjectSyncJobModel): ProjectSyncJob {
   };
 }
 
-/**
- * Storage adapter for asynchronous project CDM sync job rows (`project_permission_sync_jobs`).
- */
 export class ProjectSyncJobRepository implements IProjectSyncJobRepository {
   constructor(private readonly db: DbSchema) {}
 

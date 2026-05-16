@@ -85,11 +85,11 @@ import { PermissionService } from './permissions.service';
 import { ProjectAppTagService } from './project-app-tags.service';
 import { ProjectAppService } from './project-apps.service';
 import { ProjectGroupService } from './project-groups.service';
-import { ProjectPermissionExportService } from './project-permission-export.service';
+import { ProjectExportService } from './project-export.service';
 import { ProjectPermissionService } from './project-permissions.service';
 import { ProjectResourceService } from './project-resources.service';
 import { ProjectRoleService } from './project-roles.service';
-import { ProjectSyncService } from './project-sync.service';
+import { ProjectImportService } from './project-import.service';
 import { ProjectSyncJobService } from './project-sync-job.service';
 import { ProjectTagService } from './project-tags.service';
 import { ProjectUserApiKeyService } from './project-user-api-keys.service';
@@ -401,8 +401,8 @@ export function createServices(
 
   return {
     ...servicesBase,
-    projectSync: new ProjectSyncService(
-      repositories.projectSyncRepository,
+    projectImport: new ProjectImportService(
+      repositories.projectImportRepository,
       servicesBase.roles,
       servicesBase.groups,
       servicesBase.roleGroups,
@@ -427,11 +427,11 @@ export function createServices(
       repositories.userRepository,
       servicesBase.resourceTags,
       servicesBase.permissionTags,
-      repositories.projectPermissionExportRepository
+      repositories.projectExportRepository
     ),
-    projectPermissionExport: new ProjectPermissionExportService(
-      repositories.projectSyncRepository,
-      repositories.projectPermissionExportRepository,
+    projectExport: new ProjectExportService(
+      repositories.projectImportRepository,
+      repositories.projectExportRepository,
       servicesBase.roles,
       servicesBase.groups,
       servicesBase.roleGroups,

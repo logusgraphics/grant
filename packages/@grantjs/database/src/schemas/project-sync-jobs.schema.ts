@@ -16,18 +16,13 @@ import {
 import { projects } from './projects.schema';
 import { users } from './users.schema';
 
-/** `project_sync_jobs.operation` — import (CDM apply) or export (async CDM snapshot). */
 export const projectSyncJobOperations = ['import', 'export'] as const;
 export type ProjectSyncJobOperation = (typeof projectSyncJobOperations)[number];
 
-/** `project_sync_jobs.mode_strategy` — CDM merge/replace; null for non-import jobs. */
 export const projectSyncJobModeStrategies = ['merge', 'replace'] as const;
 export type ProjectSyncJobModeStrategy = (typeof projectSyncJobModeStrategies)[number];
 
-/**
- * Asynchronous CDM project jobs (import apply, future async export).
- * PostgreSQL: `project_sync_jobs` (renamed from `project_permission_sync_jobs` in migration 0067).
- */
+/** Asynchronous CDM import/export jobs (`project_sync_jobs`). */
 export const projectSyncJobs = pgTable(
   'project_sync_jobs',
   {
@@ -38,17 +33,14 @@ export const projectSyncJobs = pgTable(
     scopeTenant: varchar('scope_tenant', { length: 50 }).notNull(),
     scopeId: varchar('scope_id', { length: 255 }).notNull(),
     cdmVersion: integer('cdm_version').notNull(),
-    /** Optional client idempotency key (maps from `SyncProjectInput.id` on import). */
     jobName: text('job_name'),
     operation: varchar('operation', { length: 20 })
       .$type<ProjectSyncJobOperation>()
       .notNull()
       .default('import'),
-    /** CDM mode strategy for import jobs; null for export and other operations. */
     modeStrategy: varchar('mode_strategy', {
       length: 20,
     }).$type<ProjectSyncJobModeStrategy | null>(),
-    /** pending | running | completed | failed | cancelled */
     status: varchar('status', { length: 50 }).notNull().default('pending'),
     payload: jsonb('payload').notNull(),
     result: jsonb('result'),

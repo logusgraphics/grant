@@ -1,6 +1,6 @@
 import { ValidationError } from '@/lib/errors';
 
-/** Metadata key for roles/groups created by project CDM permission sync. */
+/** Metadata key for roles/groups created by project CDM import. */
 export const CDM_IMPORT_METADATA_KEY = 'cdmImport' as const;
 
 /** Importer-owned payload merged under this key (never overwrites `cdmImport`). */

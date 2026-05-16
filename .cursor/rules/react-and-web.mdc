@@ -40,6 +40,8 @@ Some modules differ but stay consistent (e.g. `components/features/settings`, `c
 ## General
 
 - Functional components and hooks; prefer server components where appropriate and keep client boundaries explicit.
+- Avoid JSDoc on hooks when names and types are clear; user-facing copy belongs in i18n keys only.
+- Reuse shared layout/helpers within a feature module (e.g. one page shell, one grant-context hook) instead of duplicating across routes.
 
 ## Deep-dive docs
 

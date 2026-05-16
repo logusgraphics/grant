@@ -1,5 +1,5 @@
 /**
- * Ensures permission sync job lifecycle writes append-only audit rows.
+ * Ensures project sync job lifecycle writes append-only audit rows.
  */
 import type { IAuditLogger } from '@grantjs/core';
 import {

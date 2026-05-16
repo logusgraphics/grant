@@ -21,13 +21,15 @@ import { CdmModeStrategy, type Scope, type SyncProjectInput, Tenant } from '@gra
 import { describe, expect, it, vi } from 'vitest';
 
 import { CDM_IMPORT_METADATA_KEY } from '@/constants/cdm-import.constants';
-import { assembleExportedSyncProjectInput } from '@/services/cdm';
-import { expandCdmSyncInput } from '@/services/cdm/expand-cdm-sync-input';
-import { PermissionHandler } from '@/services/cdm/permission.handler';
-import { ResourceHandler } from '@/services/cdm/resource.handler';
-import { RoleTemplateHandler } from '@/services/cdm/role-template.handler';
-import { TagHandler } from '@/services/cdm/tag.handler';
-import { UserAssignmentHandler } from '@/services/cdm/user-assignment.handler';
+import {
+  assembleExportedSyncProjectInput,
+  expandCdmSyncInput,
+  PermissionCdmEntity,
+  ResourceCdmEntity,
+  RoleTemplateCdmEntity,
+  TagCdmEntity,
+  UserAssignmentCdmEntity,
+} from '@/lib/cdm';
 
 const projectAId = 'aaaa0000-0000-4000-8000-000000000001';
 const projectBId = 'bbbb0000-0000-4000-8000-000000000002';
@@ -149,23 +151,28 @@ function buildExportRepoForProjectA() {
 }
 
 function buildHandlers(exportRepo: ReturnType<typeof buildExportRepoForProjectA>) {
-  const resource = new ResourceHandler({} as never, exportRepo as never, {} as never, {} as never);
-  const permission = new PermissionHandler(
+  const resource = new ResourceCdmEntity(
+    {} as never,
+    exportRepo as never,
+    {} as never,
+    {} as never
+  );
+  const permission = new PermissionCdmEntity(
     {} as never,
     exportRepo as never,
     {} as never,
     {} as never,
     {} as never
   );
-  const tag = new TagHandler({} as never, exportRepo as never, {} as never, {} as never);
-  const roleTemplate = new RoleTemplateHandler(
+  const tag = new TagCdmEntity({} as never, exportRepo as never, {} as never, {} as never);
+  const roleTemplate = new RoleTemplateCdmEntity(
     {} as never,
     exportRepo as never,
     {} as never,
     {} as never,
     {} as never
   );
-  const userAssignment = new UserAssignmentHandler(
+  const userAssignment = new UserAssignmentCdmEntity(
     exportRepo as never,
     {} as never,
     {} as never,
@@ -335,7 +342,7 @@ describe('CDM round-trip integration', () => {
 
     const tagsService = { createTag: vi.fn().mockResolvedValue({ id: B.tagId }) };
     const projectTags = { addProjectTag: vi.fn().mockResolvedValue(undefined) };
-    const tagHandler = new TagHandler(
+    const tagHandler = new TagCdmEntity(
       {} as never,
       {} as never,
       tagsService as never,
@@ -344,7 +351,7 @@ describe('CDM round-trip integration', () => {
 
     const resourcesService = { createResource: vi.fn().mockResolvedValue({ id: B.resourceId }) };
     const projectResources = { addProjectResource: vi.fn().mockResolvedValue(undefined) };
-    const resourceHandler = new ResourceHandler(
+    const resourceHandler = new ResourceCdmEntity(
       {} as never,
       {} as never,
       resourcesService as never,
@@ -355,7 +362,7 @@ describe('CDM round-trip integration', () => {
       createPermission: vi.fn().mockResolvedValue({ id: B.permissionId }),
     };
     const projectPermissions = { addProjectPermission: vi.fn().mockResolvedValue(undefined) };
-    const permissionHandler = new PermissionHandler(
+    const permissionHandler = new PermissionCdmEntity(
       {} as never,
       {} as never,
       permissionsService as never,
@@ -379,7 +386,7 @@ describe('CDM round-trip integration', () => {
     };
     const roleTags = { addRoleTag: vi.fn().mockResolvedValue(undefined) };
     const groupTags = { addGroupTag: vi.fn().mockResolvedValue(undefined) };
-    const roleTemplateHandler = new RoleTemplateHandler(
+    const roleTemplateHandler = new RoleTemplateCdmEntity(
       {} as never,
       {} as never,
       builder as never,
@@ -393,7 +400,7 @@ describe('CDM round-trip integration', () => {
     };
     const userRoles = { addUserRole: vi.fn().mockResolvedValue(undefined) };
     const userTags = { addUserTag: vi.fn().mockResolvedValue(undefined) };
-    const userAssignmentHandler = new UserAssignmentHandler(
+    const userAssignmentHandler = new UserAssignmentCdmEntity(
       {} as never,
       builder as never,
       projectUsers as never,
