@@ -1,31 +1,47 @@
 import type {
   IAccountProjectService,
   IAccountProjectTagService,
+  IJobAdapter,
   IOrganizationProjectService,
   IOrganizationProjectTagService,
   IProjectGroupService,
   IProjectPermissionService,
-  IProjectPermissionSyncService,
   IProjectRoleService,
   IProjectService,
+  IProjectSyncJobService,
   IProjectTagService,
   IProjectUserService,
   ITransactionalConnection,
+  ProjectSyncJobExportPayload,
 } from '@grantjs/core';
 import {
+  CdmFindBy,
+  CdmModeStrategy,
+  CdmOnConflict,
+  MutationCancelProjectSyncArgs,
   MutationCreateProjectArgs,
   MutationDeleteProjectArgs,
-  MutationSyncProjectPermissionsArgs,
+  MutationStartProjectExportArgs,
+  MutationStartProjectSyncArgs,
   MutationUpdateProjectArgs,
   Project,
   ProjectPage,
+  ProjectSyncJob,
+  ProjectSyncJobOperation,
+  ProjectSyncJobPage,
+  ProjectSyncJobStatus,
   QueryProjectsArgs,
-  SyncProjectPermissionsResult,
+  QueryProjectSyncJobArgs,
+  QueryProjectSyncJobsArgs,
+  Scope,
+  SyncProjectInput,
   Tenant,
 } from '@grantjs/schema';
 
+import { assertValidCdmExportSections } from '@/constants/cdm-export.constants';
+import { PROJECT_SYNC_JOB_ID } from '@/constants/project-sync.constants';
 import { IEntityCacheAdapter } from '@/lib/cache';
-import { BadRequestError } from '@/lib/errors';
+import { BadRequestError, ConfigurationError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { DeleteParams, SelectedFields } from '@/types';
 
@@ -43,10 +59,12 @@ export class ProjectHandler extends CacheHandler {
     private readonly projectGroups: IProjectGroupService,
     private readonly projectRoles: IProjectRoleService,
     private readonly projectUsers: IProjectUserService,
-    private readonly projectPermissionSync: IProjectPermissionSyncService,
+    private readonly projectSyncJobs: IProjectSyncJobService,
+    private readonly jobs: IJobAdapter | null,
     cache: IEntityCacheAdapter,
     scopeServices: ScopeServices,
-    private readonly db: ITransactionalConnection<Transaction>
+    private readonly db: ITransactionalConnection<Transaction>,
+    private readonly scheduleAfterCommit?: (fn: () => void | Promise<void>) => void
   ) {
     super(cache, scopeServices);
   }
@@ -121,28 +139,310 @@ export class ProjectHandler extends CacheHandler {
     return projectsResult;
   }
 
-  public async syncProjectPermissions(
-    params: MutationSyncProjectPermissionsArgs
-  ): Promise<SyncProjectPermissionsResult> {
-    return await this.db.withTransaction(async (tx: Transaction) => {
-      const result = await this.projectPermissionSync.syncProjectPermissions(
-        {
-          projectId: params.id,
-          scope: params.scope,
-          input: params.input,
-        },
-        tx
+  public async startProjectSync(
+    params: MutationStartProjectSyncArgs & { enqueuedById: string }
+  ): Promise<ProjectSyncJob> {
+    const jobs = this.jobs;
+    if (!jobs || !jobs.enqueue) {
+      throw new ConfigurationError(
+        'Project sync jobs are unavailable: job adapter is not configured. Set JOBS_ENABLED=true.'
       );
-      await this.invalidatePermissionsCacheForScope(params.scope);
-      await this.invalidateRolesCacheForScope(params.scope);
-      await this.invalidateGroupsCacheForScope(params.scope);
-      await this.invalidateUsersCacheForScope(params.scope);
-      await this.invalidateResourcesCacheForScope(params.scope);
-      for (const ua of params.input.userAssignments) {
-        await this.invalidateAuthorizationCacheForUser(ua.userId);
+    }
+    const enqueueJob = jobs.enqueue.bind(jobs);
+
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    this.validateSyncInput(params.input);
+
+    const jobName = params.input.id ?? null;
+    if (jobName !== null) {
+      const inflight = await this.projectSyncJobs.findActiveByJobKey({
+        projectId: params.id,
+        operation: 'import',
+        jobName,
+        statuses: ['pending', 'running'],
+      });
+      if (inflight) {
+        return inflight;
       }
-      return result;
+    }
+
+    const modeStrategyDb: 'merge' | 'replace' =
+      params.input.mode.strategy === CdmModeStrategy.Merge ? 'merge' : 'replace';
+
+    const job = await this.projectSyncJobs.create({
+      projectId: params.id,
+      scope: params.scope,
+      cdmVersion: params.input.version,
+      jobName,
+      operation: 'import',
+      modeStrategy: modeStrategyDb,
+      payload: params.input,
+      enqueuedById: params.enqueuedById,
     });
+
+    this.enqueueProjectSyncJobAfterCommit(enqueueJob, params.scope, job.id);
+    return job;
+  }
+
+  public async startProjectExport(
+    params: MutationStartProjectExportArgs & { enqueuedById: string }
+  ): Promise<ProjectSyncJob> {
+    const jobs = this.jobs;
+    if (!jobs || !jobs.enqueue) {
+      throw new ConfigurationError(
+        'Project sync jobs are unavailable: job adapter is not configured. Set JOBS_ENABLED=true.'
+      );
+    }
+    const enqueueJob = jobs.enqueue.bind(jobs);
+
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+
+    if (params.input.version !== 1) {
+      throw new ValidationError('Unsupported version; only 1 is allowed');
+    }
+
+    const explicitJobName =
+      params.input.jobName != null && params.input.jobName.trim() !== ''
+        ? params.input.jobName.trim()
+        : null;
+    const jobName = explicitJobName ?? (await this.resolveProjectDisplayName(params.id));
+    if (jobName !== null) {
+      const inflight = await this.projectSyncJobs.findActiveByJobKey({
+        projectId: params.id,
+        operation: 'export',
+        jobName,
+        statuses: ['pending', 'running'],
+      });
+      if (inflight) {
+        return inflight;
+      }
+    }
+
+    const sections =
+      params.input.sections != null && params.input.sections.length > 0
+        ? assertValidCdmExportSections(params.input.sections)
+        : undefined;
+
+    const exportMode = this.resolveExportMode(params.input.mode);
+    this.validateExportMode(exportMode);
+
+    const modeStrategyDb: 'merge' | 'replace' =
+      exportMode.strategy === CdmModeStrategy.Merge ? 'merge' : 'replace';
+
+    const payload: ProjectSyncJobExportPayload = {
+      version: params.input.version,
+      ...(sections != null && sections.length > 0 ? { sections: [...sections] } : {}),
+      mode: {
+        strategy: modeStrategyDb,
+        onConflict: exportMode.onConflict,
+        confirmDestructive: exportMode.confirmDestructive,
+      },
+    };
+    if (params.input.includeUserApiKeys !== undefined && params.input.includeUserApiKeys !== null) {
+      payload.includeUserApiKeys = params.input.includeUserApiKeys;
+    }
+
+    const job = await this.projectSyncJobs.create({
+      projectId: params.id,
+      scope: params.scope,
+      cdmVersion: params.input.version,
+      jobName,
+      operation: 'export',
+      modeStrategy: modeStrategyDb,
+      payload,
+      enqueuedById: params.enqueuedById,
+    });
+
+    this.enqueueProjectSyncJobAfterCommit(enqueueJob, params.scope, job.id);
+    return job;
+  }
+
+  private enqueueProjectSyncJobAfterCommit(
+    enqueueJob: (jobId: string, data: { scope: Scope; payload: { jobRecordId: string } }) => void,
+    scope: Scope,
+    jobRecordId: string
+  ): void {
+    const runEnqueue = (): void => {
+      void enqueueJob(PROJECT_SYNC_JOB_ID, { scope, payload: { jobRecordId } });
+    };
+    const defer =
+      this.scheduleAfterCommit ??
+      ((fn: () => void | Promise<void>) => {
+        void Promise.resolve(fn());
+      });
+    defer(runEnqueue);
+  }
+
+  private async resolveProjectDisplayName(projectId: string): Promise<string | null> {
+    const page = await this.projects.getProjects({
+      ids: [projectId],
+      page: 1,
+      limit: 1,
+      requestedFields: ['name'],
+    });
+    const name = page.projects[0]?.name?.trim();
+    return name && name.length > 0 ? name : null;
+  }
+
+  public async getProjectSyncJob(params: QueryProjectSyncJobArgs): Promise<ProjectSyncJob> {
+    this.assertProjectScope(params.scope);
+    return this.projectSyncJobs.getById({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+  }
+
+  public async listProjectSyncJobs(params: QueryProjectSyncJobsArgs): Promise<ProjectSyncJobPage> {
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    return this.projectSyncJobs.list({
+      projectId: params.id,
+      scope: params.scope,
+      page: params.page,
+      limit: params.limit,
+      search: params.search,
+      sort: params.sort,
+      status: params.status,
+    });
+  }
+
+  public async getProjectSyncJobPayload(params: QueryProjectSyncJobArgs): Promise<{
+    payload: unknown;
+    jobName: string | null;
+    cdmVersion: number;
+  }> {
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    return this.projectSyncJobs.getPayload({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+  }
+
+  public async cancelProjectSync(params: MutationCancelProjectSyncArgs): Promise<ProjectSyncJob> {
+    this.assertProjectScope(params.scope);
+    return this.projectSyncJobs.cancel({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+  }
+
+  public async getProjectSyncJobSnapshot(params: QueryProjectSyncJobArgs): Promise<{
+    snapshot: SyncProjectInput;
+    takenAt: Date;
+    sizeBytes: number;
+  }> {
+    this.assertProjectScope(params.scope);
+    const scopeProjectId = this.projectIdFromScope(params.scope);
+    if (scopeProjectId !== params.id) {
+      throw new ValidationError(
+        'scope id must contain the same projectId as the projectId argument'
+      );
+    }
+    const job = await this.projectSyncJobs.getById({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+    const result = await this.projectSyncJobs.getSnapshot({
+      projectId: params.id,
+      jobId: params.jobId,
+    });
+    if (!result) {
+      throw new NotFoundError('ProjectSyncJobSnapshot', params.jobId);
+    }
+    if (
+      job.operation === ProjectSyncJobOperation.Export &&
+      job.status !== ProjectSyncJobStatus.Completed
+    ) {
+      throw new NotFoundError('ProjectSyncJobSnapshot', params.jobId);
+    }
+    return result;
+  }
+
+  private assertProjectScope(scope: { tenant: Tenant; id: string }): void {
+    if (scope.tenant !== Tenant.AccountProject && scope.tenant !== Tenant.OrganizationProject) {
+      throw new ValidationError(
+        'project sync jobs require accountProject or organizationProject scope'
+      );
+    }
+  }
+
+  private projectIdFromScope(scope: { id: string }): string {
+    return scope.id.split(':')[1] ?? '';
+  }
+
+  private resolveExportMode(mode: MutationStartProjectExportArgs['input']['mode']): {
+    strategy: CdmModeStrategy;
+    onConflict: CdmOnConflict | null;
+    confirmDestructive: boolean;
+  } {
+    return {
+      strategy: mode?.strategy ?? CdmModeStrategy.Merge,
+      onConflict: mode?.onConflict ?? null,
+      confirmDestructive: mode?.confirmDestructive ?? false,
+    };
+  }
+
+  private validateExportMode(mode: {
+    strategy: CdmModeStrategy;
+    confirmDestructive: boolean;
+  }): void {
+    if (mode.strategy === CdmModeStrategy.Replace && mode.confirmDestructive !== true) {
+      throw new ValidationError(
+        'mode.confirmDestructive must be true when mode.strategy is replace'
+      );
+    }
+  }
+
+  private validateSyncInput(input: MutationStartProjectSyncArgs['input']): void {
+    if (input.version !== 1) {
+      throw new ValidationError('Unsupported version; only 1 is allowed');
+    }
+    if (input.mode?.strategy === 'replace' && input.mode.confirmDestructive !== true) {
+      throw new ValidationError(
+        'mode.confirmDestructive must be true when mode.strategy is replace'
+      );
+    }
+
+    const roleKeys = new Set<string>();
+    for (const r of input.roles) {
+      if (roleKeys.has(r.key)) {
+        throw new ValidationError(`Duplicate role key: ${r.key}`);
+      }
+      roleKeys.add(r.key);
+    }
+
+    const userSeen = new Set<string>();
+    for (const u of input.users) {
+      const isId = u.key.findBy === CdmFindBy.Id;
+      const dedupe = isId ? `id:${u.key.value}` : `key:${u.key.value}`;
+      if (userSeen.has(dedupe)) {
+        throw new ValidationError(`Duplicate user entry: ${dedupe}`);
+      }
+      userSeen.add(dedupe);
+    }
   }
 
   public async createProject(params: MutationCreateProjectArgs): Promise<Project> {
@@ -299,7 +599,6 @@ export class ProjectHandler extends CacheHandler {
     return await this.db.withTransaction(async (tx: Transaction) => {
       const { id: projectId, scope } = params;
 
-      // Query common project data (not tenant-specific)
       const [projectTags, projectPermissions, projectGroups, projectRoles, projectUsers] =
         await Promise.all([
           this.projectTags.getProjectTags({ projectId }, tx),
@@ -376,7 +675,6 @@ export class ProjectHandler extends CacheHandler {
           this.projectGroups.removeProjectGroup({ projectId, groupId }, tx)
         ),
         ...roleIds.map((roleId) => this.projectRoles.removeProjectRole({ projectId, roleId }, tx)),
-        ...userIds.map((userId) => this.projectUsers.removeProjectUser({ projectId, userId }, tx)),
         ...userRolesForProjectRoles
           .flat()
           .map((ur) =>
@@ -386,6 +684,11 @@ export class ProjectHandler extends CacheHandler {
             )
           ),
       ]);
+
+      const uniqueUserIds = [...new Set(userIds)];
+      for (const userId of uniqueUserIds) {
+        await this.projectUsers.removeProjectUser({ projectId, userId }, tx);
+      }
 
       this.removeProjectIdFromScopeCache(scope, projectId);
 

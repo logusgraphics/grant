@@ -190,7 +190,8 @@
       "settings": "Einstellungen",
       "backToOrganization": "Zurück zur Organisation",
       "signingKeys": "Signierungsschlüssel",
-      "projectApps": "Apps"
+      "projectApps": "Apps",
+      "projectSyncJobs": "Import/Export"
     }
   },
   "theme": {
@@ -763,6 +764,7 @@
       "showMetadata": "Metadaten anzeigen",
       "primaryTag": "Haupt-Tag",
       "metadataInfo": "Optionale Metadaten für den Benutzer. Dies kann verwendet werden, um in Berechtigungsbedingungen zu übereinstimmen.",
+      "metadataProjectContext": "Im Projekt wird dieses JSON in der Projektmitgliedschaft gespeichert und mit dem globalen Profil für Berechtigungsprüfungen zusammengeführt. Gleiche Schlüssel auf der Mitgliedschaft überschreiben globale Schlüssel.",
       "metadataDocsLink": "Vollständige Syntaxreferenz",
       "validation": {
         "rolesRequired": "Benutzer muss mindestens eine Rolle haben"
@@ -1403,6 +1405,7 @@
       "account": "Konto",
       "organization": "Organisation",
       "project": "Projekt",
+      "projectSyncJob": "Import/Export-Job",
       "resource": "Ressource",
       "role": "Rolle",
       "group": "Gruppe",
@@ -1421,6 +1424,7 @@
       "account": "Ein Arbeitsbereichskonto",
       "organization": "Ein Organisationsarbeitsbereich",
       "project": "Ein Projekt innerhalb einer Organisation",
+      "projectSyncJob": "Ein asynchroner CDM-Import- oder Export-Job für ein Projekt",
       "resource": "Eine Ressourcendefinition",
       "role": "Eine Rollendefinition",
       "group": "Eine Berechtigungsgruppe",
@@ -1575,6 +1579,7 @@
       "accountProjectGroupOwner": "Konto Projekt Gruppe Eigentümer",
       "accountProjectPermissionOwner": "Konto Projekt Berechtigung Eigentümer",
       "accountProjectTagOwner": "Konto Projekt Tag Eigentümer",
+      "accountProjectSyncJobOwner": "Konto Projekt Import/Export Eigentümer",
       "resourceCommon": "Ressource Allgemein",
       "roleCommon": "Rolle Allgemein",
       "groupCommon": "Gruppe Allgemein",
@@ -1602,6 +1607,10 @@
       "projectAdmin": "Projekt Administrator",
       "projectDev": "Projekt Entwickler",
       "projectViewer": "Projekt Betrachter",
+      "projectSyncJobOwner": "Import/Export Eigentümer",
+      "projectSyncJobAdmin": "Import/Export Administrator",
+      "projectSyncJobDev": "Import/Export Entwickler",
+      "projectSyncJobViewer": "Import/Export Betrachter",
       "resourceOwner": "Ressource Eigentümer",
       "resourceAdmin": "Ressource Administrator",
       "resourceDev": "Ressource Entwickler",
@@ -1659,6 +1668,7 @@
       "accountProjectGroupOwner": "Eigentümerberechtigungen für Kontoebene Projekt-Gruppenverwaltung",
       "accountProjectPermissionOwner": "Eigentümerberechtigungen für Kontoebene Projekt-Berechtigungsverwaltung",
       "accountProjectTagOwner": "Eigentümerberechtigungen für Kontoebene Projekt-Tagverwaltung",
+      "accountProjectSyncJobOwner": "Eigentümerberechtigungen für CDM-Import- und Export-Jobs auf Kontoebene",
       "resourceCommon": "Allgemeine Berechtigungen für Ressourcenzugriff",
       "roleCommon": "Allgemeine Berechtigungen für Rollenzugriff",
       "groupCommon": "Allgemeine Berechtigungen für Gruppenzugriff",
@@ -1686,6 +1696,10 @@
       "projectAdmin": "Administratorberechtigungen für Projektverwaltung",
       "projectDev": "Entwicklerberechtigungen für Projektverwaltung",
       "projectViewer": "Betrachterberechtigungen für Projektzugriff",
+      "projectSyncJobOwner": "Eigentümerberechtigungen für CDM-Import- und Export-Jobs",
+      "projectSyncJobAdmin": "Administratorberechtigungen für CDM-Import- und Export-Jobs",
+      "projectSyncJobDev": "Entwicklerberechtigungen für CDM-Import- und Export-Jobs",
+      "projectSyncJobViewer": "Betrachterberechtigungen für CDM-Import- und Export-Jobs",
       "resourceOwner": "Eigentümerberechtigungen für Ressourcenverwaltung",
       "resourceAdmin": "Administratorberechtigungen für Ressourcenverwaltung",
       "resourceDev": "Entwicklerberechtigungen für Ressourcenverwaltung",
@@ -1900,6 +1914,10 @@
         "delete": "Tag löschen",
         "query": "Tag abfragen"
       },
+      "projectSyncJob": {
+        "query": "Import/Export-Job abfragen",
+        "update": "Import/Export-Job aktualisieren"
+      },
       "apiKey": {
         "create": "API-Schlüssel erstellen",
         "delete": "API-Schlüssel löschen",
@@ -2008,6 +2026,10 @@
         "update": "Berechtigung zum Aktualisieren eines Tags",
         "delete": "Berechtigung zum Löschen eines Tags",
         "query": "Berechtigung zum Abfragen von Tags"
+      },
+      "projectSyncJob": {
+        "query": "Berechtigung zum Abfragen von CDM-Import- und Export-Jobs",
+        "update": "Berechtigung zum Starten oder Abbrechen von CDM-Import- und Export-Jobs"
       },
       "apiKey": {
         "create": "Berechtigung zum Erstellen eines API-Schlüssels",
@@ -3181,6 +3203,276 @@
     "notifications": {
       "rotateSuccess": "Signaturschlüssel rotiert",
       "rotateError": "Fehler beim Rotieren des Signaturschlüssels"
+    }
+  },
+  "projectSyncJobs": {
+    "title": "Import/Export",
+    "view": {
+      "cards": "Karten",
+      "table": "Tabelle"
+    },
+    "search": {
+      "placeholder": "Suche nach Jobnamen"
+    },
+    "sort": {
+      "label": "Sortieren",
+      "enqueuedAt": "Eingereiht",
+      "startedAt": "Gestartet",
+      "completedAt": "Abgeschlossen",
+      "status": "Status",
+      "jobName": "Jobname"
+    },
+    "filter": {
+      "status": "Status"
+    },
+    "limit": {
+      "label": "Pro Seite"
+    },
+    "toolbar": {
+      "start": "Import",
+      "export": "Export"
+    },
+    "exportDialog": {
+      "title": "Projekt exportieren",
+      "contentsInfo": "Wähle, welche Daten der Export enthalten soll. Der Job läuft im Hintergrund; lade das CDM aus der Jobliste herunter, sobald er abgeschlossen ist.",
+      "readMore": "Mehr erfahren",
+      "readMoreAria": "Mehr über CDM-Export (öffnet in neuem Tab)",
+      "sections": {
+        "users": "Benutzer",
+        "usersHint": "Mitglieder und Rollenzuweisungen für dieses Projekt.",
+        "userApiKeys": "Benutzer-API-Schlüssel",
+        "userApiKeysHint": "CDM-verwaltete Schlüssel-Identitäten in diesem Export. Geheimnisse sind nie enthalten.",
+        "roles": "Rollen",
+        "rolesHint": "Definitionen und Berechtigungsschlüssel (inkl. Katalogreferenzen).",
+        "groups": "Gruppen",
+        "groupsHint": "Zeilen, auf die Rollen und Gruppenzuweisungen verweisen.",
+        "resources": "Ressourcen",
+        "resourcesHint": "Projektressourcen und Verknüpfungen. Oft leer bei ausschließlichem Katalog.",
+        "permissions": "Berechtigungen",
+        "permissionsHint": "Benutzerdefinierte Zeilen zu Ressourcen. Schaltet Ressourcen mit ein.",
+        "tags": "Tags",
+        "tagsHint": "Definitionen und Zuweisungen für Benutzer, Rollen und Gruppen."
+      },
+      "helperReimport": "Beim Import von Benutzern ohne Rollen musst du diese Datei ggf. mit einem anderen Export zusammenführen, der Rollen enthält.",
+      "tabs": {
+        "contents": "Inhalt",
+        "options": "Optionen"
+      },
+      "options": {
+        "jobNameLabel": "Jobname",
+        "jobNameHint": "Optionale Bezeichnung für die Jobliste und Idempotenzschlüssel",
+        "versionOption": "v{version}",
+        "onConflictDefault": "Standard",
+        "confirmDestructiveHint": "Wenn aktiviert, werden CDM-verwaltete Entitäten beim Replace-Import gelöscht und neu erstellt.",
+        "replaceRequiresConfirm": "Bestätige die zerstörerische Änderung auf dem Tab „Optionen“, bevor du mit Replace-Modus exportierst.",
+        "reimportDefaultsInfo": "Diese Optionen werden in den exportierten CDM-mode-Block für einen späteren Import geschrieben. Sie ändern nicht, was aus der Datenbank exportiert wird.",
+        "fieldInfo": {
+          "version": "CDM-Schemaversion, die im exportierten Dokument gespeichert wird.",
+          "mode": "Merge aktualisiert bestehende Entitäten beim Re-Import; Replace entfernt CDM-verwaltete Zeilen vor dem Anwenden der Datei.",
+          "onConflict": "Bei Konflikten im Merge-Modus beim Re-Import: fehlschlagen, überspringen oder bestehende Zeile aktualisieren."
+        },
+        "docsAria": {
+          "jobName": "Dokumentation: Export-Jobname (öffnet in neuem Tab)",
+          "version": "Dokumentation: CDM-Version beim Export (öffnet in neuem Tab)",
+          "mode": "Dokumentation: Re-Import-Modus (öffnet in neuem Tab)",
+          "onConflict": "Dokumentation: Verhalten bei Konflikten beim Re-Import (öffnet in neuem Tab)",
+          "confirmDestructive": "Dokumentation: Zerstörerischen Re-Import bestätigen (öffnet in neuem Tab)"
+        }
+      },
+      "cancel": "Abbrechen",
+      "export": "Export",
+      "submitting": "Wird eingereiht…"
+    },
+    "status": {
+      "all": "Alle",
+      "pending": "Ausstehend",
+      "running": "Läuft",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen"
+    },
+    "operation": {
+      "import": "Import",
+      "export": "Export"
+    },
+    "table": {
+      "status": "Status",
+      "jobName": "Jobname",
+      "noJobName": "(kein Jobname)",
+      "operation": "Vorgang",
+      "mode": "Modus",
+      "cdmVersion": "Version",
+      "enqueuedAt": "Eingereiht",
+      "startedAt": "Gestartet",
+      "completedAt": "Abgeschlossen",
+      "jobId": "Job-ID"
+    },
+    "audit": {
+      "cancelled": "Abgebrochen"
+    },
+    "empty": {
+      "title": "Noch keine Import-Jobs",
+      "description": "Importiere eine CDM-JSON-Datei, um eine externe Auth-Domäne in das Berechtigungsschema dieses Projekts zu übersetzen."
+    },
+    "noResults": {
+      "title": "Keine passenden Jobs",
+      "description": "Filter zurücksetzen oder nach einem anderen Jobnamen suchen."
+    },
+    "actions": {
+      "view": "Details anzeigen",
+      "downloadPayload": "Payload herunterladen",
+      "downloadExport": "Export herunterladen",
+      "cancel": "Job abbrechen"
+    },
+    "startDialog": {
+      "title": "Berechtigungs-Sync starten",
+      "description": "Lege eine CDM-JSON-Datei ab oder klicke zum Auswählen. Die Originaldatei wird gespeichert, damit du sie später ansehen und herunterladen kannst.",
+      "dropzone": {
+        "active": "Lege die JSON-Datei hier ab",
+        "idle": "JSON-Datei ablegen oder klicken, um zu durchsuchen",
+        "hint": "Nur .json-Dateien bis 25 MB werden unterstützt",
+        "browse": "Datei auswählen"
+      },
+      "errors": {
+        "invalidType": "Nur .json-Dateien werden akzeptiert.",
+        "fileTooLarge": "Datei ist zu groß. Maximale Größe ist {maxSize} MB.",
+        "invalidJson": "Die Datei ist kein gültiges JSON.",
+        "invalidShape": "Das JSON sieht nicht wie ein CDM-Payload aus (fehlende oder ungültige version, mode.strategy, roles[] oder users[]; optionale resources/permissions/groups/tags müssen Arrays sein, falls gesetzt).",
+        "readFailed": "Fehler beim Lesen der Datei."
+      },
+      "summary": {
+        "jobParameters": "Import-Job",
+        "entityCounts": "Entitäten in der Datei",
+        "version": "CDM-Version",
+        "strategyLabel": "Modus",
+        "strategy": {
+          "merge": "Zusammenführen",
+          "replace": "Ersetzen"
+        },
+        "onConflictLabel": "Bei Konflikt",
+        "onConflict": {
+          "fail": "Fehlschlagen",
+          "skip": "Überspringen",
+          "update": "Aktualisieren"
+        },
+        "confirmDestructiveLabel": "Zerstörerische Änderung",
+        "confirmDestructiveYes": "Bestätigt",
+        "confirmDestructiveNo": "Nicht bestätigt",
+        "jobName": "Jobname (Idempotenz)",
+        "roles": "Rollen",
+        "users": "Benutzer",
+        "apiKeys": "Benutzer-API-Schlüssel",
+        "groups": "Gruppen",
+        "resources": "Ressourcen",
+        "permissions": "Berechtigungen",
+        "tags": "Tags",
+        "byokNote": "Jeder aufgeführte Benutzer-API-Schlüssel muss im JSON clientSecret enthalten (nur Import). Export und Rollback-Snapshots enthalten niemals Geheimnisse."
+      },
+      "clear": "Datei entfernen",
+      "cancel": "Abbrechen",
+      "submit": "Sync starten",
+      "submitting": "Wird eingereiht…",
+      "checkingPermission": "Berechtigung wird geprüft…",
+      "permissionDeniedTitle": "Sync kann nicht gestartet werden",
+      "permissionDeniedDescription": "Zum Importieren von CDM und Einreihen eines Sync-Jobs brauchst du die Berechtigung, dieses Projekt zu aktualisieren.",
+      "emailVerificationTitle": "E-Mail bestätigen",
+      "emailVerificationDescription": "Bestätige deine E-Mail-Adresse, bevor du einen Berechtigungs-Sync startest."
+    },
+    "viewDialog": {
+      "title": "Sync-Job",
+      "description": "Inspiziere den Lebenszyklus, das Ergebnis und die Originaldaten dieses Jobs.",
+      "tabs": {
+        "details": "Details",
+        "result": "Ergebnis",
+        "payload": "Payload",
+        "snapshot": "Rollback-Snapshot",
+        "exportArtifact": "Exportiertes CDM"
+      },
+      "polling": "Aktualisiere…",
+      "loading": "Lade Job-Details…",
+      "close": "Schließen",
+      "fields": {
+        "status": "Status",
+        "jobId": "Job-ID",
+        "jobName": "Jobname",
+        "operation": "Vorgang",
+        "mode": "Modus",
+        "onConflict": "Bei Konflikt",
+        "confirmDestructive": "Zerstörerische Änderung",
+        "cdmVersion": "Version",
+        "enqueuedAt": "Eingereiht",
+        "startedAt": "Gestartet",
+        "completedAt": "Abgeschlossen",
+        "cancelledAt": "Abgebrochen",
+        "notSet": "—",
+        "errorMessage": "Fehler",
+        "warnings": "{count, plural, =1 {# Warnung} other {# Warnungen}}"
+      },
+      "result": {
+        "exportNotApplicable": "Export-Jobs liefern keine Import-Zähler. Laden Sie das generierte CDM nach Abschluss über den Tab „Exportiertes CDM“ herunter.",
+        "notAvailable": "Ergebnisse sind verfügbar, sobald der Job abgeschlossen ist.",
+        "rolesCreated": "Rollen erstellt",
+        "groupsCreated": "Gruppen erstellt",
+        "roleGroupsLinked": {
+          "left": "Rollen",
+          "right": "Gruppen"
+        },
+        "groupPermissionsLinked": {
+          "left": "Gruppen",
+          "right": "Berechtigungen"
+        },
+        "projectRolesLinked": {
+          "left": "Projekt",
+          "right": "Rollen"
+        },
+        "projectGroupsLinked": {
+          "left": "Projekt",
+          "right": "Gruppen"
+        },
+        "projectPermissionsLinked": {
+          "left": "Projekt",
+          "right": "Berechtigungen"
+        },
+        "projectResourcesLinked": {
+          "left": "Projekt",
+          "right": "Ressourcen"
+        },
+        "projectUsersEnsured": "Projektnutzer sichergestellt",
+        "usersCreated": "Grant-Benutzer angelegt (CDM-Provision)",
+        "userRolesAssigned": "Nutzerrollen zugewiesen",
+        "projectUserApiKeysCreated": "Benutzer-API-Schlüssel erstellt"
+      },
+      "payload": {
+        "loading": "Lade Payload…",
+        "notAvailable": "Payload konnte nicht geladen werden.",
+        "reload": "Neu laden",
+        "download": "Payload herunterladen"
+      },
+      "snapshot": {
+        "exportSummary": "Dies ist das generierte CDM-Exportdokument nach Abschluss des Jobs. Laden Sie es herunter, um das Berechtigungsmodell zu sichern oder zu klonen.",
+        "exportTakenAt": "Generiert am {time}, als der Export abgeschlossen wurde.",
+        "summary": "Dieser Snapshot wurde automatisch vor dem Sync in derselben Transaktion wie der Import erstellt. Er kann als CDM-Payload erneut abgespielt werden, um das Projekt auf den Stand vor diesem Job zurückzusetzen.",
+        "takenAt": "Aufgenommen am {time}, kurz bevor dieser Sync ausgeführt wurde.",
+        "loading": "Lade Snapshot…",
+        "notAvailable": "Für diesen Job ist kein Rollback-Snapshot verfügbar.",
+        "reload": "Neu laden",
+        "download": "Herunterladen"
+      }
+    },
+    "cancelDialog": {
+      "title": "Sync-Job abbrechen",
+      "description": "Job {jobName} abbrechen? Ausstehende Jobs werden aus der Warteschlange entfernt. Laufende Jobs werden beim nächsten sicheren Punkt nach bestem Bemühen gestoppt.",
+      "cancel": "Job behalten",
+      "confirm": "Job abbrechen",
+      "confirming": "Wird abgebrochen…"
+    },
+    "notifications": {
+      "startSuccess": "Sync-Job eingereiht",
+      "startError": "Sync konnte nicht gestartet werden",
+      "exportSuccess": "Export-Job eingereiht",
+      "exportError": "Export konnte nicht gestartet werden",
+      "cancelSuccess": "Sync-Job abgebrochen",
+      "cancelError": "Sync-Job konnte nicht abgebrochen werden"
     }
   }
 }

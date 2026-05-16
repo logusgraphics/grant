@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useGrant } from '@grantjs/client/react';
 import { ResourceAction, ResourceSlug } from '@grantjs/constants';
-import { User } from '@grantjs/schema';
+import { Tenant, User } from '@grantjs/schema';
 import type { LucideIcon } from 'lucide-react';
 import {
   Calendar,
@@ -22,14 +22,28 @@ import { Avatar, CopyToClipboard, EditableText, JsonEditor } from '@/components/
 import { SettingImageUploadDialog } from '@/components/features/settings';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useScopeFromParams } from '@/hooks';
+import { useProjectUserScope, useScopeFromParams } from '@/hooks/common';
 import { useUserMutations } from '@/hooks/users';
+import { getCurrentUserId } from '@/lib/auth';
 import { getDocsUrl } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth.store';
+
+function isProjectMembershipMetadataScope(scope: { tenant: Tenant } | null | undefined): boolean {
+  if (!scope) return false;
+  return (
+    scope.tenant === Tenant.AccountProject ||
+    scope.tenant === Tenant.OrganizationProject ||
+    scope.tenant === Tenant.AccountProjectUser ||
+    scope.tenant === Tenant.OrganizationProjectUser
+  );
+}
 
 interface UserInfoProps {
   user: User;
   onPictureUpdate?: () => void;
+  /** Refetch user list/detail after mutations so metadata matches server (project pivot + merged view). */
+  onAfterUserMutation?: () => void | Promise<unknown>;
 }
 
 function isValidImageUrl(url: string | null | undefined): url is string {
@@ -56,33 +70,52 @@ function getAuthMethodIcon(provider: string): LucideIcon {
   }
 }
 
-export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
+export function UserInfo({ user, onPictureUpdate, onAfterUserMutation }: UserInfoProps) {
   const t = useTranslations('user.info');
   const tUsers = useTranslations('users.form');
   const tProjectApps = useTranslations('projectApps');
   const scope = useScopeFromParams();
+  /** Parent AccountProject / OrganizationProject — required for user mutations (API rejects leaf *ProjectUser scope). Same pattern as {@link UserRoles}. */
+  const projectScope = useProjectUserScope();
+  const mutationScope = projectScope ?? scope;
   const { uploadUserPicture, updateUser } = useUserMutations();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isMetadataEditing, setIsMetadataEditing] = useState(false);
   const [isMetadataSubmitting, setIsMetadataSubmitting] = useState(false);
   const [metadataDraft, setMetadataDraft] = useState<object>({});
 
+  /** Session user id — do not use `useUsersStore().currentUser`; detail pages set that to the viewed profile for breadcrumbs. */
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const sessionUserId = useMemo(
+    () => (accessToken ? getCurrentUserId(accessToken) : null),
+    [accessToken]
+  );
+  const isSelf = sessionUserId !== null && sessionUserId === user.id;
+  const isSelfManagedMember = (user.authenticationMethods?.length ?? 0) > 0;
+  /** Name and picture: self-managed users may edit their own; admins may edit admin-managed (provisioned) users. */
+  const canEditProfileAsViewer = isSelf || !isSelfManagedMember;
+
   const canUpdate = useGrant(ResourceSlug.User, ResourceAction.Update, {
-    scope: scope!,
+    scope: mutationScope!,
   });
   const canUploadPicture = useGrant(ResourceSlug.User, ResourceAction.UploadPicture, {
-    scope: scope!,
+    scope: mutationScope!,
   });
+  const canEditProfileFields = canUpdate && canEditProfileAsViewer;
+  const canUploadProfilePicture = canUploadPicture && canEditProfileAsViewer;
+  /** Pivot metadata is admin-managed for permission conditions; self-managed users must not self-edit. */
+  const canEditProjectMetadata = canUpdate && !(isSelf && isSelfManagedMember);
 
   const handleUploadPicture = async (file: string, filename: string, contentType: string) => {
     await uploadUserPicture({
-      scope: scope!,
+      scope: mutationScope!,
       userId: user.id,
       file,
       filename,
       contentType,
     });
     onPictureUpdate?.();
+    await onAfterUserMutation?.();
   };
 
   const validPictureUrl = isValidImageUrl(user.pictureUrl) ? user.pictureUrl : undefined;
@@ -138,9 +171,10 @@ export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
     setIsMetadataSubmitting(true);
     try {
       await updateUser(user.id, {
-        scope: scope!,
+        scope: mutationScope!,
         metadata: metadataDraft as Record<string, unknown>,
       });
+      await onAfterUserMutation?.();
       setIsMetadataEditing(false);
     } finally {
       setIsMetadataSubmitting(false);
@@ -168,7 +202,7 @@ export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
               size="lg"
               className="h-16 w-16 md:h-24 md:w-24"
             />
-            {canUploadPicture && (
+            {canUploadProfilePicture && (
               <Button
                 type="button"
                 variant="secondary"
@@ -185,12 +219,13 @@ export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
             <EditableText
               value={user.name || ''}
               onConfirm={async (newName: string) => {
-                await updateUser(user.id, { name: newName, scope: scope! });
+                await updateUser(user.id, { name: newName, scope: mutationScope! });
+                await onAfterUserMutation?.();
               }}
               className="text-2xl font-semibold"
               inputClassName="text-2xl font-semibold"
               placeholder="User name"
-              disabled={!canUpdate}
+              disabled={!canEditProfileFields}
             />
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
               <Fingerprint className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -250,6 +285,11 @@ export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
               <PopoverContent className="w-80 z-[99999999]" align="start">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">{tUsers('metadataInfo')}</p>
+                  {isProjectMembershipMetadataScope(scope) && (
+                    <p className="text-sm text-muted-foreground">
+                      {tUsers('metadataProjectContext')}
+                    </p>
+                  )}
                   <a
                     href={`${getDocsUrl()}/core-concepts/permission-conditions.html#field-paths`}
                     target="_blank"
@@ -261,7 +301,7 @@ export function UserInfo({ user, onPictureUpdate }: UserInfoProps) {
                 </div>
               </PopoverContent>
             </Popover>
-            {canUpdate &&
+            {canEditProjectMetadata &&
               (isMetadataEditing ? (
                 <div className="flex items-center gap-1">
                   <Button

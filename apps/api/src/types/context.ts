@@ -11,6 +11,11 @@ export interface RequestContext {
   user: GrantAuth | null;
   handlers: Handlers;
   resourceResolvers: ResourceResolvers;
+  /**
+   * Queue side effects (e.g. BullMQ enqueue) to run after the HTTP-scoped DB
+   * transaction commits — avoids workers seeing uncommitted rows.
+   */
+  scheduleAfterCommit?: (fn: () => void | Promise<void>) => void;
   requestLogger: ILogger;
   origin: string;
   /** Base URL derived from request (X-Forwarded-Proto/Host or Host); used for issuer and callbacks. */

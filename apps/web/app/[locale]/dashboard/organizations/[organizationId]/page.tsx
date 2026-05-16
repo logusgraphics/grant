@@ -5,22 +5,24 @@ import { useParams } from 'next/navigation';
 import { AccountType } from '@grantjs/schema';
 
 import { FullPageLoader } from '@/components/common';
-import { useRouter } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function OrganizationPage() {
-  const { getCurrentAccount, loading, clearAuth } = useAuthStore();
+  const { getCurrentAccount, loading } = useAuthStore();
   const currentAccount = getCurrentAccount();
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
 
   useEffect(() => {
     if (loading) return;
-    if (currentAccount && currentAccount.type === AccountType.Organization) {
-      const organizationId = params.organizationId as string;
-      router.push(`/dashboard/organizations/${organizationId}/projects`);
-    }
-  }, [params, currentAccount, loading, clearAuth, router]);
+    if (!currentAccount || currentAccount.type !== AccountType.Organization) return;
+    const organizationId = params.organizationId as string;
+    const hub = `/dashboard/organizations/${organizationId}`;
+    if (pathname !== hub && pathname !== `${hub}/`) return;
+    router.push(`${hub}/projects`);
+  }, [params, currentAccount, loading, router, pathname]);
 
   return <FullPageLoader />;
 }

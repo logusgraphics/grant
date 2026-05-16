@@ -244,7 +244,7 @@
       "idx": 34,
       "version": "7",
       "when": 1770828351818,
-      "tag": "0034_mighty_exodus",
+      "tag": "0033_mighty_exodus",
       "breakpoints": true
     },
     {
@@ -406,6 +406,83 @@
       "version": "7",
       "when": 1774032447533,
       "tag": "0057_vengeful_lily_hollister",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1776697298938,
+      "tag": "0058_spooky_komodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1777719854023,
+      "tag": "0059_wooden_amazoness",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1777742424432,
+      "tag": "0060_clear_magma",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1777802281945,
+      "tag": "0061_famous_mandarin",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1777834291678,
+      "tag": "0062_stale_sabra",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1777836819240,
+      "tag": "0063_quiet_havok",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1777881497452,
+      "tag": "0064_polite_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1777906310391,
+      "tag": "0065_wooden_alex_wilder",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1778763830068,
+      "tag": "0066_dear_dragon_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1778764617646,
+      "tag": "0067_blue_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1778840266857,
+      "tag": "0068_aberrant_leper_queen",
       "breakpoints": true
     }
   ]

@@ -1,0 +1,2 @@
+DROP INDEX "project_sync_jobs_project_operation_job_name_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "project_sync_jobs_project_operation_job_name_unique" ON "project_sync_jobs" USING btree ("project_id","operation","job_name") WHERE "project_sync_jobs"."job_name" IS NOT NULL AND "project_sync_jobs"."deleted_at" IS NULL AND "project_sync_jobs"."status" IN ('pending', 'running');

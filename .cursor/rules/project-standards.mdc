@@ -16,3 +16,5 @@ alwaysApply: true
 - **Configuration**: all magic numbers, external URLs, and tunable defaults belong in `apps/api/src/config/env.config.ts` with env-overridable values.
 - Do not commit unless the user explicitly asks; validate changes before suggesting.
 - **Domain context**: before implementing in areas involving tenancy, permissions, or auth, read the relevant doc (see `docs-reference.mdc` or `docs/architecture/`).
+- **Layer terminology**: **Handler** = `apps/api/src/handlers` only (`CacheHandler`). **Service** = `*Service` + `*.schemas.ts` in `services/`. Never use `*.handler.ts` or `*Handler` classes outside `handlers/` (CDM uses `lib/cdm/entities/*.cdm-entity.ts` / `*CdmEntity`). See AGENTS.md § Layer terminology.
+- **Comments**: prefer names and composition over comments; document behavior in `docs/` or module READMEs, not inline essays. See AGENTS.md § Comments and documentation.

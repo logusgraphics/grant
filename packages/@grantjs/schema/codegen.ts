@@ -4,7 +4,7 @@ const config: CodegenConfig = {
   schema: './src/schema/**/*.graphql',
   documents: './src/operations/**/*.graphql',
   hooks: {
-    afterAllFileWrite: ['npm run format'],
+    afterAllFileWrite: ['pnpm run format'],
   },
   generates: {
     // Client-side types and operations (typed document nodes for Apollo)

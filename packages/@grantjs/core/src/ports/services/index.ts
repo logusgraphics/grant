@@ -1,6 +1,7 @@
 export * from './account.service.port';
 export * from './api-key.service.port';
 export * from './auth.service.port';
+export * from './cdm-entity-handler.port';
 export * from './file-storage.service.port';
 export * from './grant.service.port';
 export * from './group.service.port';

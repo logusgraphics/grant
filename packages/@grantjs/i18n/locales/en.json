@@ -98,6 +98,8 @@
       "searchMin2": "Search term must be at least 2 characters",
       "usernameMin3": "Username must be at least 3 characters",
       "eitherUserIdOrRoleIdRequired": "Either userId or roleId must be provided",
+      "cdmUserAssignmentUserXor": "Provide exactly one of userId or userKey for each user assignment",
+      "cdmApiKeyUserXor": "Provide exactly one of userId or userKey for each project user API key",
       "eitherRoleIdOrGroupIdRequired": "Either roleId or groupId must be provided",
       "eitherGroupIdOrPermissionIdRequired": "Either groupId or permissionId must be provided",
       "codeTooLong": "Authorization code is too long",
@@ -240,6 +242,37 @@
         "typo": "Someone else might have entered your email address by mistake."
       },
       "signature": "Grant Team"
+    }
+  },
+  "projectSyncJobs": {
+    "startDialog": {
+      "summary": {
+        "jobParameters": "Import job",
+        "entityCounts": "Entities in file",
+        "version": "CDM version",
+        "strategyLabel": "Mode",
+        "strategy": {
+          "merge": "Merge",
+          "replace": "Replace"
+        },
+        "onConflictLabel": "On conflict",
+        "onConflict": {
+          "fail": "Fail",
+          "skip": "Skip",
+          "update": "Update"
+        },
+        "confirmDestructiveLabel": "Destructive change",
+        "confirmDestructiveYes": "Confirmed",
+        "jobName": "Job name (idempotency)",
+        "roles": "Roles",
+        "users": "Users",
+        "apiKeys": "User API keys",
+        "groups": "Groups",
+        "resources": "Resources",
+        "permissions": "Permissions",
+        "tags": "Tags",
+        "byokNote": "Each listed user API key must include clientSecret in the JSON (import only). Export and rollback snapshots never contain secrets."
+      }
     }
   }
 }

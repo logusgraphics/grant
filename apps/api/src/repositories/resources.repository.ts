@@ -44,6 +44,7 @@ export class ResourceRepository
             action: p.action,
             resourceId: p.resourceId,
             condition: p.condition as Permission['condition'],
+            metadata: p.metadata as Permission['metadata'],
             createdAt: p.createdAt,
             updatedAt: p.updatedAt,
             deletedAt: p.deletedAt,
@@ -66,7 +67,9 @@ export class ResourceRepository
   }
 
   public async createResource(
-    params: Omit<CreateResourceInput, 'scope' | 'createPermissions' | 'tagIds' | 'primaryTagId'>,
+    params: Omit<CreateResourceInput, 'scope' | 'createPermissions' | 'tagIds' | 'primaryTagId'> & {
+      metadata?: Record<string, unknown>;
+    },
     transaction?: Transaction
   ): Promise<Resource> {
     return this.create(
@@ -76,6 +79,7 @@ export class ResourceRepository
         description: params.description,
         actions: params.actions ?? [...DEFAULT_RESOURCE_ACTIONS],
         isActive: params.isActive ?? true,
+        metadata: params.metadata ?? {},
       },
       transaction
     );

@@ -3,6 +3,7 @@ import { SortOrder, UserAuthenticationMethodProvider, UserSortableField } from '
 import { z } from '@/lib/zod-openapi.lib';
 import {
   createSuccessResponseSchema,
+  jsonSchema,
   listQuerySchema,
   scopeSchema,
   tenantSchema,
@@ -105,6 +106,12 @@ export const updateUserRequestSchema = z.object({
       description: "Updated user's full name",
       example: 'Jane Doe',
     }),
+  pictureUrl: z.string().max(500).nullable().optional().openapi({
+    description: 'Public profile picture URL (global or project pivot depending on scope)',
+  }),
+  metadata: jsonSchema.nullable().optional().openapi({
+    description: 'User metadata (merged to project pivot when scope is a project)',
+  }),
   roleIds: z
     .array(z.string())
     .optional()

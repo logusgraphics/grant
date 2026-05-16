@@ -62,6 +62,28 @@ export const exchangeApiKeyResponseSchema = z.object({
   expiresIn: z.number(),
 });
 
+/** CDM import: supply plaintext secret (BYOK); optional client id from export round-trip. */
+export const createApiKeyForCdmImportParamsSchema = z
+  .object({
+    clientSecret: clientSecretSchema,
+    clientId: clientIdSchema.nullable().optional(),
+    name: nameSchema.nullable().optional(),
+    description: descriptionSchema.nullable().optional(),
+    expiresAt: z.date().nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.expiresAt == null) {
+      return;
+    }
+    if (!isUtcCalendarDateAtLeastTomorrow(data.expiresAt)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['expiresAt'],
+        message: 'errors.validation.expirationMustBeFuture',
+      });
+    }
+  });
+
 export const createApiKeyRequestSchema = z
   .object({
     name: nameSchema.nullable().optional(),

@@ -99,6 +99,8 @@
     "searchMin2": "Search term must be at least 2 characters",
     "usernameMin3": "Username must be at least 3 characters",
     "eitherUserIdOrRoleIdRequired": "Either userId or roleId must be provided",
+    "cdmUserAssignmentUserXor": "Provide exactly one of userId or userKey for each user assignment",
+    "cdmApiKeyUserXor": "Provide exactly one of userId or userKey for each project user API key",
     "eitherRoleIdOrGroupIdRequired": "Either roleId or groupId must be provided",
     "eitherGroupIdOrPermissionIdRequired": "Either groupId or permissionId must be provided",
     "codeTooLong": "Authorization code is too long",

@@ -1,0 +1,7 @@
+enum ProjectSyncJobSortableField {
+  enqueuedAt
+  startedAt
+  completedAt
+  status
+  jobName
+}

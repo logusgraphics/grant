@@ -116,6 +116,7 @@ Follow the pattern in `components/features/groups/`:
 - `pnpm lint` — no lint errors.
 - `pnpm test` — existing tests still pass.
 - Confirm OpenAPI spec is in sync with REST routes.
+- Document non-obvious behavior in `docs/` or module READMEs, not long inline comments (see AGENTS.md § Comments and documentation).
 
 ## Notes
 

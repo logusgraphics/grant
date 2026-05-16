@@ -77,6 +77,13 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
       // SET LOCAL ROLE + set_config are transaction-scoped — no leaking.
       // The transaction stays open until the response finishes (commit) or
       // an unrecoverable error occurs (rollback).
+      const afterCommitJobs: Array<() => void | Promise<void>> = [];
+      const requestLogger = getRequestLogger(req);
+
+      const scheduleAfterCommit = (fn: () => void | Promise<void>) => {
+        afterCommitJobs.push(fn);
+      };
+
       db.transaction(async (tx) => {
         await setRlsContext(tx, rlsCtx);
 
@@ -84,7 +91,9 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
         const scopedRepositories = createRepositories(scopedDb);
         const services = createServices(scopedRepositories, user, scopedDb, cache, grant);
         const txConnection = new DrizzleTransactionalConnection(scopedDb);
-        const handlers = createHandlers(cache, services, txConnection, grant);
+        const handlers = createHandlers(cache, services, txConnection, grant, {
+          scheduleAfterCommit,
+        });
         const resourceResolvers = createResourceResolvers();
 
         (req as ContextRequest).context = {
@@ -92,7 +101,8 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
           user,
           handlers,
           resourceResolvers,
-          requestLogger: getRequestLogger(req),
+          scheduleAfterCommit,
+          requestLogger,
           origin,
           requestBaseUrl,
           locale,
@@ -106,16 +116,44 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
         // should commit (RLS only filters reads/writes; partial-mutation
         // rollback is handled by handler-level savepoints as before).
         return new Promise<void>((resolve) => {
-          res.on('finish', resolve);
-          res.on('close', resolve);
+          let transactionResolved = false;
+          const completeTransaction = () => {
+            if (transactionResolved) return;
+            transactionResolved = true;
+            resolve();
+          };
+
+          res.on('finish', () => {
+            completeTransaction();
+          });
+          res.on('close', () => {
+            completeTransaction();
+          });
           next();
         });
-      }).catch(next);
+      })
+        .then(() => {
+          // Run after Drizzle's transaction promise settles (COMMIT finished). Queue workers
+          // and other pool connections must not run until the row is visible.
+          if (afterCommitJobs.length === 0) return;
+          void Promise.all(afterCommitJobs.map((fn) => Promise.resolve(fn()))).catch(
+            (err: unknown) => {
+              requestLogger.error({ err }, 'scheduleAfterCommit callback failed');
+            }
+          );
+        })
+        .catch(next);
     } else {
       // Unscoped / system / RLS-disabled: no transaction, use global db.
+      const scheduleAfterCommit = (fn: () => void | Promise<void>) => {
+        void Promise.resolve(fn());
+      };
+
       const services = createServices(repositories, user, db, cache, grant);
       const txConnection = new DrizzleTransactionalConnection(db);
-      const handlers = createHandlers(cache, services, txConnection, grant);
+      const handlers = createHandlers(cache, services, txConnection, grant, {
+        scheduleAfterCommit,
+      });
       const resourceResolvers = createResourceResolvers();
 
       (req as ContextRequest).context = {
@@ -123,6 +161,7 @@ export function contextMiddleware(db: DbSchema, cache: IEntityCacheAdapter) {
         user,
         handlers,
         resourceResolvers,
+        scheduleAfterCommit,
         requestLogger: getRequestLogger(req),
         origin,
         requestBaseUrl,

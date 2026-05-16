@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { normalizePermissionSlug } from '@/lib/permission-normalizer';
 
-import { jsonSchema } from './common';
+import { jsonSchema, scopeSchema } from './common';
 
 export const isAuthorizedInputSchema = z.object({
   permission: z
@@ -27,6 +27,8 @@ export const isAuthorizedInputSchema = z.object({
       resource: jsonSchema.nullable().optional(),
     })
     .optional(),
+  /** Optional scope override (session tokens). Must match REST / GraphQL contract when added to GraphQL. */
+  scope: scopeSchema.optional(),
 });
 
 export const authorizationResultSchema = z.object({

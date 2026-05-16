@@ -1,0 +1,27 @@
+"""
+Counters and warnings from a completed CDM import.
+"""
+type SyncProjectResult {
+  projectId: ID!
+  importId: String
+  rolesCreated: Int!
+  groupsCreated: Int!
+  roleGroupsLinked: Int!
+  groupPermissionsLinked: Int!
+  projectRolesLinked: Int!
+  projectGroupsLinked: Int!
+  projectPermissionsLinked: Int!
+  projectResourcesLinked: Int!
+  projectUsersEnsured: Int!
+  usersCreated: Int!
+  userRolesAssigned: Int!
+  projectUserApiKeysCreated: Int!
+  resourcesCreated: Int!
+  permissionsCreated: Int!
+  tagsCreated: Int!
+  projectTagsLinked: Int!
+  roleTagsLinked: Int!
+  groupTagsLinked: Int!
+  userTagsLinked: Int!
+  warnings: [String!]!
+}

@@ -1,3 +1,8 @@
+/**
+ * Confirmation and destructive flows. Typical layout: `AlertDialogContent` → `AlertDialogHeader`
+ * (`AlertDialogTitle`, `AlertDialogDescription`) → optional body → `AlertDialogFooter` with
+ * `AlertDialogCancel` first, then `AlertDialogAction` (matches `DialogFooter` gap/spacing).
+ */
 'use client';
 
 import * as React from 'react';
@@ -83,7 +88,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn('text-lg font-semibold', className)}
+      className={cn('text-lg font-semibold leading-none', className)}
       {...props}
     />
   );

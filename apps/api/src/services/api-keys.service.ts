@@ -22,7 +22,7 @@ import {
 } from '@grantjs/schema';
 
 import { config } from '@/config';
-import { AuthenticationError, BadRequestError, NotFoundError } from '@/lib/errors';
+import { AuthenticationError, BadRequestError, ConflictError, NotFoundError } from '@/lib/errors';
 import { buildJwksIssuerUrl } from '@/lib/jwks.lib';
 import { generateRandomBytes, generateUUID, hashSecret, verifySecret } from '@/lib/token.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
@@ -31,6 +31,7 @@ import { SelectedFields } from '@/types';
 
 import {
   apiKeySchema,
+  createApiKeyForCdmImportParamsSchema,
   createApiKeyRequestSchema,
   createApiKeyResponseSchema,
   deleteApiKeyParamsSchema,
@@ -218,6 +219,70 @@ export class ApiKeyService implements IApiKeyService {
       id: apiKey.id,
       clientId: apiKey.clientId,
       clientSecret,
+      name: apiKey.name,
+      description: apiKey.description,
+      expiresAt: apiKey.expiresAt,
+      createdAt: apiKey.createdAt,
+    };
+
+    return validateOutput(createApiKeyResponseSchema, response, context) as CreateApiKeyResult;
+  }
+
+  public async createApiKeyForCdmImport(
+    params: {
+      clientSecret: string;
+      clientId?: string | null;
+      name?: string | null;
+      description?: string | null;
+      expiresAt?: Date | null;
+    },
+    transaction?: Transaction
+  ): Promise<CreateApiKeyResult> {
+    const context = 'ApiKeyService.createApiKeyForCdmImport';
+    const validatedParams = validateInput(createApiKeyForCdmImportParamsSchema, params, context);
+
+    const clientId =
+      validatedParams.clientId?.trim() && validatedParams.clientId.length > 0
+        ? validatedParams.clientId
+        : generateUUID();
+
+    if (validatedParams.clientId) {
+      const existing = await this.apiKeyRepository.findByClientId(clientId, transaction);
+      if (existing) {
+        throw new ConflictError('clientId is already in use');
+      }
+    }
+
+    const clientSecretHash = hashSecret(validatedParams.clientSecret);
+    const createdBy = this.getPerformedBy();
+
+    const apiKey = await this.apiKeyRepository.createApiKey(
+      {
+        clientId,
+        clientSecretHash,
+        name: validatedParams.name ?? null,
+        description: validatedParams.description ?? null,
+        expiresAt: validatedParams.expiresAt ?? null,
+        createdBy,
+      },
+      transaction
+    );
+
+    const newValues = {
+      id: apiKey.id,
+      clientId: apiKey.clientId,
+      name: apiKey.name,
+      description: apiKey.description,
+      expiresAt: apiKey.expiresAt,
+      createdAt: apiKey.createdAt,
+    };
+
+    await this.audit.logCreate(apiKey.id, newValues, { action: 'CREATE_API_KEY_CDM' }, transaction);
+
+    const response: CreateApiKeyResult = {
+      id: apiKey.id,
+      clientId: apiKey.clientId,
+      clientSecret: validatedParams.clientSecret,
       name: apiKey.name,
       description: apiKey.description,
       expiresAt: apiKey.expiresAt,
@@ -437,8 +502,10 @@ export class ApiKeyService implements IApiKeyService {
 
     let deletedKey: ApiKey;
     if (hardDelete) {
-      deletedKey = await this.apiKeyRepository.hardDeleteApiKey(id, transaction);
+      // Audit row FKs to `api_keys.id`; insert the log before the row is removed
+      // so the transaction is not left aborted (Postgres aborts the whole tx on FK failure).
       await this.audit.logHardDelete(id, oldValues, { action: 'HARD_DELETE_API_KEY' }, transaction);
+      deletedKey = await this.apiKeyRepository.hardDeleteApiKey(id, transaction);
     } else {
       deletedKey = await this.apiKeyRepository.softDeleteApiKey(id, transaction);
       await this.audit.logSoftDelete(

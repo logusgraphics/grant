@@ -190,7 +190,8 @@
       "settings": "Settings",
       "backToOrganization": "Back to Organization",
       "signingKeys": "Signing Keys",
-      "projectApps": "Apps"
+      "projectApps": "Apps",
+      "projectSyncJobs": "Import/Export"
     }
   },
   "theme": {
@@ -763,6 +764,7 @@
       "showMetadata": "Show metadata",
       "primaryTag": "Primary Tag",
       "metadataInfo": "Optional metadata for the user. This can be used to match in permission conditions.",
+      "metadataProjectContext": "In a project, this JSON is stored on the project membership and merged with the user's global profile for permission checks here. Same keys on the membership override global keys.",
       "metadataDocsLink": "Full syntax reference",
       "validation": {
         "rolesRequired": "User must have at least one role"
@@ -1403,6 +1405,7 @@
       "account": "Account",
       "organization": "Organization",
       "project": "Project",
+      "projectSyncJob": "Import/Export Job",
       "resource": "Resource",
       "role": "Role",
       "group": "Group",
@@ -1421,6 +1424,7 @@
       "account": "A workspace account",
       "organization": "An organization workspace",
       "project": "A project within an organization",
+      "projectSyncJob": "An async CDM import or export job for a project",
       "resource": "A resource definition",
       "role": "A role definition",
       "group": "A permission group",
@@ -1575,6 +1579,7 @@
       "accountProjectGroupOwner": "Account Project Group Owner",
       "accountProjectPermissionOwner": "Account Project Permission Owner",
       "accountProjectTagOwner": "Account Project Tag Owner",
+      "accountProjectSyncJobOwner": "Account Project Import/Export Owner",
       "resourceCommon": "Resource Common",
       "roleCommon": "Role Common",
       "groupCommon": "Group Common",
@@ -1602,6 +1607,10 @@
       "projectAdmin": "Project Admin",
       "projectDev": "Project Dev",
       "projectViewer": "Project Viewer",
+      "projectSyncJobOwner": "Import/Export Owner",
+      "projectSyncJobAdmin": "Import/Export Admin",
+      "projectSyncJobDev": "Import/Export Dev",
+      "projectSyncJobViewer": "Import/Export Viewer",
       "resourceOwner": "Resource Owner",
       "resourceAdmin": "Resource Admin",
       "resourceDev": "Resource Dev",
@@ -1659,6 +1668,7 @@
       "accountProjectGroupOwner": "Owner permissions for account-level project group management",
       "accountProjectPermissionOwner": "Owner permissions for account-level project permission management",
       "accountProjectTagOwner": "Owner permissions for account-level project tag management",
+      "accountProjectSyncJobOwner": "Owner permissions for account-level CDM import and export jobs",
       "resourceCommon": "Common permissions for resource access",
       "roleCommon": "Common permissions for role access",
       "groupCommon": "Common permissions for group access",
@@ -1686,6 +1696,10 @@
       "projectAdmin": "Admin permissions for project management",
       "projectDev": "Developer permissions for project management",
       "projectViewer": "Viewer permissions for project access",
+      "projectSyncJobOwner": "Owner permissions for CDM import and export jobs",
+      "projectSyncJobAdmin": "Admin permissions for CDM import and export jobs",
+      "projectSyncJobDev": "Developer permissions for CDM import and export jobs",
+      "projectSyncJobViewer": "Viewer permissions for CDM import and export jobs",
       "resourceOwner": "Owner permissions for resource management",
       "resourceAdmin": "Admin permissions for resource management",
       "resourceDev": "Developer permissions for resource management",
@@ -1900,6 +1914,10 @@
         "delete": "Delete Tag",
         "query": "Query Tag"
       },
+      "projectSyncJob": {
+        "query": "Query Import/Export Job",
+        "update": "Update Import/Export Job"
+      },
       "apiKey": {
         "create": "Create API Key",
         "delete": "Delete API Key",
@@ -2008,6 +2026,10 @@
         "update": "Permission to update a tag",
         "delete": "Permission to delete a tag",
         "query": "Permission to query tags"
+      },
+      "projectSyncJob": {
+        "query": "Permission to query CDM import and export jobs",
+        "update": "Permission to start or cancel CDM import and export jobs"
       },
       "apiKey": {
         "create": "Permission to create an API key",
@@ -3182,6 +3204,276 @@
     "notifications": {
       "rotateSuccess": "Signing key rotated",
       "rotateError": "Failed to rotate signing key"
+    }
+  },
+  "projectSyncJobs": {
+    "title": "Import/Export",
+    "view": {
+      "cards": "Cards",
+      "table": "Table"
+    },
+    "search": {
+      "placeholder": "Search by job name"
+    },
+    "sort": {
+      "label": "Sort",
+      "enqueuedAt": "Enqueued",
+      "startedAt": "Started",
+      "completedAt": "Completed",
+      "status": "Status",
+      "jobName": "Job name"
+    },
+    "filter": {
+      "status": "Status"
+    },
+    "limit": {
+      "label": "Per page"
+    },
+    "toolbar": {
+      "start": "Import",
+      "export": "Export"
+    },
+    "exportDialog": {
+      "title": "Export Project",
+      "contentsInfo": "Choose which data to include in the export. The job runs in the background; download the CDM from the jobs list when it completes.",
+      "readMore": "Read more",
+      "readMoreAria": "Read more about CDM export (opens in a new tab)",
+      "sections": {
+        "users": "Users",
+        "usersHint": "Members and role assignments for this project.",
+        "userApiKeys": "User API keys",
+        "userApiKeysHint": "CDM-managed key identities in this export. Secrets are never included.",
+        "roles": "Roles",
+        "rolesHint": "Definitions and permission keys for this project (including catalog references).",
+        "groups": "Groups",
+        "groupsHint": "Rows referenced by roles and group-level grants.",
+        "resources": "Resources",
+        "resourcesHint": "Project resources and links. Often empty when you use only the global catalog.",
+        "permissions": "Permissions",
+        "permissionsHint": "Custom rows tied to resources. Selecting this also includes Resources.",
+        "tags": "Tags",
+        "tagsHint": "Definitions and assignments for users, roles, and groups."
+      },
+      "helperReimport": "Importing users without roles may require merging this file with another export that includes roles.",
+      "tabs": {
+        "contents": "Contents",
+        "options": "Options"
+      },
+      "options": {
+        "jobNameLabel": "Job name",
+        "jobNameHint": "Optional label for the job list and idempotency key",
+        "versionOption": "v{version}",
+        "onConflictDefault": "Default",
+        "confirmDestructiveHint": "When checked, CDM-managed entities are deleted and recreated on a replace import.",
+        "replaceRequiresConfirm": "Confirm destructive change on the Options tab before exporting with replace mode.",
+        "reimportDefaultsInfo": "These options are written into the exported CDM mode block for a future import. They do not change what is exported from the database.",
+        "fieldInfo": {
+          "version": "CDM schema version stamped on the exported document.",
+          "mode": "Merge updates existing entities on re-import; replace removes CDM-managed rows before applying the file.",
+          "onConflict": "When merge mode finds a conflict during re-import, choose whether to fail, skip, or update the existing row."
+        },
+        "docsAria": {
+          "jobName": "Documentation: export job name (opens in a new tab)",
+          "version": "Documentation: CDM version on export (opens in a new tab)",
+          "mode": "Documentation: re-import mode strategy (opens in a new tab)",
+          "onConflict": "Documentation: on conflict during re-import (opens in a new tab)",
+          "confirmDestructive": "Documentation: confirm destructive re-import (opens in a new tab)"
+        }
+      },
+      "cancel": "Cancel",
+      "export": "Export",
+      "submitting": "Enqueueing…"
+    },
+    "status": {
+      "all": "All",
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "operation": {
+      "import": "Import",
+      "export": "Export"
+    },
+    "table": {
+      "status": "Status",
+      "jobName": "Job name",
+      "noJobName": "(no job name)",
+      "operation": "Operation",
+      "mode": "Mode",
+      "cdmVersion": "Version",
+      "enqueuedAt": "Enqueued",
+      "startedAt": "Started",
+      "completedAt": "Completed",
+      "jobId": "Job ID"
+    },
+    "audit": {
+      "cancelled": "Cancelled"
+    },
+    "empty": {
+      "title": "No import jobs yet",
+      "description": "Import a CDM JSON file to translate an external auth domain into this project's permission schema."
+    },
+    "noResults": {
+      "title": "No matching jobs",
+      "description": "Try clearing filters or searching for a different job name."
+    },
+    "actions": {
+      "view": "View details",
+      "downloadPayload": "Download payload",
+      "downloadExport": "Download export",
+      "cancel": "Cancel job"
+    },
+    "startDialog": {
+      "title": "Start permission sync",
+      "description": "Drop a CDM JSON file or click to browse. The original payload is stored so you can review and download it later.",
+      "dropzone": {
+        "active": "Drop the JSON file here",
+        "idle": "Drag and drop a JSON file, or click to browse",
+        "hint": "Only .json files up to 25 MB are supported",
+        "browse": "Choose a file"
+      },
+      "errors": {
+        "invalidType": "Only .json files are accepted.",
+        "fileTooLarge": "File is too large. Maximum size is {maxSize} MB.",
+        "invalidJson": "The file is not valid JSON.",
+        "invalidShape": "The JSON does not look like a CDM payload (missing or invalid version, mode.strategy, roles[], or users[]; optional resources/permissions/groups/tags must be arrays when present).",
+        "readFailed": "Failed to read the file."
+      },
+      "summary": {
+        "jobParameters": "Import job",
+        "entityCounts": "Entities in file",
+        "version": "CDM version",
+        "strategyLabel": "Mode",
+        "strategy": {
+          "merge": "Merge",
+          "replace": "Replace"
+        },
+        "onConflictLabel": "On conflict",
+        "onConflict": {
+          "fail": "Fail",
+          "skip": "Skip",
+          "update": "Update"
+        },
+        "confirmDestructiveLabel": "Destructive change",
+        "confirmDestructiveYes": "Confirmed",
+        "confirmDestructiveNo": "Not confirmed",
+        "jobName": "Job name (idempotency)",
+        "roles": "Roles",
+        "users": "Users",
+        "apiKeys": "User API keys",
+        "groups": "Groups",
+        "resources": "Resources",
+        "permissions": "Permissions",
+        "tags": "Tags",
+        "byokNote": "Each listed user API key must include clientSecret in the JSON (import only). Export and rollback snapshots never contain secrets."
+      },
+      "clear": "Remove file",
+      "cancel": "Cancel",
+      "submit": "Start sync",
+      "submitting": "Enqueueing…",
+      "checkingPermission": "Checking permission…",
+      "permissionDeniedTitle": "You can't start a sync",
+      "permissionDeniedDescription": "You need permission to update this project to import CDM and enqueue a sync job.",
+      "emailVerificationTitle": "Verify your email",
+      "emailVerificationDescription": "Verify your email address before starting a permission sync."
+    },
+    "viewDialog": {
+      "title": "Sync job",
+      "description": "Inspect this job's lifecycle, results, and original payload.",
+      "tabs": {
+        "details": "Details",
+        "result": "Result",
+        "payload": "Payload",
+        "snapshot": "Rollback snapshot",
+        "exportArtifact": "Exported CDM"
+      },
+      "polling": "Updating…",
+      "loading": "Loading job details…",
+      "close": "Close",
+      "fields": {
+        "status": "Status",
+        "jobId": "Job ID",
+        "jobName": "Job name",
+        "operation": "Operation",
+        "mode": "Mode",
+        "onConflict": "On conflict",
+        "confirmDestructive": "Destructive change",
+        "cdmVersion": "Version",
+        "enqueuedAt": "Enqueued",
+        "startedAt": "Started",
+        "completedAt": "Completed",
+        "cancelledAt": "Cancelled",
+        "notSet": "—",
+        "errorMessage": "Error",
+        "warnings": "{count, plural, =1 {# warning} other {# warnings}}"
+      },
+      "result": {
+        "exportNotApplicable": "Export jobs do not produce import counters. Download the generated CDM from the Exported CDM tab once the job completes.",
+        "notAvailable": "Results are available once the job has completed.",
+        "rolesCreated": "Roles created",
+        "groupsCreated": "Groups created",
+        "roleGroupsLinked": {
+          "left": "Roles",
+          "right": "groups"
+        },
+        "groupPermissionsLinked": {
+          "left": "Groups",
+          "right": "permissions"
+        },
+        "projectRolesLinked": {
+          "left": "Project",
+          "right": "roles"
+        },
+        "projectGroupsLinked": {
+          "left": "Project",
+          "right": "groups"
+        },
+        "projectPermissionsLinked": {
+          "left": "Project",
+          "right": "permissions"
+        },
+        "projectResourcesLinked": {
+          "left": "Project",
+          "right": "resources"
+        },
+        "projectUsersEnsured": "Project users ensured",
+        "usersCreated": "Grant users created (CDM provision)",
+        "userRolesAssigned": "User roles assigned",
+        "projectUserApiKeysCreated": "User API keys created"
+      },
+      "payload": {
+        "loading": "Loading payload…",
+        "notAvailable": "Payload could not be loaded.",
+        "reload": "Reload",
+        "download": "Download payload"
+      },
+      "snapshot": {
+        "exportSummary": "This is the generated CDM export produced when the job completed. Download it to clone or back up the project's permission model.",
+        "exportTakenAt": "Generated {time} when the export completed.",
+        "summary": "This snapshot was captured automatically before the sync ran, inside the same transaction as the import. Replay it as a CDM payload to roll the project back to the state it had before this job.",
+        "takenAt": "Captured {time}, just before this sync ran.",
+        "loading": "Loading snapshot…",
+        "notAvailable": "No rollback snapshot is available for this job.",
+        "reload": "Reload",
+        "download": "Download"
+      }
+    },
+    "cancelDialog": {
+      "title": "Cancel sync job",
+      "description": "Cancel job {jobName}? Pending jobs are removed from the queue. Running jobs are stopped on a best-effort basis at the next safe checkpoint.",
+      "cancel": "Keep job",
+      "confirm": "Cancel job",
+      "confirming": "Cancelling…"
+    },
+    "notifications": {
+      "startSuccess": "Sync job enqueued",
+      "startError": "Failed to start sync",
+      "exportSuccess": "Export job enqueued",
+      "exportError": "Failed to start export",
+      "cancelSuccess": "Sync job cancelled",
+      "cancelError": "Failed to cancel sync"
     }
   }
 }

@@ -278,11 +278,14 @@ export type AddProjectTagInput = {
 
 export type AddProjectUserApiKeyInput = {
   apiKeyId: Scalars['ID']['input'];
+  /** Optional pivot metadata (e.g. CDM `cdmImport` / `cdmSource`); omit for normal API creates. */
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   projectId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
 export type AddProjectUserInput = {
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   projectId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
@@ -398,6 +401,43 @@ export type AuthorizationResult = {
   reason?: Maybe<AuthorizationReason>;
 };
 
+export enum CdmFindBy {
+  Email = 'email',
+  Id = 'id',
+  Key = 'key',
+  Name = 'name',
+  Slug = 'slug',
+}
+
+export enum CdmIfMissing {
+  CreateNew = 'createNew',
+  Fail = 'fail',
+  Skip = 'skip',
+}
+
+export type CdmKeyResolverInput = {
+  findBy?: InputMaybe<CdmFindBy>;
+  ifMissing?: InputMaybe<CdmIfMissing>;
+  value: Scalars['String']['input'];
+};
+
+export type CdmModeInput = {
+  confirmDestructive?: InputMaybe<Scalars['Boolean']['input']>;
+  onConflict?: InputMaybe<CdmOnConflict>;
+  strategy: CdmModeStrategy;
+};
+
+export enum CdmModeStrategy {
+  Merge = 'merge',
+  Replace = 'replace',
+}
+
+export enum CdmOnConflict {
+  Fail = 'fail',
+  Skip = 'skip',
+  Update = 'update',
+}
+
 export type ChangeMyPasswordInput = {
   confirmPassword: Scalars['String']['input'];
   currentPassword: Scalars['String']['input'];
@@ -497,6 +537,7 @@ export type CreatePermissionInput = {
   action: Scalars['String']['input'];
   condition?: InputMaybe<Scalars['JSON']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   resourceId?: InputMaybe<Scalars['ID']['input']>;
@@ -551,6 +592,7 @@ export type CreateResourceInput = {
   createPermissions?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   scope: Scope;
@@ -570,6 +612,7 @@ export type CreateRoleInput = {
 
 export type CreateTagInput = {
   color: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name: Scalars['String']['input'];
   scope: Scope;
 };
@@ -667,6 +710,16 @@ export type Group = Auditable & {
   permissions?: Maybe<Array<Permission>>;
   tags?: Maybe<Array<Tag>>;
   updatedAt: Scalars['Date']['output'];
+};
+
+export type GroupCdmInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type GroupPage = PaginatedResults & {
@@ -835,6 +888,13 @@ export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
   acceptInvitation: AcceptInvitationResult;
+  /**
+   * Cancel a pending or running project CDM sync job. Cancellation is
+   * immediate when the job is still PENDING; if the job is already RUNNING, the
+   * cancellation is recorded and the worker stops at the next checkpoint
+   * (best-effort).
+   */
+  cancelProjectSync: ProjectSyncJob;
   changeMyPassword: ChangeMyPasswordResult;
   createApiKey: CreateApiKeyResult;
   createGroup: Group;
@@ -889,11 +949,28 @@ export type Mutation = {
   setMyPrimaryMfaDevice: MfaDevice;
   setupMfa: MfaSetupResponse;
   /**
-   * Replace-import project RBAC from a canonical data model (CDM): roles, groups,
-   * project pivots, and user role assignments tagged for this project.
-   * Requires Project:update in the given project scope.
+   * Enqueue an asynchronous CDM **export** job for the given project. The worker
+   * snapshots current permission state into a replay-ready `SyncProjectInput` and
+   * stores it on the job row (`snapshot`); poll `projectSyncJob` for status.
+   *
+   * Requires Project:update in the given project scope (same as starting import jobs).
+   *
+   * Pass optional `input.jobName` for idempotency with the same rules as import `input.id`.
    */
-  syncProjectPermissions: SyncProjectPermissionsResult;
+  startProjectExport: ProjectSyncJob;
+  /**
+   * Enqueue an asynchronous project CDM import job for the given project.
+   * Applies a canonical data model document: roles, groups, resources, permissions,
+   * tags, project pivots, and user assignments scoped to the project.
+   * Requires Project:update in the given project scope.
+   *
+   * Returns immediately with a job descriptor in the PENDING status; the actual
+   * import runs in the background. Poll `projectSyncJob` for status.
+   * Pass optional `input.id` as a stable **job name** for idempotency: if an active job
+   * already exists for the same `(project, operation=IMPORT, jobName)`, that job is
+   * returned instead of creating a new one.
+   */
+  startProjectSync: ProjectSyncJob;
   updateGroup: Group;
   updateMyUser: User;
   updateOrganization: Organization;
@@ -916,6 +993,12 @@ export type Mutation = {
 
 export type MutationAcceptInvitationArgs = {
   input: AcceptInvitationInput;
+};
+
+export type MutationCancelProjectSyncArgs = {
+  id: Scalars['ID']['input'];
+  jobId: Scalars['ID']['input'];
+  scope: Scope;
 };
 
 export type MutationChangeMyPasswordArgs = {
@@ -1099,9 +1182,15 @@ export type MutationSetMyPrimaryMfaDeviceArgs = {
   input: SetMyPrimaryMfaDeviceInput;
 };
 
-export type MutationSyncProjectPermissionsArgs = {
+export type MutationStartProjectExportArgs = {
   id: Scalars['ID']['input'];
-  input: SyncProjectPermissionsInput;
+  input: StartProjectExportInput;
+  scope: Scope;
+};
+
+export type MutationStartProjectSyncArgs = {
+  id: Scalars['ID']['input'];
+  input: SyncProjectInput;
   scope: Scope;
 };
 
@@ -1443,6 +1532,7 @@ export type Permission = Auditable & {
   deletedAt?: Maybe<Scalars['Date']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  metadata: Scalars['JSON']['output'];
   name: Scalars['String']['output'];
   resource?: Maybe<Resource>;
   resourceId?: Maybe<Scalars['ID']['output']>;
@@ -1450,20 +1540,25 @@ export type Permission = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
+/** Custom permission for this project; `resource` is an opaque key in the same document. */
+export type PermissionCdmInput = {
+  action: Scalars['String']['input'];
+  condition?: InputMaybe<Scalars['JSON']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  groups?: InputMaybe<Array<Scalars['String']['input']>>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  resource: Scalars['String']['input'];
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type PermissionPage = PaginatedResults & {
   __typename?: 'PermissionPage';
   hasNextPage: Scalars['Boolean']['output'];
   permissions: Array<Permission>;
   totalCount: Scalars['Int']['output'];
-};
-
-/** Reference to a Grant permission (resource + action). Optional permissionId skips lookup. */
-export type PermissionRefCdmInput = {
-  action: Scalars['String']['input'];
-  /** When set, must match the permission row's condition (JSON) for resolution. */
-  condition?: InputMaybe<Scalars['JSON']['input']>;
-  permissionId?: InputMaybe<Scalars['ID']['input']>;
-  resourceSlug: Scalars['String']['input'];
 };
 
 export enum PermissionSearchableField {
@@ -1669,6 +1764,68 @@ export enum ProjectSortableField {
   UpdatedAt = 'updatedAt',
 }
 
+/** Asynchronous project CDM import or export job. */
+export type ProjectSyncJob = {
+  __typename?: 'ProjectSyncJob';
+  cancelledAt?: Maybe<Scalars['Date']['output']>;
+  cdmVersion: Scalars['Int']['output'];
+  completedAt?: Maybe<Scalars['Date']['output']>;
+  enqueuedAt: Scalars['Date']['output'];
+  errorMessage?: Maybe<Scalars['String']['output']>;
+  /** Rollback snapshot (import) or exported CDM (export); REST `.../snapshot`. */
+  hasSnapshot: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Client idempotency key from `SyncProjectInput.id` on import. */
+  jobName?: Maybe<Scalars['String']['output']>;
+  /** Import merge/replace; null for export. */
+  modeStrategy?: Maybe<CdmModeStrategy>;
+  operation: ProjectSyncJobOperation;
+  projectId: Scalars['ID']['output'];
+  /** Import counters when completed; null for export (CDM in snapshot download). */
+  result?: Maybe<SyncProjectResult>;
+  snapshotSizeBytes?: Maybe<Scalars['Int']['output']>;
+  snapshotTakenAt?: Maybe<Scalars['Date']['output']>;
+  startedAt?: Maybe<Scalars['Date']['output']>;
+  status: ProjectSyncJobStatus;
+  warnings: Array<Scalars['String']['output']>;
+};
+
+/** CDM import or export work for a project (`project_sync_jobs`). */
+export enum ProjectSyncJobOperation {
+  Export = 'EXPORT',
+  Import = 'IMPORT',
+}
+
+/** Paginated list of project CDM sync jobs. */
+export type ProjectSyncJobPage = PaginatedResults & {
+  __typename?: 'ProjectSyncJobPage';
+  hasNextPage: Scalars['Boolean']['output'];
+  jobs: Array<ProjectSyncJob>;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type ProjectSyncJobSortInput = {
+  field: ProjectSyncJobSortableField;
+  order: SortOrder;
+};
+
+export enum ProjectSyncJobSortableField {
+  CompletedAt = 'completedAt',
+  EnqueuedAt = 'enqueuedAt',
+  JobName = 'jobName',
+  StartedAt = 'startedAt',
+  Status = 'status',
+}
+
+/** Lifecycle status of an asynchronous project CDM sync job. */
+export enum ProjectSyncJobStatus {
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+  Running = 'RUNNING',
+}
+
 export type ProjectTag = Auditable & {
   __typename?: 'ProjectTag';
   createdAt: Scalars['Date']['output'];
@@ -1690,7 +1847,10 @@ export type ProjectUser = Auditable & {
   __typename?: 'ProjectUser';
   createdAt: Scalars['Date']['output'];
   deletedAt?: Maybe<Scalars['Date']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  metadata: Scalars['JSON']['output'];
+  pictureUrl?: Maybe<Scalars['String']['output']>;
   project?: Maybe<Project>;
   projectId: Scalars['ID']['output'];
   updatedAt: Scalars['Date']['output'];
@@ -1735,6 +1895,18 @@ export type Query = {
   permissions: PermissionPage;
   /** List OAuth apps for the given project scope. Allowed scopes: accountProject, organizationProject. */
   projectApps: ProjectAppPage;
+  /**
+   * Read the current state of a project CDM sync job. Use this to poll
+   * the lifecycle of a job started via `startProjectSync`.
+   */
+  projectSyncJob: ProjectSyncJob;
+  /**
+   * List project CDM sync jobs for a project, with optional pagination,
+   * search (matches jobName), status filter, and sort. Use this to populate the
+   * job history view. Use `projectSyncJob` to read a single job's
+   * current state for polling.
+   */
+  projectSyncJobs: ProjectSyncJobPage;
   projects: ProjectPage;
   resources: ResourcePage;
   roles: RolePage;
@@ -1824,6 +1996,22 @@ export type QueryProjectAppsArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<ProjectAppSortInput>;
   tagIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type QueryProjectSyncJobArgs = {
+  id: Scalars['ID']['input'];
+  jobId: Scalars['ID']['input'];
+  scope: Scope;
+};
+
+export type QueryProjectSyncJobsArgs = {
+  id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  scope: Scope;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ProjectSyncJobSortInput>;
+  status?: InputMaybe<ProjectSyncJobStatus>;
 };
 
 export type QueryProjectsArgs = {
@@ -2246,11 +2434,24 @@ export type Resource = Auditable & {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
+  metadata: Scalars['JSON']['output'];
   name: Scalars['String']['output'];
   permissions?: Maybe<Array<Permission>>;
   slug: Scalars['String']['output'];
   tags: Array<Tag>;
   updatedAt: Scalars['Date']['output'];
+};
+
+/** Project resource row for CDM import/export. */
+export type ResourceCdmInput = {
+  actions: Array<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type ResourcePage = PaginatedResults & {
@@ -2323,6 +2524,17 @@ export type Role = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
+export type RoleCdmInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  groups?: InputMaybe<Array<Scalars['String']['input']>>;
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type RoleGroup = Auditable & {
   __typename?: 'RoleGroup';
   createdAt: Scalars['Date']['output'];
@@ -2385,14 +2597,6 @@ export type RoleTagTagArgs = {
   scope: Scope;
 };
 
-/** Logical role from the source system with effective permission set. */
-export type RoleTemplateCdmInput = {
-  description?: InputMaybe<Scalars['String']['input']>;
-  externalKey: Scalars['String']['input'];
-  name: Scalars['String']['input'];
-  permissionRefs: Array<PermissionRefCdmInput>;
-};
-
 export type Scope = {
   id: Scalars['ID']['input'];
   tenant: Tenant;
@@ -2443,30 +2647,74 @@ export enum SortOrder {
   Desc = 'DESC',
 }
 
-export type SyncProjectPermissionsInput = {
-  /** CDM schema version; only 1 is supported initially. */
-  cdmVersion: Scalars['Int']['input'];
-  /** Optional idempotency / audit correlation id. */
-  importId?: InputMaybe<Scalars['String']['input']>;
-  roleTemplates: Array<RoleTemplateCdmInput>;
-  userAssignments: Array<UserAssignmentCdmInput>;
+/**
+ * Parameters for enqueueing an asynchronous CDM **export** job. The worker
+ * materialises a `SyncProjectInput` document and stores it in the job `snapshot`
+ * column; this input is persisted as the job `payload` (export options only).
+ */
+export type StartProjectExportInput = {
+  /**
+   * When `users` are exported, whether to emit CDM-managed project user API key rows
+   * (identity only). Omit = default true (full export behaviour).
+   */
+  includeUserApiKeys?: InputMaybe<Scalars['Boolean']['input']>;
+  /**
+   * Optional stable idempotency / display name (same column as import `SyncProjectInput.id`).
+   * When set, an active job for the same `(project, operation=EXPORT, jobName)` is returned
+   * instead of creating a new one.
+   */
+  jobName?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Embedded in the exported CDM document `mode` block for re-import.
+   * Does not change export execution (snapshot is always read-only).
+   */
+  mode?: InputMaybe<CdmModeInput>;
+  /** Subset of CDM slices to export; omit or empty for a full project export. */
+  sections?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** CDM document version (only `1` is supported). */
+  version: Scalars['Int']['input'];
 };
 
-export type SyncProjectPermissionsResult = {
-  __typename?: 'SyncProjectPermissionsResult';
+/**
+ * Versioned canonical project document (CDM) for export/import: roles, users,
+ * resources, permissions, groups, and tags scoped to one project.
+ */
+export type SyncProjectInput = {
+  groups?: InputMaybe<Array<GroupCdmInput>>;
+  id?: InputMaybe<Scalars['String']['input']>;
+  mode: CdmModeInput;
+  permissions?: InputMaybe<Array<PermissionCdmInput>>;
+  resources?: InputMaybe<Array<ResourceCdmInput>>;
+  roles: Array<RoleCdmInput>;
+  tags?: InputMaybe<Array<TagCdmInput>>;
+  users: Array<UserCdmInput>;
+  version: Scalars['Int']['input'];
+};
+
+/** Counters and warnings from a completed CDM import. */
+export type SyncProjectResult = {
+  __typename?: 'SyncProjectResult';
   groupPermissionsLinked: Scalars['Int']['output'];
+  groupTagsLinked: Scalars['Int']['output'];
   groupsCreated: Scalars['Int']['output'];
   importId?: Maybe<Scalars['String']['output']>;
+  permissionsCreated: Scalars['Int']['output'];
   projectGroupsLinked: Scalars['Int']['output'];
-  /** The project that was synced. */
   projectId: Scalars['ID']['output'];
   projectPermissionsLinked: Scalars['Int']['output'];
   projectResourcesLinked: Scalars['Int']['output'];
   projectRolesLinked: Scalars['Int']['output'];
+  projectTagsLinked: Scalars['Int']['output'];
+  projectUserApiKeysCreated: Scalars['Int']['output'];
   projectUsersEnsured: Scalars['Int']['output'];
+  resourcesCreated: Scalars['Int']['output'];
   roleGroupsLinked: Scalars['Int']['output'];
+  roleTagsLinked: Scalars['Int']['output'];
   rolesCreated: Scalars['Int']['output'];
+  tagsCreated: Scalars['Int']['output'];
   userRolesAssigned: Scalars['Int']['output'];
+  userTagsLinked: Scalars['Int']['output'];
+  usersCreated: Scalars['Int']['output'];
   warnings: Array<Scalars['String']['output']>;
 };
 
@@ -2477,8 +2725,16 @@ export type Tag = Auditable & {
   deletedAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   isPrimary?: Maybe<Scalars['Boolean']['output']>;
+  metadata: Scalars['JSON']['output'];
   name: Scalars['String']['output'];
   updatedAt: Scalars['Date']['output'];
+};
+
+export type TagCdmInput = {
+  color: Scalars['String']['input'];
+  key: Scalars['String']['input'];
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type TagPage = PaginatedResults & {
@@ -2600,6 +2856,7 @@ export type UpdatePermissionInput = {
   action?: InputMaybe<Scalars['String']['input']>;
   condition?: InputMaybe<Scalars['JSON']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   resourceId?: InputMaybe<Scalars['ID']['input']>;
@@ -2655,6 +2912,7 @@ export type UpdateResourceInput = {
   actions?: InputMaybe<Array<Scalars['String']['input']>>;
   description?: InputMaybe<Scalars['String']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   primaryTagId?: InputMaybe<Scalars['ID']['input']>;
   scope: Scope;
@@ -2686,6 +2944,7 @@ export type UpdateRoleTagInput = {
 
 export type UpdateTagInput = {
   color?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   scope: Scope;
 };
@@ -2756,11 +3015,14 @@ export type User = Auditable & {
   updatedAt: Scalars['Date']['output'];
 };
 
-/** User membership: roles from templates and/or direct permission grants. */
-export type UserAssignmentCdmInput = {
-  directPermissionRefs?: InputMaybe<Array<PermissionRefCdmInput>>;
-  roleTemplateKeys?: InputMaybe<Array<Scalars['String']['input']>>;
-  userId: Scalars['ID']['input'];
+export type UserApiKeyCdmInput = {
+  clientId?: InputMaybe<Scalars['String']['input']>;
+  clientSecret?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  expiresAt?: InputMaybe<Scalars['Date']['input']>;
+  key?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export enum UserAuthenticationEmailProviderAction {
@@ -2790,6 +3052,18 @@ export enum UserAuthenticationMethodProvider {
   Github = 'github',
   Google = 'google',
 }
+
+export type UserCdmInput = {
+  apiKeys?: InputMaybe<Array<UserApiKeyCdmInput>>;
+  groups?: InputMaybe<Array<Scalars['String']['input']>>;
+  key: CdmKeyResolverInput;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  primaryTag?: InputMaybe<Scalars['String']['input']>;
+  roles?: InputMaybe<Array<Scalars['String']['input']>>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
 
 export type UserDataExport = {
   __typename?: 'UserDataExport';
@@ -4231,6 +4505,32 @@ export type UpdateProjectAppMutation = {
   };
 };
 
+export type CancelProjectSyncMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  scope: Scope;
+  jobId: Scalars['ID']['input'];
+}>;
+
+export type CancelProjectSyncMutation = {
+  __typename?: 'Mutation';
+  cancelProjectSync: {
+    __typename?: 'ProjectSyncJob';
+    id: string;
+    projectId: string;
+    status: ProjectSyncJobStatus;
+    cdmVersion: number;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
+    warnings: Array<string>;
+    errorMessage?: string | null;
+    enqueuedAt: Date;
+    startedAt?: Date | null;
+    completedAt?: Date | null;
+    cancelledAt?: Date | null;
+  };
+};
+
 export type CreateProjectMutationVariables = Exact<{
   input: CreateProjectInput;
 }>;
@@ -4340,29 +4640,143 @@ export type GetProjectsQuery = {
   };
 };
 
-export type SyncProjectPermissionsMutationVariables = Exact<{
+export type ProjectSyncJobQueryVariables = Exact<{
   id: Scalars['ID']['input'];
   scope: Scope;
-  input: SyncProjectPermissionsInput;
+  jobId: Scalars['ID']['input'];
 }>;
 
-export type SyncProjectPermissionsMutation = {
-  __typename?: 'Mutation';
-  syncProjectPermissions: {
-    __typename?: 'SyncProjectPermissionsResult';
+export type ProjectSyncJobQuery = {
+  __typename?: 'Query';
+  projectSyncJob: {
+    __typename?: 'ProjectSyncJob';
+    id: string;
     projectId: string;
-    importId?: string | null;
-    rolesCreated: number;
-    groupsCreated: number;
-    roleGroupsLinked: number;
-    groupPermissionsLinked: number;
-    projectRolesLinked: number;
-    projectGroupsLinked: number;
-    projectPermissionsLinked: number;
-    projectResourcesLinked: number;
-    projectUsersEnsured: number;
-    userRolesAssigned: number;
+    status: ProjectSyncJobStatus;
+    cdmVersion: number;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
     warnings: Array<string>;
+    errorMessage?: string | null;
+    enqueuedAt: Date;
+    startedAt?: Date | null;
+    completedAt?: Date | null;
+    cancelledAt?: Date | null;
+    hasSnapshot: boolean;
+    snapshotTakenAt?: Date | null;
+    snapshotSizeBytes?: number | null;
+    result?: {
+      __typename?: 'SyncProjectResult';
+      projectId: string;
+      importId?: string | null;
+      rolesCreated: number;
+      groupsCreated: number;
+      roleGroupsLinked: number;
+      groupPermissionsLinked: number;
+      projectRolesLinked: number;
+      projectGroupsLinked: number;
+      projectPermissionsLinked: number;
+      projectResourcesLinked: number;
+      projectUsersEnsured: number;
+      usersCreated: number;
+      userRolesAssigned: number;
+      projectUserApiKeysCreated: number;
+      warnings: Array<string>;
+    } | null;
+  };
+};
+
+export type ProjectSyncJobsQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+  scope: Scope;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<ProjectSyncJobSortInput>;
+  status?: InputMaybe<ProjectSyncJobStatus>;
+}>;
+
+export type ProjectSyncJobsQuery = {
+  __typename?: 'Query';
+  projectSyncJobs: {
+    __typename?: 'ProjectSyncJobPage';
+    totalCount: number;
+    hasNextPage: boolean;
+    jobs: Array<{
+      __typename?: 'ProjectSyncJob';
+      id: string;
+      projectId: string;
+      status: ProjectSyncJobStatus;
+      cdmVersion: number;
+      jobName?: string | null;
+      operation: ProjectSyncJobOperation;
+      modeStrategy?: CdmModeStrategy | null;
+      warnings: Array<string>;
+      errorMessage?: string | null;
+      enqueuedAt: Date;
+      startedAt?: Date | null;
+      completedAt?: Date | null;
+      cancelledAt?: Date | null;
+      hasSnapshot: boolean;
+      snapshotTakenAt?: Date | null;
+      snapshotSizeBytes?: number | null;
+    }>;
+  };
+};
+
+export type StartProjectExportMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  scope: Scope;
+  input: StartProjectExportInput;
+}>;
+
+export type StartProjectExportMutation = {
+  __typename?: 'Mutation';
+  startProjectExport: {
+    __typename?: 'ProjectSyncJob';
+    id: string;
+    projectId: string;
+    status: ProjectSyncJobStatus;
+    cdmVersion: number;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
+    warnings: Array<string>;
+    errorMessage?: string | null;
+    enqueuedAt: Date;
+    startedAt?: Date | null;
+    completedAt?: Date | null;
+    cancelledAt?: Date | null;
+    hasSnapshot: boolean;
+    snapshotTakenAt?: Date | null;
+    snapshotSizeBytes?: number | null;
+  };
+};
+
+export type StartProjectSyncMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  scope: Scope;
+  input: SyncProjectInput;
+}>;
+
+export type StartProjectSyncMutation = {
+  __typename?: 'Mutation';
+  startProjectSync: {
+    __typename?: 'ProjectSyncJob';
+    id: string;
+    projectId: string;
+    status: ProjectSyncJobStatus;
+    cdmVersion: number;
+    jobName?: string | null;
+    operation: ProjectSyncJobOperation;
+    modeStrategy?: CdmModeStrategy | null;
+    warnings: Array<string>;
+    errorMessage?: string | null;
+    enqueuedAt: Date;
+    startedAt?: Date | null;
+    completedAt?: Date | null;
+    cancelledAt?: Date | null;
   };
 };
 
@@ -8809,6 +9223,86 @@ export const UpdateProjectAppDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdateProjectAppMutation, UpdateProjectAppMutationVariables>;
+export const CancelProjectSyncDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CancelProjectSync' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'jobId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelProjectSync' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'jobId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'jobId' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cancelledAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CancelProjectSyncMutation, CancelProjectSyncMutationVariables>;
 export const CreateProjectDocument = {
   kind: 'Document',
   definitions: [
@@ -9192,13 +9686,251 @@ export const GetProjectsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetProjectsQuery, GetProjectsQueryVariables>;
-export const SyncProjectPermissionsDocument = {
+export const ProjectSyncJobDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ProjectSyncJob' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'jobId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectSyncJob' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'jobId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'jobId' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'result' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'importId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'rolesCreated' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'groupsCreated' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'roleGroupsLinked' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'groupPermissionsLinked' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectRolesLinked' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectGroupsLinked' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectPermissionsLinked' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectResourcesLinked' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectUsersEnsured' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'usersCreated' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'userRolesAssigned' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectUserApiKeysCreated' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cancelledAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasSnapshot' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'snapshotTakenAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'snapshotSizeBytes' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectSyncJobQuery, ProjectSyncJobQueryVariables>;
+export const ProjectSyncJobsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ProjectSyncJobs' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ProjectSyncJobSortInput' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'status' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ProjectSyncJobStatus' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectSyncJobs' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'page' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'page' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'limit' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'search' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'search' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sort' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'sort' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'status' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'status' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'jobs' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'cancelledAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'hasSnapshot' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'snapshotTakenAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'snapshotSizeBytes' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectSyncJobsQuery, ProjectSyncJobsQueryVariables>;
+export const StartProjectExportDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'mutation',
-      name: { kind: 'Name', value: 'SyncProjectPermissions' },
+      name: { kind: 'Name', value: 'StartProjectExport' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
@@ -9221,10 +9953,7 @@ export const SyncProjectPermissionsDocument = {
           variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
           type: {
             kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'SyncProjectPermissionsInput' },
-            },
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'StartProjectExportInput' } },
           },
         },
       ],
@@ -9233,7 +9962,7 @@ export const SyncProjectPermissionsDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'syncProjectPermissions' },
+            name: { kind: 'Name', value: 'startProjectExport' },
             arguments: [
               {
                 kind: 'Argument',
@@ -9254,19 +9983,22 @@ export const SyncProjectPermissionsDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'importId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'rolesCreated' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'groupsCreated' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'roleGroupsLinked' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'groupPermissionsLinked' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectRolesLinked' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectGroupsLinked' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectPermissionsLinked' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectResourcesLinked' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectUsersEnsured' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'userRolesAssigned' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cancelledAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasSnapshot' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'snapshotTakenAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'snapshotSizeBytes' } },
               ],
             },
           },
@@ -9274,10 +10006,87 @@ export const SyncProjectPermissionsDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<
-  SyncProjectPermissionsMutation,
-  SyncProjectPermissionsMutationVariables
->;
+} as unknown as DocumentNode<StartProjectExportMutation, StartProjectExportMutationVariables>;
+export const StartProjectSyncDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'StartProjectSync' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Scope' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'SyncProjectInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'startProjectSync' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'scope' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'scope' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cdmVersion' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'operation' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modeStrategy' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'warnings' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'errorMessage' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enqueuedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'cancelledAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<StartProjectSyncMutation, StartProjectSyncMutationVariables>;
 export const UpdateProjectDocument = {
   kind: 'Document',
   definitions: [

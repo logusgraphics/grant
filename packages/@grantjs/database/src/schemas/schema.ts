@@ -72,6 +72,12 @@ import {
   projectResourcesRelations,
 } from './project-resources.schema';
 import { projectRoles, projectRolesRelations } from './project-roles.schema';
+import {
+  projectSyncJobAuditLogs,
+  projectSyncJobAuditLogsRelations,
+  projectSyncJobs,
+  projectSyncJobsRelations,
+} from './project-sync-jobs.schema';
 import { projectTags, projectTagsRelations } from './project-tags.schema';
 import {
   projectUserApiKeyAuditLogs,
@@ -150,6 +156,8 @@ export const schema = {
   resourceTags,
   resourceTagAuditLogs,
   projectPermissions,
+  projectSyncJobs,
+  projectSyncJobAuditLogs,
   projectResources,
   projectResourceAuditLogs,
   projectRoles,
@@ -202,6 +210,8 @@ export const schema = {
   resourceAuditLogsRelations,
   resourceTagsRelations,
   projectPermissionsRelations,
+  projectSyncJobsRelations,
+  projectSyncJobAuditLogsRelations,
   projectResourcesRelations,
   projectResourceAuditLogsRelations,
   projectRolesRelations,

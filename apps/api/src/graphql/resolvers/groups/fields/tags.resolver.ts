@@ -2,6 +2,17 @@ import { GroupResolvers } from '@grantjs/schema';
 
 import { GraphqlContext } from '@/graphql/types';
 
+/**
+ * Resolves Group.tags scoped to the caller's tenant.
+ *
+ * Background: group_tags is a global pivot (no project column), so loading
+ * via the `groups.tags` relation returns every tag the group has been linked
+ * to across all projects. That leaks tags from project A when the caller is
+ * operating under project B.
+ *
+ * Fix: load the raw group_tags pivot, then intersect with the scope's tag IDs
+ * via tags.getTags({ scope, ids }). Mirrors the ProjectApp.tags pattern.
+ */
 export const groupTagsResolver: GroupResolvers<GraphqlContext>['tags'] = async (
   parent,
   _args,
@@ -9,12 +20,23 @@ export const groupTagsResolver: GroupResolvers<GraphqlContext>['tags'] = async (
 ) => {
   const groupId = parent.id;
 
-  if (parent.tags) {
-    return parent.tags;
+  const scope = context.user?.scope;
+  if (!scope) {
+    return [];
   }
 
-  return await context.handlers.groups.getGroupTags({
-    groupId,
-    requestedFields: ['tags'],
+  const pivots = await context.handlers.groups.getGroupTagPivots({ groupId });
+  if (pivots.length === 0) {
+    return [];
+  }
+
+  const ids = pivots.map((p) => p.tagId);
+  const { tags } = await context.handlers.tags.getTags({
+    scope,
+    ids,
+    limit: ids.length,
   });
+
+  const isPrimaryByTagId = new Map(pivots.map((p) => [p.tagId, p.isPrimary]));
+  return tags.map((t) => ({ ...t, isPrimary: isPrimaryByTagId.get(t.id) ?? false }));
 };

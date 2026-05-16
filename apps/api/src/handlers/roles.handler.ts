@@ -237,4 +237,16 @@ export class RoleHandler extends CacheHandler {
     }
     return [];
   }
+
+  /**
+   * Returns the raw role_tags pivot rows for a role.
+   * Used by Role.tags resolver, which then intersects with scoped tag IDs to
+   * avoid leaking tags from other projects/scopes.
+   */
+  public async getRoleTagPivots(params: {
+    roleId: string;
+  }): Promise<Array<{ tagId: string; isPrimary: boolean }>> {
+    const pivots = await this.roleTags.getRoleTags({ roleId: params.roleId });
+    return pivots.map((p) => ({ tagId: p.tagId, isPrimary: p.isPrimary }));
+  }
 }

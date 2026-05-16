@@ -1,5 +1,3 @@
-import { Job, JobSchedulerJson, Queue, Worker } from 'bullmq';
-
 import type {
   IJobAdapter,
   ILogger,
@@ -8,8 +6,8 @@ import type {
   JobResult,
   ScheduledJob,
 } from '@grantjs/core';
-
 import type { Scope } from '@grantjs/schema';
+import { Job, JobSchedulerJson, Queue, Worker } from 'bullmq';
 
 interface BullMQConfig {
   host: string;
@@ -124,6 +122,13 @@ export class BullMQJobAdapter implements IJobAdapter {
       });
 
       this.workers.set('main', worker);
+    }
+
+    // Enqueue-only jobs skip cron scheduling — the worker is still bound, so
+    // one-off `enqueue()` calls can dispatch them on demand.
+    if (job.enqueueOnly) {
+      this.logger.info({ jobId: job.id }, 'Enqueue-only job registered with BullMQ');
+      return;
     }
 
     // upsertJobScheduler is idempotent: it creates or updates the scheduler

@@ -4,20 +4,22 @@ import { useEffect } from 'react';
 import { AccountType } from '@grantjs/schema';
 
 import { FullPageLoader } from '@/components/common';
-import { useRouter } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function AccountPage() {
   const { getCurrentAccount, loading } = useAuthStore();
   const currentAccount = getCurrentAccount();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (loading) return;
-    if (currentAccount && currentAccount.type === AccountType.Personal) {
-      router.push(`/dashboard/accounts/${currentAccount.id}/projects`);
-    }
-  }, [currentAccount, loading, router]);
+    if (!currentAccount || currentAccount.type !== AccountType.Personal) return;
+    const hub = `/dashboard/accounts/${currentAccount.id}`;
+    if (pathname !== hub && pathname !== `${hub}/`) return;
+    router.push(`${hub}/projects`);
+  }, [currentAccount, loading, router, pathname]);
 
   return <FullPageLoader />;
 }

@@ -1,6 +1,7 @@
 import type { Grant, ITransactionalConnection } from '@grantjs/core';
 
 import { IEntityCacheAdapter } from '@/lib/cache';
+import { getJobAdapter } from '@/lib/jobs';
 import type { Transaction } from '@/lib/transaction-manager.lib';
 import { Services } from '@/services';
 
@@ -24,11 +25,17 @@ import { UserHandler } from './users.handler';
 
 export type Handlers = ReturnType<typeof createHandlers>;
 
+export type CreateHandlersOptions = {
+  /** When set (scoped RLS requests), defer enqueue until after DB commit. */
+  scheduleAfterCommit?: (fn: () => void | Promise<void>) => void;
+};
+
 export function createHandlers(
   cache: IEntityCacheAdapter,
   services: Services,
   db: ITransactionalConnection<Transaction>,
-  grant: Grant
+  grant: Grant,
+  options?: CreateHandlersOptions
 ) {
   const userHandler = new UserHandler(
     services.userTags,
@@ -36,6 +43,7 @@ export function createHandlers(
     services.organizationUsers,
     services.projectUsers,
     services.userRoles,
+    services.userAuthenticationMethods,
     services.fileStorage,
     cache,
     services,
@@ -179,10 +187,12 @@ export function createHandlers(
       services.projectGroups,
       services.projectRoles,
       services.projectUsers,
-      services.projectPermissionSync,
+      services.projectSyncJobs,
+      getJobAdapter(),
       cache,
       services,
-      db
+      db,
+      options?.scheduleAfterCommit
     ),
     projectApps: new ProjectAppsHandler(
       services.projectApps,

@@ -39,6 +39,21 @@ export interface IApiKeyService {
     transaction?: unknown
   ): Promise<CreateApiKeyResult>;
 
+  /**
+   * Create an API key with an operator-supplied plaintext secret (CDM BYOK).
+   * Optional `clientId` restores a prior export's public id when still unused.
+   */
+  createApiKeyForCdmImport(
+    params: {
+      clientSecret: string;
+      clientId?: string | null;
+      name?: string | null;
+      description?: string | null;
+      expiresAt?: Date | null;
+    },
+    transaction?: unknown
+  ): Promise<CreateApiKeyResult>;
+
   getApiKeys(
     params: Omit<QueryApiKeysArgs, 'scope'> & SelectedFields<ApiKey>,
     transaction?: unknown

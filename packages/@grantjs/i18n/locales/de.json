@@ -98,6 +98,8 @@
       "searchMin2": "Suchbegriff muss mindestens 2 Zeichen lang sein",
       "usernameMin3": "Benutzername muss mindestens 3 Zeichen lang sein",
       "eitherUserIdOrRoleIdRequired": "Es muss entweder userId oder roleId angegeben werden",
+      "cdmUserAssignmentUserXor": "Geben Sie für jede Benutzerzuweisung genau eines von userId oder userKey an",
+      "cdmApiKeyUserXor": "Geben Sie für jeden Projekt-Benutzer-API-Schlüssel genau eines von userId oder userKey an",
       "eitherRoleIdOrGroupIdRequired": "Es muss entweder roleId oder groupId angegeben werden",
       "eitherGroupIdOrPermissionIdRequired": "Es muss entweder groupId oder permissionId angegeben werden",
       "codeTooLong": "Autorisierungscode ist zu lang",
@@ -240,6 +242,37 @@
         "typo": "Möglicherweise hat jemand versehentlich Ihre E-Mail-Adresse eingegeben."
       },
       "signature": "Grant Team"
+    }
+  },
+  "projectSyncJobs": {
+    "startDialog": {
+      "summary": {
+        "jobParameters": "Import-Job",
+        "entityCounts": "Entitäten in der Datei",
+        "version": "CDM-Version",
+        "strategyLabel": "Modus",
+        "strategy": {
+          "merge": "Zusammenführen",
+          "replace": "Ersetzen"
+        },
+        "onConflictLabel": "Bei Konflikt",
+        "onConflict": {
+          "fail": "Fehlschlagen",
+          "skip": "Überspringen",
+          "update": "Aktualisieren"
+        },
+        "confirmDestructiveLabel": "Zerstörerische Änderung",
+        "confirmDestructiveYes": "Bestätigt",
+        "jobName": "Jobname (Idempotenz)",
+        "roles": "Rollen",
+        "users": "Benutzer",
+        "apiKeys": "Benutzer-API-Schlüssel",
+        "groups": "Gruppen",
+        "resources": "Ressourcen",
+        "permissions": "Berechtigungen",
+        "tags": "Tags",
+        "byokNote": "Jeder aufgeführte Benutzer-API-Schlüssel muss im JSON clientSecret enthalten (nur Import). Export und Rollback-Snapshots enthalten niemals Geheimnisse."
+      }
     }
   }
 }

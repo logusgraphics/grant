@@ -97,6 +97,7 @@ export class PermissionRepository
       action: p.action,
       resourceId: p.resourceId,
       condition: p.condition,
+      metadata: p.metadata,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
       deletedAt: p.deletedAt,

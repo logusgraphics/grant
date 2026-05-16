@@ -30,6 +30,7 @@ import {
   projectPermissionsAuditLogs,
   projectResourceAuditLogs,
   projectRoleAuditLogs,
+  projectSyncJobAuditLogs,
   projectTagAuditLogs,
   projectUserApiKeyAuditLogs,
   projectUserAuditLogs,
@@ -83,11 +84,13 @@ import { PermissionTagService } from './permission-tags.service';
 import { PermissionService } from './permissions.service';
 import { ProjectAppTagService } from './project-app-tags.service';
 import { ProjectAppService } from './project-apps.service';
+import { ProjectExportService } from './project-export.service';
 import { ProjectGroupService } from './project-groups.service';
-import { ProjectPermissionSyncService } from './project-permission-sync.service';
+import { ProjectImportService } from './project-import.service';
 import { ProjectPermissionService } from './project-permissions.service';
 import { ProjectResourceService } from './project-resources.service';
 import { ProjectRoleService } from './project-roles.service';
+import { ProjectSyncJobService } from './project-sync-job.service';
 import { ProjectTagService } from './project-tags.service';
 import { ProjectUserApiKeyService } from './project-user-api-keys.service';
 import { ProjectUserService } from './project-users.service';
@@ -398,8 +401,8 @@ export function createServices(
 
   return {
     ...servicesBase,
-    projectPermissionSync: new ProjectPermissionSyncService(
-      repositories.projectPermissionSyncRepository,
+    projectImport: new ProjectImportService(
+      repositories.projectImportRepository,
       servicesBase.roles,
       servicesBase.groups,
       servicesBase.roleGroups,
@@ -409,7 +412,51 @@ export function createServices(
       servicesBase.projectPermissions,
       servicesBase.projectResources,
       servicesBase.projectUsers,
-      servicesBase.userRoles
+      servicesBase.userRoles,
+      servicesBase.apiKeys,
+      servicesBase.projectUserApiKeys,
+      cache,
+      servicesBase.tags,
+      servicesBase.projectTags,
+      servicesBase.roleTags,
+      servicesBase.groupTags,
+      servicesBase.userTags,
+      servicesBase.resources,
+      servicesBase.permissions,
+      servicesBase.users,
+      repositories.userRepository,
+      servicesBase.resourceTags,
+      servicesBase.permissionTags,
+      repositories.projectExportRepository
+    ),
+    projectExport: new ProjectExportService(
+      repositories.projectImportRepository,
+      repositories.projectExportRepository,
+      servicesBase.roles,
+      servicesBase.groups,
+      servicesBase.roleGroups,
+      servicesBase.groupPermissions,
+      servicesBase.projectRoles,
+      servicesBase.projectGroups,
+      servicesBase.projectPermissions,
+      servicesBase.projectResources,
+      servicesBase.projectUsers,
+      servicesBase.userRoles,
+      servicesBase.apiKeys,
+      servicesBase.projectUserApiKeys,
+      servicesBase.tags,
+      servicesBase.projectTags,
+      servicesBase.roleTags,
+      servicesBase.groupTags,
+      servicesBase.userTags,
+      servicesBase.resources,
+      servicesBase.permissions,
+      servicesBase.users,
+      repositories.userRepository
+    ),
+    projectSyncJobs: new ProjectSyncJobService(
+      repositories.projectSyncJobRepository,
+      audit(projectSyncJobAuditLogs, 'projectSyncJobId', user, db)
     ),
   };
 }

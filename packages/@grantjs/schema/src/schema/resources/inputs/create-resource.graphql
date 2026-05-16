@@ -8,4 +8,5 @@ input CreateResourceInput {
   tagIds: [ID!]
   primaryTagId: ID
   createPermissions: Boolean
+  metadata: JSON
 }

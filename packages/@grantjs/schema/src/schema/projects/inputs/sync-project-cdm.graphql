@@ -1,0 +1,132 @@
+enum CdmModeStrategy {
+  merge
+  replace
+}
+
+enum CdmOnConflict {
+  fail
+  skip
+  update
+}
+
+enum CdmFindBy {
+  key
+  id
+  email
+  name
+  slug
+}
+
+enum CdmIfMissing {
+  fail
+  skip
+  createNew
+}
+
+input CdmModeInput {
+  strategy: CdmModeStrategy!
+  onConflict: CdmOnConflict
+  confirmDestructive: Boolean
+}
+
+input CdmKeyResolverInput {
+  value: String!
+  findBy: CdmFindBy
+  ifMissing: CdmIfMissing
+}
+
+"""
+Project resource row for CDM import/export.
+"""
+input ResourceCdmInput {
+  key: String!
+  slug: String
+  name: String!
+  description: String
+  actions: [String!]!
+  tags: [String!]
+  primaryTag: String
+  metadata: JSON
+}
+
+"""
+Custom permission for this project; `resource` is an opaque key in the same document.
+"""
+input PermissionCdmInput {
+  key: String!
+  resource: String!
+  action: String!
+  name: String!
+  description: String
+  condition: JSON
+  groups: [String!]
+  tags: [String!]
+  primaryTag: String
+  metadata: JSON
+}
+
+input TagCdmInput {
+  key: String!
+  name: String!
+  color: String!
+  metadata: JSON
+}
+
+input GroupCdmInput {
+  key: String!
+  name: String!
+  description: String
+  permissions: [String!]
+  tags: [String!]
+  primaryTag: String
+  metadata: JSON
+}
+
+input RoleCdmInput {
+  key: String!
+  name: String!
+  description: String
+  groups: [String!]
+  permissions: [String!]
+  tags: [String!]
+  primaryTag: String
+  metadata: JSON
+}
+
+input UserApiKeyCdmInput {
+  key: String
+  clientId: String
+  clientSecret: String
+  name: String
+  description: String
+  expiresAt: Date
+  metadata: JSON
+}
+
+input UserCdmInput {
+  key: CdmKeyResolverInput!
+  name: String!
+  roles: [String!]
+  groups: [String!]
+  permissions: [String!]
+  tags: [String!]
+  primaryTag: String
+  apiKeys: [UserApiKeyCdmInput!]
+  metadata: JSON
+}
+
+"""
+Versioned canonical project document (CDM) for export/import: roles, users,
+resources, permissions, groups, and tags scoped to one project.
+"""
+input SyncProjectInput {
+  version: Int!
+  id: String
+  mode: CdmModeInput!
+  roles: [RoleCdmInput!]!
+  users: [UserCdmInput!]!
+  resources: [ResourceCdmInput!]
+  permissions: [PermissionCdmInput!]
+  groups: [GroupCdmInput!]
+  tags: [TagCdmInput!]
+}

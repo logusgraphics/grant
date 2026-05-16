@@ -56,6 +56,22 @@ export const Query = {
     { resource: ResourceSlug.Project, action: ResourceAction.Query },
     projectQueries.getProjects!
   ),
+  projectSyncJob: authorizeGraphQLResolver(
+    {
+      resource: ResourceSlug.ProjectSyncJob,
+      action: ResourceAction.Query,
+      resourceResolver: 'project',
+    },
+    projectQueries.projectSyncJob!
+  ),
+  projectSyncJobs: authorizeGraphQLResolver(
+    {
+      resource: ResourceSlug.ProjectSyncJob,
+      action: ResourceAction.Query,
+      resourceResolver: 'project',
+    },
+    projectQueries.projectSyncJobs!
+  ),
   // Project apps (OAuth apps per project; scoped)
   projectApps: authorizeGraphQLResolver(
     {

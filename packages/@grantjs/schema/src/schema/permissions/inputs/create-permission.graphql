@@ -7,4 +7,5 @@ input CreatePermissionInput {
   tagIds: [ID!]
   scope: Scope!
   primaryTagId: ID
+  metadata: JSON
 }

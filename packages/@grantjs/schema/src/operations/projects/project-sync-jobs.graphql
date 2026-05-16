@@ -1,0 +1,40 @@
+query ProjectSyncJobs(
+  $id: ID!
+  $scope: Scope!
+  $page: Int
+  $limit: Int
+  $search: String
+  $sort: ProjectSyncJobSortInput
+  $status: ProjectSyncJobStatus
+) {
+  projectSyncJobs(
+    id: $id
+    scope: $scope
+    page: $page
+    limit: $limit
+    search: $search
+    sort: $sort
+    status: $status
+  ) {
+    jobs {
+      id
+      projectId
+      status
+      cdmVersion
+      jobName
+      operation
+      modeStrategy
+      warnings
+      errorMessage
+      enqueuedAt
+      startedAt
+      completedAt
+      cancelledAt
+      hasSnapshot
+      snapshotTakenAt
+      snapshotSizeBytes
+    }
+    totalCount
+    hasNextPage
+  }
+}

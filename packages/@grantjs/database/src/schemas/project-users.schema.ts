@@ -1,6 +1,7 @@
 import { relations, sql } from 'drizzle-orm';
 import {
   index,
+  jsonb,
   pgPolicy,
   pgTable,
   timestamp,
@@ -22,15 +23,22 @@ export const projectUsers = pgTable(
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
+    metadata: jsonb('metadata').default({}).notNull(),
+    /** Project-visible display name override; null means use global users.name */
+    displayName: varchar('display_name', { length: 255 }),
+    /** Project-visible picture URL override; null means use global users.picture_url */
+    pictureUrl: varchar('picture_url', { length: 500 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
+    index('project_users_metadata_idx').using('gin', table.metadata),
     uniqueIndex('project_users_project_id_user_id_unique')
       .on(table.projectId, table.userId)
       .where(sql`${table.deletedAt} IS NULL`),
-    uniqueIndex('project_users_deleted_at_idx').on(table.deletedAt),
+    /** Non-unique: many rows can share the same soft-delete timestamp (e.g. parallel deletes). */
+    index('project_users_deleted_at_idx').on(table.deletedAt),
     pgPolicy('tenant_isolation_policy', {
       as: 'restrictive',
       for: 'select',

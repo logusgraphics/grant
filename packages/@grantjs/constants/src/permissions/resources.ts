@@ -30,6 +30,7 @@ export const ResourceSlug = {
   Organization: 'Organization',
   Project: 'Project',
   ProjectApp: 'ProjectApp',
+  ProjectSyncJob: 'ProjectSyncJob',
   Resource: 'Resource',
   Role: 'Role',
   Group: 'Group',
@@ -86,6 +87,9 @@ const RESOURCES: Record<ResourceSlug, ResourceTemplate> = {
       ResourceAction.Delete,
       ResourceAction.Query,
     ],
+  },
+  [ResourceSlug.ProjectSyncJob]: {
+    actions: [ResourceAction.Query, ResourceAction.Update],
   },
   [ResourceSlug.Resource]: {
     actions: [

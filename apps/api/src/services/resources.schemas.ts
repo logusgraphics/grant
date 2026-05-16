@@ -35,6 +35,7 @@ export const createResourceParamsSchema = z.object({
   description: descriptionSchema,
   actions: z.array(actionSchema).nullable().optional(),
   isActive: z.boolean().nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const updateResourceParamsSchema = z.object({
@@ -66,6 +67,7 @@ export const resourcePermissionSchema = baseEntitySchema.extend({
   action: actionSchema,
   resourceId: idSchema.nullable(),
   condition: permissionConditionSchema.nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()),
 });
 
 export const resourceSchema = baseEntitySchema.extend({
@@ -74,6 +76,7 @@ export const resourceSchema = baseEntitySchema.extend({
   description: descriptionSchema.nullable(),
   actions: z.array(actionSchema),
   isActive: z.boolean(),
+  metadata: z.record(z.string(), z.unknown()),
   permissions: z.array(resourcePermissionSchema).optional(),
 });
 

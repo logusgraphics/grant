@@ -20,6 +20,7 @@ import {
   UserSearchableField,
   UserTag,
 } from '@grantjs/schema';
+import { and, isNull, sql } from 'drizzle-orm';
 
 import { Transaction } from '@/lib/transaction-manager.lib';
 import { EntityRepository, RelationsConfig } from '@/repositories/common';
@@ -72,6 +73,26 @@ export class UserRepository extends EntityRepository<UserModel, User> implements
     transaction?: Transaction
   ): Promise<User> {
     return this.create(params, transaction);
+  }
+
+  public async findUserIdByCdmImport(
+    params: { projectId: string; kind: string; externalKey: string },
+    transaction?: Transaction
+  ): Promise<string | null> {
+    const dbInstance = transaction ?? this.db;
+    const rows = await dbInstance
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          isNull(users.deletedAt),
+          sql`${users.metadata}->'cdmImport'->>'projectId' = ${params.projectId}`,
+          sql`${users.metadata}->'cdmImport'->>'kind' = ${params.kind}`,
+          sql`${users.metadata}->'cdmImport'->>'externalKey' = ${params.externalKey}`
+        )
+      )
+      .limit(1);
+    return rows[0]?.id ?? null;
   }
 
   public async updateUser(

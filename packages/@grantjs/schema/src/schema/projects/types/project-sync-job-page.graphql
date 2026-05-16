@@ -1,0 +1,8 @@
+"""
+Paginated list of project CDM sync jobs.
+"""
+type ProjectSyncJobPage implements PaginatedResults {
+  jobs: [ProjectSyncJob!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}

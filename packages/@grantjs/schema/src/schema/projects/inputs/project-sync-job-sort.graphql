@@ -1,0 +1,4 @@
+input ProjectSyncJobSortInput {
+  field: ProjectSyncJobSortableField!
+  order: SortOrder!
+}

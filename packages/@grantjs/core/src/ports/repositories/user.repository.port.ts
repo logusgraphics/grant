@@ -44,6 +44,14 @@ export interface IUserRepository {
     transaction?: unknown
   ): Promise<User>;
 
+  /**
+   * Lookup a user row created by CDM import (`metadata.cdmImport`) for idempotent re-import.
+   */
+  findUserIdByCdmImport(
+    params: { projectId: string; kind: string; externalKey: string },
+    transaction?: unknown
+  ): Promise<string | null>;
+
   updateUser(
     id: string,
     input: Omit<UpdateUserInput, 'scope'>,

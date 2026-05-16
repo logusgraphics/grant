@@ -6,6 +6,9 @@ import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
+/** Outline badge with transparent fill — used for auth methods, roles, tags, sync job operation, etc. */
+export const valueBadgeClassName = 'bg-transparent border-2';
+
 export interface BadgeItem {
   id: string;
   label: string;
@@ -74,7 +77,7 @@ export function ScrollBadges({
               className={cn(
                 item.className,
                 showAsRound && 'w-3 h-3 rounded-full p-0 border-2 bg-transparent',
-                !showAsRound && 'bg-transparent border-2'
+                !showAsRound && valueBadgeClassName
               )}
             >
               {!showAsRound && item.label}

@@ -26,6 +26,9 @@ import type {
   ProjectPermission,
   ProjectResource,
   ProjectRole,
+  ProjectSyncJob,
+  ProjectSyncJobSortInput,
+  ProjectSyncJobStatus,
   ProjectTag,
   ProjectUser,
   ProjectUserApiKey,
@@ -47,6 +50,8 @@ import type {
   RemoveProjectTagInput,
   RemoveProjectUserApiKeyInput,
   RemoveProjectUserInput,
+  SyncProjectInput,
+  SyncProjectResult,
   UpdateProjectAppInput,
   UpdateProjectAppTagInput,
   UpdateProjectTagInput,
@@ -82,6 +87,34 @@ export interface IProjectUserRepository {
   getProjectUsers(params: QueryProjectUsersInput, transaction?: unknown): Promise<ProjectUser[]>;
 
   addProjectUser(params: AddProjectUserInput, transaction?: unknown): Promise<ProjectUser>;
+
+  mergeProjectUserCdmMetadata(
+    params: {
+      projectId: string;
+      userId: string;
+      importerMetadata: Record<string, unknown> | null | undefined;
+    },
+    transaction?: unknown
+  ): Promise<ProjectUser>;
+
+  updateProjectUserMetadata(
+    params: {
+      projectId: string;
+      userId: string;
+      metadata: Record<string, unknown>;
+    },
+    transaction?: unknown
+  ): Promise<ProjectUser>;
+
+  updateProjectUserProfile(
+    params: {
+      projectId: string;
+      userId: string;
+      displayName?: string | null;
+      pictureUrl?: string | null;
+    },
+    transaction?: unknown
+  ): Promise<ProjectUser>;
 
   softDeleteProjectUser(
     params: RemoveProjectUserInput,
@@ -288,4 +321,127 @@ export interface IProjectUserApiKeyRepository {
     params: RemoveProjectUserApiKeyInput,
     transaction?: unknown
   ): Promise<ProjectUserApiKey>;
+}
+
+/** Worker-internal view of a sync job, including the persisted payload + scope. */
+export interface ProjectSyncJobFull {
+  job: ProjectSyncJob;
+  /** Import: full `SyncProjectInput`. Export: `ProjectSyncJobExportPayload` JSON. */
+  payload: unknown;
+  scopeTenant: string;
+  scopeId: string;
+  /** True when `cancel()` was invoked while the job was already running. */
+  cancelRequested: boolean;
+}
+
+/** Filters for paginated lookup of sync jobs scoped to a single project. */
+export interface ListProjectSyncJobsParams {
+  projectId: string;
+  scopeTenant: string;
+  scopeId: string;
+  page?: number | null;
+  limit?: number | null;
+  search?: string | null;
+  sort?: ProjectSyncJobSortInput | null;
+  status?: ProjectSyncJobStatus | null;
+}
+
+/** Result row for the payload endpoint: stored CDM body + lightweight identifiers. */
+export interface ProjectSyncJobPayloadRow {
+  /** Import: `SyncProjectInput`. Export: `ProjectSyncJobExportPayload`. */
+  payload: unknown;
+  jobName: string | null;
+  cdmVersion: number;
+  projectId: string;
+}
+
+/** Result row for the snapshot endpoint: pre-sync rollback artifact + metadata. */
+export interface ProjectSyncJobSnapshotRow {
+  snapshot: SyncProjectInput;
+  takenAt: Date;
+  sizeBytes: number;
+  projectId: string;
+}
+
+export interface IProjectSyncJobRepository {
+  insert(
+    params: {
+      projectId: string;
+      scopeTenant: string;
+      scopeId: string;
+      cdmVersion: number;
+      jobName: string | null;
+      operation: 'import' | 'export';
+      modeStrategy: 'merge' | 'replace' | null;
+      payload: unknown;
+      enqueuedById: string;
+    },
+    transaction?: unknown
+  ): Promise<ProjectSyncJob>;
+
+  getById(jobId: string, transaction?: unknown): Promise<ProjectSyncJob | null>;
+
+  /** Worker-only: load the full row (payload, scope, cancel flag) for execution. */
+  getFullById(jobId: string, transaction?: unknown): Promise<ProjectSyncJobFull | null>;
+
+  /**
+   * Read just the persisted CDM payload + lightweight identifiers for the
+   * download endpoint. Returns null when the job does not exist.
+   */
+  getPayloadById(jobId: string, transaction?: unknown): Promise<ProjectSyncJobPayloadRow | null>;
+
+  /** Paginated list of jobs filtered by project + scope, optional status/search/sort. */
+  listByProject(
+    params: ListProjectSyncJobsParams,
+    transaction?: unknown
+  ): Promise<{ items: ProjectSyncJob[]; totalCount: number }>;
+
+  findActiveByJobKey(
+    params: {
+      projectId: string;
+      operation: 'import' | 'export';
+      jobName: string;
+      /** DB status values; defaults to pending, running, and completed (import idempotency). */
+      statuses?: readonly string[];
+    },
+    transaction?: unknown
+  ): Promise<ProjectSyncJob | null>;
+
+  updateStatus(
+    params: {
+      jobId: string;
+      status: ProjectSyncJobStatus;
+      startedAt?: Date | null;
+      completedAt?: Date | null;
+      cancelledAt?: Date | null;
+      cancelRequested?: Date | null;
+      result?: SyncProjectResult | null;
+      warnings?: string[] | null;
+      errorMessage?: string | null;
+      errorDetails?: Record<string, unknown> | null;
+    },
+    transaction?: unknown
+  ): Promise<ProjectSyncJob>;
+
+  /**
+   * Persist a pre-sync rollback snapshot for an existing job row. Throws
+   * `NotFoundError` when the job does not exist. Intended to be called from
+   * inside the sync worker's import transaction.
+   */
+  updateSnapshot(
+    params: {
+      jobId: string;
+      snapshot: SyncProjectInput;
+      takenAt: Date;
+      sizeBytes: number;
+    },
+    transaction?: unknown
+  ): Promise<void>;
+
+  /**
+   * Read a previously-captured snapshot. Returns `null` when no snapshot was
+   * persisted for this job. The job row itself is queried by `jobId` only;
+   * callers enforce the `(projectId === row.projectId)` invariant.
+   */
+  getSnapshotById(jobId: string, transaction?: unknown): Promise<ProjectSyncJobSnapshotRow | null>;
 }

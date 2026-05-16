@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { WorkspaceSwitcher } from '@/components/common';
+import { ProjectSyncJobsModuleIcon } from '@/components/features/project-sync-jobs/project-sync-jobs-icon';
 import { ProjectSwitcher } from '@/components/features/projects';
 import { Sidebar } from '@/components/ui/sidebar';
 
@@ -91,6 +92,11 @@ export function PersonalProjectSidebar({ ...props }: ComponentProps<typeof Sideb
           title: t('projectTags'),
           url: `/dashboard/accounts/${accountId}/projects/${projectId}/tags`,
           icon: Tag,
+        },
+        {
+          title: t('projectSyncJobs'),
+          url: `/dashboard/accounts/${accountId}/projects/${projectId}/import-export`,
+          icon: ProjectSyncJobsModuleIcon,
         },
       ],
       checkActive: true,

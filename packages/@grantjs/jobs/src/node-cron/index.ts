@@ -1,5 +1,3 @@
-import cron from 'node-cron';
-
 import type {
   EnqueueJobData,
   IJobAdapter,
@@ -9,6 +7,7 @@ import type {
   JobResult,
   ScheduledJob,
 } from '@grantjs/core';
+import cron from 'node-cron';
 
 /** Task type returned by node-cron schedule() (v4 has no namespace export) */
 type CronTask = ReturnType<typeof cron.schedule>;
@@ -25,12 +24,20 @@ export class NodeCronJobAdapter implements IJobAdapter {
   constructor(private readonly logger: ILogger) {}
 
   async schedule(job: ScheduledJob, handler: JobHandler): Promise<void> {
-    if (this.jobs.has(job.id)) {
+    if (this.handlers.has(job.id)) {
       throw new Error(`Job ${job.id} is already scheduled`);
     }
 
     if (!job.enabled) {
       this.logger.info({ jobId: job.id }, 'Job is disabled, skipping schedule');
+      return;
+    }
+
+    // Enqueue-only jobs register the handler so `enqueue()` can dispatch them,
+    // but don't bind a recurring cron task.
+    if (job.enqueueOnly) {
+      this.handlers.set(job.id, handler);
+      this.logger.info({ jobId: job.id }, 'Enqueue-only job registered with node-cron');
       return;
     }
 

@@ -12,6 +12,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -92,7 +93,7 @@ export function SettingMfaEnrollDialog({
               <AlertTitle>{t('enroll.infoTitle')}</AlertTitle>
               <AlertDescription>{t('enroll.infoDescription')}</AlertDescription>
             </Alert>
-            <div className="flex items-center justify-between">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -104,7 +105,7 @@ export function SettingMfaEnrollDialog({
               <Button onClick={begin} disabled={loading}>
                 {loading ? t('enroll.preparing') : t('enroll.continue')}
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         ) : (
           <div className="space-y-6 py-1">
@@ -118,7 +119,7 @@ export function SettingMfaEnrollDialog({
                 containerClassName="justify-center"
               />
             </div>
-            <div className="flex items-center justify-between">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -130,7 +131,7 @@ export function SettingMfaEnrollDialog({
               <Button onClick={verify} disabled={loading || code.length < 6}>
                 {loading ? t('enroll.verifying') : t('enroll.verifyAndEnable')}
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         )}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}

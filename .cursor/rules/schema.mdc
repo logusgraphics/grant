@@ -11,3 +11,10 @@ alwaysApply: false
 - **Generate schema and types** after changes: `pnpm --filter @grantjs/schema generate`.
 
 Generated types are used in REST routes, GraphQL resolvers, handlers, services, and repositories. Do not redefine these types elsewhere; extend or use partials (e.g. `QueryGroupsArgs & SelectedFields<Group>`) as needed.
+
+## GraphQL descriptions
+
+- **Type / enum / operation (tier A):** one short `"""` block per type or mutation when the name alone is insufficient.
+- **Non-obvious fields (tier B):** brief field docs (`hasSnapshot`, `modeStrategy`).
+- **Self-explanatory counters (tier C):** omit per-field descriptions on `SyncProjectResult` counters.
+- **CDM inputs (tier D):** one line per `*CdmInput`; behavioral detail belongs in `apps/api/src/lib/cdm/README.md` and `docs/core-concepts/cdm-import-export.md`.

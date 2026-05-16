@@ -3,6 +3,7 @@ import { User, UserSortInput } from '@grantjs/schema';
 import { Response, Router } from 'express';
 
 import { authorizeRestRoute, requireEmailThenMfaRest } from '@/lib/authorization';
+import { AuthenticationError } from '@/lib/errors';
 import { NotFoundError } from '@/lib/errors';
 import { validate } from '@/middleware/validation.middleware';
 import {
@@ -137,11 +138,17 @@ export function createUserRoutes(context: RequestContext) {
       res: Response
     ) => {
       const { id } = req.params;
-      const { name, roleIds, tagIds, primaryTagId, scope } = req.body;
+      const { name, roleIds, tagIds, primaryTagId, scope, pictureUrl, metadata } = req.body;
+
+      const actorUserId = context.user?.userId;
+      if (!actorUserId) {
+        throw new AuthenticationError('Authentication required');
+      }
 
       const user = await context.handlers.users.updateUser({
         id,
-        input: { name, roleIds, tagIds, primaryTagId, scope },
+        input: { name, roleIds, tagIds, primaryTagId, scope, pictureUrl, metadata },
+        actorUserId,
       });
 
       sendSuccessResponse(res, user);

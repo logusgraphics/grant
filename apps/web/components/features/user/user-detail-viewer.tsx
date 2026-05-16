@@ -22,7 +22,7 @@ export function UserDetailViewer() {
   const scope = useScopeFromParams();
   const setCurrentUser = useUsersStore((state) => state.setCurrentUser);
 
-  const { users, loading, error } = useUsers({
+  const { users, loading, error, refetch } = useUsers({
     scope: scope!,
     ids: [userId],
     limit: 1,
@@ -47,7 +47,7 @@ export function UserDetailViewer() {
 
   return (
     <div className="min-w-0 space-y-6">
-      <UserInfo user={user} />
+      <UserInfo user={user} onAfterUserMutation={refetch} />
       <div className="grid min-w-0 gap-6 min-[1200px]:grid-cols-2">
         <UserRoles user={user} />
         <UserTags user={user} />

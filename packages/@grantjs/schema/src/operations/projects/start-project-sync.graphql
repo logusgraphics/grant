@@ -1,0 +1,17 @@
+mutation StartProjectSync($id: ID!, $scope: Scope!, $input: SyncProjectInput!) {
+  startProjectSync(id: $id, scope: $scope, input: $input) {
+    id
+    projectId
+    status
+    cdmVersion
+    jobName
+    operation
+    modeStrategy
+    warnings
+    errorMessage
+    enqueuedAt
+    startedAt
+    completedAt
+    cancelledAt
+  }
+}

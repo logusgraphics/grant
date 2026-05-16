@@ -57,6 +57,7 @@ export const groupTagSchema = z.object({
   id: idSchema,
   groupId: idSchema,
   tagId: idSchema,
+  isPrimary: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
   deletedAt: z.date().nullable().optional(),

@@ -1,0 +1,53 @@
+"""
+Lifecycle status of an asynchronous project CDM sync job.
+"""
+enum ProjectSyncJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+"""
+CDM import or export work for a project (`project_sync_jobs`).
+"""
+enum ProjectSyncJobOperation {
+  IMPORT
+  EXPORT
+}
+
+"""
+Asynchronous project CDM import or export job.
+"""
+type ProjectSyncJob {
+  id: ID!
+  projectId: ID!
+  status: ProjectSyncJobStatus!
+  cdmVersion: Int!
+  """
+  Client idempotency key from `SyncProjectInput.id` on import.
+  """
+  jobName: String
+  operation: ProjectSyncJobOperation!
+  """
+  Import merge/replace; null for export.
+  """
+  modeStrategy: CdmModeStrategy
+  """
+  Import counters when completed; null for export (CDM in snapshot download).
+  """
+  result: SyncProjectResult
+  warnings: [String!]!
+  errorMessage: String
+  enqueuedAt: Date!
+  startedAt: Date
+  completedAt: Date
+  cancelledAt: Date
+  """
+  Rollback snapshot (import) or exported CDM (export); REST `.../snapshot`.
+  """
+  hasSnapshot: Boolean!
+  snapshotTakenAt: Date
+  snapshotSizeBytes: Int
+}

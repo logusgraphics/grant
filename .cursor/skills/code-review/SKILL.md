@@ -22,6 +22,7 @@ Code Review:
 - [ ] Web patterns
 - [ ] i18n
 - [ ] Error handling
+- [ ] Comments (no narrative blocks; behavior in docs/README)
 ```
 
 ## What to check

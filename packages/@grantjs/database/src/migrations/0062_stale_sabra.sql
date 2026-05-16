@@ -1,0 +1,1 @@
+ALTER TABLE "project_user_api_keys" ADD COLUMN "metadata" jsonb;

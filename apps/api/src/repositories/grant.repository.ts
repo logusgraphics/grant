@@ -17,6 +17,7 @@ import {
   organizationUsers,
   permissions,
   projectRoles,
+  projectUsers,
   resources,
   roleGroups,
   roles,
@@ -26,8 +27,13 @@ import {
 import { Permission, Scope, Tenant, TokenType } from '@grantjs/schema';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
+import {
+  mergeEffectiveUserMetadataForProject,
+  toMetadataRecord,
+} from '@/lib/effective-project-user-metadata.lib';
 import { NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
+import { tryProjectIdFromScope } from '@/lib/project-id-from-scope.lib';
 import { Transaction } from '@/lib/transaction-manager.lib';
 
 export class GrantRepository implements IGrantRepository {
@@ -40,18 +46,9 @@ export class GrantRepository implements IGrantRepository {
     scope?: Scope,
     transaction?: Transaction
   ): Promise<ExecutionContextUser> {
-    // Project API key tokens use sub = apiKeyId (sentinel); return synthetic user for authorization
-    if (
-      scope &&
-      (scope.tenant === Tenant.AccountProject || scope.tenant === Tenant.OrganizationProject)
-    ) {
-      return {
-        id: userId,
-        metadata: {},
-      };
-    }
-
     const db = transaction || this.db;
+    const projectId = scope ? tryProjectIdFromScope(scope) : null;
+
     const user = await db.query.users.findFirst({
       where: and(eq(users.id, userId), isNull(users.deletedAt)),
       columns: {
@@ -61,12 +58,38 @@ export class GrantRepository implements IGrantRepository {
     });
 
     if (!user) {
+      if (projectId != null) {
+        return {
+          id: userId,
+          metadata: {},
+        };
+      }
       throw new NotFoundError(`User not found: ${userId}`);
+    }
+
+    const globalMd = toMetadataRecord(user.metadata);
+
+    if (projectId != null) {
+      const pivot = await db.query.projectUsers.findFirst({
+        where: and(
+          eq(projectUsers.projectId, projectId),
+          eq(projectUsers.userId, userId),
+          isNull(projectUsers.deletedAt)
+        ),
+        columns: {
+          metadata: true,
+        },
+      });
+      const pivotMd = toMetadataRecord(pivot?.metadata);
+      return {
+        id: user.id,
+        metadata: mergeEffectiveUserMetadataForProject(globalMd, pivotMd),
+      };
     }
 
     return {
       id: user.id,
-      metadata: user.metadata as Record<string, unknown>,
+      metadata: globalMd,
     };
   }
 

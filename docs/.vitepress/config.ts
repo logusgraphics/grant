@@ -93,7 +93,7 @@ export default withMermaid({
             { text: 'Permission Conditions', link: '/core-concepts/permission-conditions' },
             { text: 'API Keys', link: '/core-concepts/api-keys' },
             {
-              text: 'MFA recovery',
+              text: 'MFA Recovery',
               link: '/core-concepts/mfa-recovery',
             },
             {
@@ -101,6 +101,10 @@ export default withMermaid({
               link: '/core-concepts/organization-invitations',
             },
             { text: 'Tags & Relationships', link: '/core-concepts/tags-relationships' },
+            {
+              text: 'CDM Import & Export',
+              link: '/core-concepts/cdm-import-export',
+            },
           ],
         },
         {

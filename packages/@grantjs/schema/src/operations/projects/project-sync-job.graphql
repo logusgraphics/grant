@@ -1,0 +1,37 @@
+query ProjectSyncJob($id: ID!, $scope: Scope!, $jobId: ID!) {
+  projectSyncJob(id: $id, scope: $scope, jobId: $jobId) {
+    id
+    projectId
+    status
+    cdmVersion
+    jobName
+    operation
+    modeStrategy
+    result {
+      projectId
+      importId
+      rolesCreated
+      groupsCreated
+      roleGroupsLinked
+      groupPermissionsLinked
+      projectRolesLinked
+      projectGroupsLinked
+      projectPermissionsLinked
+      projectResourcesLinked
+      projectUsersEnsured
+      usersCreated
+      userRolesAssigned
+      projectUserApiKeysCreated
+      warnings
+    }
+    warnings
+    errorMessage
+    enqueuedAt
+    startedAt
+    completedAt
+    cancelledAt
+    hasSnapshot
+    snapshotTakenAt
+    snapshotSizeBytes
+  }
+}

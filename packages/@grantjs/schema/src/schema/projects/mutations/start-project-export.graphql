@@ -1,0 +1,12 @@
+extend type Mutation {
+  """
+  Enqueue an asynchronous CDM **export** job for the given project. The worker
+  snapshots current permission state into a replay-ready `SyncProjectInput` and
+  stores it on the job row (`snapshot`); poll `projectSyncJob` for status.
+
+  Requires Project:update in the given project scope (same as starting import jobs).
+
+  Pass optional `input.jobName` for idempotency with the same rules as import `input.id`.
+  """
+  startProjectExport(id: ID!, scope: Scope!, input: StartProjectExportInput!): ProjectSyncJob!
+}

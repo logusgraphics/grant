@@ -7,4 +7,5 @@ input UpdatePermissionInput {
   condition: JSON
   tagIds: [ID!]
   primaryTagId: ID
+  metadata: JSON
 }

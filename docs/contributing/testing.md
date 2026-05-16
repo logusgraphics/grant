@@ -51,6 +51,9 @@ apps/api/tests/
 │   ├── project-oauth.integration.test.ts # Project OAuth authorize, email request, email callback
 │   ├── rate-limit.integration.test.ts   # HTTP-level rate limit tests (MFA paths share auth bucket)
 │   ├── observability.integration.test.ts   # Metrics endpoint, telemetry/analytics/tracing adapters
+│   ├── project-sync.integration.test.ts      # CDM sync job REST routes (mocked handlers)
+│   ├── project-sync-graphql.integration.test.ts # CDM sync job GraphQL resolvers (mocked handlers)
+│   ├── cdm-round-trip.integration.test.ts    # CDM export/import cross-refs and partial sections
 │   └── request-logging.integration.test.ts   # Request-scoped logger and requestId in log payload
 └── e2e/
     ├── flows.e2e.test.ts                # Full flow: register → login → org → invite → project
@@ -63,6 +66,7 @@ apps/api/tests/
     │   ├── project-oauth.e2e.test.ts   # Project OAuth authorize, email request, email callback
     │   ├── mfa.e2e.test.ts             # TOTP enroll/verify, org MFA policy, recovery step-up
     │   ├── mfa-aal2-login.e2e.test.ts  # Login requiresMfaStepUp when API uses aal2 (opt-in env)
+    │   ├── project-sync-jobs.e2e.test.ts # CDM import/export jobs (REST + GraphQL, RBAC)
     │   └── user-onboarding.e2e.test.ts  # User onboarding flow
     └── compliance/
         ├── soc2-access-control.e2e.test.ts
@@ -178,6 +182,41 @@ Project OAuth (authorize, email magic link, callback) is covered at three levels
 **E2E Redis:** Set `E2E_REDIS_HOST`, `E2E_REDIS_PORT` (default 6380), and `E2E_REDIS_PASSWORD` if your E2E Redis is not at `localhost:6380` with password `grant_redis_password` (see `docker-compose.e2e.yml`).
 
 **GitHub callback E2E:** Full GitHub OAuth flow (user authorizes in browser) is not automated in E2E; it is covered by unit and integration tests with mocked GitHub exchange. To run a full GitHub flow E2E, use a test GitHub OAuth app or a mock OAuth server (see project OAuth testing strategy).
+
+## CDM project sync jobs
+
+CDM import/export (async `ProjectSyncJob` rows) is covered at unit, integration, and E2E layers. Shared fixtures live in `apps/api/tests/helpers/cdm-sync-fixtures.ts`; E2E REST helpers in `apps/api/tests/e2e/helpers/sync-job.ts`.
+
+| Layer           | Location                                                                                          | What it asserts                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **Unit**        | `tests/unit/services/project-sync-job.service.test.ts`                                            | Job lifecycle: cancel conflicts, `markFailed`, terminal guards     |
+| **Unit**        | `tests/unit/services/project-import.metadata.test.ts`, `project-export.service.test.ts`           | `ProjectImportService` metadata; `ProjectExportService` assembly   |
+| **Unit**        | `tests/unit/handlers/projects.handler.start-project-sync.test.ts`, `start-project-export.test.ts` | Enqueue, idempotency, replace `confirmDestructive` validation      |
+| **Unit**        | `tests/unit/jobs/project-sync.job.test.ts`                                                        | Worker: snapshot order, export sections, import replace mode       |
+| **Unit**        | `tests/unit/lib/cdm/registry.test.ts`, `tests/unit/services/cdm-handler-registry.test.ts`         | Registry order; replace import: all `teardown` before any `apply`  |
+| **Unit**        | `tests/unit/lib/cdm/*.cdm-entity.test.ts`                                                         | Per-entity validate/apply/teardown/export                          |
+| **Integration** | `tests/integration/project-sync.integration.test.ts`                                              | All seven REST sync routes (mocked handlers + bypassed auth)       |
+| **Integration** | `tests/integration/project-sync-graphql.integration.test.ts`                                      | GraphQL mutations/queries delegate to handlers                     |
+| **Integration** | `tests/integration/cdm-round-trip.integration.test.ts`                                            | CDM opaque keys, cross-refs, partial export assembly               |
+| **E2E**         | `tests/e2e/scenarios/project-sync-jobs.e2e.test.ts`                                               | Real API + DB + RBAC; export → merge import; modes; GraphQL parity |
+
+**E2E background jobs:** `docker-compose.e2e.yml` sets `JOBS_ENABLED=true` and `JOB_PROVIDER=node-cron` so enqueue runs the worker inline (no separate worker container). Align `.env.test` with `.env.test.example` if you override job settings locally.
+
+```bash
+# Unit + integration (API package)
+pnpm --filter grant-api exec vitest run \
+  tests/unit/services/project-sync-job.service.test.ts \
+  tests/unit/services/project-import.metadata.test.ts \
+  tests/unit/services/project-export.service.test.ts \
+  tests/unit/services/cdm-handler-registry.test.ts \
+  tests/unit/jobs/project-sync.job.test.ts \
+  tests/unit/lib/cdm \
+  tests/integration/project-sync.integration.test.ts \
+  tests/integration/cdm-round-trip.integration.test.ts
+
+# E2E (stack migrated + seeded)
+pnpm --filter grant-api test:e2e -- tests/e2e/scenarios/project-sync-jobs.e2e.test.ts
+```
 
 ## i18n Testing
 

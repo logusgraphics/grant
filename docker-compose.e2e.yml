@@ -134,8 +134,9 @@ services:
       ANALYTICS_ENABLED: 'false'
       TRACING_ENABLED: 'false'
 
-      # Job scheduling – disabled for E2E
-      JOB_PROVIDER: none
+      # Job scheduling – node-cron runs workers inline on enqueue (sync job E2E)
+      JOBS_ENABLED: 'true'
+      JOB_PROVIDER: node-cron
     ports:
       - '4001:4000'
     healthcheck:
