@@ -14,9 +14,13 @@ This doc explains how we version and publish artifacts. **Platform version** (ro
 | Platform (`grant`)                                 | Changesets **fixed** group                     | Root `package.json` version                       |
 | Apps (`grant-api`, `grant-web`, `grant-docs`)      | Same fixed group                               | Not published to npm (private)                    |
 | npm (`@grantjs/schema`, `client`, `server`, `cli`) | Same fixed group                               | registry.npmjs.org                                |
-| Docker images                                      | Root `package.json` after version PR           | `:demo`, `:sha-<commit>`, `:<version>`, `:latest` |
-| `example-nextjs` image                             | Root `package.json` (not a Changesets package) | Same GHCR tags as other images                    |
+| Docker images                                      | `apps/api/package.json` after version PR       | `:demo`, `:sha-<commit>`, `:<version>`, `:latest` |
+| `example-nextjs` image                             | Same as platform apps (image tags, not npm)    | Same GHCR tags as other images                    |
 | Demo environment                                   | `:demo` on main                                | Latest main commit                                |
+| Web header / `GET /api/config` `appVersion`        | `apps/api/package.json` at API startup         | No env vars; matches running API image semver     |
+| OpenAPI `info.version`                             | Same as `config.app.version`                   | —                                                 |
+
+Do **not** set `APP_VERSION` or `NEXT_PUBLIC_APP_VERSION` — they were removed. The API reads semver from [`apps/api/package.json`](../../apps/api/package.json) via `readPlatformVersion()` so the UI and OpenAPI stay aligned with the Docker tag CI publishes.
 
 ## Fixed versioning group
 
