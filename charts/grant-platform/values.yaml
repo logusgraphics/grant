@@ -3,7 +3,8 @@
 # =============================================================================
 # Map env names to @grantjs/env (packages/@grantjs/env/src/schema.ts).
 # Production: set secrets via existingSecretEnv or external secrets operator.
-# Default *.image.tag is latest (GHCR Release workflow also publishes :demo and :sha-<git>).
+# Default *.image.tag is latest (GHCR also publishes :demo, :sha-<git>, and :<semver> after a version PR).
+# Pin production to a semver tag (e.g. "1.0.0") instead of "demo" or "latest" when reproducibility matters.
 
 global:
   # Required: public https URL (e.g. https://grant.example.com) — no trailing path

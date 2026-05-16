@@ -2,16 +2,24 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "grant",
+      "grant-api",
+      "grant-web",
+      "grant-docs",
+      "@grantjs/schema",
+      "@grantjs/client",
+      "@grantjs/server",
+      "@grantjs/cli"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "grant-api",
     "grant-config",
-    "grant-web",
-    "grant-docs",
     "example-express",
     "example-fastify",
     "example-nestjs",

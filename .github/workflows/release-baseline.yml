@@ -1,0 +1,45 @@
+# One-time (or manual) semver tags for platform images already published as :demo.
+name: Release baseline image tags
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semver tag to apply (e.g. 1.0.0)
+        required: true
+        default: '1.0.0'
+      source_tag:
+        description: Source image tag to copy from
+        required: true
+        default: demo
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  tag:
+    name: Retag platform images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply semver tags
+        env:
+          VERSION: ${{ inputs.version }}
+          SOURCE: ${{ inputs.source_tag }}
+          IMAGE_BASE: ghcr.io/${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for image in grant-api grant-web grant-docs example-nextjs; do
+            echo "Tagging ${image}:${SOURCE} -> :${VERSION} and :latest"
+            docker buildx imagetools create \
+              "${IMAGE_BASE}/${image}:${SOURCE}" \
+              --tag "${IMAGE_BASE}/${image}:${VERSION}" \
+              --tag "${IMAGE_BASE}/${image}:latest"
+          done
