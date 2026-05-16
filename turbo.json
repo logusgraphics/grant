@@ -40,7 +40,6 @@
     "DEMO_*",
     "E2E_*",
     "BENCHMARK_*",
-    "APP_VERSION",
     "NEXT_PUBLIC_*"
   ],
   "tasks": {

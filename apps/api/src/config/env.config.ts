@@ -10,6 +10,7 @@ import { SUPPORTED_LOCALES } from '@grantjs/i18n';
 import { UserAuthenticationMethodProvider } from '@grantjs/schema';
 
 import { ConfigurationError } from '@/lib/errors';
+import { readPlatformVersion } from '@/lib/platform-version.lib';
 
 const env = getEnv();
 
@@ -26,8 +27,8 @@ export const APP_CONFIG = {
   /** Application name */
   name: 'Grant API',
 
-  /** Application version */
-  version: '1.0.0',
+  /** Application version (from apps/api/package.json; matches Docker semver tags) */
+  version: readPlatformVersion(),
 
   /** Server port */
   port: env.API_PORT,

@@ -99,7 +99,7 @@ export function generateOpenApiDocument() {
   const document = generator.generateDocument({
     openapi: '3.0.0',
     info: {
-      version: '1.0.0',
+      version: config.app.version,
       title: 'Grant REST API',
       description: 'REST API for the Grant - An open-source identity and access management system',
       contact: {

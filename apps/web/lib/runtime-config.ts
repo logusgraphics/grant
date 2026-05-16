@@ -34,8 +34,7 @@ function getServerConfig(): RuntimeConfig {
       process.env.DEMO_MODE_DB_REFRESH_SCHEDULE ?? DEFAULTS.demoModeDbRefreshSchedule,
     accountDeletionRetentionDays:
       process.env.PRIVACY_ACCOUNT_DELETION_RETENTION_DAYS ?? DEFAULTS.accountDeletionRetentionDays,
-    appVersion:
-      process.env.NEXT_PUBLIC_APP_VERSION ?? process.env.APP_VERSION ?? DEFAULTS.appVersion,
+    appVersion: DEFAULTS.appVersion,
   };
 }
 

@@ -244,8 +244,6 @@ export const envSchema = z.object({
   E2E_REDIS_PORT: optionalString('6380'),
   E2E_REDIS_PASSWORD: optionalString('grant_redis_password'),
   BENCHMARK_REPORT: optionalString(''),
-  APP_VERSION: optionalString('1.0.0'),
-  NEXT_PUBLIC_APP_VERSION: optionalString(''),
 });
 
 export type Env = z.infer<typeof envSchema>;
