@@ -7,9 +7,9 @@ import {
   CDM_IMPORT_METADATA_KEY,
   CDM_SOURCE_METADATA_KEY,
 } from '@/constants/cdm-import.constants';
-import { ConflictError } from '@/lib/errors';
-import { buildExternalKey } from '@/lib/cdm/identity.lib';
 import { ResourceCdmEntity } from '@/lib/cdm/entities/resource.cdm-entity';
+import { buildExternalKey } from '@/lib/cdm/identity.lib';
+import { ConflictError } from '@/lib/errors';
 
 const projectId = '10000000-0000-4000-8000-000000000011';
 const accountId = '20000000-0000-4000-8000-000000000020';

@@ -1,6 +1,5 @@
 import type {
   IProjectExportService,
-  IProjectImportService,
   IProjectSyncJobService,
   ProjectSyncJobExecutionData,
   ProjectSyncJobExportPayload,

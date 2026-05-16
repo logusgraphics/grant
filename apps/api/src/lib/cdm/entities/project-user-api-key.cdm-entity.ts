@@ -18,8 +18,8 @@ import { ValidationError } from '@/lib/errors';
 import { Transaction } from '@/lib/transaction-manager.lib';
 import type { ProjectExportRepository } from '@/repositories/project-export.repository';
 import type { ProjectImportRepository } from '@/repositories/project-import.repository';
-
 import { clientSecretSchema } from '@/services/cdm.schemas';
+
 import type { CdmProjectUserApiKeyInternal } from '../cdm-internal.types';
 import { buildExternalKey } from '../identity.lib';
 

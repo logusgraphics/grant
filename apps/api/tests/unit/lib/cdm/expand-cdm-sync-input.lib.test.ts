@@ -1,13 +1,13 @@
 import { CdmFindBy, CdmModeStrategy, type SyncProjectInput } from '@grantjs/schema';
 import { describe, expect, it } from 'vitest';
 
-import { ValidationError } from '@/lib/errors';
 import {
   canonicalPermissionDocumentString,
   parseCdmPermissionDocumentString,
   serializePermissionRefForCdmDocument,
 } from '@/lib/cdm/cdm-permission-document-ref.lib';
 import { expandCdmSyncInput } from '@/lib/cdm/expand-cdm-sync-input.lib';
+import { ValidationError } from '@/lib/errors';
 
 const mode = {
   strategy: CdmModeStrategy.Merge,
