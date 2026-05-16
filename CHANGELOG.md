@@ -33,4 +33,10 @@ Tags: `:1.0.0`, `:latest` (from current `:demo` build). Rolling demo continues t
 
 ## 1.1.0
 
-_Pending — see `.changeset/` on the feature branch and the v1.1.0 GitHub Release after merge._
+### Platform
+
+Async CDM project sync jobs, export, and pre-sync rollback snapshots. **Breaking:** synchronous `syncProject` / `POST .../permissions/sync` removed — use enqueue-and-poll job APIs (see migration notes in package changelogs).
+
+**Docker images:** tagged `:1.1.0` and `:latest` after this release.
+
+**npm packages:** `@grantjs/schema`, `@grantjs/client`, `@grantjs/server`, `@grantjs/cli` at **1.1.0** (fixed group with apps).
