@@ -1,5 +1,23 @@
 # grant-api
 
+## 1.1.1
+
+### Patch Changes
+
+- 005ec00: Resolve platform version from `apps/api/package.json` at runtime for `/api/config` and OpenAPI. Remove deprecated `APP_VERSION` and `NEXT_PUBLIC_APP_VERSION` environment variables.
+  - @grantjs/schema@1.1.1
+  - @grantjs/core@1.0.0
+  - @grantjs/jobs@1.0.0
+  - @grantjs/analytics@1.0.0
+  - @grantjs/cache@1.0.0
+  - @grantjs/constants@1.0.0
+  - @grantjs/database@1.0.0
+  - @grantjs/email@1.0.0
+  - @grantjs/errors@1.0.0
+  - @grantjs/logger@1.0.0
+  - @grantjs/storage@1.0.0
+  - @grantjs/telemetry@1.0.0
+
 ## 1.1.0
 
 ### Minor Changes
