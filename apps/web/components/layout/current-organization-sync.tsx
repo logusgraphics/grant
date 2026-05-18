@@ -26,16 +26,22 @@ export function CurrentOrganizationSync() {
     limit: 1,
     sort: { field: OrganizationSortableField.Name, order: SortOrder.Asc },
     skip: !scope || !organizationId,
+    fetchPolicy: 'network-only',
   });
 
-  const organization = organizationId ? (organizations[0] ?? null) : null;
+  const organization = organizationId
+    ? (organizations.find((org) => org.id === organizationId) ?? null)
+    : null;
 
   useEffect(() => {
-    setCurrentOrganization(organization);
-    return () => {
+    if (!organizationId) {
       setCurrentOrganization(null);
-    };
-  }, [organization, setCurrentOrganization]);
+      return;
+    }
+    if (organization) {
+      setCurrentOrganization(organization);
+    }
+  }, [organization, organizationId, setCurrentOrganization]);
 
   return null;
 }

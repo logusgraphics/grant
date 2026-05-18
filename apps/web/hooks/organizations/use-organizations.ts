@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, type WatchQueryFetchPolicy } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { Organization, OrganizationPage, QueryOrganizationsArgs, Scope } from '@grantjs/schema';
 import { GetOrganizationsDocument } from '@grantjs/schema';
@@ -7,6 +7,7 @@ import { GetOrganizationsDocument } from '@grantjs/schema';
 export type UseOrganizationsParams = Omit<QueryOrganizationsArgs, 'scope'> & {
   scope?: Scope;
   skip?: boolean;
+  fetchPolicy?: WatchQueryFetchPolicy;
 };
 
 interface UseOrganizationsResult {
@@ -20,7 +21,8 @@ interface UseOrganizationsResult {
 }
 
 export function useOrganizations(options: UseOrganizationsParams): UseOrganizationsResult {
-  const { scope, ids, limit, page, search, sort, skip: skipParam } = options;
+  const { scope, ids, limit, page, search, sort, skip: skipParam, fetchPolicy = 'cache-and-network' } =
+    options;
 
   const skip = useMemo(
     () => skipParam === true || !scope || !scope.id || !scope.tenant,
@@ -39,7 +41,7 @@ export function useOrganizations(options: UseOrganizationsParams): UseOrganizati
     {
       variables,
       skip,
-      fetchPolicy: 'cache-and-network',
+      fetchPolicy,
       notifyOnNetworkStatusChange: true,
     }
   );
