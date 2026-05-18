@@ -75,7 +75,9 @@ export function Breadcrumb() {
 
       if (params.organizationId && segment === params.organizationId) {
         const orgLabel =
-          currentOrganization?.name || params.organizationId || t('organizations.organization');
+          currentOrganization?.id === params.organizationId
+            ? currentOrganization.name
+            : t('loading');
         breadcrumbs.push({
           label: orgLabel,
           href: `/dashboard/organizations/${segment}`,
