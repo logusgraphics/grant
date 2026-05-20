@@ -1,6 +1,6 @@
 {
   "name": "grant-api",
-  "version": "1.1.1",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -42,12 +42,12 @@
     "@graphql-tools/schema": "^10.0.33",
     "@octokit/rest": "^22.0.1",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.75.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.76.0",
     "@opentelemetry/exporter-jaeger": "^2.7.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.216.0",
     "@opentelemetry/instrumentation-ioredis": "^0.64.0",
     "@opentelemetry/resources": "^2.7.1",
-    "@opentelemetry/sdk-node": "^0.217.0",
+    "@opentelemetry/sdk-node": "^0.216.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.29.0",
     "@types/bcrypt": "^6.0.0",
