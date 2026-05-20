@@ -7,5 +7,10 @@ export type {
   ResourceResolver,
   Scope,
 } from '../types';
-export type { GrantOptions, GrantRouteHandler, WithGrantContext } from './with-grant';
+export type {
+  GrantOptions,
+  GrantRouteHandler,
+  NextRouteContext,
+  WithGrantContext,
+} from './with-grant';
 export { withGrant } from './with-grant';

@@ -24,9 +24,14 @@ export interface WithGrantContext {
   authorization: AuthorizationResult;
 }
 
+/** Next.js 15+ App Router route context (`params` is a Promise). */
+export type NextRouteContext = {
+  params: Promise<Record<string, string>>;
+};
+
 /**
  * Next.js App Router route handler type (GET, POST, etc.)
- * Second argument is optional context; params are in the request URL for resolver use.
+ * Second argument is Grant authorization context after the guard runs.
  */
 export type GrantRouteHandler = (
   request: NextRequest,
@@ -65,13 +70,10 @@ export function withGrant(
   client: GrantClient,
   options: GrantOptions,
   handler: GrantRouteHandler
-): (
-  request: NextRequest,
-  context?: { params?: Promise<Record<string, string>> }
-) => Promise<Response> {
+): (request: NextRequest, routeContext: NextRouteContext) => Promise<Response> {
   return async (
     request: NextRequest,
-    _routeContext?: { params?: Promise<Record<string, string>> }
+    _routeContext: NextRouteContext
   ): Promise<Response> => {
     debugGrant('Next', { resource: options.resource, action: options.action });
 
