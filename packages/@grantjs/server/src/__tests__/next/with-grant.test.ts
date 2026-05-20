@@ -54,7 +54,8 @@ describe('withGrant (Next.js)', () => {
     const wrapped = withGrant(client, { resource: 'Document', action: 'Query' }, handler);
 
     const request = createMockRequest();
-    const response = await wrapped(request as NextRequest);
+    const routeContext = { params: Promise.resolve({}) };
+    const response = await wrapped(request as NextRequest, routeContext);
 
     expect(response.status).toBe(200);
     expect(handler).toHaveBeenCalledWith(request, {
@@ -67,7 +68,8 @@ describe('withGrant (Next.js)', () => {
     const wrapped = withGrant(client, { resource: 'Document', action: 'Query' }, handler);
 
     const request = createMockRequest({ authorization: '' });
-    const response = await wrapped(request as NextRequest);
+    const routeContext = { params: Promise.resolve({}) };
+    const response = await wrapped(request as NextRequest, routeContext);
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -89,7 +91,8 @@ describe('withGrant (Next.js)', () => {
     const wrapped = withGrant(client, { resource: 'Document', action: 'Delete' }, handler);
 
     const request = createMockRequest();
-    const response = await wrapped(request as NextRequest);
+    const routeContext = { params: Promise.resolve({}) };
+    const response = await wrapped(request as NextRequest, routeContext);
 
     expect(response.status).toBe(403);
     const body = await response.json();
@@ -116,7 +119,8 @@ describe('withGrant (Next.js)', () => {
     );
 
     const request = createMockRequest();
-    await wrapped(request as NextRequest);
+    const routeContext = { params: Promise.resolve({}) };
+    await wrapped(request as NextRequest, routeContext);
 
     expect(resourceResolver).toHaveBeenCalledWith({
       resourceSlug: 'Document',
@@ -139,7 +143,8 @@ describe('withGrant (Next.js)', () => {
     );
 
     const request = createMockRequest();
-    const response = await wrapped(request as NextRequest);
+    const routeContext = { params: Promise.resolve({}) };
+    const response = await wrapped(request as NextRequest, routeContext);
 
     expect(response.status).toBe(404);
     const body = await response.json();
